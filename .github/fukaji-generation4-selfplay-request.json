@@ -1,0 +1,17 @@
+{
+  "research_only": true,
+  "model_adoption_allowed": false,
+  "training_allowed": false,
+  "source_run": 40418598213,
+  "model_sha256": "db79c7d32cd6e03e6f417a461789fa1736ac8eb3fe2159030531cb5303afb2fd",
+  "seed": 20272427,
+  "games": 128,
+  "shards": 8,
+  "opening_plies": 6,
+  "max_plies": 240,
+  "movetime_ms": 200,
+  "depth": 2,
+  "mix_percent": 25,
+  "fast_relative": true,
+  "root_alpha_beta_both": true
+}
