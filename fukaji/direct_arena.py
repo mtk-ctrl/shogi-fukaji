@@ -45,7 +45,7 @@ def replay_check(opening_moves, moves, result):
         raise ValueError("unknown termination")
 
 
-def play(head, relative_black, relative_model, legacy_model, depth, max_plies):
+def play(head, relative_black, relative_model, legacy_model, depth, max_plies,\n         movetime_ms=20, search_mode="complete_depth"):
     board = shogi.Board()
     for word in head:
         move = shogi.Move.from_usi(word)
@@ -55,7 +55,7 @@ def play(head, relative_black, relative_model, legacy_model, depth, max_plies):
     moves = []
     stats = {"relative_nodes": 0, "legacy_nodes": 0,
              "relative_turns": 0, "legacy_turns": 0,
-             "relative_depth_zero": 0, "legacy_depth_zero": 0}
+             "relative_depth_zero": 0, "legacy_depth_zero": 0,\n             "relative_depth_sum": 0, "legacy_depth_sum": 0,\n             "relative_incomplete": 0, "legacy_incomplete": 0}
     status, winner = "move_limit_unresolved", None
     for _ in range(max_plies):
         if board.is_checkmate():
@@ -68,12 +68,10 @@ def play(head, relative_black, relative_model, legacy_model, depth, max_plies):
         label = "relative" if is_relative else "legacy"
         model = relative_model if is_relative else legacy_model
         word, finished, nodes = select_move(
-            board, 20, depth, model=model, complete_depth=True)
+            board, movetime_ms, depth, model=model,\n            complete_depth=(search_mode == "complete_depth"))
         stats[label + "_nodes"] += nodes
         stats[label + "_turns"] += 1
-        if finished != depth:
-            stats[label + "_depth_zero"] += 1
-            raise ValueError("incomplete equal-depth search")
+        stats[label + "_depth_sum"] += finished\n        if finished == 0:\n            stats[label + "_depth_zero"] += 1\n        if finished != depth:\n            stats[label + "_incomplete"] += 1\n            if search_mode == "complete_depth":\n                raise ValueError("incomplete equal-depth search")
         if word == "resign":
             status = "no_move_unresolved"
             break
@@ -106,8 +104,7 @@ def execute(relative_path, legacy_path, request_path, out):
         v = cfg.get(key)
         if type(v) is not int or not lo <= v <= hi:
             raise ValueError("invalid " + key)
-    if cfg.get("depth") != 1 or cfg.get("mix_percent") != 25:
-        raise ValueError("this pre-registered experiment fixes depth=1 and mix=25")
+    mode = cfg.get("search_mode", "complete_depth")\n    depth = cfg.get("depth")\n    movetime_ms = cfg.get("movetime_ms", 20)\n    if mode not in ("complete_depth", "timed"):\n        raise ValueError("invalid search mode")\n    if type(movetime_ms) is not int or not 1 <= movetime_ms <= 1000:\n        raise ValueError("invalid movetime_ms")\n    if (type(depth) is not int or\n            (mode == "complete_depth" and depth != 1) or\n            (mode == "timed" and depth not in (1, 2)) or\n            cfg.get("mix_percent") != 25):\n        raise ValueError("invalid fixed-model comparison settings")
     relative = RelativeValue(relative_path, mix_percent=25)
     legacy = LinearValue(legacy_path, mix_percent=25)
     root = Path(out)
@@ -116,7 +113,7 @@ def execute(relative_path, legacy_path, request_path, out):
     for pair in range(cfg["arena_pairs"]):
         head = opening(cfg["arena_seed"] + pair, cfg["opening_plies"])
         for relative_black in (True, False):
-            row = play(head, relative_black, relative, legacy, 1, cfg["max_plies"])
+            row = play(head, relative_black, relative, legacy, depth,\n                       cfg["max_plies"], movetime_ms=movetime_ms, search_mode=mode)
             row.update({"pair": pair, "relative_black": relative_black, "opening": head})
             rows.append(row)
     wins = sum(r["status"] == "checkmate" and
@@ -132,7 +129,7 @@ def execute(relative_path, legacy_path, request_path, out):
               "relative_model_sha256": digest(relative_path),
               "legacy_model_sha256": digest(legacy_path),
               "arena_seed": cfg["arena_seed"], "mix_percent": 25,
-              "depth": 1, "search_mode": "complete_depth",
+              "depth": depth, "search_mode": mode,\n              "movetime_ms": movetime_ms if mode == "timed" else None,\n              "max_plies": cfg["max_plies"],
               "legal_replay_verified": True,
               "all_pairs_alternate_color": True,
               "stats": {key: sum(row["stats"][key] for row in rows)
