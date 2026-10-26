@@ -1,0 +1,61 @@
+name: FUKAJI frozen endgame root alpha-beta probe
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/fukaji-root-alpha-request.json"
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-frozen-root-alpha-probe
+  cancel-in-progress: false
+jobs:
+  profile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Validate frozen request and run unit tests
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from fukaji.root_alpha_probe import validate_request
+          validate_request(json.loads(Path(".github/fukaji-root-alpha-request.json").read_text()))
+          PY
+          python -m unittest discover -s tests -v
+      - name: Download frozen 32-game artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-fast-arena-40378086136
+          run-id: 40378086136
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/source
+      - name: Download frozen relative model
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-relative-trial-40359123574
+          run-id: 40359123574
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/model
+      - name: Compare full-window and root-bound searches on frozen positions
+        run: |
+          python -m fukaji.root_alpha_probe \
+            --request .github/fukaji-root-alpha-request.json \
+            --games build/source/fast_games.jsonl \
+            --report build/source/fast_report.json \
+            --model build/model/mover-relative-v1.npz \
+            --out build/root_alpha_probe
+      - name: Upload read-only root-bound diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-root-alpha-probe-${{ github.run_id }}
+          path: build/root_alpha_probe/
+          retention-days: 30
+          if-no-files-found: warn
