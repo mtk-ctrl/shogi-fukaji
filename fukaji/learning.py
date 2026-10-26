@@ -37,7 +37,8 @@ def load_games(path):
         if not line.strip():
             continue
         g = json.loads(line)
-        if set(g) != {"start_sfen", "moves", "winner", "source"}:
+        required = {"start_sfen", "moves", "winner", "source"}
+        if not (set(g) == required or set(g) == required | {"parent_id"}):
             raise ValueError(f"line {line_no}: invalid game schema")
         if g["source"] != "selfplay":
             raise ValueError("external/human game rejected")
@@ -49,6 +50,9 @@ def load_games(path):
         if key in seen:
             continue
         seen.add(key)
+        group_key = g.get("parent_id", key)
+        if not isinstance(group_key,str) or len(group_key)!=64 or any(c not in "0123456789abcdef" for c in group_key):
+            raise ValueError(f"line {line_no}: invalid parent_id")
         b = shogi.Board(g["start_sfen"])
         positions = []
         turns = []
@@ -70,19 +74,39 @@ def load_games(path):
                 raise ValueError(f"line {line_no}: inconsistent winner")
         else:
             continue
-        rows.append((key, np.stack(positions), np.array([1.0 if turn == g["winner"] else 0.0 for turn in turns], dtype=np.float32)))
+        rows.append((group_key, np.stack(positions), np.array([1.0 if turn == g["winner"] else 0.0 for turn in turns], dtype=np.float32)))
     return rows
 
-def split_key(key):
-    n = int(hashlib.sha256(("fukaji-split-v1|" + key).encode()).hexdigest()[:8], 16) % 10
-    return "train" if n < 8 else ("validation" if n == 8 else "test")
+def partition_rows(rows):
+    """Deterministic independent *parent-game* partition, not position split.
+
+    Hold out at least two independent parents per validation/test split when
+    six or more distinct parents exist. Assignments are frozen within each
+    experiment; do not use the held-out test split for model selection.
+    """
+    groups=sorted({key for key,_,_ in rows},key=lambda key: hashlib.sha256(("fukaji-group-v2|"+key).encode()).hexdigest())
+    n=len(groups)
+    if n>=6:
+        heldout=max(2,round(n*0.1))
+        val_n=test_n=heldout
+    elif n>=3:
+        val_n=test_n=1
+    elif n==2:
+        val_n,test_n=0,1
+    else:
+        val_n=test_n=0
+    train_n=n-val_n-test_n
+    labels={key: ("train" if i<train_n else "validation" if i<train_n+val_n else "test") for i,key in enumerate(groups)}
+    parts={k: [] for k in ("train","validation","test")}
+    for row in rows:
+        parts[labels[row[0]]].append(row[1:])
+    group_counts={k:sum(v==k for v in labels.values()) for k in parts}
+    return parts,group_counts
 
 def fit(rows, epochs=12, lr=0.05, seed=42):
     if not rows:
         raise ValueError("no verified completed self-play games")
-    parts = {k: [] for k in ("train", "validation", "test")}
-    for key, xs, ys in rows:
-        parts[split_key(key)].append((xs, ys))
+    parts,group_counts = partition_rows(rows)
     if not parts["train"]:
         raise ValueError("no train games")
     # Small linear value model is only the integration baseline, not an NNUE.
