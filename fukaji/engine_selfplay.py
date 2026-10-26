@@ -1,5 +1,6 @@
 """Self-play of the actual FUKAJI bootstrap search (not the random smoke generator)."""
 import argparse
+import hashlib
 import json
 import random
 from pathlib import Path
@@ -51,5 +52,7 @@ def main():
             if game:
                 f.write(json.dumps(game)+"\n")
                 count+=1
-    print(json.dumps({"attempts":args.attempts,"completed_checkmates":count,"note":"No outcome is invented for move limits, resign or repetition."}))
+    summary={"generator":"fukaji-alpha-beta-v0","attempts":args.attempts,"completed_checkmates":count,"movetime_ms":args.movetime,"depth":args.depth,"max_plies":args.max_plies,"seed":args.seed,"dataset_sha256":hashlib.sha256(dest.read_bytes()).hexdigest(),"note":"No outcome is invented for move limits, resign or repetition."}
+    (dest.parent / (dest.stem + ".manifest.json")).write_text(json.dumps(summary,indent=2),encoding="utf-8")
+    print(json.dumps(summary))
 if __name__=="__main__":main()
