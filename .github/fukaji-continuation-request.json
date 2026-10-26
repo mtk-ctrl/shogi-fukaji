@@ -1,0 +1,18 @@
+{
+  "research_only": true,
+  "source_runs": [
+    40387257648,
+    40395505536
+  ],
+  "original_plies": 160,
+  "max_plies": 240,
+  "relative_model_sha256": "881af10b5bc0cde591e37a9aee883213fa7dd602345b786b9b93d69c7e6ed239",
+  "movetime_ms": 200,
+  "depth": 2,
+  "mix_percent": 25,
+  "fast_relative": true,
+  "root_alpha_beta_default": false,
+  "root_alpha_beta_candidate": true,
+  "training_allowed": false,
+  "model_adoption_allowed": false
+}
