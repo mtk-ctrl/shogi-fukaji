@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 import numpy as np
 import shogi
-from fukaji.learning import FEATURES
+from fukaji.learning import FEATURES, features
 from fukaji.engine import evaluate,select_move
 from fukaji.value_model import LinearValue
 
@@ -32,6 +32,23 @@ class ValueIntegrationTests(unittest.TestCase):
             self.assertEqual(evaluate(b,m),-100)
             move,depth,nodes=select_move(b,30,max_depth=2,model=m)
             self.assertIn(shogi.Move.from_usi(move),b.legal_moves)
+
+    def test_sparse_inference_matches_original_dense_dot(self):
+        rng = np.random.default_rng(1234)
+        with tempfile.TemporaryDirectory() as d:
+            p=Path(d)/"weights.npz"
+            w=rng.normal(0,0.2,FEATURES).astype(np.float32)
+            np.savez_compressed(p,weight=w)
+            m=LinearValue(p,mix_percent=25)
+            b=shogi.Board()
+            for ply in range(40):
+                dense=float(np.dot(features(b),w))
+                expected=int(round(max(-10.0,min(10.0,dense))*100))
+                self.assertLessEqual(abs(m.score(b)-expected),1,
+                                     f"ply={ply}")
+                options=list(b.legal_moves)
+                if not options or b.is_checkmate():break
+                b.push(options[int(rng.integers(len(options)))])
 
     def test_reject_bad_model(self):
         with tempfile.TemporaryDirectory() as d:
