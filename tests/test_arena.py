@@ -27,7 +27,7 @@ class ArenaTests(unittest.TestCase):
             model=p/"nonzero.npz"
             rng=np.random.default_rng(8)
             np.savez_compressed(model,weight=rng.normal(0,0.1,FEATURES).astype(np.float32))
-            result=run(model,p/"control.jsonl",pairs=1,movetime=2,
+            result=run(model,p/"control.jsonl",pairs=1,movetime=20,
                        depth=1,max_plies=12,opening_plies=4,mix=0,seed=129)
             rows=[json.loads(s) for s in (p/"control.jsonl").read_text().splitlines()]
             self.assertEqual(rows[0]["opening"],rows[1]["opening"])
