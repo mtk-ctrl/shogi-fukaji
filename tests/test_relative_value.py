@@ -13,8 +13,9 @@ from fukaji.arena import run
 class RelativeValueTests(unittest.TestCase):
     def test_turn_normalization_changes_piece_encoding_not_just_bias(self):
         b = shogi.Board()
+        b.push_usi("7g7f")  # break the initial color/rotation symmetry
         words = b.sfen().split()
-        words[1] = "w"
+        words[1] = "b"
         opposite = shogi.Board(" ".join(words))
         a = relative_features(b)
         z = relative_features(opposite)
