@@ -1,0 +1,19 @@
+{
+  "research_only": true,
+  "generation2_run": 40404769521,
+  "generation3_run": 40414745515,
+  "generation2_sha256": "00a6186dd710c992cb5df2fe96dd42066eef37a6e0f212eecd5931691a20e6b4",
+  "generation3_sha256": "7740cd133fa05b21998109ca35abcccfa1b365f005c7a7407468f397957e74bd",
+  "seed": 20271727,
+  "pairs": 16,
+  "shards": 8,
+  "opening_plies": 6,
+  "max_plies": 160,
+  "movetime_ms": 200,
+  "depth": 2,
+  "mix_percent": 25,
+  "fast_relative": true,
+  "root_alpha_beta_both": true,
+  "training_allowed": false,
+  "model_adoption_allowed": false
+}
