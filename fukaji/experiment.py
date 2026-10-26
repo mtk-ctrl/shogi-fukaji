@@ -15,7 +15,7 @@ import numpy as np
 
 def execute(out, attempts=24, movetime=2, depth=1, max_plies=240, opening_plies=6,
             seed=110000, arena_pairs=4, arena_seed=20261026,
-            branch_max_parents=8, branch_max_plies=100):
+            branch_max_parents=8, branch_max_plies=100, arena_mixes=(50,), arena_max_plies=120):
     root=Path(out);root.mkdir(parents=True,exist_ok=True)
     games=root/"search_games.jsonl"
     termination_counts={}
@@ -42,7 +42,7 @@ def execute(out, attempts=24, movetime=2, depth=1, max_plies=240, opening_plies=
             "dataset_sha256":hashlib.sha256(combined.read_bytes()).hexdigest(),"branch_report":branch_report,
             "search_milliseconds":movetime,"search_depth":depth,"max_plies":max_plies,
             "opening_plies":opening_plies,"seed":seed,"arena_pairs":arena_pairs,
-            "arena_seed":arena_seed,"branch_max_parents":branch_max_parents,
+            "arena_seed":arena_seed,"arena_mixes":list(arena_mixes),"arena_max_plies":arena_max_plies,"branch_max_parents":branch_max_parents,
             "branch_max_plies":branch_max_plies,"model":"linear-value-v0",
             "status":"blocked_insufficient_decisive_games","note":"No fake results; no strength conclusion."}
     # Do not train/promote without independent validation and test games.
@@ -58,9 +58,17 @@ def execute(out, attempts=24, movetime=2, depth=1, max_plies=240, opening_plies=
         report["model_sha256"]=hashlib.sha256(model.read_bytes()).hexdigest()
         report["splits"]=metrics
         report["status"]="trained_and_arena_measured"
-        # Pair/alternate colors and report unresolved separately.
-        report["arena"]=arena(model,root/"arena.jsonl",pairs=arena_pairs,movetime=movetime,
-                              depth=depth,max_plies=120,opening_plies=opening_plies,mix=50,seed=arena_seed)
+        # Exploratory mix sensitivity on identical openings and alternating colors.
+        # Do not select/promote a model on these results without a new seed.
+        report["arena_sweep"]={}
+        for mix in arena_mixes:
+            result=arena(model,root/f"arena_mix_{mix}.jsonl",pairs=arena_pairs,movetime=movetime,
+                         depth=depth,max_plies=arena_max_plies,opening_plies=opening_plies,
+                         mix=mix,seed=arena_seed)
+            report["arena_sweep"][str(mix)]=result
+        if 50 in arena_mixes:
+            report["arena"]=report["arena_sweep"]["50"]
+        report["arena_sweep_note"]="Exploratory only: no promotion or strength claim without independent confirmation."
     elif len(rows)>=4:
         report["status"]="blocked_insufficient_independent_parent_groups"
     (root/"experiment.json").write_text(json.dumps(report,indent=2)+"\n")
@@ -78,6 +86,8 @@ def main():
     a.add_argument("--seed",type=int,default=110000)
     a.add_argument("--arena-pairs",type=int,default=4)
     a.add_argument("--arena-seed",type=int,default=20261026)
+    a.add_argument("--arena-max-plies",type=int,default=120)
+    a.add_argument("--arena-mixes",type=int,nargs="+",default=[50])
     a.add_argument("--branch-max-parents",type=int,default=8)
     a.add_argument("--branch-max-plies",type=int,default=100)
     a.add_argument("--request",default=None)
@@ -87,21 +97,33 @@ def main():
         mapping={"attempts":"attempts","movetime_ms":"movetime","depth":"depth",
                  "max_plies":"max_plies","opening_plies":"opening_plies",
                  "seed":"seed","arena_pairs":"arena_pairs","arena_seed":"arena_seed",
+                 "arena_max_plies":"arena_max_plies",
                  "branch_max_parents":"branch_max_parents","branch_max_plies":"branch_max_plies"}
         for key,attr in mapping.items():
             if key in config:
                 if type(config[key]) is not int:
                     a.error("request field "+key+" must be integer")
                 setattr(x,attr,config[key])
+        if "arena_mixes" in config:
+            mixes=config["arena_mixes"]
+            if (not isinstance(mixes,list) or not (1<=len(mixes)<=3)
+                or any(type(m) is not int or not 0<=m<=100 for m in mixes)
+                or len(set(mixes))!=len(mixes)):
+                a.error("arena_mixes must be 1..3 distinct integer percentages 0..100")
+            x.arena_mixes=mixes
         if config.get("branch_variants",6)!=6:
             a.error("branch_variants must equal the implemented 6 forks per parent")
     if not (1<=x.attempts<=100 and 1<=x.movetime<=100 and 1<=x.depth<=3
             and 50<=x.max_plies<=400 and 0<=x.opening_plies<=20
             and 0<=x.seed<=2**31-1 and 0<=x.arena_seed<=2**31-1
-            and 1<=x.arena_pairs<=40 and 1<=x.branch_max_parents<=20
+            and 1<=x.arena_pairs<=40 and 60<=x.arena_max_plies<=300
+            and 1<=len(x.arena_mixes)<=3 and len(set(x.arena_mixes))==len(x.arena_mixes)
+            and all(type(m) is int and 0<=m<=100 for m in x.arena_mixes)
+            and 1<=x.branch_max_parents<=20
             and 20<=x.branch_max_plies<=200):
         a.error("experiment limits exceeded")
     execute(x.out,x.attempts,x.movetime,x.depth,x.max_plies,x.opening_plies,
             seed=x.seed,arena_pairs=x.arena_pairs,arena_seed=x.arena_seed,
-            branch_max_parents=x.branch_max_parents,branch_max_plies=x.branch_max_plies)
+            branch_max_parents=x.branch_max_parents,branch_max_plies=x.branch_max_plies,
+            arena_mixes=x.arena_mixes,arena_max_plies=x.arena_max_plies)
 if __name__=="__main__":main()
