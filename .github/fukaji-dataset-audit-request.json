@@ -1,0 +1,7 @@
+{
+  "request": "2026-10-27-frozen-parent-split-label-and-turn-feature-audit-v1",
+  "protocol": "diagnostic-only-no-model-promotion",
+  "source_run_id": 40349702347,
+  "dataset_sha256": "49a8c98be58b521dde77f11dd1e857028f4a4f1b3d9791cb48a58f97698baeb7",
+  "model_sha256": "8a1d2a0b72dcc0cf24dc963658d282fc073045e470999f2a52f7503e422a8efa"
+}
