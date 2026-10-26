@@ -1,0 +1,16 @@
+{
+  "research_only": true,
+  "paired_source_run_id": 40375047387,
+  "relative_source_run_id": 40359123574,
+  "paired_games_sha256": "ba3bddd838407654f24f16a386e260a2b48aae387712c702ee362ab4d2bb59a5",
+  "relative_model_sha256": "881af10b5bc0cde591e37a9aee883213fa7dd602345b786b9b93d69c7e6ed239",
+  "max_samples": 12,
+  "movetime_ms": 200,
+  "max_depth": 2,
+  "model_mixes": [
+    0,
+    25,
+    100
+  ],
+  "objective": "Identify FUKAJI 200ms search bottlenecks on legally replayed frozen KUMOJI match positions; no new matches or adoption."
+}
