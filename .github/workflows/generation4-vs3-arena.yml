@@ -1,0 +1,98 @@
+name: FUKAJI frozen generation-4 vs generation-3 paired arena
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/fukaji-generation4-vs3-request.json"
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-generation4-vs3-arena
+  cancel-in-progress: false
+jobs:
+  paired:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Verify frozen paired request and all tests before real games
+        run: |
+          python -m unittest discover -s tests -v
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from fukaji.generation4_vs3_arena import validate_request
+          validate_request(json.loads(Path('.github/fukaji-generation4-vs3-request.json').read_text()))
+          PY
+      - name: Download frozen generation 3
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-generation3-research-40414745515
+          run-id: 40414745515
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/generation4_vs3_arena/g3
+      - name: Download frozen generation 4
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-generation4-research-40418598213
+          run-id: 40418598213
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/generation4_vs3_arena/g4
+      - name: Play four color-swapped opening pairs with equal 200ms search
+        run: |
+          python -m fukaji.generation4_vs3_arena \
+            --mode play \
+            --request .github/fukaji-generation4-vs3-request.json \
+            --generation3 build/generation4_vs3_arena/g3/mover-relative-generation3-research.npz \
+            --generation4 build/generation4_vs3_arena/g4/mover-relative-generation4-research.npz \
+            --shard ${{ matrix.shard }} \
+            --out build/generation4_vs3_arena/part
+      - name: Upload replay-verified paired games
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-generation4-vs3-arena-part-${{ matrix.shard }}-${{ github.run_id }}
+          path: build/generation4_vs3_arena/part/
+          retention-days: 30
+          if-no-files-found: warn
+  aggregate:
+    needs: paired
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Download all eight paired-game shards
+        uses: actions/download-artifact@v4
+        with:
+          pattern: fukaji-generation4-vs3-arena-part-*
+          path: build/generation4_vs3_arena/parts
+          merge-multiple: false
+      - name: Verify all 64 games, 32 color-swapped pairs and winners
+        run: |
+          python -m fukaji.generation4_vs3_arena \
+            --mode aggregate \
+            --parts build/generation4_vs3_arena/parts \
+            --out build/generation4_vs3_arena/aggregate
+      - name: Upload frozen comparative result
+        uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-generation4-vs3-arena-aggregate-${{ github.run_id }}
+          path: build/generation4_vs3_arena/aggregate/
+          retention-days: 30
+          if-no-files-found: error
