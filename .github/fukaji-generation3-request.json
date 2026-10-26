@@ -1,0 +1,14 @@
+{
+  "research_only": true,
+  "source_runs": [
+    40404298089,
+    40414249980
+  ],
+  "parent_model_runs": [
+    40359123574,
+    40404769521
+  ],
+  "training_allowed": true,
+  "model_adoption_allowed": false,
+  "preserve_existing_test": true
+}
