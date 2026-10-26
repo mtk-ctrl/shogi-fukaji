@@ -6,7 +6,7 @@ This is a verification bridge, not NNUE, and no strength gain is presumed.
 import hashlib
 from pathlib import Path
 import numpy as np
-from .learning import FEATURES, features
+from .learning import FEATURES
 
 class LinearValue:
     def __init__(self, path, weight_cp=100, mix_percent=50):
@@ -25,11 +25,31 @@ class LinearValue:
         self.weights = np.asarray(w,dtype=np.float32).copy()
         self.weight_cp = float(weight_cp)
         self.mix = mix_percent/100.0
+        # Expand the one-hot linear model once, avoiding numpy feature-vector
+        # allocation and dot product at every search leaf.
+        self._piece_weights = tuple(float(v) for v in self.weights[:81 * 14 * 2])
+        base = 81 * 14 * 2
+        self._hand_prefix = {}
+        for color in (0, 1):
+            for kind in range(1, 8):
+                offset = base + (color * 7 + kind - 1) * 20
+                prefix = [0.0]
+                for j in range(20):
+                    prefix.append(prefix[-1] + float(self.weights[offset + j]))
+                self._hand_prefix[color, kind] = tuple(prefix)
+        self._turn_weight = float(self.weights[-1])
 
     def score(self, board):
         # Model was trained on side-to-move WDL targets, not Black targets.
         # The logit is a centipawn-like heuristic, not a calibrated cp value.
-        logit = float(np.dot(features(board),self.weights))
+        logit = self._turn_weight if board.turn == 0 else -self._turn_weight
+        for square in range(81):
+            piece = board.piece_at(square)
+            if piece is not None:
+                logit += self._piece_weights[(int(piece.color) * 14 + piece.piece_type - 1) * 81 + square]
+        for color in (0, 1):
+            for kind, count in board.pieces_in_hand[color].items():
+                logit += self._hand_prefix[color, kind][min(20, int(count))]
         return int(round(max(-10.0,min(10.0,logit))*self.weight_cp))
 
     def combine(self, board, classical):
