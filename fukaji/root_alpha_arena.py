@@ -22,7 +22,7 @@ MODEL_RUN = 40359123574
 def validate_request(c):
     # Two explicitly frozen, independently seeded protocols; no arbitrary
     # request edits can silently change the experimental conditions.
-    allowed = {20271327: (8, 120), 20271427: (16, 160)}
+    allowed = {20271327: (8, 120), 20271427: (16, 160), 20271527: (16, 160)}
     if c.get("arena_seed") not in allowed:
         raise ValueError("unknown independent arena protocol")
     pairs, max_plies = allowed[c["arena_seed"]]
