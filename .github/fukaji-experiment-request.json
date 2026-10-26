@@ -1,9 +1,9 @@
 {
-  "request": "2026-10-26-first-search-experiment",
+  "request": "2026-10-26-scarcity-remediation-100-games",
   "protocol": "real-search-v1",
-  "attempts": 24,
+  "attempts": 100,
   "movetime_ms": 2,
   "depth": 1,
-  "max_plies": 240,
+  "max_plies": 400,
   "opening_plies": 6
 }
