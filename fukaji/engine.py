@@ -49,8 +49,13 @@ def negamax(board, depth, alpha, beta, deadline, nodes, model=None):
         raise TimeoutError()
     if board.is_checkmate():
         return -MATE-depth
+    # A repetition is legal, but a shallow search must not score a
+    # self-imposed cycle as equal to genuine positional improvement.
+    # The root keeps every legal move available if repetition is forced.
     if board.is_fourfold_repetition():
-        return 0
+        return -25000
+    if board.transpositions[board.zobrist_hash()] >= 2:
+        return -1000
     if depth<=0:
         return evaluate(board, model)
     legal=ordered_moves(board)
@@ -83,7 +88,7 @@ def select_move(board, movetime_ms=200, max_depth=5, model=None, avoid_repetitio
             try:
                 count=board.transpositions[board.zobrist_hash()]
                 # Immediate mate must never be filtered out by cycle avoidance.
-                if count>1 and board.is_check() and board.is_checkmate():
+                if board.is_checkmate():
                     count=-1
             finally:
                 board.pop()
@@ -95,7 +100,6 @@ def select_move(board, movetime_ms=200, max_depth=5, model=None, avoid_repetitio
         return "resign",0,0
     deadline=time.monotonic()+max(1,movetime_ms)/1000
     best=moves[0]
-    bestscore=0
     nodes=[0]
     complete_depth=0
     for depth in range(1,max_depth+1):
@@ -118,7 +122,6 @@ def select_move(board, movetime_ms=200, max_depth=5, model=None, avoid_repetitio
         except TimeoutError:
             break
         best,current=current,best
-        bestscore=scorebest
         complete_depth=depth
         moves.sort(key=lambda m: 0 if m==best else 1)
     return best.usi(),complete_depth,nodes[0]
