@@ -1,0 +1,65 @@
+name: FUKAJI isolated relative generation 2 training
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/fukaji-generation2-request.json"
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-generation2-training
+  cancel-in-progress: false
+jobs:
+  train:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Validate frozen generation request and full unit tests
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from fukaji.generation_train import DATA_RUN, PARENT_RUN
+          cfg=json.loads(Path('.github/fukaji-generation2-request.json').read_text())
+          if cfg != {'research_only': True, 'source_run': DATA_RUN,
+                     'parent_run': PARENT_RUN, 'training_allowed': True,
+                     'model_adoption_allowed': False}:
+              raise ValueError('unexpected generation-2 request')
+          PY
+          python -m unittest discover -s tests -v
+      - name: Download replay-verified generation input
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-generation-input-40404298089
+          run-id: 40404298089
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/generation2/input
+      - name: Download frozen parent relative model
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-relative-trial-40359123574
+          run-id: 40359123574
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/generation2/parent
+      - name: Train isolated parent-initialized candidate and evaluate group holdouts
+        run: |
+          python -m fukaji.generation_train \
+            --data build/generation2/input/verified_mates.jsonl \
+            --manifest build/generation2/input/generation_input_manifest.json \
+            --parent build/generation2/parent/mover-relative-v1.npz \
+            --out build/generation2/research_candidate
+      - name: Upload candidate and frozen diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-generation2-research-${{ github.run_id }}
+          path: build/generation2/research_candidate/
+          retention-days: 30
+          if-no-files-found: warn
