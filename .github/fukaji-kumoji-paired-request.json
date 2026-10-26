@@ -1,0 +1,16 @@
+{
+  "research_only": true,
+  "arena_seed": 20271028,
+  "pairs": 4,
+  "max_plies": 120,
+  "opening_plies": 6,
+  "movetime_ms": 200,
+  "arms": [
+    "equal_200ms",
+    "kumoji_formal"
+  ],
+  "relative_source_run_id": 40359123574,
+  "kumoji_commit": "807db500ee2739c1eb6a527b614eeea40a5993d6",
+  "relative_model_sha256": "881af10b5bc0cde591e37a9aee883213fa7dd602345b786b9b93d69c7e6ed239",
+  "objective": "8 same-opening games per arm, exploratory only; KUMOJI adopted knowledge ON, FUKAJI no equivalent"
+}
