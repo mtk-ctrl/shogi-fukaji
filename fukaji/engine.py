@@ -105,7 +105,7 @@ def negamax(board, depth, alpha, beta, deadline, nodes, model=None, fast_relativ
             break
     return best
 
-def select_move(board, movetime_ms=200, max_depth=5, model=None, avoid_repetition=True, complete_depth=False, fast_relative=False):
+def select_move(board, movetime_ms=200, max_depth=5, model=None, avoid_repetition=True, complete_depth=False, fast_relative=False, root_alpha_beta=False):
     moves=ordered_moves(board)
     # At the root, prefer genuinely new legal positions over repeating an
     # earlier position. The old engine repeated 96/100 games to termination.
@@ -140,18 +140,25 @@ def select_move(board, movetime_ms=200, max_depth=5, model=None, avoid_repetitio
             break
         current=best
         scorebest=-INF
+        # Research-only root alpha reuse. Child beta=-alpha is a valid
+        # fail-soft bound: a cut-off root move cannot beat the current best.
+        # Disabled by default to preserve the original search baseline.
+        root_alpha=-INF
         try:
             for move in moves:
                 if time.monotonic()>=deadline:
                     raise TimeoutError()
                 board.push(move)
                 try:
-                    score=-negamax(board,depth-1,-INF,INF,deadline,nodes,model,fast_relative)
+                    child_beta = -root_alpha if root_alpha_beta else INF
+                    score=-negamax(board,depth-1,-INF,child_beta,deadline,nodes,model,fast_relative)
                 finally:
                     board.pop()
                 if score>scorebest:
                     scorebest=score
                     current=move
+                if root_alpha_beta and score>root_alpha:
+                    root_alpha=score
         except TimeoutError:
             break
         best,current=current,best
