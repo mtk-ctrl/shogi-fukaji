@@ -1,9 +1,12 @@
 {
-  "request": "2026-10-26-termination-diagnostics-after-2of100",
-  "protocol": "real-search-v1-termination-diagnostics",
-  "attempts": 100,
+  "request": "2026-10-26-repetition-aware-verified-endgame-branches-v1",
+  "protocol": "repetition-avoidance-parent-disjoint-endgame-v1",
+  "attempts": 40,
   "movetime_ms": 2,
   "depth": 1,
-  "max_plies": 400,
-  "opening_plies": 6
+  "max_plies": 300,
+  "opening_plies": 6,
+  "branch_max_parents": 8,
+  "branch_max_plies": 100,
+  "branch_variants": 6
 }
