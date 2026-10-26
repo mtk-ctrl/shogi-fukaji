@@ -30,7 +30,7 @@ def features(board):
     x[-1] = 1.0 if board.turn == shogi.BLACK else -1.0
     return x
 
-def load_games(path):
+def load_games(path, feature_fn=features):
     seen = set()
     rows = []
     for line_no, line in enumerate(Path(path).read_text(encoding="utf-8").splitlines(), 1):
@@ -60,7 +60,7 @@ def load_games(path):
             move = shogi.Move.from_usi(move_text)
             if move not in b.legal_moves:
                 raise ValueError(f"line {line_no}: illegal move {move_text}")
-            positions.append(features(b))
+            positions.append(feature_fn(b))
             turns.append(int(b.turn))
             b.push(move)
         # No invented wins for unfinished games; no reward for draws.
