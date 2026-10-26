@@ -1,6 +1,6 @@
 {
-  "request": "2026-10-26-split-validation-gate-check",
-  "protocol": "real-search-v1",
+  "request": "2026-10-26-termination-diagnostics-after-2of100",
+  "protocol": "real-search-v1-termination-diagnostics",
   "attempts": 100,
   "movetime_ms": 2,
   "depth": 1,
