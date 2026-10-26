@@ -1,17 +1,17 @@
 {
-  "request": "2026-10-27-independent-parent-dataset-relative-model-confirmation",
-  "protocol": "new-independent-selfplay-dataset-for-relative-v1-confirmation-no-promotion",
-  "attempts": 40,
+  "request": "2026-10-27-more-independent-selfplay-100-attempts-research-only",
+  "protocol": "independent-real-search-selfplay-more-attempts-no-promotion",
+  "attempts": 100,
   "movetime_ms": 2,
   "depth": 1,
-  "max_plies": 300,
+  "max_plies": 400,
   "opening_plies": 6,
   "branch_max_parents": 8,
   "branch_max_plies": 100,
   "branch_variants": 6,
-  "seed": 550000,
+  "seed": 660000,
   "arena_pairs": 2,
-  "arena_seed": 20270427,
+  "arena_seed": 20271627,
   "arena_mixes": [
     0
   ],
