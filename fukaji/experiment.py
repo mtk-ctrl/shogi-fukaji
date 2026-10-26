@@ -15,9 +15,16 @@ import numpy as np
 def execute(out, attempts=24, movetime=2, depth=1, max_plies=240, opening_plies=6):
     root=Path(out);root.mkdir(parents=True,exist_ok=True)
     games=root/"search_games.jsonl"
+    termination_counts={}
+    diagnostic_samples=[]
     with games.open("w") as f:
         for i in range(attempts):
-            game=play(110000+i,movetime,max_plies,depth,opening_plies=opening_plies)
+            diagnostic={}
+            game=play(110000+i,movetime,max_plies,depth,opening_plies=opening_plies,diagnostic=diagnostic)
+            reason=diagnostic.get("reason","unclassified")
+            termination_counts[reason]=termination_counts.get(reason,0)+1
+            if len(diagnostic_samples)<12 and reason!="checkmate":
+                diagnostic_samples.append({"seed":110000+i,**diagnostic})
             if game: f.write(json.dumps(game)+"\n")
     rows=load_games(games)
     report={"generator":"fukaji-alpha-beta-v0","requested_games":attempts,
@@ -29,6 +36,8 @@ def execute(out, attempts=24, movetime=2, depth=1, max_plies=240, opening_plies=
     from .learning import split_key
     split_counts = {k: sum(split_key(key)==k for key,_,_ in rows) for k in ('train','validation','test')}
     report['split_game_counts']=split_counts
+    report["termination_counts"]=termination_counts
+    report["nondecisive_samples"]=diagnostic_samples
     if all(split_counts[k]>=2 for k in ('train','validation','test')):
         weights,metrics=fit(rows,epochs=4)
         model=root/"value-v0.npz"
