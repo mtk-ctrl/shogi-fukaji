@@ -50,6 +50,9 @@ class ArenaTests(unittest.TestCase):
             self.assertEqual(result["search_diagnostics"]["candidate_depth_zero"],0)
             self.assertEqual(result["search_diagnostics"]["baseline_depth_zero"],0)
             self.assertEqual(result["unresolved"],2)
+            rows=[json.loads(line) for line in (p/"fixed.jsonl").read_text().splitlines()]
+            self.assertEqual(rows[0]["moves"],rows[1]["moves"])
+            self.assertEqual(rows[0]["opening"],rows[1]["opening"])
 
     def test_bad_model_is_rejected(self):
         with tempfile.TemporaryDirectory() as folder:
