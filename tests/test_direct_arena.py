@@ -40,6 +40,20 @@ class DirectArenaTests(unittest.TestCase):
                 replay_check(row["opening"], row["moves"], row)
             self.assertEqual(report["stats"]["relative_depth_zero"], 0)
             self.assertEqual(report["stats"]["legacy_depth_zero"], 0)
+            cfg.update({"search_mode": "timed", "movetime_ms": 1,
+                        "depth": 2, "max_plies": 4})
+            request.write_text(json.dumps(cfg), encoding="utf-8")
+            timed = execute(relative, legacy, request, root / "timed")
+            self.assertEqual(timed["games"], 2)
+            self.assertEqual(timed["search_mode"], "timed")
+            self.assertEqual(timed["movetime_ms"], 1)
+            self.assertEqual(timed["depth"], 2)
+            self.assertEqual(timed["relative_wins"] + timed["legacy_wins"] +
+                             timed["unresolved"], 2)
+            self.assertEqual(timed["stats"]["relative_turns"] +
+                             timed["stats"]["legacy_turns"], 8)
+            self.assertLessEqual(timed["stats"]["relative_depth_sum"] +
+                                 timed["stats"]["legacy_depth_sum"], 16)
             cfg["relative_model_sha256"] = "0" * 64
             request.write_text(json.dumps(cfg), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "relative_model_sha256 mismatch"):
