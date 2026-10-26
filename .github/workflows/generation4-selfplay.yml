@@ -1,0 +1,90 @@
+name: FUKAJI frozen generation-4 independent 128 selfplay
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/fukaji-generation4-selfplay-request.json"
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-generation4-selfplay
+  cancel-in-progress: false
+jobs:
+  selfplay:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Verify tests and frozen selfplay request
+        run: |
+          python -m unittest discover -s tests -v
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from fukaji.generation4_selfplay import validate_request
+          validate_request(json.loads(Path('.github/fukaji-generation4-selfplay-request.json').read_text()))
+          PY
+      - name: Download SHA-frozen generation-4 research model
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-generation4-research-40418598213
+          run-id: 40418598213
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/generation4_selfplay/g4
+      - name: Play sixteen independent openings with generation-4 on both seats
+        run: |
+          python -m fukaji.generation4_selfplay \
+            --mode play \
+            --request .github/fukaji-generation4-selfplay-request.json \
+            --model build/generation4_selfplay/g4/mover-relative-generation4-research.npz \
+            --shard ${{ matrix.shard }} \
+            --out build/generation4_selfplay/part
+      - name: Upload all actual played moves and verified outcomes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-generation4-selfplay-part-${{ matrix.shard }}-${{ github.run_id }}
+          path: build/generation4_selfplay/part/
+          retention-days: 30
+          if-no-files-found: warn
+  aggregate:
+    needs: selfplay
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Download eight independent selfplay shards
+        uses: actions/download-artifact@v4
+        with:
+          pattern: fukaji-generation4-selfplay-part-*
+          path: build/generation4_selfplay/parts
+          merge-multiple: false
+      - name: Verify all 128 legal games, true mates, independent parent IDs
+        run: |
+          python -m fukaji.generation4_selfplay \
+            --mode aggregate \
+            --parts build/generation4_selfplay/parts \
+            --out build/generation4_selfplay/aggregate
+      - name: Upload research-only raw games and eligible mate dataset
+        uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-generation4-selfplay-aggregate-${{ github.run_id }}
+          path: build/generation4_selfplay/aggregate/
+          retention-days: 30
+          if-no-files-found: error
