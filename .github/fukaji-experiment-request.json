@@ -1,6 +1,6 @@
 {
-  "request": "2026-10-27-sparse-inference-controlled-repeat-mix25",
-  "protocol": "same-model-same-seed-sparse-inference-depth-audit-v1",
+  "request": "2026-10-27-independent-parent-dataset-relative-model-confirmation",
+  "protocol": "new-independent-selfplay-dataset-for-relative-v1-confirmation-no-promotion",
   "attempts": 40,
   "movetime_ms": 2,
   "depth": 1,
@@ -9,11 +9,11 @@
   "branch_max_parents": 8,
   "branch_max_plies": 100,
   "branch_variants": 6,
-  "seed": 440000,
-  "arena_pairs": 24,
-  "arena_seed": 20270127,
+  "seed": 550000,
+  "arena_pairs": 2,
+  "arena_seed": 20270427,
   "arena_mixes": [
-    25
+    0
   ],
   "arena_max_plies": 160
 }
