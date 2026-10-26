@@ -33,5 +33,8 @@ class LinearValue:
         return int(round(max(-10.0,min(10.0,logit))*self.weight_cp))
 
     def combine(self, board, classical):
+        # The 0% control must not spend time evaluating a model it ignores.
+        if self.mix == 0:
+            return int(classical)
         learned = self.score(board)
         return int(round((1-self.mix)*classical + self.mix*learned))
