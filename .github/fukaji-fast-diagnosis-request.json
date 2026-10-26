@@ -8,5 +8,6 @@
   "training_allowed": false,
   "games_sha256": "0af0c939049bca6998ae56f0ba623768845014c98af3bdfe05750b7cf52601fb",
   "report_sha256": "b23e2ec9f1c6b33d465c00f63733b1b0ecb80a00ddec762baf6b3b45016fcd8a",
-  "objective": "Read-only legal replay and tactical/termination diagnosis of 32 completed fast-vs-baseline games. No training, game generation, or model promotion."
+  "objective": "Frozen 32-game tactical checkpoint pass: legal replay, immediate mate availability at plies 80/120/160, descriptive material/check/capture metrics. No training, game generation, or promotion.",
+  "tactical_probe_pass": 2
 }

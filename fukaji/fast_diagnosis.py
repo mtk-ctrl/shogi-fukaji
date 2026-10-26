@@ -33,7 +33,8 @@ def validate_request(c):
             or c.get("source_arena_seed") != 20271227
             or c.get("source_pairs") != 16
             or c.get("source_max_plies") != 160
-            or c.get("training_allowed") is not False):
+            or c.get("training_allowed") is not False
+            or c.get("tactical_probe_pass") != 2):
         raise ValueError("invalid frozen diagnostic protocol")
     for key in ("games_sha256", "report_sha256"):
         value = c.get(key)
@@ -57,6 +58,17 @@ def material_balance(board):
     return score
 
 
+def has_mate_in_one(board):
+    """Does the player to move have a legal immediate mate? Restore board state."""
+    for move in list(board.legal_moves):
+        board.push(move)
+        mate = board.is_checkmate()
+        board.pop()
+        if mate:
+            return True
+    return False
+
+
 def analyze_game(row, max_plies):
     head, moves = row["opening"], row["moves"]
     if not isinstance(head, list) or not isinstance(moves, list):
@@ -70,6 +82,7 @@ def analyze_game(row, max_plies):
     seen = Counter({board.zobrist_hash(): 1})
     captures = promotions = drops = checks = revisits = late_revisits = 0
     all_moves = head + moves
+    mate_in_one_at = {}
     for index, word in enumerate(all_moves):
         move = shogi.Move.from_usi(word)
         if move not in board.legal_moves:
@@ -86,6 +99,8 @@ def analyze_game(row, max_plies):
             if index >= len(all_moves) - 40:
                 late_revisits += 1
         seen[key] += 1
+        if index + 1 in (80, 120, 160) and not board.is_checkmate():
+            mate_in_one_at[str(index + 1)] = has_mate_in_one(board)
     return {
         "pair": row["pair"], "fast_black": row["fast_black"],
         "status": row["status"], "winner": row["winner"],
@@ -93,6 +108,7 @@ def analyze_game(row, max_plies):
         "promotions": promotions, "drops": drops, "checks": checks,
         "revisited_positions": revisits, "late_40_revisits": late_revisits,
         "final_abs_material_gap": abs(material_balance(board)),
+        "mate_in_one_at_ply": mate_in_one_at,
     }
 
 
@@ -138,6 +154,8 @@ def diagnose(rows, report, cfg):
             "median_checks": statistics.median(r["checks"] for r in selected) if selected else None,
             "games_with_position_revisits": sum(r["revisited_positions"] > 0 for r in selected),
             "games_with_late_revisits": sum(r["late_40_revisits"] > 0 for r in selected),
+            "games_with_mate_in_one_at_checkpoints": sum(any(r["mate_in_one_at_ply"].values()) for r in selected),
+            "mate_in_one_by_checkpoint": {str(ply): sum(r["mate_in_one_at_ply"].get(str(ply), False) for r in selected) for ply in (80, 120, 160)},
             "median_final_abs_material_gap": statistics.median(
                 r["final_abs_material_gap"] for r in selected) if selected else None,
         }

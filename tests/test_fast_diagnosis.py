@@ -3,7 +3,7 @@ import unittest
 
 import shogi
 
-from fukaji.fast_diagnosis import MODEL_SHA, SOURCE_RUN, analyze_game, validate_request
+from fukaji.fast_diagnosis import MODEL_SHA, SOURCE_RUN, analyze_game, has_mate_in_one, validate_request
 
 
 class FastDiagnosisTests(unittest.TestCase):
@@ -11,7 +11,7 @@ class FastDiagnosisTests(unittest.TestCase):
         return {"research_only": True, "source_run_id": SOURCE_RUN,
                 "model_sha256": MODEL_SHA, "source_arena_seed": 20271227,
                 "source_pairs": 16, "source_max_plies": 160,
-                "training_allowed": False,
+                "training_allowed": False, "tactical_probe_pass": 2,
                 "games_sha256": "a" * 64, "report_sha256": "b" * 64}
 
     def test_fail_closed_protocol(self):
@@ -25,6 +25,12 @@ class FastDiagnosisTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     validate_request(c)
 
+    def test_mate_probe_is_read_only(self):
+        board = shogi.Board()
+        original = board.sfen()
+        self.assertFalse(has_mate_in_one(board))
+        self.assertEqual(board.sfen(), original)
+
     def test_unresolved_stays_unresolved(self):
         row = {"opening": ["7g7f", "3c3d"], "moves": ["2g2f"],
                "status": "move_limit_unresolved", "winner": None,
@@ -33,6 +39,7 @@ class FastDiagnosisTests(unittest.TestCase):
         self.assertEqual(got["status"], "move_limit_unresolved")
         self.assertEqual(got["plies"], 3)
         self.assertEqual(got["captures"], 0)
+        self.assertEqual(got["mate_in_one_at_ply"], {})
         with self.assertRaises(ValueError):
             analyze_game(row, 4)
         row["winner"] = shogi.BLACK
