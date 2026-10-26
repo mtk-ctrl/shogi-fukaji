@@ -22,7 +22,7 @@ jobs:
       - run: python -m unittest discover -s tests -v
       - name: Real search selfplay, verified target learning and paired arena
         run: |
-          python -m fukaji.experiment --attempts 40 --movetime 2 --depth 1 --max-plies 300 --opening-plies 6
+          python -m fukaji.experiment --request .github/fukaji-experiment-request.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
