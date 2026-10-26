@@ -70,7 +70,13 @@ def run(model_path, out, pairs=2, movetime=2, depth=1, max_plies=30, opening_pli
         raise ValueError("invalid search mode")
     if search_mode=="complete_depth" and depth>2:
         raise ValueError("complete-depth diagnostic limited to depth <=2")
-    if model_type not in ("legacy", "mover_relative_v1"):\n        raise ValueError("unknown model schema")\n    if model_type == "mover_relative_v1":\n        from .relative_value import RelativeValue\n        candidate = RelativeValue(model_path, mix_percent=mix)\n    else:\n        candidate = LinearValue(model_path, mix_percent=mix)
+    if model_type not in ("legacy", "mover_relative_v1"):
+        raise ValueError("unknown model schema")
+    if model_type == "mover_relative_v1":
+        from .relative_value import RelativeValue
+        candidate = RelativeValue(model_path, mix_percent=mix)
+    else:
+        candidate = LinearValue(model_path, mix_percent=mix)
     rows=[]
     for i in range(pairs):
         hist=opening(seed+i,opening_plies)
