@@ -1,5 +1,5 @@
 {
-  "request": "2026-10-26-scarcity-remediation-100-games",
+  "request": "2026-10-26-split-validation-gate-check",
   "protocol": "real-search-v1",
   "attempts": 100,
   "movetime_ms": 2,
