@@ -64,3 +64,4 @@ jobs:
           path: build/search_profile/
           retention-days: 30
           if-no-files-found: warn
+\n# Listed in .github/workflows/README.md; bounded read-only profiling only.\n

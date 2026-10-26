@@ -11,7 +11,7 @@
 | `fixed-model-arena.yml` | 凍結モデルの対局比較 |
 | `direct-relative-arena.yml` | 旧/相対特徴モデル直接対局（request JSON更新または手動） |
 | `kumoji-usi-smoke.yml` | **接続確認のみ**：雲路固定commitを読取り専用checkoutし、独立深路USIと短い対局を行う（request JSON更新または手動） |
-| `kumoji-paired.yml` | **探索的比較**：同一序盤を先後交替する2条件（双方200ms/雲路正式長考・先読みON）を別々に記録。雲路の採用知識163件は常時ON。 |
+| `search-profile.yml` | **研究診断**：凍結した雲路対局棋譜から深路の実戦局面を抽出し、200ms探索の古典評価／相対特徴評価（0/25/100%）の処理量・完了深さと関数別負荷を測定。棋力比較・正式採用ではない。 |\n| `kumoji-paired.yml` | **探索的比較**：同一序盤を先後交替する2条件（双方200ms/雲路正式長考・先読みON）を別々に記録。雲路の採用知識163件は常時ON。 |
 
 ## KUMOJI接続確認の制約
 
