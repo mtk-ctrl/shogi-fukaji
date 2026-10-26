@@ -18,6 +18,7 @@ class SearchProfileTests(unittest.TestCase):
             "movetime_ms": 200,
             "max_depth": 2,
             "model_mixes": [0, 25, 100],
+            "compare_fused": True,
         }
 
     def games(self):
@@ -51,6 +52,7 @@ class SearchProfileTests(unittest.TestCase):
             ("movetime_ms", 10000),
             ("max_depth", 6),
             ("model_mixes", [25]),
+            ("compare_fused", False),
             ("paired_games_sha256", "not_a_sha"),
         ):
             with self.subTest(name=name):
