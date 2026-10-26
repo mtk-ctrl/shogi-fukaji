@@ -1,6 +1,6 @@
 {
-  "request": "2026-10-26-independent-seed-arena-mix-sensitivity",
-  "protocol": "heldout-arena-mix-exploration-v1",
+  "request": "2026-10-27-independent-mix25-confirmation-with-mix0-control",
+  "protocol": "predeclared-mix25-vs-baseline-independent-seed-with-zero-mix-parity-v1",
   "attempts": 40,
   "movetime_ms": 2,
   "depth": 1,
@@ -9,13 +9,12 @@
   "branch_max_parents": 8,
   "branch_max_plies": 100,
   "branch_variants": 6,
-  "seed": 330000,
-  "arena_pairs": 12,
-  "arena_seed": 20261226,
+  "seed": 440000,
+  "arena_pairs": 24,
+  "arena_seed": 20270127,
   "arena_mixes": [
-    10,
-    25,
-    50
+    0,
+    25
   ],
   "arena_max_plies": 160
 }
