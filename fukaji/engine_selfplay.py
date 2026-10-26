@@ -8,7 +8,7 @@ import shogi
 from .engine import select_move
 from .value_model import LinearValue
 
-def play(seed, movetime_ms=25, max_plies=160, max_depth=2, model=None, opening_plies=4):
+def play(seed, movetime_ms=25, max_plies=160, max_depth=2, model=None, opening_plies=4, diagnostic=None):
     rng=random.Random(seed)
     board=shogi.Board()
     start=board.sfen()
@@ -25,6 +25,7 @@ def play(seed, movetime_ms=25, max_plies=160, max_depth=2, model=None, opening_p
         if board.is_checkmate():
             break
         if board.is_fourfold_repetition():
+            if diagnostic is not None: diagnostic["reason"]="fourfold_repetition"
             return None
         options=list(board.legal_moves)
         if not options:
@@ -38,7 +39,15 @@ def play(seed, movetime_ms=25, max_plies=160, max_depth=2, model=None, opening_p
         moves.append(move_text)
         board.push(move)
     if not board.is_checkmate():
+        if diagnostic is not None:
+            diagnostic["reason"]="max_plies_or_no_moves"
+            diagnostic["plies"]=len(moves)
+            diagnostic["final_sfen"]=board.sfen()
+            diagnostic["in_check"]=board.is_check()
         return None
+    if diagnostic is not None:
+        diagnostic["reason"]="checkmate"
+        diagnostic["plies"]=len(moves)
     return {"start_sfen":start,"moves":moves,"winner":int(not board.turn),"source":"selfplay"}
 
 def main():
