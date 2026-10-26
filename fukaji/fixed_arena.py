@@ -40,6 +40,11 @@ def execute(model_path, request_path, out):
         or len(set(times))!=len(times)
         or any(type(v) is not int or not 1<=v<=100 for v in times)):
         raise ValueError("invalid arena_movetimes_ms")
+    search_mode=config.get("arena_search_mode","timed")
+    if search_mode not in ("timed","complete_depth"):
+        raise ValueError("invalid arena_search_mode")
+    if search_mode=="complete_depth" and (config["depth"]>2 or len(times)!=1):
+        raise ValueError("complete-depth diagnostic requires depth <=2 and one placeholder time")
     if len(mixes)*len(times)*config["arena_pairs"]*2>240:
         raise ValueError("arena game budget exceeded")
     root=Path(out)
@@ -49,14 +54,16 @@ def execute(model_path, request_path, out):
             "arena_pairs":config["arena_pairs"],"arena_mixes":mixes,
             "arena_movetimes_ms":times,"arena_max_plies":config["arena_max_plies"],
             "depth":config["depth"],"opening_plies":config["opening_plies"],
+            "arena_search_mode":search_mode,"wall_clock_cutoff_enabled":search_mode=="timed",
             "arms":{},"note":"Exploratory, not an independent proof of strength."}
     for ms in times:
         for mix in mixes:
-            key=f"{ms}ms_mix{mix}"
+            key=f"{ms}ms_mix{mix}" if search_mode=="timed" else f"complete_depth{config['depth']}_mix{mix}"
             report["arms"][key]=arena(
                 model_path,root/f"{key}.jsonl",pairs=config["arena_pairs"],
                 movetime=ms,depth=config["depth"],max_plies=config["arena_max_plies"],
-                opening_plies=config["opening_plies"],mix=mix,seed=config["arena_seed"])
+                opening_plies=config["opening_plies"],mix=mix,seed=config["arena_seed"],
+                search_mode=search_mode)
     (root/"fixed_arena_report.json").write_text(json.dumps(report,indent=2)+"\n",encoding="utf-8")
     print(json.dumps(report,indent=2))
     return report
