@@ -1,6 +1,6 @@
 {
-  "request": "2026-10-27-independent-mix25-confirmation-with-mix0-control",
-  "protocol": "predeclared-mix25-vs-baseline-independent-seed-with-zero-mix-parity-v1",
+  "request": "2026-10-27-sparse-inference-controlled-repeat-mix25",
+  "protocol": "same-model-same-seed-sparse-inference-depth-audit-v1",
   "attempts": 40,
   "movetime_ms": 2,
   "depth": 1,
@@ -13,7 +13,6 @@
   "arena_pairs": 24,
   "arena_seed": 20270127,
   "arena_mixes": [
-    0,
     25
   ],
   "arena_max_plies": 160
