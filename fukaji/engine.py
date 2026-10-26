@@ -75,7 +75,7 @@ def negamax(board, depth, alpha, beta, deadline, nodes, model=None):
             break
     return best
 
-def select_move(board, movetime_ms=200, max_depth=5, model=None, avoid_repetition=True):
+def select_move(board, movetime_ms=200, max_depth=5, model=None, avoid_repetition=True, complete_depth=False):
     moves=ordered_moves(board)
     # At the root, prefer genuinely new legal positions over repeating an
     # earlier position. The old engine repeated 96/100 games to termination.
@@ -98,7 +98,10 @@ def select_move(board, movetime_ms=200, max_depth=5, model=None, avoid_repetitio
 
     if not moves:
         return "resign",0,0
-    deadline=time.monotonic()+max(1,movetime_ms)/1000
+    # Diagnostic mode removes wall-clock cutoffs. Both engines must complete
+    # the same search depth to isolate evaluation quality from inference cost.
+    # This mode is for bounded-depth research, not timed USI competition.
+    deadline=float("inf") if complete_depth else time.monotonic()+max(1,movetime_ms)/1000
     best=moves[0]
     nodes=[0]
     complete_depth=0
