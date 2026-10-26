@@ -8,9 +8,9 @@ import shogi
 from .engine import select_move
 from .value_model import LinearValue
 
-def play(seed, movetime_ms=25, max_plies=160, max_depth=2, model=None, opening_plies=4, diagnostic=None):
+def play(seed, movetime_ms=25, max_plies=160, max_depth=2, model=None, opening_plies=4, diagnostic=None, start_sfen=None, parent_id=None, avoid_repetition=True):
     rng=random.Random(seed)
-    board=shogi.Board()
+    board=shogi.Board(start_sfen) if start_sfen else shogi.Board()
     start=board.sfen()
     moves=[]
     for ply in range(min(opening_plies,max_plies)):
@@ -25,12 +25,15 @@ def play(seed, movetime_ms=25, max_plies=160, max_depth=2, model=None, opening_p
         if board.is_checkmate():
             break
         if board.is_fourfold_repetition():
-            if diagnostic is not None: diagnostic["reason"]="fourfold_repetition"
+            if diagnostic is not None:
+                diagnostic["reason"]="fourfold_repetition"
+                diagnostic["plies"]=len(moves)
+                diagnostic["in_check"]=board.is_check()
             return None
         options=list(board.legal_moves)
         if not options:
             break
-        move_text,depth,nodes=select_move(board,movetime_ms,max_depth=max_depth,model=model)
+        move_text,depth,nodes=select_move(board,movetime_ms,max_depth=max_depth,model=model,avoid_repetition=avoid_repetition)
         if move_text=="resign":
             break
         move=shogi.Move.from_usi(move_text)
@@ -48,7 +51,10 @@ def play(seed, movetime_ms=25, max_plies=160, max_depth=2, model=None, opening_p
     if diagnostic is not None:
         diagnostic["reason"]="checkmate"
         diagnostic["plies"]=len(moves)
-    return {"start_sfen":start,"moves":moves,"winner":int(not board.turn),"source":"selfplay"}
+    game={"start_sfen":start,"moves":moves,"winner":int(not board.turn),"source":"selfplay"}
+    if parent_id is not None:
+        game["parent_id"]=parent_id
+    return game
 
 def main():
     ap=argparse.ArgumentParser()
