@@ -51,11 +51,13 @@ def load_games(path):
         seen.add(key)
         b = shogi.Board(g["start_sfen"])
         positions = []
+        turns = []
         for move_text in g["moves"]:
             move = shogi.Move.from_usi(move_text)
             if move not in b.legal_moves:
                 raise ValueError(f"line {line_no}: illegal move {move_text}")
             positions.append(features(b))
+            turns.append(int(b.turn))
             b.push(move)
         # No invented wins for unfinished games; no reward for draws.
         if g["winner"] is not None:
@@ -68,7 +70,7 @@ def load_games(path):
                 raise ValueError(f"line {line_no}: inconsistent winner")
         else:
             continue
-        rows.append((key, np.stack(positions), np.array([1.0 if ((i % 2 == 0) == (g["winner"] == 0)) else 0.0 for i in range(len(positions))], dtype=np.float32)))
+        rows.append((key, np.stack(positions), np.array([1.0 if turn == g["winner"] else 0.0 for turn in turns], dtype=np.float32)))
     return rows
 
 def split_key(key):
