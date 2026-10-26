@@ -1,0 +1,26 @@
+import unittest
+import shogi
+from fukaji.engine import select_move, evaluate, ordered_moves
+
+class EngineTests(unittest.TestCase):
+    def test_search_returns_legal_move(self):
+        b=shogi.Board()
+        move, depth, nodes=select_move(b,30,max_depth=2)
+        self.assertIn(shogi.Move.from_usi(move),b.legal_moves)
+        self.assertGreaterEqual(depth,0)
+    def test_side_to_move_reversal(self):
+        b=shogi.Board()
+        self.assertEqual(evaluate(b),0)
+        b.push_usi("7g7f")
+        self.assertLess(abs(evaluate(b)),100)
+    def test_usi_protocol(self):
+        import subprocess,sys
+        process=subprocess.run([sys.executable,"-m","fukaji.engine"],
+            input="usi\nisready\nposition startpos\ngo movetime 30\nquit\n",
+            stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,timeout=15)
+        self.assertEqual(process.returncode,0,process.stderr)
+        self.assertIn("usiok",process.stdout)
+        self.assertIn("readyok",process.stdout)
+        self.assertIn("bestmove ",process.stdout)
+
+if __name__=="__main__": unittest.main()
