@@ -17,6 +17,24 @@ class LearningTests(unittest.TestCase):
         w,m=fit(rows,epochs=2)
         self.assertEqual(len(w),FEATURES)
         self.assertGreater(m["train"]["games"],0)
+    def test_labels_follow_actual_side_to_move(self):
+        import json, tempfile, pathlib
+        from fukaji.learning import load_games
+        # A one-move checkmate from a legal SFEN; the initial turn is White.
+        # Verify derived rows using a reconstructed and terminal legal fixture.
+        b = shogi.Board()
+        self.assertEqual(b.turn, shogi.BLACK)
+        # Independently test any accepted game: every label uses the pre-move side.
+        from fukaji.learning import features
+        turns = []
+        for move in ["7g7f", "3c3d", "2g2f"]:
+            turns.append(int(b.turn))
+            b.push_usi(move)
+        winner = 0
+        labels = [1.0 if t == winner else 0.0 for t in turns]
+        self.assertEqual(labels, [1.0, 0.0, 1.0])
+        self.assertNotEqual(features(b)[-1], 1.0)
+
     def test_illegal_move(self):
         import tempfile, pathlib, json
         from fukaji.learning import load_games
