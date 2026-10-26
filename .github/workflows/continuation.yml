@@ -14,7 +14,12 @@ jobs:
   continuation:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -60,12 +65,42 @@ jobs:
             --source-b build/continuation/second/root_alpha_games.jsonl \
             --report-b build/continuation/second/root_alpha_report.json \
             --model build/continuation/model/mover-relative-v1.npz \
-            --out build/continuation/verified
+            --out build/continuation/verified \\
+            --shard ${{ matrix.shard }} --shards 8
       - name: Upload original-linked legal continuations and verified mates
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: fukaji-continuation-${{ github.run_id }}
+          name: fukaji-continuation-part-${{ matrix.shard }}-${{ github.run_id }}
           path: build/continuation/verified/
           retention-days: 30
           if-no-files-found: warn
+  aggregate:
+    needs: continuation
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Download eight completed shard artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: fukaji-continuation-part-*
+          path: build/continuation/parts
+          merge-multiple: false
+      - name: Recheck all 32 legal continuations and verified checkmate labels
+        run: |
+          python -m fukaji.continuation_aggregate \
+            --parts build/continuation/parts \
+            --out build/continuation/aggregate
+      - name: Upload replay-verified aggregate and new mate dataset
+        uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-continuation-aggregate-${{ github.run_id }}
+          path: build/continuation/aggregate/
+          retention-days: 30
+          if-no-files-found: error

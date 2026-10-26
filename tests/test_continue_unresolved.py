@@ -2,7 +2,8 @@ import unittest
 from unittest.mock import patch
 import shogi
 
-from fukaji.continue_unresolved import advance, validate_request, MODEL_SHA, SOURCE_RUNS
+from fukaji.continue_unresolved import advance, validate_request, MODEL_SHA, SOURCE_RUNS, execute
+from fukaji.continuation_aggregate import aggregate
 
 
 class ContinuationTest(unittest.TestCase):
@@ -60,6 +61,12 @@ class ContinuationTest(unittest.TestCase):
                    return_value=("1a1a", 0, 1)):
             with self.assertRaises(ValueError):
                 advance(shogi.Board(), True, None, 1)
+
+    def test_aggregate_missing_shards_rejected(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            with self.assertRaisesRegex(ValueError, 'eight'):
+                aggregate(d, d)
 
     def test_continuation_limit(self):
         with self.assertRaises(ValueError):

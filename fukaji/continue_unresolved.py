@@ -130,7 +130,9 @@ def extend_one(game, run_id, model):
     }
 
 
-def execute(request, source_a, report_a, source_b, report_b, model_path, out):
+def execute(request, source_a, report_a, source_b, report_b, model_path, out, shard=0, shards=1):
+    if shards not in (1, 8) or type(shard) is not int or not 0 <= shard < shards:
+        raise ValueError("invalid continuation shard")
     validate_request(json.loads(Path(request).read_text(encoding="utf-8")))
     if digest(model_path) != MODEL_SHA:
         raise ValueError("frozen relative model SHA mismatch")
@@ -149,10 +151,12 @@ def execute(request, source_a, report_a, source_b, report_b, model_path, out):
         if len(unresolved) != 16:
             raise ValueError("source unresolved count mismatch")
         counts[str(run_id)] = source_counts
-        for row in unresolved:
-            extended.append(extend_one(row, run_id, model))
-    if len(extended) != 32:
-        raise ValueError("wrong continuation count")
+        for index, row in enumerate(unresolved):
+            global_index = SOURCE_RUNS.index(run_id) * 16 + index
+            if global_index % shards == shard:
+                extended.append(extend_one(row, run_id, model))
+    if len(extended) != 32 // shards:
+        raise ValueError("wrong continuation shard count")
     root = Path(out)
     root.mkdir(parents=True, exist_ok=True)
     games_path = root / "continuations.jsonl"
@@ -188,6 +192,7 @@ def execute(request, source_a, report_a, source_b, report_b, model_path, out):
         "fast_relative": True,
         "root_alpha_beta_candidate": True,
         "root_alpha_beta_default": False,
+        "shard": shard, "shards": shards,
         "extended_games": len(extended),
         "outcomes": dict(outcomes),
         "new_verified_mates": len(mates),
@@ -206,9 +211,11 @@ def main():
     for arg in ("request", "source-a", "report-a", "source-b",
                 "report-b", "model", "out"):
         p.add_argument("--" + arg, required=True)
+    p.add_argument("--shard", type=int, default=0)
+    p.add_argument("--shards", type=int, default=1)
     a = p.parse_args()
     execute(a.request, a.source_a, a.report_a, a.source_b,
-            a.report_b, a.model, a.out)
+            a.report_b, a.model, a.out, a.shard, a.shards)
 
 
 if __name__ == "__main__":
