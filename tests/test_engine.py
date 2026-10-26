@@ -1,6 +1,7 @@
 import unittest
 import shogi
-from fukaji.engine import select_move, evaluate, ordered_moves
+from fukaji.engine import select_move, evaluate, ordered_moves, negamax, INF
+import time
 
 class EngineTests(unittest.TestCase):
     def test_search_returns_legal_move(self):
@@ -13,6 +14,22 @@ class EngineTests(unittest.TestCase):
         self.assertEqual(evaluate(b),0)
         b.push_usi("7g7f")
         self.assertLess(abs(evaluate(b)),100)
+    def test_search_penalizes_visited_position(self):
+        b=shogi.Board()
+        # Real, legal four-ply cycle: both kings return to original squares.
+        for move in ("5i5h","5a5b","5h5i","5b5a"):
+            b.push_usi(move)
+        self.assertEqual(b.transpositions[b.zobrist_hash()],2)
+        score=negamax(b,0,-INF,INF,time.monotonic()+2,[0])
+        self.assertEqual(score,-1000)
+
+    def test_root_move_remains_legal_after_cycle(self):
+        b=shogi.Board()
+        for move in ("5i5h","5a5b","5h5i","5b5a"):
+            b.push_usi(move)
+        move,depth,nodes=select_move(b,20,max_depth=1)
+        self.assertIn(shogi.Move.from_usi(move),b.legal_moves)
+
     def test_usi_protocol(self):
         import subprocess,sys
         process=subprocess.run([sys.executable,"-m","fukaji.engine"],
