@@ -18,7 +18,9 @@ VALUES = {1:100,2:300,3:320,4:480,5:760,6:900,7:600,8:0,9:500,10:520,11:620,12:8
 INF=10**9
 MATE=1000000
 
-def evaluate(board, model=None):
+def evaluate(board, model=None, fast_relative=False):
+    if fast_relative and isinstance(model, RelativeValue) and model.mix > 0:
+        return evaluate_relative_fused(board, model)
     score=0
     for sq in range(81):
         p=board.piece_at(sq)
@@ -36,6 +38,33 @@ def evaluate(board, model=None):
             score+=factor*int(count)*VALUES[kind]
     return model.combine(board,score) if model is not None else score
 
+def evaluate_relative_fused(board, model):
+    """Single board scan for classical + frozen relative score (opt-in research)."""
+    turn = int(board.turn)
+    classical = 0
+    logit = model._turn_weight
+    for sq in range(81):
+        p = board.piece_at(sq)
+        if p is None:
+            continue
+        val = VALUES[p.piece_type]
+        if p.piece_type != shogi.KING:
+            rank, file = sq % 9, sq // 9
+            val += 2 * (4 - abs(file - 4)) + (4 - abs(rank - 4))
+        classical += val if p.color == board.turn else -val
+        owner = int(p.color) ^ turn
+        relative_sq = sq if turn == shogi.BLACK else 80 - sq
+        logit += model._piece_weights[(owner * 14 + p.piece_type - 1) * 81 + relative_sq]
+    for color in (shogi.BLACK, shogi.WHITE):
+        owner = int(color) ^ turn
+        factor = 1 if color == board.turn else -1
+        for kind, count in board.pieces_in_hand[color].items():
+            classical += factor * int(count) * VALUES[kind]
+            logit += model._hand_prefix[owner, kind][min(20, int(count))]
+    learned = int(round(max(-10.0, min(10.0, logit)) * model.weight_cp))
+    return int(round((1 - model.mix) * classical + model.mix * learned))
+
+
 def ordered_moves(board):
     options=list(board.legal_moves)
     def order(m):
@@ -44,7 +73,7 @@ def ordered_moves(board):
     options.sort(key=order,reverse=True)
     return options
 
-def negamax(board, depth, alpha, beta, deadline, nodes, model=None):
+def negamax(board, depth, alpha, beta, deadline, nodes, model=None, fast_relative=False):
     nodes[0]+=1
     if (nodes[0]&127)==0 and time.monotonic()>=deadline:
         raise TimeoutError()
@@ -58,7 +87,7 @@ def negamax(board, depth, alpha, beta, deadline, nodes, model=None):
     if board.transpositions[board.zobrist_hash()] >= 2:
         return -1000
     if depth<=0:
-        return evaluate(board, model)
+        return evaluate(board, model, fast_relative)
     legal=ordered_moves(board)
     if not legal:
         return -MATE-depth if board.is_check() else 0
@@ -66,7 +95,7 @@ def negamax(board, depth, alpha, beta, deadline, nodes, model=None):
     for move in legal:
         board.push(move)
         try:
-            score=-negamax(board,depth-1,-beta,-alpha,deadline,nodes,model)
+            score=-negamax(board,depth-1,-beta,-alpha,deadline,nodes,model,fast_relative)
         finally:
             board.pop()
         if score>best:
@@ -76,7 +105,7 @@ def negamax(board, depth, alpha, beta, deadline, nodes, model=None):
             break
     return best
 
-def select_move(board, movetime_ms=200, max_depth=5, model=None, avoid_repetition=True, complete_depth=False):
+def select_move(board, movetime_ms=200, max_depth=5, model=None, avoid_repetition=True, complete_depth=False, fast_relative=False):
     moves=ordered_moves(board)
     # At the root, prefer genuinely new legal positions over repeating an
     # earlier position. The old engine repeated 96/100 games to termination.
@@ -117,7 +146,7 @@ def select_move(board, movetime_ms=200, max_depth=5, model=None, avoid_repetitio
                     raise TimeoutError()
                 board.push(move)
                 try:
-                    score=-negamax(board,depth-1,-INF,INF,deadline,nodes,model)
+                    score=-negamax(board,depth-1,-INF,INF,deadline,nodes,model,fast_relative)
                 finally:
                     board.pop()
                 if score>scorebest:
@@ -137,6 +166,7 @@ def command_loop():
     model_mix = 50
     model_type = "legacy"
     model = None
+    fast_relative = False
     for raw in sys.stdin:
         tokens=raw.strip().split()
         if not tokens:
@@ -149,6 +179,7 @@ def command_loop():
             print("option name ValueModelFile type string default <empty>")
             print("option name ValueModelMix type spin default 50 min 0 max 100")
             print("option name ValueModelType type combo default legacy var legacy var relative")
+            print("option name FastRelativeEval type check default false")
             print("usiok",flush=True)
         elif cmd=="isready":
             if model_path:
@@ -180,6 +211,8 @@ def command_loop():
                 try: model_mix=max(0,min(100,int(tokens[tokens.index("value")+1])))
                 except (ValueError,IndexError): pass
                 model=None
+            if "FastRelativeEval" in tokens and "value" in tokens:
+                fast_relative = tokens[tokens.index("value")+1].lower() == "true"
             if "SearchDepth" in tokens and "value" in tokens:
                 try: depth=max(1,min(6,int(tokens[tokens.index("value")+1])))
                 except (ValueError,IndexError): pass
@@ -207,7 +240,7 @@ def command_loop():
             if "movetime" in tokens:
                 try:ms=max(1,min(10000,int(tokens[tokens.index("movetime")+1])))
                 except (ValueError,IndexError):pass
-            move,finished,nodes=select_move(board,ms,depth,model)
+            move,finished,nodes=select_move(board,ms,depth,model,fast_relative=fast_relative)
             print(f"info depth {finished} nodes {nodes}",flush=True)
             print(f"bestmove {move}",flush=True)
         elif cmd=="quit":
