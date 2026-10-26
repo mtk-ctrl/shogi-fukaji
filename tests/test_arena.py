@@ -37,6 +37,20 @@ class ArenaTests(unittest.TestCase):
                              result["search_diagnostics"]["baseline_turns"])
             self.assertIn("candidate_depth_zero",result["search_diagnostics"])
 
+    def test_complete_depth_arena_never_records_zero_depth(self):
+        with tempfile.TemporaryDirectory() as folder:
+            p=Path(folder)
+            model=p/"zero.npz"
+            np.savez_compressed(model,weight=np.zeros(FEATURES,dtype=np.float32))
+            result=run(model,p/"fixed.jsonl",pairs=1,movetime=1,
+                       depth=1,max_plies=4,opening_plies=2,mix=0,
+                       seed=99,search_mode="complete_depth")
+            self.assertEqual(result["search_mode"],"complete_depth")
+            self.assertIsNone(result["movetime_ms"])
+            self.assertEqual(result["search_diagnostics"]["candidate_depth_zero"],0)
+            self.assertEqual(result["search_diagnostics"]["baseline_depth_zero"],0)
+            self.assertEqual(result["unresolved"],2)
+
     def test_bad_model_is_rejected(self):
         with tempfile.TemporaryDirectory() as folder:
             p=Path(folder)
