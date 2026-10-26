@@ -25,7 +25,11 @@ def execute(out, attempts=24, movetime=2, depth=1, max_plies=240, opening_plies=
             "search_milliseconds":movetime,"search_depth":depth,"max_plies":max_plies,
             "opening_plies":opening_plies,"model":"linear-value-v0",
             "status":"blocked_insufficient_decisive_games","note":"No fake results; no strength conclusion."}
-    if len(rows)>=4:
+    # Do not train/promote without independent validation and test games.
+    from .learning import split_key
+    split_counts = {k: sum(split_key(key)==k for key,_,_ in rows) for k in ('train','validation','test')}
+    report['split_game_counts']=split_counts
+    if all(split_counts[k]>=2 for k in ('train','validation','test')):
         weights,metrics=fit(rows,epochs=4)
         model=root/"value-v0.npz"
         np.savez_compressed(model,weight=weights)
@@ -35,6 +39,8 @@ def execute(out, attempts=24, movetime=2, depth=1, max_plies=240, opening_plies=
         # Pair/alternate colors and report unresolved separately.
         report["arena"]=arena(model,root/"arena.jsonl",pairs=4,movetime=movetime,
                               depth=depth,max_plies=120,opening_plies=opening_plies,mix=50)
+    elif len(rows)>=4:
+        report["status"]="blocked_insufficient_independent_splits"
     (root/"experiment.json").write_text(json.dumps(report,indent=2)+"\n")
     print(json.dumps(report,indent=2))
     return report
