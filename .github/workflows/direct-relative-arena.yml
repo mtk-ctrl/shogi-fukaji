@@ -1,0 +1,65 @@
+name: FUKAJI frozen-model direct relative versus legacy arena
+on:
+  push:
+    paths:
+      - ".github/fukaji-direct-arena-request.json"
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-direct-relative-legacy
+  cancel-in-progress: false
+jobs:
+  direct-arena:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - run: python -m unittest discover -s tests -v
+      - name: Validate frozen source IDs and hashes
+        id: source
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, os, re
+          from pathlib import Path
+          c = json.loads(Path(".github/fukaji-direct-arena-request.json").read_text())
+          for key in ("relative_source_run_id", "legacy_source_run_id"):
+              if type(c[key]) is not int or c[key] <= 0:
+                  raise ValueError("invalid "+key)
+          for key in ("relative_model_sha256", "legacy_model_sha256"):
+              if not re.fullmatch("[0-9a-f]{64}", c[key]):
+                  raise ValueError("invalid "+key)
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"relative_run={c['relative_source_run_id']}\n")
+              f.write(f"legacy_run={c['legacy_source_run_id']}\n")
+          PY
+      - name: Download frozen relative model
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-relative-trial-${{ steps.source.outputs.relative_run }}
+          run-id: ${{ steps.source.outputs.relative_run }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/relative_source
+      - name: Download frozen legacy model
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-real-experiment-${{ steps.source.outputs.legacy_run }}
+          run-id: ${{ steps.source.outputs.legacy_run }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/legacy_source
+      - name: SHA-checked equal-depth head-to-head and legal replay
+        run: |
+          python -m fukaji.direct_arena --relative-model build/relative_source/mover-relative-v1.npz --legacy-model build/legacy_source/value-v0.npz --request .github/fukaji-direct-arena-request.json --out build/direct_arena
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fukaji-direct-arena-${{ github.run_id }}
+          path: build/direct_arena/
+          retention-days: 30
+          if-no-files-found: warn
