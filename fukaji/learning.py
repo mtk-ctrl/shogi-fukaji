@@ -14,7 +14,10 @@ FEATURES = 81 * PIECES * 2 + 2 * 7 * 20 + 1
 
 def features(board):
     x = np.zeros(FEATURES, dtype=np.float32)
-    for sq, p in board.piece_map().items():
+    for sq in range(81):
+        p = board.piece_at(sq)
+        if p is None:
+            continue
         kind = p.piece_type - 1
         assert 0 <= kind < PIECES
         x[(int(p.color) * PIECES + kind) * 81 + sq] = 1.0
