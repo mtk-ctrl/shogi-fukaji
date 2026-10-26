@@ -1,0 +1,71 @@
+name: FUKAJI frozen unresolved game continuation
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/fukaji-continuation-request.json"
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-unresolved-continuation
+  cancel-in-progress: false
+jobs:
+  continuation:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Validate frozen request and run all tests before expensive search
+        run: |
+          python -m unittest discover -s tests -v
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from fukaji.continue_unresolved import validate_request
+          validate_request(json.loads(Path('.github/fukaji-continuation-request.json').read_text()))
+          PY
+      - name: Download SHA-frozen first source
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-root-alpha-arena-40387257648
+          run-id: 40387257648
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/continuation/first
+      - name: Download SHA-frozen second source
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-root-alpha-arena-40395505536
+          run-id: 40395505536
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/continuation/second
+      - name: Download SHA-frozen relative model
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-relative-trial-40359123574
+          run-id: 40359123574
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/continuation/model
+      - name: Extend only 32 verified unresolved games from 160 to at most 240 plies
+        run: |
+          python -m fukaji.continue_unresolved \
+            --request .github/fukaji-continuation-request.json \
+            --source-a build/continuation/first/root_alpha_games.jsonl \
+            --report-a build/continuation/first/root_alpha_report.json \
+            --source-b build/continuation/second/root_alpha_games.jsonl \
+            --report-b build/continuation/second/root_alpha_report.json \
+            --model build/continuation/model/mover-relative-v1.npz \
+            --out build/continuation/verified
+      - name: Upload original-linked legal continuations and verified mates
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-continuation-${{ github.run_id }}
+          path: build/continuation/verified/
+          retention-days: 30
+          if-no-files-found: warn
