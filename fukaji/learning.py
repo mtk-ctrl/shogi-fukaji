@@ -68,7 +68,7 @@ def load_games(path):
                 raise ValueError(f"line {line_no}: inconsistent winner")
         else:
             continue
-        rows.append((key, np.stack(positions), np.full(len(positions), 1.0 if g["winner"] == 0 else 0.0, dtype=np.float32)))
+        rows.append((key, np.stack(positions), np.array([1.0 if ((i % 2 == 0) == (g["winner"] == 0)) else 0.0 for i in range(len(positions))], dtype=np.float32)))
     return rows
 
 def split_key(key):
@@ -119,7 +119,9 @@ def main():
     target = Path(args.out)
     target.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(target / "value-v0.npz", weight=w)
-    report = {"model": "linear-value-v0", "not_nnue": True, "engine_integration": False, "seed": 42, "verified_completed_games": len(games), "splits": metrics, "note": "Accuracy on self-play outcomes does not establish chess strength."}
+    source_sha256 = hashlib.sha256(Path(args.games).read_bytes()).hexdigest()
+    model_sha256 = hashlib.sha256((target / "value-v0.npz").read_bytes()).hexdigest()
+    report = {"model": "linear-value-v0", "not_nnue": True, "engine_integration": False, "seed": 42, "verified_completed_games": len(games), "source_sha256": source_sha256, "model_sha256": model_sha256, "splits": metrics, "note": "Accuracy on self-play outcomes does not establish chess strength."}
     (target / "metrics.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
     print(json.dumps(report, indent=2))
 
