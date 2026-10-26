@@ -1,6 +1,6 @@
 {
-  "request": "2026-10-26-repetition-search-penalty-v2",
-  "protocol": "repetition-search-penalty-v2",
+  "request": "2026-10-26-independent-seed-repetition-and-20-pair-arena",
+  "protocol": "repetition-search-penalty-v2-independent-seed",
   "attempts": 40,
   "movetime_ms": 2,
   "depth": 1,
@@ -8,5 +8,8 @@
   "opening_plies": 6,
   "branch_max_parents": 8,
   "branch_max_plies": 100,
-  "branch_variants": 6
+  "branch_variants": 6,
+  "seed": 220000,
+  "arena_pairs": 20,
+  "arena_seed": 20261126
 }
