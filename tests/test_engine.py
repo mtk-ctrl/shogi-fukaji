@@ -30,6 +30,16 @@ class EngineTests(unittest.TestCase):
         move,depth,nodes=select_move(b,20,max_depth=1)
         self.assertIn(shogi.Move.from_usi(move),b.legal_moves)
 
+    def test_complete_depth_ignores_short_wall_clock_and_finishes(self):
+        b=shogi.Board()
+        one=select_move(b,1,max_depth=1,complete_depth=True)
+        twenty=select_move(b,20,max_depth=1,complete_depth=True)
+        self.assertEqual(one[0],twenty[0])
+        self.assertEqual(one[1],1)
+        self.assertEqual(twenty[1],1)
+        self.assertEqual(one[2],twenty[2])
+        self.assertIn(shogi.Move.from_usi(one[0]),b.legal_moves)
+
     def test_usi_protocol(self):
         import subprocess,sys
         process=subprocess.run([sys.executable,"-m","fukaji.engine"],
