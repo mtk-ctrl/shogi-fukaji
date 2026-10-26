@@ -2,7 +2,7 @@
   "research_only": true,
   "relative_source_run_id": 40359123574,
   "relative_model_sha256": "881af10b5bc0cde591e37a9aee883213fa7dd602345b786b9b93d69c7e6ed239",
-  "arena_seed": 20271427,
+  "arena_seed": 20271527,
   "arena_pairs": 16,
   "max_plies": 160,
   "opening_plies": 6,
