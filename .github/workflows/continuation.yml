@@ -65,7 +65,7 @@ jobs:
             --source-b build/continuation/second/root_alpha_games.jsonl \
             --report-b build/continuation/second/root_alpha_report.json \
             --model build/continuation/model/mover-relative-v1.npz \
-            --out build/continuation/verified \\
+            --out build/continuation/verified \
             --shard ${{ matrix.shard }} --shards 8
       - name: Upload original-linked legal continuations and verified mates
         if: always()
