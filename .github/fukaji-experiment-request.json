@@ -1,6 +1,6 @@
 {
-  "request": "2026-10-26-repetition-aware-verified-endgame-branches-v1",
-  "protocol": "repetition-avoidance-parent-disjoint-endgame-v1",
+  "request": "2026-10-26-repetition-search-penalty-v2",
+  "protocol": "repetition-search-penalty-v2",
   "attempts": 40,
   "movetime_ms": 2,
   "depth": 1,
