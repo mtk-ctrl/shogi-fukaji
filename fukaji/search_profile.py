@@ -30,7 +30,8 @@ def validate_request(c):
             or not 4 <= c["max_samples"] <= 16
             or c.get("movetime_ms") != 200
             or c.get("max_depth") != 2
-            or c.get("model_mixes") != [0, 25, 100]):
+            or c.get("model_mixes") != [0, 25, 100]
+            or c.get("compare_fused") is not True):
         raise ValueError("invalid fixed search profiling protocol")
     for name in ("paired_games_sha256", "relative_model_sha256"):
         value = c.get(name)
@@ -116,29 +117,37 @@ def execute(request_path, games_path, report_path, model_path, out_dir):
         # Rotate run order to reduce bias from runner load and CPU warming.
         order = c["model_mixes"][index % 3:] + c["model_mixes"][:index % 3]
         for mix in order:
-            t0 = time.perf_counter()
-            move, depth, nodes = select_move(
-                board, movetime_ms=c["movetime_ms"],
-                max_depth=c["max_depth"], model=models[mix])
-            elapsed = (time.perf_counter() - t0) * 1000
-            if move == "resign" or shogi.Move.from_usi(move) not in board.legal_moves:
-                raise ValueError("profiling returned an illegal move")
-            records.append({**{k: sample[k] for k in ("pair", "a_black", "phase", "plies")},
-                            "mix_percent": mix, "move": move, "complete_depth": depth,
-                            "nodes": nodes, "elapsed_ms": round(elapsed, 3)})
+            for mode in (("baseline", "fused") if mix else ("baseline",)):
+                t0 = time.perf_counter()
+                move, depth, nodes = select_move(
+                    board, movetime_ms=c["movetime_ms"],
+                    max_depth=c["max_depth"], model=models[mix],
+                    fast_relative=(mode == "fused"))
+                elapsed = (time.perf_counter() - t0) * 1000
+                if move == "resign" or shogi.Move.from_usi(move) not in board.legal_moves:
+                    raise ValueError("profiling returned an illegal move")
+                records.append({**{k: sample[k] for k in ("pair", "a_black", "phase", "plies")},
+                                "mix_percent": mix, "eval_mode": mode,
+                                "move": move, "complete_depth": depth,
+                                "nodes": nodes, "elapsed_ms": round(elapsed, 3)})
     # cProfile is intentionally separated from wall-clock measurements:
     # instrumentation changes speed, so it must not be treated as game time.
-    profiler = cProfile.Profile()
-    profiler.enable()
-    select_move(shogi.Board(positions[0]["sfen"]), movetime_ms=1200,
-                max_depth=3, model=models[25])
-    profiler.disable()
     buf = io.StringIO()
-    pstats.Stats(profiler, stream=buf).sort_stats("cumulative").print_stats(25)
+    for mode in ("baseline", "fused"):
+        profiler = cProfile.Profile()
+        profiler.enable()
+        select_move(shogi.Board(positions[0]["sfen"]), movetime_ms=1200,
+                    max_depth=3, model=models[25],
+                    fast_relative=(mode == "fused"))
+        profiler.disable()
+        buf.write("\\n=== " + mode + " (instrumented; not a speed benchmark) ===\\n")
+        pstats.Stats(profiler, stream=buf).sort_stats("cumulative").print_stats(25)
     by_mix = {}
     for mix in c["model_mixes"]:
-        subset = [r for r in records if r["mix_percent"] == mix]
-        by_mix[str(mix)] = {
+        for mode in (("baseline", "fused") if mix else ("baseline",)):
+            subset = [r for r in records if r["mix_percent"] == mix
+                      and r["eval_mode"] == mode]
+            by_mix[str(mix) + ":" + mode] = {
             "positions": len(subset),
             "total_nodes": sum(r["nodes"] for r in subset),
             "median_nodes": statistics.median(r["nodes"] for r in subset),
