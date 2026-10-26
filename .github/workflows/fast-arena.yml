@@ -1,0 +1,56 @@
+name: FUKAJI frozen-model fast leaf 200ms arena
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/fukaji-fast-arena-request.json"
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-fast-leaf-paired-research
+  cancel-in-progress: false
+jobs:
+  fast_arena:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout independent FUKAJI
+        uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Validate fixed request and tests before game
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from fukaji.fast_arena import validate_request
+          cfg = validate_request(json.loads(Path(".github/fukaji-fast-arena-request.json").read_text()))
+          assert cfg["relative_source_run_id"] == 40359123574
+          print("fast-vs-baseline bounded research preflight passed")
+          PY
+          python -m unittest discover -s tests -v
+      - name: Download frozen relative model
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-relative-trial-40359123574
+          run-id: 40359123574
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/relative_source
+      - name: Compare identical model with opt-in fused evaluation
+        run: |
+          python -m fukaji.fast_arena \
+            --request .github/fukaji-fast-arena-request.json \
+            --model build/relative_source/mover-relative-v1.npz \
+            --out build/fast_arena
+      - name: Save legal replay and SHA-checked research
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-fast-arena-${{ github.run_id }}
+          path: build/fast_arena/
+          retention-days: 30
+          if-no-files-found: warn
