@@ -30,7 +30,7 @@ def execute(out, attempts=24, movetime=2, depth=1, max_plies=240, opening_plies=
     # Fork only from replay-verified mate parents; do not label repetition.
     branch_path=root/"endgame_branches.jsonl"
     branch_report=branch_from_parents(games,branch_path,movetime=movetime,depth=depth,
-                                     max_plies=120,max_parents=12)
+                                     max_plies=100,max_parents=8)
     combined=root/"combined_verified.jsonl"
     combined.write_bytes(games.read_bytes()+branch_path.read_bytes())
     rows=load_games(combined)
