@@ -1,0 +1,22 @@
+{
+  "research_only": true,
+  "source_run_id": 40378086136,
+  "model_run_id": 40359123574,
+  "model_sha256": "881af10b5bc0cde591e37a9aee883213fa7dd602345b786b9b93d69c7e6ed239",
+  "source_seed": 20271227,
+  "source_pairs": 16,
+  "max_samples": 12,
+  "time_ms": [
+    200,
+    1000
+  ],
+  "max_depths": [
+    2,
+    3
+  ],
+  "mix_percent": 25,
+  "training_allowed": false,
+  "games_sha256": "0af0c939049bca6998ae56f0ba623768845014c98af3bdfe05750b7cf52601fb",
+  "report_sha256": "b23e2ec9f1c6b33d465c00f63733b1b0ecb80a00ddec762baf6b3b45016fcd8a",
+  "objective": "Bounded frozen endgame profile of 200ms depth2 vs 1000ms depth3 on 12 legal positions. No strength labels or adoption."
+}
