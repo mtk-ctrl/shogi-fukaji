@@ -63,14 +63,14 @@ def play(history, candidate_black, candidate, movetime, depth, max_plies, search
     status="checkmate" if b.is_checkmate() else "move_limit_unresolved"
     return {"status":status,"winner":int(not b.turn) if b.is_checkmate() else None,"moves":moves,"stats":stats}
 
-def run(model_path, out, pairs=2, movetime=2, depth=1, max_plies=30, opening_plies=4, mix=50, seed=20261026, search_mode="timed"):
+def run(model_path, out, pairs=2, movetime=2, depth=1, max_plies=30, opening_plies=4, mix=50, seed=20261026, search_mode="timed", model_type="legacy"):
     if not (1<=pairs<=500 and 1<=movetime<=10000 and 1<=depth<=6 and 1<=max_plies<=800 and 0<=opening_plies<=20):
         raise ValueError("unsafe arena limits")
     if search_mode not in ("timed","complete_depth"):
         raise ValueError("invalid search mode")
     if search_mode=="complete_depth" and depth>2:
         raise ValueError("complete-depth diagnostic limited to depth <=2")
-    candidate=LinearValue(model_path,mix_percent=mix)
+    if model_type not in ("legacy", "mover_relative_v1"):\n        raise ValueError("unknown model schema")\n    if model_type == "mover_relative_v1":\n        from .relative_value import RelativeValue\n        candidate = RelativeValue(model_path, mix_percent=mix)\n    else:\n        candidate = LinearValue(model_path, mix_percent=mix)
     rows=[]
     for i in range(pairs):
         hist=opening(seed+i,opening_plies)
@@ -91,7 +91,7 @@ def run(model_path, out, pairs=2, movetime=2, depth=1, max_plies=30, opening_pli
         "search_diagnostics":{key:sum(r["stats"][key] for r in rows) for key in rows[0]["stats"]},
         "max_plies":max_plies,"opening_plies":opening_plies,
         "model_sha256":candidate.sha256,"mix":mix,"movetime_ms":movetime if search_mode=="timed" else None,
-        "search_mode":search_mode,"depth":depth,"seed":seed,
+        "search_mode":search_mode,"depth":depth,"seed":seed,"model_type":model_type,
         "arena_sha256":hashlib.sha256(target.read_bytes()).hexdigest(),
         "caution":"No Elo claim from unresolved games or tiny arena."}
     (target.parent/(target.stem+".report.json")).write_text(json.dumps(summary,indent=2)+"\n",encoding="utf-8")
