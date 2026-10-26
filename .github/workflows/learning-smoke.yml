@@ -32,12 +32,11 @@ jobs:
       - run: python -m pip install -r requirements.txt
       - run: python -m unittest discover -s tests -v
       - name: Generate legal games and train baseline
-        if: github.event_name == 'workflow_dispatch'
         run: |
-          python -m fukaji.selfplay --attempts "${{ inputs.attempts }}" --out build/selfplay.jsonl
-          python -m fukaji.learning --games build/selfplay.jsonl --out build/model --epochs "${{ inputs.epochs }}"
+          python -m fukaji.selfplay --attempts "${{ inputs.attempts || '100' }}" --out build/selfplay.jsonl
+          python -m fukaji.learning --games build/selfplay.jsonl --out build/model --epochs "${{ inputs.epochs || '4' }}"
       - uses: actions/upload-artifact@v4
-        if: github.event_name == 'workflow_dispatch'
+        if: always()
         with:
           name: fukaji-learning-${{ github.run_id }}
           path: |
