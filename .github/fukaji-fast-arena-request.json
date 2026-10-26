@@ -2,13 +2,13 @@
   "research_only": true,
   "relative_source_run_id": 40359123574,
   "relative_model_sha256": "881af10b5bc0cde591e37a9aee883213fa7dd602345b786b9b93d69c7e6ed239",
-  "arena_seed": 20271127,
-  "arena_pairs": 8,
-  "max_plies": 120,
+  "arena_seed": 20271227,
+  "arena_pairs": 16,
+  "max_plies": 160,
   "opening_plies": 6,
   "movetime_ms": 200,
   "depth": 2,
   "mix_percent": 25,
   "fast_eval_default": false,
-  "objective": "16 color-swapped games: identical frozen model and 200ms depth2, only fused evaluation toggled; verify legal replay and unresolved, no adoption."
+  "objective": "Independent 32-game (16 paired openings) 200ms depth2 FastRelativeEval ON vs OFF, frozen identical model; 160-ply cutoff to reduce unresolved. Measure search nodes/depth, legal replay, no promotion."
 }
