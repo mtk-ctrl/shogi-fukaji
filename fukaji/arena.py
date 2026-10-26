@@ -26,7 +26,7 @@ def opening(seed, plies):
         history.append(m.usi())
     return history
 
-def play(history, candidate_black, candidate, movetime, depth, max_plies):
+def play(history, candidate_black, candidate, movetime, depth, max_plies, search_mode="timed"):
     b=shogi.Board()
     for word in history:
         move=shogi.Move.from_usi(word)
@@ -44,7 +44,8 @@ def play(history, candidate_black, candidate, movetime, depth, max_plies):
             return {"status":"repetition_unresolved","winner":None,"moves":moves,"stats":stats}
         is_candidate=(b.turn==shogi.BLACK)==candidate_black
         model=candidate if is_candidate else None
-        word,finished,nodes=select_move(b,movetime,depth,model=model)
+        word,finished,nodes=select_move(b,movetime,depth,model=model,
+                                        complete_depth=(search_mode=="complete_depth"))
         side="candidate" if is_candidate else "baseline"
         stats[side+"_nodes"]+=nodes
         stats[side+"_turns"]+=1
@@ -62,15 +63,19 @@ def play(history, candidate_black, candidate, movetime, depth, max_plies):
     status="checkmate" if b.is_checkmate() else "move_limit_unresolved"
     return {"status":status,"winner":int(not b.turn) if b.is_checkmate() else None,"moves":moves,"stats":stats}
 
-def run(model_path, out, pairs=2, movetime=2, depth=1, max_plies=30, opening_plies=4, mix=50, seed=20261026):
+def run(model_path, out, pairs=2, movetime=2, depth=1, max_plies=30, opening_plies=4, mix=50, seed=20261026, search_mode="timed"):
     if not (1<=pairs<=500 and 1<=movetime<=10000 and 1<=depth<=6 and 1<=max_plies<=800 and 0<=opening_plies<=20):
         raise ValueError("unsafe arena limits")
+    if search_mode not in ("timed","complete_depth"):
+        raise ValueError("invalid search mode")
+    if search_mode=="complete_depth" and depth>2:
+        raise ValueError("complete-depth diagnostic limited to depth <=2")
     candidate=LinearValue(model_path,mix_percent=mix)
     rows=[]
     for i in range(pairs):
         hist=opening(seed+i,opening_plies)
         for black in (True,False):
-            result=play(hist,black,candidate,movetime,depth,max_plies)
+            result=play(hist,black,candidate,movetime,depth,max_plies,search_mode=search_mode)
             result.update({"pair":i,"candidate_black":black,"opening":hist})
             rows.append(result)
     wins=losses=unresolved=0
@@ -85,7 +90,8 @@ def run(model_path, out, pairs=2, movetime=2, depth=1, max_plies=30, opening_pli
         "candidate_score_on_resolved":None if wins+losses==0 else wins/(wins+losses),
         "search_diagnostics":{key:sum(r["stats"][key] for r in rows) for key in rows[0]["stats"]},
         "max_plies":max_plies,"opening_plies":opening_plies,
-        "model_sha256":candidate.sha256,"mix":mix,"movetime_ms":movetime,"depth":depth,"seed":seed,
+        "model_sha256":candidate.sha256,"mix":mix,"movetime_ms":movetime if search_mode=="timed" else None,
+        "search_mode":search_mode,"depth":depth,"seed":seed,
         "arena_sha256":hashlib.sha256(target.read_bytes()).hexdigest(),
         "caution":"No Elo claim from unresolved games or tiny arena."}
     (target.parent/(target.stem+".report.json")).write_text(json.dumps(summary,indent=2)+"\n",encoding="utf-8")
