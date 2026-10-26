@@ -1,0 +1,79 @@
+name: FUKAJI isolated relative generation 3 training
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/fukaji-generation3-request.json"
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-generation3-training
+  cancel-in-progress: false
+jobs:
+  train:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Verify frozen generation-3 request and run all tests
+        run: |
+          python -m unittest discover -s tests -v
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from fukaji.generation3_train import validate_request
+          validate_request(json.loads(Path('.github/fukaji-generation3-request.json').read_text()))
+          PY
+      - name: Download verified original generation input
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-generation-input-40404298089
+          run-id: 40404298089
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/generation3/old
+      - name: Download replay-verified 32-game continuation aggregate
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-continuation-aggregate-40414249980
+          run-id: 40414249980
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/generation3/new
+      - name: Download frozen generation-1 relative model
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-relative-trial-40359123574
+          run-id: 40359123574
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/generation3/g1
+      - name: Download frozen generation-2 research model
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-generation2-research-40404769521
+          run-id: 40404769521
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/generation3/g2
+      - name: Train generation 3 with frozen parent-disjoint holdouts
+        run: |
+          python -m fukaji.generation3_train \
+            --request .github/fukaji-generation3-request.json \
+            --old build/generation3/old/verified_mates.jsonl \
+            --old-manifest build/generation3/old/generation_input_manifest.json \
+            --new build/generation3/new/new_verified_mates.jsonl \
+            --new-report build/generation3/new/aggregate_report.json \
+            --generation1 build/generation3/g1/mover-relative-v1.npz \
+            --generation2 build/generation3/g2/mover-relative-generation2-research.npz \
+            --out build/generation3/research
+      - name: Upload unadopted candidate, dataset and split manifest
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-generation3-research-${{ github.run_id }}
+          path: build/generation3/research/
+          retention-days: 30
+          if-no-files-found: warn
