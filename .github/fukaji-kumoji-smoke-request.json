@@ -1,0 +1,11 @@
+{
+  "kumoji_commit": "807db500ee2739c1eb6a527b614eeea40a5993d6",
+  "relative_model_sha256": "881af10b5bc0cde591e37a9aee883213fa7dd602345b786b9b93d69c7e6ed239",
+  "relative_source_run_id": 40359123574,
+  "games": 2,
+  "seed": 20271027,
+  "max_plies": 120,
+  "movetime_ms": 200,
+  "research_only": true,
+  "objective": "USI/knowledge/time integration smoke only; no formal strength claim"
+}
