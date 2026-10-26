@@ -70,8 +70,27 @@ def negamax(board, depth, alpha, beta, deadline, nodes, model=None):
             break
     return best
 
-def select_move(board, movetime_ms=200, max_depth=5, model=None):
+def select_move(board, movetime_ms=200, max_depth=5, model=None, avoid_repetition=True):
     moves=ordered_moves(board)
+    # At the root, prefer genuinely new legal positions over repeating an
+    # earlier position. The old engine repeated 96/100 games to termination.
+    # A move is not discarded if every legal move repeats; all moves remain
+    # legal and forced repetitions are still reported as unresolved.
+    if avoid_repetition and len(moves)>1:
+        counts=[]
+        for m in moves:
+            board.push(m)
+            try:
+                count=board.transpositions[board.zobrist_hash()]
+                # Immediate mate must never be filtered out by cycle avoidance.
+                if board.is_checkmate():
+                    count=-1
+            finally:
+                board.pop()
+            counts.append(count)
+        least=min(counts)
+        moves=[m for m,count in zip(moves,counts) if count==least]
+
     if not moves:
         return "resign",0,0
     deadline=time.monotonic()+max(1,movetime_ms)/1000
