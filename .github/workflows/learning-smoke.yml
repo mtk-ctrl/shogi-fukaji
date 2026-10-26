@@ -2,6 +2,11 @@ name: FUKAJI learning pipeline
 on:
   workflow_dispatch:
     inputs:
+      source:
+        description: 'Training source (baseline is random smoke; engine uses FUKAJI alpha-beta)'
+        type: choice
+        options: [baseline, engine]
+        default: baseline
       attempts:
         description: "Random-baseline game attempts (pipeline test only)"
         required: true
@@ -38,7 +43,12 @@ jobs:
       - name: Generate legal games and train baseline
         if: github.event_name == 'workflow_dispatch'
         run: |
-          python -m fukaji.selfplay --attempts "${{ inputs.attempts || '100' }}" --out build/selfplay.jsonl
+          if [ "${{ inputs.source || 'baseline' }}" = "engine" ]; then
+            python -m fukaji.engine_selfplay --attempts "${{ inputs.attempts || '40' }}" --movetime 5 --depth 2 --max-plies 320 --out build/selfplay.jsonl
+            python -m fukaji.audit --games build/selfplay.jsonl --manifest build/selfplay.manifest.json
+          else
+            python -m fukaji.selfplay --attempts "${{ inputs.attempts || '40' }}" --out build/selfplay.jsonl
+          fi
           python -m fukaji.learning --games build/selfplay.jsonl --out build/model --epochs "${{ inputs.epochs || '4' }}"
       - uses: actions/upload-artifact@v4
         if: github.event_name == 'workflow_dispatch'
