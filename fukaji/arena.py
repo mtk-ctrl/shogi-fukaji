@@ -34,7 +34,9 @@ def play(history, candidate_black, candidate, movetime, depth, max_plies):
             raise ValueError("illegal arena opening")
         b.push(move)
     moves=[]
-    stats={"candidate_nodes":0,"baseline_nodes":0,"candidate_turns":0,"baseline_turns":0}
+    stats={"candidate_nodes":0,"baseline_nodes":0,"candidate_turns":0,"baseline_turns":0,
+           "candidate_depth_zero":0,"baseline_depth_zero":0,
+           "candidate_depth_sum":0,"baseline_depth_sum":0}
     for _ in range(max_plies):
         if b.is_checkmate():
             return {"status":"checkmate","winner":int(not b.turn),"moves":moves,"stats":stats}
@@ -46,6 +48,9 @@ def play(history, candidate_black, candidate, movetime, depth, max_plies):
         side="candidate" if is_candidate else "baseline"
         stats[side+"_nodes"]+=nodes
         stats[side+"_turns"]+=1
+        stats[side+"_depth_sum"]+=finished
+        if finished==0:
+            stats[side+"_depth_zero"]+=1
         if word=="resign":
             # No end reason is invented from the engine's lack of moves.
             return {"status":"no_move_unresolved","winner":None,"moves":moves,"stats":stats}
@@ -78,6 +83,8 @@ def run(model_path, out, pairs=2, movetime=2, depth=1, max_plies=30, opening_pli
         for r in rows:f.write(json.dumps(r)+"\n")
     summary={"pairs":pairs,"games":len(rows),"verified_candidate_wins":wins,"verified_baseline_wins":losses,"unresolved":unresolved,
         "candidate_score_on_resolved":None if wins+losses==0 else wins/(wins+losses),
+        "search_diagnostics":{key:sum(r["stats"][key] for r in rows) for key in rows[0]["stats"]},
+        "max_plies":max_plies,"opening_plies":opening_plies,
         "model_sha256":candidate.sha256,"mix":mix,"movetime_ms":movetime,"depth":depth,"seed":seed,
         "arena_sha256":hashlib.sha256(target.read_bytes()).hexdigest(),
         "caution":"No Elo claim from unresolved games or tiny arena."}
