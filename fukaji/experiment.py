@@ -13,7 +13,9 @@ from .endgame_branch import branch_from_parents
 from .arena import run as arena
 import numpy as np
 
-def execute(out, attempts=24, movetime=2, depth=1, max_plies=240, opening_plies=6):
+def execute(out, attempts=24, movetime=2, depth=1, max_plies=240, opening_plies=6,
+            seed=110000, arena_pairs=4, arena_seed=20261026,
+            branch_max_parents=8, branch_max_plies=100):
     root=Path(out);root.mkdir(parents=True,exist_ok=True)
     games=root/"search_games.jsonl"
     termination_counts={}
@@ -21,16 +23,16 @@ def execute(out, attempts=24, movetime=2, depth=1, max_plies=240, opening_plies=
     with games.open("w") as f:
         for i in range(attempts):
             diagnostic={}
-            game=play(110000+i,movetime,max_plies,depth,opening_plies=opening_plies,diagnostic=diagnostic)
+            game=play(seed+i,movetime,max_plies,depth,opening_plies=opening_plies,diagnostic=diagnostic)
             reason=diagnostic.get("reason","unclassified")
             termination_counts[reason]=termination_counts.get(reason,0)+1
             if len(diagnostic_samples)<12 and reason!="checkmate":
-                diagnostic_samples.append({"seed":110000+i,**diagnostic})
+                diagnostic_samples.append({"seed":seed+i,**diagnostic})
             if game: f.write(json.dumps(game)+"\n")
     # Fork only from replay-verified mate parents; do not label repetition.
     branch_path=root/"endgame_branches.jsonl"
     branch_report=branch_from_parents(games,branch_path,movetime=movetime,depth=depth,
-                                     max_plies=100,max_parents=8)
+                                     max_plies=branch_max_plies,max_parents=branch_max_parents)
     combined=root/"combined_verified.jsonl"
     combined.write_bytes(games.read_bytes()+branch_path.read_bytes())
     rows=load_games(combined)
@@ -39,7 +41,9 @@ def execute(out, attempts=24, movetime=2, depth=1, max_plies=240, opening_plies=
             "verified_decisive_games":len(rows),"verified_root_games":sum(1 for line in games.read_text().splitlines() if line.strip()),
             "dataset_sha256":hashlib.sha256(combined.read_bytes()).hexdigest(),"branch_report":branch_report,
             "search_milliseconds":movetime,"search_depth":depth,"max_plies":max_plies,
-            "opening_plies":opening_plies,"model":"linear-value-v0",
+            "opening_plies":opening_plies,"seed":seed,"arena_pairs":arena_pairs,
+            "arena_seed":arena_seed,"branch_max_parents":branch_max_parents,
+            "branch_max_plies":branch_max_plies,"model":"linear-value-v0",
             "status":"blocked_insufficient_decisive_games","note":"No fake results; no strength conclusion."}
     # Do not train/promote without independent validation and test games.
     split_counts = {k: len(parts[k]) for k in ('train','validation','test')}
@@ -55,8 +59,8 @@ def execute(out, attempts=24, movetime=2, depth=1, max_plies=240, opening_plies=
         report["splits"]=metrics
         report["status"]="trained_and_arena_measured"
         # Pair/alternate colors and report unresolved separately.
-        report["arena"]=arena(model,root/"arena.jsonl",pairs=4,movetime=movetime,
-                              depth=depth,max_plies=120,opening_plies=opening_plies,mix=50)
+        report["arena"]=arena(model,root/"arena.jsonl",pairs=arena_pairs,movetime=movetime,
+                              depth=depth,max_plies=120,opening_plies=opening_plies,mix=50,seed=arena_seed)
     elif len(rows)>=4:
         report["status"]="blocked_insufficient_independent_parent_groups"
     (root/"experiment.json").write_text(json.dumps(report,indent=2)+"\n")
@@ -71,8 +75,33 @@ def main():
     a.add_argument("--depth",type=int,default=1)
     a.add_argument("--max-plies",type=int,default=240)
     a.add_argument("--opening-plies",type=int,default=6)
+    a.add_argument("--seed",type=int,default=110000)
+    a.add_argument("--arena-pairs",type=int,default=4)
+    a.add_argument("--arena-seed",type=int,default=20261026)
+    a.add_argument("--branch-max-parents",type=int,default=8)
+    a.add_argument("--branch-max-plies",type=int,default=100)
+    a.add_argument("--request",default=None)
     x=a.parse_args()
-    if not 1<=x.attempts<=100 or not 1<=x.movetime<=100 or not 1<=x.depth<=3 or not 50<=x.max_plies<=400 or not 0<=x.opening_plies<=20:
+    if x.request:
+        config=json.loads(Path(x.request).read_text(encoding="utf-8"))
+        mapping={"attempts":"attempts","movetime_ms":"movetime","depth":"depth",
+                 "max_plies":"max_plies","opening_plies":"opening_plies",
+                 "seed":"seed","arena_pairs":"arena_pairs","arena_seed":"arena_seed",
+                 "branch_max_parents":"branch_max_parents","branch_max_plies":"branch_max_plies"}
+        for key,attr in mapping.items():
+            if key in config:
+                if type(config[key]) is not int:
+                    a.error("request field "+key+" must be integer")
+                setattr(x,attr,config[key])
+        if config.get("branch_variants",6)!=6:
+            a.error("branch_variants must equal the implemented 6 forks per parent")
+    if not (1<=x.attempts<=100 and 1<=x.movetime<=100 and 1<=x.depth<=3
+            and 50<=x.max_plies<=400 and 0<=x.opening_plies<=20
+            and 0<=x.seed<=2**31-1 and 0<=x.arena_seed<=2**31-1
+            and 1<=x.arena_pairs<=40 and 1<=x.branch_max_parents<=20
+            and 20<=x.branch_max_plies<=200):
         a.error("experiment limits exceeded")
-    execute(x.out,x.attempts,x.movetime,x.depth,x.max_plies,x.opening_plies)
+    execute(x.out,x.attempts,x.movetime,x.depth,x.max_plies,x.opening_plies,
+            seed=x.seed,arena_pairs=x.arena_pairs,arena_seed=x.arena_seed,
+            branch_max_parents=x.branch_max_parents,branch_max_plies=x.branch_max_plies)
 if __name__=="__main__":main()
