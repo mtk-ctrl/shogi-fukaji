@@ -12,6 +12,7 @@ import sys
 import time
 import shogi
 from .value_model import LinearValue
+from .relative_value import RelativeValue
 
 VALUES = {1:100,2:300,3:320,4:480,5:760,6:900,7:600,8:0,9:500,10:520,11:620,12:850,13:1100,14:650}
 INF=10**9
@@ -134,6 +135,7 @@ def command_loop():
     depth=4
     model_path = None
     model_mix = 50
+    model_type = "legacy"
     model = None
     for raw in sys.stdin:
         tokens=raw.strip().split()
@@ -146,21 +148,30 @@ def command_loop():
             print("option name SearchDepth type spin default 4 min 1 max 6")
             print("option name ValueModelFile type string default <empty>")
             print("option name ValueModelMix type spin default 50 min 0 max 100")
+            print("option name ValueModelType type combo default legacy var legacy var relative")
             print("usiok",flush=True)
         elif cmd=="isready":
             if model_path:
                 try:
-                    model=LinearValue(model_path,mix_percent=model_mix)
+                    model=(RelativeValue if model_type == "relative" else LinearValue)(
+                        model_path, mix_percent=model_mix)
                     print("info string value_model sha256 "+model.sha256,flush=True)
                 except Exception as e:
                     model=None
                     print("info string value_model rejected: "+str(e),flush=True)
+                    # Never silently fall back to classical evaluation in a model match.
+                    raise SystemExit(2)
             else:
                 model=None
             print("readyok",flush=True)
         elif cmd=="usinewgame":
             board=shogi.Board()
         elif cmd=="setoption":
+            if "ValueModelType" in tokens and "value" in tokens:
+                model_type=tokens[tokens.index("value")+1].lower()
+                if model_type not in ("legacy", "relative"):
+                    raise SystemExit("invalid ValueModelType")
+                model=None
             if "ValueModelFile" in tokens:
                 idx=tokens.index("ValueModelFile")+1
                 model_path=" ".join(tokens[idx+1:] if idx<len(tokens) and tokens[idx]=="value" else tokens[idx:]) or None
