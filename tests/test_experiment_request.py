@@ -12,7 +12,7 @@ class ExperimentRequestTests(unittest.TestCase):
             root=Path(d)
             config={"attempts":1,"movetime_ms":1,"depth":1,"max_plies":50,
                     "opening_plies":0,"seed":777777,"arena_pairs":7,
-                    "arena_seed":999999,"branch_max_parents":2,
+                    "arena_seed":999999,"arena_mixes":[10,25,50],"arena_max_plies":160,"branch_max_parents":2,
                     "branch_max_plies":30,"branch_variants":6}
             request=root/"request.json"
             request.write_text(json.dumps(config),encoding="utf-8")
@@ -22,11 +22,22 @@ class ExperimentRequestTests(unittest.TestCase):
                                 capture_output=True,text=True,timeout=20)
             self.assertEqual(proc.returncode,0,proc.stderr)
             report=json.loads((out/"experiment.json").read_text())
-            for key in ("seed","arena_pairs","arena_seed","branch_max_parents","branch_max_plies"):
+            for key in ("seed","arena_pairs","arena_seed","arena_mixes","arena_max_plies","branch_max_parents","branch_max_plies"):
                 self.assertEqual(report[key],config[key])
             self.assertEqual(report["requested_games"],1)
             if report["nondecisive_samples"]:
                 self.assertEqual(report["nondecisive_samples"][0]["seed"],777777)
+
+    def test_rejects_invalid_mix_sweep(self):
+        for mixes in ([50,50],[],[101],["25"],[0,10,25,50]):
+            with self.subTest(mixes=mixes), tempfile.TemporaryDirectory() as d:
+                request=Path(d)/"request.json"
+                request.write_text(json.dumps({"arena_mixes":mixes}))
+                proc=subprocess.run([sys.executable,"-m","fukaji.experiment",
+                                     "--request",str(request)],capture_output=True,
+                                    text=True,timeout=10)
+                self.assertNotEqual(proc.returncode,0)
+                self.assertIn("arena_mixes",proc.stderr)
 
     def test_rejects_misleading_branch_variants(self):
         with tempfile.TemporaryDirectory() as d:
