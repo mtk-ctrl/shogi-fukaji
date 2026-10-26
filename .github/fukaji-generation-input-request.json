@@ -1,0 +1,9 @@
+{
+  "research_only": true,
+  "source_runs": [
+    40387257648,
+    40395505536
+  ],
+  "training_allowed": false,
+  "model_adoption_allowed": false
+}

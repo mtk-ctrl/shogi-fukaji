@@ -1,0 +1,66 @@
+name: FUKAJI frozen paired selfplay generation input audit
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/fukaji-generation-input-request.json"
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-generation-input-audit
+  cancel-in-progress: false
+jobs:
+  audit:
+    # Branch pushes cannot launch research before tests and review.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Validate frozen request and run full unit tests
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from fukaji.generation_input import SOURCES
+          cfg = json.loads(Path('.github/fukaji-generation-input-request.json').read_text())
+          if cfg != {'research_only': True, 'source_runs': list(SOURCES),
+                     'training_allowed': False, 'model_adoption_allowed': False}:
+              raise ValueError('unexpected research generation input request')
+          PY
+          python -m unittest discover -s tests -v
+      - name: Download first SHA-frozen arena
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-root-alpha-arena-40387257648
+          run-id: 40387257648
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/generation_input/first
+      - name: Download second SHA-frozen arena
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-root-alpha-arena-40395505536
+          run-id: 40395505536
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/generation_input/second
+      - name: Replay all 64 games and prepare only verified mate labels
+        run: |
+          python -m fukaji.generation_input \
+            --source-a build/generation_input/first/root_alpha_games.jsonl \
+            --report-a build/generation_input/first/root_alpha_report.json \
+            --source-b build/generation_input/second/root_alpha_games.jsonl \
+            --report-b build/generation_input/second/root_alpha_report.json \
+            --out build/generation_input/verified
+      - name: Upload read-only generation input and audit manifest
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-generation-input-${{ github.run_id }}
+          path: build/generation_input/verified/
+          retention-days: 30
+          if-no-files-found: warn
