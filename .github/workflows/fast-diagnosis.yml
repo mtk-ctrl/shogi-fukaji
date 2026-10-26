@@ -1,0 +1,56 @@
+name: FUKAJI frozen 32-game postgame diagnosis
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/fukaji-fast-diagnosis-request.json"
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-frozen-fast-postgame-diagnosis
+  cancel-in-progress: false
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout independent FUKAJI
+        uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Verify frozen request and all unit tests
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from fukaji.fast_diagnosis import validate_request
+          validate_request(json.loads(Path(".github/fukaji-fast-diagnosis-request.json").read_text()))
+          print("bounded read-only diagnosis preflight passed")
+          PY
+          python -m unittest discover -s tests -v
+      - name: Download completed 32-game research artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-fast-arena-40378086136
+          run-id: 40378086136
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/frozen_source
+      - name: Replay legal games and diagnose unresolved outcomes
+        run: |
+          python -m fukaji.fast_diagnosis \
+            --request .github/fukaji-fast-diagnosis-request.json \
+            --games build/frozen_source/fast_games.jsonl \
+            --report build/frozen_source/fast_report.json \
+            --out build/fast_diagnosis
+      - name: Preserve SHA-checked descriptive diagnosis
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-fast-diagnosis-${{ github.run_id }}
+          path: build/fast_diagnosis/
+          retention-days: 30
+          if-no-files-found: warn
