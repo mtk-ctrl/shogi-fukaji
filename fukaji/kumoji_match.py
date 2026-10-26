@@ -56,9 +56,12 @@ def audit_game(row):
         expected = white if board.turn == shogi.BLACK else black
         if winner != expected:
             raise ValueError("incorrect checkmate winner")
-    elif reason in ("move_limit", "fourfold_repetition", "no_legal_moves"):
+    elif reason in ("move_limit", "fourfold_repetition"):
         if winner is not None:
             raise ValueError("unresolved game mislabelled decisive")
+    elif reason == "no_legal_moves":
+        if any(board.legal_moves) or winner not in ("A", "B"):
+            raise ValueError("invalid no-legal-moves adjudication")
     elif reason == "perpetual_check":
         if winner not in ("A", "B"):
             raise ValueError("missing perpetual-check winner")
