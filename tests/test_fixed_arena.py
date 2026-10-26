@@ -37,6 +37,24 @@ class FixedArenaTests(unittest.TestCase):
             self.assertTrue(all(c.kwargs["seed"]==20270127 for c in fake.call_args_list))
             self.assertTrue(all(c.args[0]==model for c in fake.call_args_list))
 
+    def test_complete_depth_request_routes_equal_depth_and_sha(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)
+            model=root/"model.npz"
+            model.write_bytes(b"test fixture")
+            req=root/"request.json"
+            cfg=self.config(model)
+            cfg["arena_search_mode"]="complete_depth"
+            cfg["arena_movetimes_ms"]=[20]
+            req.write_text(json.dumps(cfg))
+            with patch("fukaji.fixed_arena.arena",return_value={"games":4}) as fake:
+                report=execute(model,req,root/"out")
+            self.assertEqual(set(report["arms"]),{"complete_depth1_mix0","complete_depth1_mix25"})
+            self.assertFalse(report["wall_clock_cutoff_enabled"])
+            self.assertEqual(fake.call_count,2)
+            self.assertTrue(all(c.kwargs["search_mode"]=="complete_depth" for c in fake.call_args_list))
+            self.assertTrue(all(c.kwargs["depth"]==1 for c in fake.call_args_list))
+
     def test_mismatched_model_is_rejected_before_arena(self):
         with tempfile.TemporaryDirectory() as d:
             root=Path(d)
