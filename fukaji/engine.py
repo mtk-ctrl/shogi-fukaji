@@ -11,12 +11,13 @@ import random
 import sys
 import time
 import shogi
+from .value_model import LinearValue
 
 VALUES = {1:100,2:300,3:320,4:480,5:760,6:900,7:600,8:0,9:500,10:520,11:620,12:850,13:1100,14:650}
 INF=10**9
 MATE=1000000
 
-def evaluate(board):
+def evaluate(board, model=None):
     score=0
     for sq in range(81):
         p=board.piece_at(sq)
@@ -32,7 +33,7 @@ def evaluate(board):
         factor=1 if color==board.turn else -1
         for kind,count in board.pieces_in_hand[color].items():
             score+=factor*int(count)*VALUES[kind]
-    return score
+    return model.combine(board,score) if model is not None else score
 
 def ordered_moves(board):
     options=list(board.legal_moves)
@@ -42,7 +43,7 @@ def ordered_moves(board):
     options.sort(key=order,reverse=True)
     return options
 
-def negamax(board, depth, alpha, beta, deadline, nodes):
+def negamax(board, depth, alpha, beta, deadline, nodes, model=None):
     nodes[0]+=1
     if (nodes[0]&127)==0 and time.monotonic()>=deadline:
         raise TimeoutError()
@@ -51,7 +52,7 @@ def negamax(board, depth, alpha, beta, deadline, nodes):
     if board.is_fourfold_repetition():
         return 0
     if depth<=0:
-        return evaluate(board)
+        return evaluate(board, model)
     legal=ordered_moves(board)
     if not legal:
         return -MATE-depth if board.is_check() else 0
@@ -59,7 +60,7 @@ def negamax(board, depth, alpha, beta, deadline, nodes):
     for move in legal:
         board.push(move)
         try:
-            score=-negamax(board,depth-1,-beta,-alpha,deadline,nodes)
+            score=-negamax(board,depth-1,-beta,-alpha,deadline,nodes,model)
         finally:
             board.pop()
         if score>best:
@@ -69,7 +70,7 @@ def negamax(board, depth, alpha, beta, deadline, nodes):
             break
     return best
 
-def select_move(board, movetime_ms=200, max_depth=5):
+def select_move(board, movetime_ms=200, max_depth=5, model=None):
     moves=ordered_moves(board)
     if not moves:
         return "resign",0,0
@@ -89,7 +90,7 @@ def select_move(board, movetime_ms=200, max_depth=5):
                     raise TimeoutError()
                 board.push(move)
                 try:
-                    score=-negamax(board,depth-1,-INF,INF,deadline,nodes)
+                    score=-negamax(board,depth-1,-INF,INF,deadline,nodes,model)
                 finally:
                     board.pop()
                 if score>scorebest:
@@ -106,6 +107,9 @@ def select_move(board, movetime_ms=200, max_depth=5):
 def command_loop():
     board=shogi.Board()
     depth=4
+    model_path = None
+    model_mix = 50
+    model = None
     for raw in sys.stdin:
         tokens=raw.strip().split()
         if not tokens:
@@ -115,12 +119,31 @@ def command_loop():
             print("id name FUKAJI v0 bootstrap")
             print("id author mtk-ctrl")
             print("option name SearchDepth type spin default 4 min 1 max 6")
+            print("option name ValueModelFile type string default <empty>")
+            print("option name ValueModelMix type spin default 50 min 0 max 100")
             print("usiok",flush=True)
         elif cmd=="isready":
+            if model_path:
+                try:
+                    model=LinearValue(model_path,mix_percent=model_mix)
+                    print("info string value_model sha256 "+model.sha256,flush=True)
+                except Exception as e:
+                    model=None
+                    print("info string value_model rejected: "+str(e),flush=True)
+            else:
+                model=None
             print("readyok",flush=True)
         elif cmd=="usinewgame":
             board=shogi.Board()
         elif cmd=="setoption":
+            if "ValueModelFile" in tokens:
+                idx=tokens.index("ValueModelFile")+1
+                model_path=" ".join(tokens[idx+1:] if idx<len(tokens) and tokens[idx]=="value" else tokens[idx:]) or None
+                model=None
+            if "ValueModelMix" in tokens and "value" in tokens:
+                try: model_mix=max(0,min(100,int(tokens[tokens.index("value")+1])))
+                except (ValueError,IndexError): pass
+                model=None
             if "SearchDepth" in tokens and "value" in tokens:
                 try: depth=max(1,min(6,int(tokens[tokens.index("value")+1])))
                 except (ValueError,IndexError): pass
@@ -148,7 +171,7 @@ def command_loop():
             if "movetime" in tokens:
                 try:ms=max(1,min(10000,int(tokens[tokens.index("movetime")+1])))
                 except (ValueError,IndexError):pass
-            move,finished,nodes=select_move(board,ms,depth)
+            move,finished,nodes=select_move(board,ms,depth,model)
             print(f"info depth {finished} nodes {nodes}",flush=True)
             print(f"bestmove {move}",flush=True)
         elif cmd=="quit":
