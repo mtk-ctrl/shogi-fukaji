@@ -83,7 +83,7 @@ def select_move(board, movetime_ms=200, max_depth=5, model=None, avoid_repetitio
             try:
                 count=board.transpositions[board.zobrist_hash()]
                 # Immediate mate must never be filtered out by cycle avoidance.
-                if board.is_checkmate():
+                if count>1 and board.is_check() and board.is_checkmate():
                     count=-1
             finally:
                 board.pop()
