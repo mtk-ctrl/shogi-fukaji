@@ -12,5 +12,6 @@
     25,
     100
   ],
-  "objective": "Identify FUKAJI 200ms search bottlenecks on legally replayed frozen KUMOJI match positions; no new matches or adoption."
+  "objective": "Compare exact-score opt-in fused leaf evaluation vs unchanged baseline on frozen 12 KUMOJI game positions; record 200ms nodes/depth, not wins or adoption.",
+  "compare_fused": true
 }
