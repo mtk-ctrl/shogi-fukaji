@@ -20,10 +20,16 @@ MODEL_RUN = 40359123574
 
 
 def validate_request(c):
+    # Two explicitly frozen, independently seeded protocols; no arbitrary
+    # request edits can silently change the experimental conditions.
+    allowed = {20271327: (8, 120), 20271427: (16, 160)}
+    if c.get("arena_seed") not in allowed:
+        raise ValueError("unknown independent arena protocol")
+    pairs, max_plies = allowed[c["arena_seed"]]
     expected = {
         "research_only": True, "relative_source_run_id": MODEL_RUN,
-        "relative_model_sha256": MODEL_SHA, "arena_seed": 20271327,
-        "arena_pairs": 8, "max_plies": 120, "opening_plies": 6,
+        "relative_model_sha256": MODEL_SHA, "arena_seed": c["arena_seed"],
+        "arena_pairs": pairs, "max_plies": max_plies, "opening_plies": 6,
         "movetime_ms": 200, "depth": 2, "mix_percent": 25,
         "fast_relative": True, "root_alpha_beta_default": False,
         "root_alpha_beta_candidate": True, "training_allowed": False,

@@ -31,6 +31,17 @@ class RootAlphaArenaTests(unittest.TestCase):
             with self.subTest(key=key), self.assertRaises(ValueError):
                 validate_request(c)
 
+    def test_independent_32_game_protocol_is_frozen(self):
+        c = self.config()
+        c.update({"arena_seed": 20271427, "arena_pairs": 16, "max_plies": 160})
+        self.assertEqual(validate_request(c), c)
+        for field, wrong in (("arena_pairs", 8), ("max_plies", 120),
+                             ("movetime_ms", 1000), ("root_alpha_beta_default", True)):
+            bad = dict(c)
+            bad[field] = wrong
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                validate_request(bad)
+
     def test_unresolved_is_not_a_win(self):
         head=["7g7f","3c3d"]
         rows=[
