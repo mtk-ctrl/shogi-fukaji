@@ -1,9 +1,9 @@
 {
-  "request": "2026-10-27-frozen-mover-relative-feature-v1-controlled-arena",
-  "protocol": "isolated-relative-feature-v1-parent-disjoint-equal-depth",
-  "source_run_id": 40349702347,
-  "dataset_sha256": "49a8c98be58b521dde77f11dd1e857028f4a4f1b3d9791cb48a58f97698baeb7",
-  "model_sha256": "8a1d2a0b72dcc0cf24dc963658d282fc073045e470999f2a52f7503e422a8efa",
+  "request": "2026-10-27-independent-seed550000-relative-retrain-v2",
+  "protocol": "isolated-relative-feature-v1-parent-disjoint-independent-seed550000",
+  "source_run_id": 40358050404,
+  "dataset_sha256": "0acf25c10c1337f694c8a177889c700c04a527deec3dfeea675a9f4810a616c7",
+  "model_sha256": "7c68ad3f65ff72996aa70267719709f675f2ada0a3263a730a65c0c231da5e50",
   "arena_pairs": 16,
-  "arena_seed": 20270327
+  "arena_seed": 20270527
 }
