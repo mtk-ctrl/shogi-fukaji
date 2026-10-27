@@ -31,7 +31,7 @@ def expected_request():
 
 def validate_request(cfg):
     if cfg != expected_request():
-        raise ValueError("unapproved generation-5 research protocol")
+        raise ValueError("unapproved generation-7 research protocol")
     return cfg
 
 def frozen_assignments(old_mapping, old_groups, new_groups):
