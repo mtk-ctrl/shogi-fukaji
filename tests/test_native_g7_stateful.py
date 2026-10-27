@@ -97,7 +97,7 @@ class StatefulG7Tests(unittest.TestCase):
             state.close()
 
     def test_native_scored_stable_order_and_fixed_depth(self):
-        board = shogi.Board("4k4/9/9/9/9/9/9/4R4/4K4 b P 1")
+        board = shogi.Board("4k4/9/9/9/9/9/9/4G4/4K4 b P 1")
         original = board.sfen()
         baseline_order = [m.usi() for m in engine.ordered_moves(
             board, fast_move_list=True, fast_legal_guard=True)]
