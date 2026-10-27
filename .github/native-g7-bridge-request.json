@@ -1,0 +1,23 @@
+{
+  "enabled": false,
+  "research_only": true,
+  "training_allowed": false,
+  "adoption_allowed": false,
+  "source_run": 40436859527,
+  "model_run": 40434466661,
+  "games_sha256": "6cb09fe88e68d9389cd04dfafdf35a1dbc16d135d78ae52bfce1a6b3c81170c6",
+  "model_sha256": "417d18e7b64494c9febdf6d217afbe4e4979e68d04528f16db8b45c0bcde2a0e",
+  "samples": 16,
+  "movetime_ms": 200,
+  "max_depth": 4,
+  "fixed_depth": 2,
+  "mix_percent": 25,
+  "fast_relative": true,
+  "root_alpha_beta": true,
+  "fast_move_list": true,
+  "fast_legal_guard": true,
+  "variants": [
+    "python_guard",
+    "native_bridge"
+  ]
+}
