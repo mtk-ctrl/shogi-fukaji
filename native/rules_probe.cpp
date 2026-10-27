@@ -288,25 +288,56 @@ static void apply_legal_move(Board& b,const string& move) {
   ++b.ply;
 }
 
+// Distinguish ordinary fourfold repetition from a continuous-check loss.
+// Each move record describes the mover and whether the opponent was checked
+// immediately after that move. Examine all moves between the first and fourth
+// occurrence of the most recent repeated position (inclusive interval).
+static string repetition_verdict(const vector<string>& history,
+                                 const vector<bool>& mover_black,
+                                 const vector<bool>& gave_check) {
+  if(history.empty())return "none";
+  vector<size_t> matches;
+  for(size_t i=0;i<history.size();++i)
+    if(history[i]==history.back())matches.push_back(i);
+  if(matches.size()<4)return "none";
+  if(mover_black.size()+1!=history.size() || gave_check.size()!=mover_black.size())
+    throw runtime_error("inconsistent repetition history");
+  size_t start=matches[matches.size()-4], end=matches.back();
+  bool all_black=true, all_white=true;
+  int black_moves=0,white_moves=0;
+  for(size_t i=start;i<end;++i) {
+    if(mover_black[i]) {++black_moves;if(!gave_check[i])all_black=false;}
+    else {++white_moves;if(!gave_check[i])all_white=false;}
+  }
+  bool black_check=black_moves>0&&all_black;
+  bool white_check=white_moves>0&&all_white;
+  if(black_check&&!white_check)return "black_loses";
+  if(white_check&&!black_check)return "white_loses";
+  return "draw";
+}
+
 int main() {
   unordered_map<string,int> counts;
   optional<Board> current;
   vector<Board> undo;
   vector<string> history;
+  vector<bool> mover_black, gave_check;
   string line;
   while(getline(cin,line)) {
-    if(line=="Z"){counts.clear();current.reset();undo.clear();history.clear();cout<<"OK\n";continue;}
+    if(line=="Z"){counts.clear();current.reset();undo.clear();history.clear();mover_black.clear();gave_check.clear();cout<<"OK\n";continue;}
     try {
-      if(line=="S"||line=="F"||line=="U") {
+      if(line=="S"||line=="F"||line=="U"||line=="L"||line=="T") {
         if(!current)throw runtime_error("no loaded board");
         if(line=="S")cout<<format_sfen(*current)<<"\n";
+        else if(line=="L")cout<<encode_moves(pseudo_moves(*current,true))<<"\n";
+        else if(line=="T")cout<<repetition_verdict(history,mover_black,gave_check)<<"\n";
         else if(line=="F") {
           int repeats=0;
           for(const auto& key:history)if(key==history.back())++repeats;
           cout<<(repeats>=4?1:0)<<"\n";
         } else {
           if(undo.empty())throw runtime_error("undo stack empty");
-          *current=undo.back();undo.pop_back();history.pop_back();
+          *current=undo.back();undo.pop_back();history.pop_back();mover_black.pop_back();gave_check.pop_back();
           cout<<format_sfen(*current)<<"\n";
         }
         continue;
@@ -315,16 +346,21 @@ int main() {
       if(line[0]=='B') {
         Board b=parse(line.substr(2));
         (void)parse_hands(b.hand);
+        b.hand=encode_hand(parse_hands(b.hand));
         current=b;undo.clear();history={state_key(b)};
+        mover_black.clear();gave_check.clear();
         cout<<format_sfen(b)<<"\n";
         continue;
       }
       if(line[0]=='M') {
         if(!current)throw runtime_error("no loaded board");
         Board next=*current;
+        bool moved_black=next.turn=="b";
         apply_legal_move(next,line.substr(2));
+        bool delivered_check=checked(next,next.turn=="b");
         undo.push_back(*current);*current=next;
         history.push_back(state_key(next));
+        mover_black.push_back(moved_black);gave_check.push_back(delivered_check);
         cout<<format_sfen(next)<<"\n";
         continue;
       }
