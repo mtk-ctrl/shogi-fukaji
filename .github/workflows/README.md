@@ -67,3 +67,5 @@
 | `g7-fast-legal-guard-arena.yml` | **研究FastLegalGuardの独立256局比較**：固定G7モデル、FastMoveList双方ON、FastLegalGuardだけON/OFF。新seed20275027の128組256局を先後交替、20runner各12〜14局、200ms/最大深さ4/mix25/高速相対評価・根元αβ ON、最大240手。合法再生・詰み勝者・未決着・SHA・探索統計を集約し、学習・正式採用・雲路変更なし。 |
 
 | `g7-fast-legal-guard-audit-recovery.yml` | **原256局の再対局なし監査・復旧専用**：対局run40451970822で20対局jobは全件成功したが集約時に旧統計キー参照で失敗。元の20分割artifactをrun ID固定で取得し、全手合法再生・勝敗・先後ペア・統計を検証して集約成果物のみ保存。別requestの厳格検査で起動、学習・再対局・採用・雲路変更なし。 |
+
+| `native-rules-benchmark.yml` | **C++独立合法手生成とPythonの処理時間の研究診断**：専用requestが固定条件に完全一致したときだけ、32凍結局面×30回×3試行で両実装を測定。全合法手集合の一致を必須とし、JSONとSHAをartifactへ保存。探索速度・棋力・正式採用・雲路変更は対象外。 |

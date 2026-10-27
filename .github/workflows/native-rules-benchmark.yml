@@ -1,0 +1,48 @@
+name: FUKAJI native rules benchmark (research only)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/native-benchmark-request.json'
+permissions:
+  contents: read
+concurrency:
+  group: fukaji-native-rules-benchmark
+  cancel-in-progress: false
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Validate explicit fixed request
+        id: request
+        run: |
+          python - <<'PY'
+          import json, os
+          with open('.github/native-benchmark-request.json', encoding='utf-8') as f:
+              request=json.load(f)
+          expected={'enabled': True, 'experiment': 'native-rules-core-20261027',
+                    'positions': 32, 'repeats': 30, 'rounds': 3}
+          disabled={**expected, 'enabled': False}
+          if request not in (expected, disabled):
+              raise SystemExit('benchmark requires the exact fixed request')
+          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as out:
+              out.write('run=' + ('true' if request == expected else 'false') + '\n')
+          PY
+      - name: Verify native equivalence and benchmark
+        if: steps.request.outputs.run == 'true'
+        run: |
+          python -m unittest tests.test_native_rules_probe -v
+          python native/benchmark_rules.py --positions 32 --repeats 30 --rounds 3 --out build/native_rules_benchmark.json
+          sha256sum build/native_rules_benchmark.json
+      - uses: actions/upload-artifact@v4
+        if: steps.request.outputs.run == 'true'
+        with:
+          name: fukaji-native-rules-benchmark
+          path: build/native_rules_benchmark.json
+          retention-days: 30
