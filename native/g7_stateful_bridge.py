@@ -44,6 +44,7 @@ class StatefulRules:
             "is_check": ([ctypes.c_uint64], ctypes.c_int),
             "push": ([ctypes.c_uint64, ctypes.c_char_p, ctypes.c_size_t], ctypes.c_int),
             "pop": ([ctypes.c_uint64], ctypes.c_int),
+            "profile": ([ctypes.c_uint64, ctypes.c_void_p, ctypes.c_size_t], ctypes.c_int),
         }
         for name, (args, result) in signatures.items():
             fn = getattr(self.lib, "fukaji_state_" + name)
@@ -70,6 +71,12 @@ class StatefulRules:
         if result < 0 or result >= len(buf):
             raise RuntimeError(f"native state {name} rejected: {result}")
         return buf.raw[:result].decode("ascii")
+
+    def native_profile(self):
+        """Counters are diagnostic only; no effect on legality or move choice."""
+        fields = self._text("profile").split(";")
+        return {key: int(value) for key, value in
+                (field.split("=", 1) for field in fields)}
 
     def legal_pseudo_order(self, board):
         start = time.perf_counter_ns()
