@@ -1,0 +1,106 @@
+name: FUKAJI frozen G5 vs G1 and G4 independent paired arena
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/fukaji-generation5-arena-request.json"
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-generation5-arena
+  cancel-in-progress: false
+jobs:
+  paired:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Verify all unit tests and frozen G5 paired protocol
+        run: |
+          python -m unittest discover -s tests -v
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from fukaji.generation5_arena import validate_request
+          validate_request(json.loads(Path('.github/fukaji-generation5-arena-request.json').read_text()))
+          PY
+      - name: Download frozen parent G1
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-relative-trial-40359123574
+          run-id: 40359123574
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/g5_arena/g1
+      - name: Download frozen research G4
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-generation4-research-40418598213
+          run-id: 40418598213
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/g5_arena/g4
+      - name: Download frozen research G5
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-generation5-research-40424947260
+          run-id: 40424947260
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/g5_arena/g5
+      - name: Play sixteen equal-time color-swapped games against G1 and G4
+        run: |
+          python -m fukaji.generation5_arena \
+            --mode play \
+            --request .github/fukaji-generation5-arena-request.json \
+            --g1 build/g5_arena/g1/mover-relative-v1.npz \
+            --g4 build/g5_arena/g4/mover-relative-generation4-research.npz \
+            --g5 build/g5_arena/g5/mover-relative-generation5-research.npz \
+            --shard ${{ matrix.shard }} \
+            --out build/g5_arena/part
+      - name: Upload replay-verified shard
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-g5-arena-part-${{ matrix.shard }}-${{ github.run_id }}
+          path: build/g5_arena/part/
+          retention-days: 30
+          if-no-files-found: warn
+  aggregate:
+    needs: paired
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Download all eight G5 comparison shards
+        uses: actions/download-artifact@v4
+        with:
+          pattern: fukaji-g5-arena-part-*
+          path: build/g5_arena/parts
+          merge-multiple: false
+      - name: Verify all 128 games and 64 color-swapped pairs
+        run: |
+          python -m fukaji.generation5_arena \
+            --mode aggregate \
+            --parts build/g5_arena/parts \
+            --out build/g5_arena/aggregate
+      - name: Upload audited comparison
+        uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-g5-arena-aggregate-${{ github.run_id }}
+          path: build/g5_arena/aggregate/
+          retention-days: 30
+          if-no-files-found: error
