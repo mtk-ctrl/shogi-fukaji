@@ -30,3 +30,7 @@ python -m fukaji.learning --games build/selfplay.jsonl --out build/model
 4. 分岐局面の研究、未使用対局の評価と旧版・雲路比較を自動化
 
 新AIのコード、Actions、学習重み、研究世代は元リポジトリへ影響させない。
+
+## G7 対 雲路の正式条件（研究比較）
+
+[専用Workflow](.github/workflows/g7-kumoji-official.yml) は独立研究専用。G7は200ms・深さ2・学習評価25%・高速相対評価/root αβ ON。雲路は固定commit 807db500ee2739c1eb6a527b614eeea40a5993d6 の実バイナリを読み取り専用ビルドし、200ms・条件付き長考ON・先読みON・採用済み163局面知識ON・2スレッドで比較する。32独立序盤・先後交替64局。**双方の計算資源は同一ではない**ため、等時間モデル比較と混同しない。未決着は勝利扱いせず、比較棋譜を学習に使わず、正式採用しない。依頼ファイルの明示変更はコード・CI検証後に別commitで行う。

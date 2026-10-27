@@ -174,6 +174,7 @@ def command_loop():
     model_type = "legacy"
     model = None
     fast_relative = False
+    root_alpha_beta = False
     for raw in sys.stdin:
         tokens=raw.strip().split()
         if not tokens:
@@ -187,6 +188,7 @@ def command_loop():
             print("option name ValueModelMix type spin default 50 min 0 max 100")
             print("option name ValueModelType type combo default legacy var legacy var relative")
             print("option name FastRelativeEval type check default false")
+            print("option name RootAlphaBeta type check default false")
             print("usiok",flush=True)
         elif cmd=="isready":
             if model_path:
@@ -220,6 +222,8 @@ def command_loop():
                 model=None
             if "FastRelativeEval" in tokens and "value" in tokens:
                 fast_relative = tokens[tokens.index("value")+1].lower() == "true"
+            if "RootAlphaBeta" in tokens and "value" in tokens:
+                root_alpha_beta = tokens[tokens.index("value")+1].lower() == "true"
             if "SearchDepth" in tokens and "value" in tokens:
                 try: depth=max(1,min(6,int(tokens[tokens.index("value")+1])))
                 except (ValueError,IndexError): pass
@@ -247,7 +251,7 @@ def command_loop():
             if "movetime" in tokens:
                 try:ms=max(1,min(10000,int(tokens[tokens.index("movetime")+1])))
                 except (ValueError,IndexError):pass
-            move,finished,nodes=select_move(board,ms,depth,model,fast_relative=fast_relative)
+            move,finished,nodes=select_move(board,ms,depth,model,fast_relative=fast_relative,root_alpha_beta=root_alpha_beta)
             print(f"info depth {finished} nodes {nodes}",flush=True)
             print(f"bestmove {move}",flush=True)
         elif cmd=="quit":
