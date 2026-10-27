@@ -156,7 +156,7 @@ def select_move(board, movetime_ms=200, max_depth=5, model=None, avoid_repetitio
                 board.push(move)
                 try:
                     child_beta = -root_alpha if root_alpha_beta else INF
-                    score=-negamax(board,depth-1,-INF,child_beta,deadline,nodes,model,fast_relative,guard_checkmate)
+                    score=-negamax(board,depth-1,-INF,child_beta,deadline,nodes,model,fast_relative,guard_checkmate,fast_move_list)
                 finally:
                     board.pop()
                 if score>scorebest:
