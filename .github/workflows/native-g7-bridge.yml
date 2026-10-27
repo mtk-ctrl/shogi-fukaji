@@ -1,0 +1,66 @@
+name: FUKAJI G7 native legal bridge frozen diagnosis (research only)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/native-g7-bridge-request.json'
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-native-g7-bridge
+  cancel-in-progress: false
+jobs:
+  diagnose:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Verify bridge tests and explicit request
+        id: request
+        run: |
+          python -m unittest tests.test_native_g7_bridge -v
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          from native.g7_bridge_diagnosis import validate_request
+          enabled = validate_request(json.loads(Path(
+              '.github/native-g7-bridge-request.json').read_text(encoding='utf-8')))
+          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as f:
+              f.write('run=' + ('true' if enabled else 'false') + '\n')
+          PY
+      - uses: actions/download-artifact@v4
+        if: steps.request.outputs.run == 'true'
+        with:
+          name: fukaji-kumoji-aggregate-40436859527
+          run-id: 40436859527
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/source
+      - uses: actions/download-artifact@v4
+        if: steps.request.outputs.run == 'true'
+        with:
+          name: fukaji-generation7-research-40434466661
+          run-id: 40434466661
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/g7
+      - name: Compare native IPC bridge against Python G7 at 200ms
+        if: steps.request.outputs.run == 'true'
+        run: |
+          python -m native.g7_bridge_diagnosis \
+            --request .github/native-g7-bridge-request.json \
+            --games build/source/all_games.jsonl \
+            --model build/g7/mover-relative-generation7-research.npz \
+            --out build/native-g7-bridge
+          sha256sum build/native-g7-bridge/diagnosis.json build/native-g7-bridge/positions.json
+      - uses: actions/upload-artifact@v4
+        if: steps.request.outputs.run == 'true'
+        with:
+          name: fukaji-native-g7-bridge
+          path: build/native-g7-bridge/
+          retention-days: 30
+          if-no-files-found: error
