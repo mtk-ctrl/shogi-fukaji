@@ -72,6 +72,30 @@ class StatefulG7Tests(unittest.TestCase):
                 state.close()
             self.assertEqual(board.sfen(), original)
 
+    def test_cached_move_parsing_preserves_order_and_undo(self):
+        board = shogi.Board()
+        original = board.sfen()
+        baseline = [m.usi() for m in engine.ordered_moves(
+            board, fast_move_list=True, fast_legal_guard=True)]
+        state = StatefulRules(self.binary, board, audit=True)
+        synced = SyncedBoard(board, state)
+        saved = engine.ordered_moves
+        try:
+            with stateful_order_search(state, cached_moves=True):
+                for _ in range(3):
+                    moves = engine.ordered_moves(
+                        synced, fast_move_list=True, fast_legal_guard=True)
+                    self.assertEqual([m.usi() for m in moves], baseline)
+                    synced.push(moves[0])
+                    synced.pop()
+                self.assertIsNot(engine.ordered_moves, saved)
+            self.assertIs(engine.ordered_moves, saved)
+            self.assertGreater(state.parse_cache_hits, 0)
+            self.assertGreater(state.parse_cache_misses, 0)
+            synced.assert_restored(original)
+        finally:
+            state.close()
+
     def test_invalid_native_move_preserves_state(self):
         board = shogi.Board()
         state = StatefulRules(self.binary, board, audit=True)
