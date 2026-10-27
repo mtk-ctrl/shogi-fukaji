@@ -189,7 +189,7 @@ extern "C" int fukaji_state_scored(uint64_t handle,char* output,
 }
 
 // Research-only compact legal move transport. A 32-bit code stores the
-// python-shogi square indices (file-major), promotion, and optional drop kind.
+// python-shogi square indices (rank-major), promotion, and optional drop kind.
 // It does not grant legality: state_push still checks the exact frame cache.
 // No output or cache is published on invalid capacity or packing failure.
 extern "C" int fukaji_state_scored_packed(uint64_t handle,uint32_t* output,
@@ -217,7 +217,7 @@ extern "C" int fukaji_state_scored_packed(uint64_t handle,uint32_t* output,
     const auto python_square=[](char file,char rank)->uint32_t {
       if(file<'1'||file>'9'||rank<'a'||rank>'i')
         throw runtime_error("invalid packed square");
-      return static_cast<uint32_t>(('9'-file)*9+(rank-'a'));
+      return static_cast<uint32_t>((rank-'a')*9+('9'-file));
     };
     vector<uint32_t> packed;
     packed.reserve(scored.size());
