@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 from fukaji.generation7_arena import MODEL_SHA, expected_request, validate_request, execute, aggregate
 
-class Generation6ArenaTest(unittest.TestCase):
+class Generation7ArenaTest(unittest.TestCase):
     def test_frozen_request(self):
         cfg = expected_request()
         self.assertEqual(validate_request(cfg), cfg)
