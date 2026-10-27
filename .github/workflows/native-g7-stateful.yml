@@ -75,7 +75,7 @@ jobs:
           run-id: 40434466661
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path: build/g7
-      - name: Compare four frozen positions in three 200ms modes
+      - name: Compare four frozen positions in four 200ms modes
         run: |
           python -m native.g7_stateful_diagnosis \
             --request .github/native-g7-stateful-request.json \
@@ -106,7 +106,7 @@ jobs:
           pattern: fukaji-stateful-part-*
           path: build/stateful-parts
           merge-multiple: false
-      - name: Validate all 20 shards and 240 measurement rows
+      - name: Validate all 20 shards and 320 measurement rows
         run: |
           python -m native.g7_stateful_diagnosis \
             --parts build/stateful-parts \
