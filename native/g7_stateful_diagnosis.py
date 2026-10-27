@@ -1,6 +1,6 @@
 """Research-only 80-position, 20-runner G7 stateful synchronization benchmark.
 
-Three modes share frozen G7 and identical search options. Stateful C++ mirrors
+Four modes share frozen G7 and identical search options. Stateful C++ mirrors
 Python push/pop and generates ordered legal moves without per-node SFEN. The
 production USI, models, training, and KUMOJI repository are never modified.
 """
@@ -30,7 +30,8 @@ from native.g7_stateful_bridge import (
 SAMPLES = 80
 SHARDS = 20
 SEED = 20271027
-VARIANTS = ("python_guard", "native_ordered", "native_stateful")
+VARIANTS = ("python_guard", "native_ordered", "native_stateful",
+            "native_stateful_cached")
 
 
 def expected_request():
@@ -93,6 +94,10 @@ def run_shard(request, games, model, out, shard):
                     if search(proxy, frozen, fixed=True) != baseline:
                         raise RuntimeError(f"stateful fixed-depth mismatch {index}")
                 proxy.assert_restored(original)
+                with stateful_order_search(state, cached_moves=True):
+                    if search(proxy, frozen, fixed=True) != baseline:
+                        raise RuntimeError(f"cached parsing fixed-depth mismatch {index}")
+                proxy.assert_restored(original)
                 modes = list(VARIANTS)
                 modes = modes[index % len(modes):] + modes[:index % len(modes)]
                 for mode in modes:
@@ -105,13 +110,16 @@ def run_shard(request, games, model, out, shard):
                     pop_ns = state.pop_ns
                     move_ns = state.move_ns
                     sort_ns = state.sort_ns
+                    parse_hits = state.parse_cache_hits
+                    parse_misses = state.parse_cache_misses
                     native_before = state.native_profile()
                     start = time.perf_counter()
                     if mode == "native_ordered":
                         with native_order_search(direct):
                             move, depth, nodes = search(board, frozen)
-                    elif mode == "native_stateful":
-                        with stateful_order_search(state):
+                    elif mode in ("native_stateful", "native_stateful_cached"):
+                        with stateful_order_search(
+                                state, cached_moves=(mode=="native_stateful_cached")):
                             move, depth, nodes = search(proxy, frozen)
                     else:
                         move, depth, nodes = search(board, frozen)
@@ -122,8 +130,9 @@ def run_shard(request, games, model, out, shard):
                     if (board.sfen() != original or move == "resign" or
                         shogi.Move.from_usi(move) not in board.legal_moves):
                         raise RuntimeError(f"illegal timed search at {index}")
-                    if mode == "native_stateful":
+                    if mode in ("native_stateful", "native_stateful_cached"):
                         proxy.assert_restored(original)
+                    is_stateful = mode in ("native_stateful", "native_stateful_cached")
                     records.append(dict(
                         sample=index, shard=shard, variant=mode,
                         move=move, depth=depth, nodes=nodes,
@@ -132,19 +141,21 @@ def run_shard(request, games, model, out, shard):
                         native_calls=direct.calls-native_calls if mode=="native_ordered" else 0,
                         sfen_ms=round((direct.sfen_ns-sfen_ns)/1e6,3) if mode=="native_ordered" else 0,
                         abi_ms=round((direct.native_ns-native_ns)/1e6,3) if mode=="native_ordered" else 0,
-                        state_calls=state.calls-state_calls if mode=="native_stateful" else 0,
-                        state_legal_ms=round((state.legal_ns-legal_ns)/1e6,3) if mode=="native_stateful" else 0,
-                        state_push_ms=round((state.push_ns-push_ns)/1e6,3) if mode=="native_stateful" else 0,
-                        state_pop_ms=round((state.pop_ns-pop_ns)/1e6,3) if mode=="native_stateful" else 0,
-                        move_construct_ms=round((state.move_ns-move_ns)/1e6,3) if mode=="native_stateful" else 0,
-                        order_sort_ms=round((state.sort_ns-sort_ns)/1e6,3) if mode=="native_stateful" else 0,
-                        state_open_ms=round(open_ms,3) if mode=="native_stateful" else 0,
-                        cache_hits=delta["cache_hits"] if mode=="native_stateful" else 0,
-                        fallback_pushes=delta["fallback_pushes"] if mode=="native_stateful" else 0,
-                        legal_generations=delta["legal_generations"] if mode=="native_stateful" else 0,
-                        validate_ms=round(delta["validate_ns"]/1e6,3) if mode=="native_stateful" else 0,
-                        apply_ms=round(delta["apply_ns"]/1e6,3) if mode=="native_stateful" else 0,
-                        history_ms=round(delta["history_ns"]/1e6,3) if mode=="native_stateful" else 0,
+                        state_calls=state.calls-state_calls if is_stateful else 0,
+                        state_legal_ms=round((state.legal_ns-legal_ns)/1e6,3) if is_stateful else 0,
+                        state_push_ms=round((state.push_ns-push_ns)/1e6,3) if is_stateful else 0,
+                        state_pop_ms=round((state.pop_ns-pop_ns)/1e6,3) if is_stateful else 0,
+                        move_construct_ms=round((state.move_ns-move_ns)/1e6,3) if is_stateful else 0,
+                        order_sort_ms=round((state.sort_ns-sort_ns)/1e6,3) if is_stateful else 0,
+                        parse_cache_hits=state.parse_cache_hits-parse_hits if is_stateful else 0,
+                        parse_cache_misses=state.parse_cache_misses-parse_misses if is_stateful else 0,
+                        state_open_ms=round(open_ms,3) if is_stateful else 0,
+                        cache_hits=delta["cache_hits"] if is_stateful else 0,
+                        fallback_pushes=delta["fallback_pushes"] if is_stateful else 0,
+                        legal_generations=delta["legal_generations"] if is_stateful else 0,
+                        validate_ms=round(delta["validate_ns"]/1e6,3) if is_stateful else 0,
+                        apply_ms=round(delta["apply_ns"]/1e6,3) if is_stateful else 0,
+                        history_ms=round(delta["history_ns"]/1e6,3) if is_stateful else 0,
                     ))
             finally:
                 state.close()
@@ -152,6 +163,7 @@ def run_shard(request, games, model, out, shard):
                   positions_sha256=positions_sha, games_sha256=GAMES_SHA,
                   model_sha256=G7_SHA, records=records,
                   caution="Stateful ABI uses frame-validated legal cache and Board-only undo; "
+                          "opt-in bounded USI parsing cache has no legality authority; "
                           "search throughput only, not strength or 10x engine speed.")
     target = Path(out)
     target.mkdir(parents=True, exist_ok=True)
@@ -194,7 +206,8 @@ def aggregate(parts, out):
                         "state_pop_ms","move_construct_ms","order_sort_ms","state_open_ms",
                         "validate_ms","apply_ms","history_ms")},
             cache_counts={key:sum(r[key] for r in group) for key in
-                          ("cache_hits","fallback_pushes","legal_generations")})
+                          ("cache_hits","fallback_pushes","legal_generations",
+                           "parse_cache_hits","parse_cache_misses")})
     result = dict(status="research_only_no_training_no_adoption",
                   samples=SAMPLES, shards=SHARDS, positions_sha256=items[0]["positions_sha256"],
                   games_sha256=GAMES_SHA, model_sha256=G7_SHA,

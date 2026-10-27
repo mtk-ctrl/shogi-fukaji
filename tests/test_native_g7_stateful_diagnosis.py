@@ -19,7 +19,7 @@ class StatefulRequestTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 validate_request({**request, **patch})
 
-    def test_all_20_shards_and_240_rows_required(self):
+    def test_all_20_shards_and_320_rows_required(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
             for shard in range(SHARDS):
@@ -34,13 +34,14 @@ class StatefulRequestTests(unittest.TestCase):
                             state_push_ms=0, state_pop_ms=0,
                             move_construct_ms=0, order_sort_ms=0, state_open_ms=0,
                             validate_ms=0, apply_ms=0, history_ms=0,
-                            cache_hits=0, fallback_pushes=0, legal_generations=0))
+                            cache_hits=0, fallback_pushes=0, legal_generations=0,
+                            parse_cache_hits=0, parse_cache_misses=0))
                 (root / f"part-{shard:02d}.json").write_text(json.dumps(dict(
                     shard=shard, positions_sha256="fixed",
                     games_sha256="games", model_sha256="model",
                     seed=20271027, records=records)))
             result = aggregate(root, root / "out")
-            self.assertEqual(len(result["records"]), 240)
+            self.assertEqual(len(result["records"]), 320)
             self.assertEqual(result["summary"]["native_stateful"]["total_nodes"], 8000)
             (root / "part-19.json").unlink()
             with self.assertRaises(ValueError):

@@ -7,6 +7,7 @@ Any native failure aborts the experiment rather than falling back silently.
 from __future__ import annotations
 
 import ctypes
+from functools import lru_cache
 import shutil
 import subprocess
 import time
@@ -58,6 +59,8 @@ class StatefulRules:
         self.pop_ns = 0
         self.move_ns = 0
         self.sort_ns = 0
+        self.parse_cache_hits = 0
+        self.parse_cache_misses = 0
         encoded = board.sfen().encode("ascii")
         rc = self.lib.fukaji_state_open(encoded, len(encoded), ctypes.byref(self.handle))
         if rc or not self.handle.value:
@@ -172,16 +175,20 @@ class SyncedBoard:
         self.state.assert_equal(self.board, full=True)
 
 @contextmanager
-def stateful_order_search(state):
-    """Same stable G7 move ordering; isolate USI->Move and scoring costs."""
+def stateful_order_search(state, *, cached_moves=False):
+    """Research-only bounded move parsing cache; ordering and legality unchanged."""
     original = engine.ordered_moves
+    # A USI move's coordinates/promotion are position-independent. Cache only
+    # the immutable parsed representation, never legal status or board state.
+    parse_move = (lru_cache(maxsize=8192)(shogi.Move.from_usi)
+                  if cached_moves else shogi.Move.from_usi)
 
     def ordered(board, fast_move_list=False, fast_legal_guard=False):
         if not (fast_move_list and fast_legal_guard):
             raise RuntimeError("stateful research requires frozen G7 options")
         words = state.legal_pseudo_order(board)
         started = time.perf_counter_ns()
-        moves = [shogi.Move.from_usi(word) for word in words]
+        moves = [parse_move(word) for word in words]
         state.move_ns += time.perf_counter_ns() - started
         started = time.perf_counter_ns()
         def score(move):
@@ -197,3 +204,7 @@ def stateful_order_search(state):
         yield
     finally:
         engine.ordered_moves = original
+        if cached_moves:
+            info = parse_move.cache_info()
+            state.parse_cache_hits += info.hits
+            state.parse_cache_misses += info.misses
