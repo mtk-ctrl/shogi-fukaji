@@ -416,9 +416,10 @@ int main() {
         if(line.size()<6||line[3]!=' '||(line[2]!='b'&&line[2]!='w'))
           throw runtime_error("check protocol");
         cout<<(checked(parse(line.substr(4)),line[2]=='b')?1:0)<<"\n";
-      } else if(line[0]=='P'||line[0]=='H') {
+      } else if(line[0]=='P'||line[0]=='H'||line[0]=='O') {
         Board b=parse(line.substr(2));
-        cout<<encode_moves(pseudo_moves(b,line[0]=='H'))<<"\n";
+        cout<<encode_moves(line[0]=='O' ? ordered_legal_moves(b) :
+                           pseudo_moves(b,line[0]=='H'))<<"\n";
       } else if(line[0]=='R') {
         string key=state_key(parse(line.substr(2)));
         cout<<(++counts[key]>=4?1:0)<<"\n";
