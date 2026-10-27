@@ -33,7 +33,7 @@ jobs:
           import json
           from pathlib import Path
           from fukaji.g7_fast_move_list_replication import validate_request
-          validate_request(json.loads(Path(".github/fukaji-g7-fast-move-list-arena-request.json").read_text()))
+          validate_request(json.loads(Path(".github/fukaji-g7-fast-move-list-replication-request.json").read_text()))
           PY
       - name: Download frozen generation-7 model
         uses: actions/download-artifact@v4
@@ -46,7 +46,7 @@ jobs:
         run: |
           python -m fukaji.g7_fast_move_list_replication \
             --mode play \
-            --request .github/fukaji-g7-fast-move-list-arena-request.json \
+            --request .github/fukaji-g7-fast-move-list-replication-request.json \
             --model build/g7_fast_replication/model/mover-relative-generation7-research.npz \
             --shard ${{ matrix.shard }} \
             --out build/g7_fast_replication/part

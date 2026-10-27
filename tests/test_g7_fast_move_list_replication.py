@@ -72,6 +72,8 @@ class G7FastMoveListReplicationTests(unittest.TestCase):
         path = Path(".github/workflows/g7-fast-move-list-replication.yml")
         text = path.read_text(encoding="utf-8")
         self.assertIn("max-parallel: 20", text)
+        self.assertEqual(text.count(".github/fukaji-g7-fast-move-list-replication-request.json"), 3)
+        self.assertNotIn(".github/fukaji-g7-fast-move-list-arena-request.json", text)
         self.assertIn("shard: [" + ", ".join(str(i) for i in range(20)) + "]", text)
         self.assertIn("fail-fast: false", text)
         self.assertIn("cancel-in-progress: false", text)
