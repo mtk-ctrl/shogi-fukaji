@@ -8,7 +8,7 @@ permissions:
   contents: read
   actions: read
 concurrency:
-  group: fukaji-g7-fast-move-list-arena
+  group: fukaji-g7-fast-move-list-replication
   cancel-in-progress: false
 jobs:
   paired:
