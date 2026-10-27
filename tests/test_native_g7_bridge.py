@@ -61,6 +61,25 @@ class NativeG7BridgeTests(unittest.TestCase):
         finally:
             bridge.close()
 
+    def test_timed_native_search_returns_legal_move(self):
+        bridge = NativeBridge(self.binary)
+        try:
+            board = shogi.Board()
+            before = board.sfen()
+            with native_search(bridge):
+                word, depth, nodes = engine.select_move(
+                    board, movetime_ms=200, max_depth=4,
+                    fast_move_list=True, fast_legal_guard=True,
+                    root_alpha_beta=True,
+                )
+            self.assertIn(shogi.Move.from_usi(word), board.legal_moves)
+            self.assertEqual(before, board.sfen())
+            self.assertGreater(nodes, 0)
+            self.assertGreaterEqual(depth, 0)
+            self.assertGreater(bridge.calls, 0)
+        finally:
+            bridge.close()
+
     def test_context_restored_and_strict_request(self):
         original = engine.ordered_moves
         bridge = NativeBridge(self.binary)
