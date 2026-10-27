@@ -64,7 +64,7 @@ class G7FastMoveListReplicationTests(unittest.TestCase):
             model = root / "model.npz"
             model.write_bytes(b"not a frozen model")
             with self.assertRaisesRegex(ValueError, "shard"):
-                execute(request, model, root / "out", 8)
+                execute(request, model, root / "out", 20)
             with self.assertRaisesRegex(ValueError, "SHA mismatch"):
                 execute(request, model, root / "out", 0)
 
