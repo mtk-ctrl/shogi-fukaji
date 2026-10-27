@@ -10,6 +10,8 @@ import ctypes
 import shutil
 import subprocess
 import time
+from contextlib import contextmanager
+from fukaji import engine
 from pathlib import Path
 
 import shogi
@@ -54,6 +56,7 @@ class StatefulRules:
         self.push_ns = 0
         self.pop_ns = 0
         self.move_ns = 0
+        self.sort_ns = 0
         encoded = board.sfen().encode("ascii")
         rc = self.lib.fukaji_state_open(encoded, len(encoded), ctypes.byref(self.handle))
         if rc or not self.handle.value:
@@ -160,3 +163,30 @@ class SyncedBoard:
         if self.stack or self.board.sfen() != original:
             raise RuntimeError("search failed to restore Python board")
         self.state.assert_equal(self.board, full=True)
+
+@contextmanager
+def stateful_order_search(state):
+    """Same stable G7 move ordering; isolate USI->Move and scoring costs."""
+    original = engine.ordered_moves
+
+    def ordered(board, fast_move_list=False, fast_legal_guard=False):
+        if not (fast_move_list and fast_legal_guard):
+            raise RuntimeError("stateful research requires frozen G7 options")
+        words = state.legal_pseudo_order(board)
+        started = time.perf_counter_ns()
+        moves = [shogi.Move.from_usi(word) for word in words]
+        state.move_ns += time.perf_counter_ns() - started
+        started = time.perf_counter_ns()
+        def score(move):
+            target = board.piece_at(move.to_square)
+            return (engine.VALUES.get(target.piece_type, 0) if target else 0) + (
+                200 if move.promotion else 0)
+        moves.sort(key=score, reverse=True)
+        state.sort_ns += time.perf_counter_ns() - started
+        return moves
+
+    engine.ordered_moves = ordered
+    try:
+        yield
+    finally:
+        engine.ordered_moves = original
