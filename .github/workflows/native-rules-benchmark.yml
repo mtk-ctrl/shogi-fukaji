@@ -32,7 +32,7 @@ jobs:
           if request not in (expected, disabled):
               raise SystemExit('benchmark requires the exact fixed request')
           with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as out:
-              out.write('run=' + ('true' if request == expected else 'false') + '\\n')
+              out.write('run=' + ('true' if request == expected else 'false') + '\n')
           PY
       - name: Verify native equivalence and benchmark
         if: steps.request.outputs.run == 'true'
