@@ -1,0 +1,90 @@
+name: FUKAJI G7 FastLegalGuard independent 256-game 20-runner arena
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/fukaji-g7-fast-legal-guard-arena-request.json"
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-g7-fast-legal-guard-arena
+  cancel-in-progress: false
+jobs:
+  paired:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Verify tests and frozen research request before play
+        run: |
+          python -m unittest discover -s tests -v
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from fukaji.g7_fast_legal_guard_arena import validate_request
+          validate_request(json.loads(Path(".github/fukaji-g7-fast-legal-guard-arena-request.json").read_text()))
+          PY
+      - name: Download frozen generation-7 model
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-generation7-research-40434466661
+          run-id: 40434466661
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/g7_guard_arena/model
+      - name: Play 12-14 independent color-swapped FastLegalGuard ON vs OFF (FastMoveList both ON) games
+        run: |
+          python -m fukaji.g7_fast_legal_guard_arena \
+            --mode play \
+            --request .github/fukaji-g7-fast-legal-guard-arena-request.json \
+            --model build/g7_guard_arena/model/mover-relative-generation7-research.npz \
+            --shard ${{ matrix.shard }} \
+            --out build/g7_guard_arena/part
+      - name: Upload verified shard
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-g7-legal-guard-arena-part-${{ matrix.shard }}-${{ github.run_id }}
+          path: build/g7_guard_arena/part/
+          retention-days: 30
+          if-no-files-found: warn
+  aggregate:
+    needs: paired
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Download all twenty independent shards
+        uses: actions/download-artifact@v4
+        with:
+          pattern: fukaji-g7-legal-guard-arena-part-*
+          path: build/g7_guard_arena/parts
+          merge-multiple: false
+      - name: Verify 256 legal games, 128 swapped pairs, fixed model and outcomes
+        run: |
+          python -m fukaji.g7_fast_legal_guard_arena \
+            --mode aggregate \
+            --parts build/g7_guard_arena/parts \
+            --out build/g7_guard_arena/aggregate
+      - name: Upload audited 256-game replication aggregate
+        uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-g7-legal-guard-arena-aggregate-${{ github.run_id }}
+          path: build/g7_guard_arena/aggregate/
+          retention-days: 30
+          if-no-files-found: error
