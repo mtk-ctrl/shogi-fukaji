@@ -1,6 +1,7 @@
 // FUKAJI research-only independent C++ attack/repetition probe.
 // No engine integration. Research-only legal-move generator and reversible state probe.
 // Protocol: C <b|w> <SFEN> => whether that king is attacked; R <SFEN>
+// Stateful L lists legal moves; T classifies fourfold/continuous-check outcomes.
 // => fourfold state; Z => reset repetition history.
 #include <algorithm>
 #include <array>
