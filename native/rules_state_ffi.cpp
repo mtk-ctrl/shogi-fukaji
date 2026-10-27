@@ -6,6 +6,7 @@
 #include "rules_probe.cpp"
 #undef main
 #include <cstring>
+#include <cstdint>
 #include <limits>
 #include <mutex>
 #include <utility>
@@ -184,6 +185,72 @@ extern "C" int fukaji_state_scored(uint64_t handle,char* output,
       ++state.legal_generations;
     }
     return rc;
+  } catch (...) {return -3;}
+}
+
+// Research-only compact legal move transport. A 32-bit code stores the
+// python-shogi square indices (rank-major), promotion, and optional drop kind.
+// It does not grant legality: state_push still checks the exact frame cache.
+// No output or cache is published on invalid capacity or packing failure.
+extern "C" int fukaji_state_scored_packed(uint64_t handle,uint32_t* output,
+                                          size_t capacity) noexcept {
+  try {
+    if(!output || capacity==0 || capacity>1024)return -1;
+    lock_guard<mutex> lock(state_mutex);
+    NativeState& state=find_state(handle);
+    LegalCache& cache=state.legal_cache[state.undo.size()];
+    const bool valid=cache.valid &&
+      cache.frame_token==state.frame_tokens.back() &&
+      cache.history_length==state.history.size() &&
+      cache.ply==state.board.ply &&
+      cache.position_key==state.history.back();
+    vector<string> pseudo=valid?cache.moves:ordered_legal_moves(state.board);
+    vector<string> scored=pseudo;
+    const auto score=[&](const string& move) {
+      const int to=from_usi_square(move[2],move[3]);
+      return research_piece_value(state.board.squares[to])+
+             (move.size()==5?200:0);
+    };
+    stable_sort(scored.begin(),scored.end(),
+                [&](const string& a,const string& b){return score(a)>score(b);});
+    if(scored.size()>capacity)return -2;
+    const auto python_square=[](char file,char rank)->uint32_t {
+      if(file<'1'||file>'9'||rank<'a'||rank>'i')
+        throw runtime_error("invalid packed square");
+      return static_cast<uint32_t>((rank-'a')*9+('9'-file));
+    };
+    vector<uint32_t> packed;
+    packed.reserve(scored.size());
+    for(const string& move:scored) {
+      if(move.size()!=4 && move.size()!=5)
+        throw runtime_error("invalid generated move size");
+      const uint32_t to=python_square(move[2],move[3]);
+      uint32_t from=127,drop=0,promote=0;
+      if(move[1]=='*') {
+        if(move.size()!=4)throw runtime_error("invalid generated drop");
+        const auto index=string("PLNSGBR").find(move[0]);
+        if(index==string::npos)throw runtime_error("invalid drop kind");
+        drop=static_cast<uint32_t>(index+1);
+      } else {
+        from=python_square(move[0],move[1]);
+        promote=move.size()==5?1:0;
+        if(promote && move[4]!='+')throw runtime_error("invalid promotion");
+      }
+      packed.push_back(to|(from<<7)|(promote<<14)|(drop<<15));
+    }
+    // Prepare all potentially throwing state before publishing the cache.
+    string key=valid?string():state.history.back();
+    if(!valid) {
+      cache.moves=std::move(pseudo);
+      cache.position_key=std::move(key);
+      cache.frame_token=state.frame_tokens.back();
+      cache.history_length=state.history.size();
+      cache.ply=state.board.ply;
+      cache.valid=true;
+      ++state.legal_generations;
+    }
+    for(size_t i=0;i<packed.size();++i)output[i]=packed[i];
+    return static_cast<int>(packed.size());
   } catch (...) {return -3;}
 }
 

@@ -14,6 +14,7 @@ from pathlib import Path
 
 import shogi
 from fukaji import engine
+from native.g7_stateful_bridge import packed_to_move
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -39,6 +40,7 @@ class NativeStateFFITests(unittest.TestCase):
             "close": ([ctypes.c_uint64], ctypes.c_int),
             "legal": ([ctypes.c_uint64, ctypes.c_void_p, ctypes.c_size_t], ctypes.c_int),
             "scored": ([ctypes.c_uint64, ctypes.c_void_p, ctypes.c_size_t], ctypes.c_int),
+            "scored_packed": ([ctypes.c_uint64, ctypes.POINTER(ctypes.c_uint32), ctypes.c_size_t], ctypes.c_int),
             "sfen": ([ctypes.c_uint64, ctypes.c_void_p, ctypes.c_size_t], ctypes.c_int),
             "verdict": ([ctypes.c_uint64, ctypes.c_void_p, ctypes.c_size_t], ctypes.c_int),
             "is_check": ([ctypes.c_uint64], ctypes.c_int),
@@ -69,6 +71,13 @@ class NativeStateFFITests(unittest.TestCase):
         self.assertGreaterEqual(size, 0, (name, size))
         return buf.raw[:size].decode("ascii")
 
+    def read_packed(self, handle, capacity=1024):
+        output = (ctypes.c_uint32 * capacity)()
+        count = self.lib.fukaji_state_scored_packed(handle, output, capacity)
+        self.assertGreaterEqual(count, 0, count)
+        self.assertLessEqual(count, capacity)
+        return [packed_to_move(int(code)).usi() for code in output[:count]]
+
     def check(self, handle, board):
         self.assertEqual(self.read(handle, "sfen"), board.sfen())
         self.assertEqual(self.lib.fukaji_state_is_check(handle), int(board.is_check()))
@@ -77,12 +86,12 @@ class NativeStateFFITests(unittest.TestCase):
             [move.usi() for move in board.legal_moves],
             board.sfen(),
         )
+        expected_scored = [move.usi() for move in engine.ordered_moves(
+            board, fast_move_list=True, fast_legal_guard=True)]
         self.assertEqual(
-            self.read(handle, "scored").split(",") if list(board.legal_moves) else [],
-            [move.usi() for move in engine.ordered_moves(
-                board, fast_move_list=True, fast_legal_guard=True)],
-            board.sfen(),
-        )
+            self.read(handle, "scored").split(",") if expected_scored else [],
+            expected_scored, board.sfen())
+        self.assertEqual(self.read_packed(handle), expected_scored, board.sfen())
 
     def profile(self, handle):
         fields = self.read(handle, "profile").split(";")
@@ -161,6 +170,20 @@ class NativeStateFFITests(unittest.TestCase):
             tiny = ctypes.create_string_buffer(2)
             self.assertEqual(self.lib.fukaji_state_scored(handle, tiny, len(tiny)), -2)
             self.assertEqual(self.profile(handle)["legal_generations"], 0)
+            move = next(iter(board.legal_moves)).usi().encode("ascii")
+            self.assertEqual(self.lib.fukaji_state_push(handle, move, len(move)), 0)
+            self.assertEqual(self.profile(handle)["fallback_pushes"], 1)
+        finally:
+            self.assertEqual(self.lib.fukaji_state_close(handle), 0)
+
+    def test_packed_capacity_failure_does_not_publish_cache(self):
+        board = shogi.Board()
+        handle = self.open_board(board)
+        try:
+            tiny = (ctypes.c_uint32 * 1)()
+            self.assertEqual(self.lib.fukaji_state_scored_packed(handle, tiny, 1), -2)
+            self.assertEqual(self.profile(handle)["legal_generations"], 0)
+            self.assertEqual(self.read(handle, "sfen"), board.sfen())
             move = next(iter(board.legal_moves)).usi().encode("ascii")
             self.assertEqual(self.lib.fukaji_state_push(handle, move, len(move)), 0)
             self.assertEqual(self.profile(handle)["fallback_pushes"], 1)
