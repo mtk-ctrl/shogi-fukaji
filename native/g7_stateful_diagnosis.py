@@ -30,8 +30,8 @@ from native.g7_stateful_bridge import (
 SAMPLES = 80
 SHARDS = 20
 SEED = 20271027
-VARIANTS = ("python_guard", "native_ordered", "native_stateful_cached",
-            "native_stateful_scored")
+VARIANTS = ("python_guard", "native_ordered", "native_stateful_scored",
+            "native_stateful_packed")
 
 
 def expected_request():
@@ -103,6 +103,12 @@ def run_shard(request, games, model, out, shard):
                     if search(proxy, frozen, fixed=True) != baseline:
                         raise RuntimeError(f"native scoring fixed-depth mismatch {index}")
                 proxy.assert_restored(original)
+                with stateful_order_search(
+                        state, cached_moves=True, native_scored=True,
+                        native_packed=True):
+                    if search(proxy, frozen, fixed=True) != baseline:
+                        raise RuntimeError(f"packed transport fixed-depth mismatch {index}")
+                proxy.assert_restored(original)
                 modes = list(VARIANTS)
                 modes = modes[index % len(modes):] + modes[:index % len(modes)]
                 for mode in modes:
@@ -112,6 +118,10 @@ def run_shard(request, games, model, out, shard):
                     state_calls = state.calls
                     legal_ns = state.legal_ns
                     scored_ns = state.scored_ns
+                    packed_ns = state.packed_ns
+                    packed_decode_ns = state.packed_decode_ns
+                    python_push_ns = state.python_push_ns
+                    python_pop_ns = state.python_pop_ns
                     push_ns = state.push_ns
                     pop_ns = state.pop_ns
                     move_ns = state.move_ns
@@ -123,10 +133,10 @@ def run_shard(request, games, model, out, shard):
                     if mode == "native_ordered":
                         with native_order_search(direct):
                             move, depth, nodes = search(board, frozen)
-                    elif mode in ("native_stateful_cached", "native_stateful_scored"):
+                    elif mode in ("native_stateful_scored", "native_stateful_packed"):
                         with stateful_order_search(
-                                state, cached_moves=True,
-                                native_scored=(mode=="native_stateful_scored")):
+                                state, cached_moves=True, native_scored=True,
+                                native_packed=(mode=="native_stateful_packed")):
                             move, depth, nodes = search(proxy, frozen)
                     else:
                         move, depth, nodes = search(board, frozen)
@@ -137,9 +147,9 @@ def run_shard(request, games, model, out, shard):
                     if (board.sfen() != original or move == "resign" or
                         shogi.Move.from_usi(move) not in board.legal_moves):
                         raise RuntimeError(f"illegal timed search at {index}")
-                    if mode in ("native_stateful_cached", "native_stateful_scored"):
+                    if mode in ("native_stateful_scored", "native_stateful_packed"):
                         proxy.assert_restored(original)
-                    is_stateful = mode in ("native_stateful_cached", "native_stateful_scored")
+                    is_stateful = mode in ("native_stateful_scored", "native_stateful_packed")
                     records.append(dict(
                         sample=index, shard=shard, variant=mode,
                         move=move, depth=depth, nodes=nodes,
@@ -151,6 +161,10 @@ def run_shard(request, games, model, out, shard):
                         state_calls=state.calls-state_calls if is_stateful else 0,
                         state_legal_ms=round((state.legal_ns-legal_ns)/1e6,3) if is_stateful else 0,
                         state_scored_ms=round((state.scored_ns-scored_ns)/1e6,3) if is_stateful else 0,
+                        state_packed_ms=round((state.packed_ns-packed_ns)/1e6,3) if is_stateful else 0,
+                        packed_decode_ms=round((state.packed_decode_ns-packed_decode_ns)/1e6,3) if is_stateful else 0,
+                        python_push_ms=round((state.python_push_ns-python_push_ns)/1e6,3) if is_stateful else 0,
+                        python_pop_ms=round((state.python_pop_ns-python_pop_ns)/1e6,3) if is_stateful else 0,
                         state_push_ms=round((state.push_ns-push_ns)/1e6,3) if is_stateful else 0,
                         state_pop_ms=round((state.pop_ns-pop_ns)/1e6,3) if is_stateful else 0,
                         move_construct_ms=round((state.move_ns-move_ns)/1e6,3) if is_stateful else 0,
@@ -171,7 +185,7 @@ def run_shard(request, games, model, out, shard):
                   positions_sha256=positions_sha, games_sha256=GAMES_SHA,
                   model_sha256=G7_SHA, records=records,
                   caution="Stateful ABI uses frame-validated legal cache and Board-only undo; "
-                          "opt-in native stable scoring retains Python search/evaluation; "
+                          "opt-in packed legal transport retains Python search/evaluation; "
                           "search throughput only, not strength or 10x engine speed.")
     target = Path(out)
     target.mkdir(parents=True, exist_ok=True)
@@ -210,7 +224,8 @@ def aggregate(parts, out):
             median_elapsed_ms=statistics.median(r["elapsed_ms"] for r in group),
             depth_distribution=dict(Counter(str(r["depth"]) for r in group)),
             totals_ms={key:round(sum(r[key] for r in group),3) for key in
-                       ("sfen_ms","abi_ms","state_legal_ms","state_scored_ms","state_push_ms",
+                       ("sfen_ms","abi_ms","state_legal_ms","state_scored_ms","state_packed_ms",
+                        "packed_decode_ms","python_push_ms","python_pop_ms","state_push_ms",
                         "state_pop_ms","move_construct_ms","order_sort_ms","state_open_ms",
                         "validate_ms","apply_ms","history_ms")},
             cache_counts={key:sum(r[key] for r in group) for key in
