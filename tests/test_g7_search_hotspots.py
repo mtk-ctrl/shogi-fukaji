@@ -19,6 +19,14 @@ class G7HotspotProtocolTests(unittest.TestCase):
             with self.subTest(field=field), self.assertRaises(ValueError):
                 validate_request(c)
 
+    def test_profile_is_bounded_and_read_only(self):
+        c = expected_request()
+        self.assertEqual(c['samples'], 16)
+        self.assertEqual(c['fixed_depth'], 2)
+        self.assertTrue(c['instrumented'])
+        self.assertFalse(c['training_allowed'])
+        self.assertFalse(c['adoption_allowed'])
+
     def test_reject_extra_key(self):
         c = expected_request()
         c["unapproved"] = True
