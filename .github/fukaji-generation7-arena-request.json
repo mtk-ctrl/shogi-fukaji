@@ -1,0 +1,25 @@
+{
+  "research_only": true,
+  "training_allowed": false,
+  "model_adoption_allowed": false,
+  "model_sha256": {
+    "g1": "881af10b5bc0cde591e37a9aee883213fa7dd602345b786b9b93d69c7e6ed239",
+    "g6": "99984388447a26cef9ca770bd3efe0cd38af784aba056395e95f90f5a4d4ff08",
+    "g7": "417d18e7b64494c9febdf6d217afbe4e4979e68d04528f16db8b45c0bcde2a0e"
+  },
+  "model_runs": {
+    "g1": 40359123574,
+    "g6": 40429892376,
+    "g7": 40434466661
+  },
+  "seed": 20273727,
+  "pairs_per_comparison": 32,
+  "shards": 8,
+  "opening_plies": 6,
+  "max_plies": 200,
+  "movetime_ms": 200,
+  "depth": 2,
+  "mix_percent": 25,
+  "fast_relative": true,
+  "root_alpha_beta_both": true
+}
