@@ -1,0 +1,65 @@
+name: FUKAJI frozen generation 6 research training
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/fukaji-generation7-request.json"
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-generation7-training
+  cancel-in-progress: false
+jobs:
+  train:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Verify all tests and frozen G7 request
+        run: |
+          python -m unittest discover -s tests -v
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from fukaji.generation7_train import validate_request
+          validate_request(json.loads(Path('.github/fukaji-generation7-request.json').read_text()))
+          PY
+      - name: Download G6 model, 382 mates and frozen split assignments
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-generation6-research-40429892376
+          run-id: 40429892376
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/generation7/old
+      - name: Download 190 replay-verified G6 selfplay mates
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-generation6-selfplay-aggregate-40431771135
+          run-id: 40431771135
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/generation7/new
+      - name: Train research G7 from G6 using only frozen train parents
+        run: |
+          python -m fukaji.generation7_train \
+            --request .github/fukaji-generation7-request.json \
+            --old-data build/generation7/old/merged_verified_mates.jsonl \
+            --old-report build/generation7/old/generation6_report.json \
+            --old-splits build/generation7/old/frozen_parent_splits.json \
+            --new-data build/generation7/new/verified_mates.jsonl \
+            --new-report build/generation7/new/selfplay_aggregate_report.json \
+            --generation6 build/generation7/old/mover-relative-generation6-research.npz \
+            --out build/generation7/research
+      - name: Upload unadopted G7 candidate, frozen split manifest and mates
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-generation7-research-${{ github.run_id }}
+          path: build/generation7/research/
+          retention-days: 30
+          if-no-files-found: error
