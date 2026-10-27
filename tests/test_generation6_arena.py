@@ -18,6 +18,11 @@ class Generation6ArenaTest(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     validate_request(bad)
 
+    def test_workflow_uses_correct_frozen_model_sources(self):
+        workflow = Path(".github/workflows/generation6-arena.yml").read_text(encoding="utf-8")
+        self.assertIn("name: fukaji-generation5-research-40424947260\\n          run-id: 40424947260".replace("\\n", "\n"), workflow)
+        self.assertIn("name: fukaji-generation6-research-40429892376\\n          run-id: 40429892376".replace("\\n", "\n"), workflow)
+
     def test_missing_shards(self):
         with tempfile.TemporaryDirectory() as tmp:
             with self.assertRaisesRegex(ValueError, "eight"):
