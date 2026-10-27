@@ -21,7 +21,7 @@
     "python_guard",
     "native_ordered",
     "native_stateful_scored",
-    "native_stateful_packed"
+    "native_stateful_snapshot"
   ],
   "seed": 20271027
 }
