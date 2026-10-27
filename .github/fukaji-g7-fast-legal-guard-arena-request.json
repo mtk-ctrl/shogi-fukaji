@@ -1,0 +1,20 @@
+{
+  "research_only": true,
+  "training_allowed": false,
+  "model_adoption_allowed": false,
+  "model_run": 40434466661,
+  "model_sha256": "417d18e7b64494c9febdf6d217afbe4e4979e68d04528f16db8b45c0bcde2a0e",
+  "seed": 20275027,
+  "pairs": 128,
+  "shards": 20,
+  "opening_plies": 6,
+  "max_plies": 240,
+  "movetime_ms": 200,
+  "depth": 4,
+  "mix_percent": 25,
+  "fast_relative": true,
+  "root_alpha_beta_both": true,
+  "fast_move_list_both": true,
+  "fast_legal_guard_candidate": true,
+  "fast_legal_guard_baseline": false
+}
