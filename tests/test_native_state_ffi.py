@@ -1,0 +1,194 @@
+"""Independent equivalence tests for the bounded stateful C++ research ABI.
+
+No production Engine patch, training, model adoption or match dispatch.
+"""
+from __future__ import annotations
+
+import ctypes
+import random
+import shutil
+import subprocess
+import tempfile
+import unittest
+from pathlib import Path
+
+import shogi
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+@unittest.skipUnless(shutil.which("g++"), "g++ required")
+class NativeStateFFITests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = tempfile.TemporaryDirectory()
+        binary = Path(cls.tmp.name) / "libfukaji_state.so"
+        build = subprocess.run(
+            ["g++", "-std=c++17", "-O2", "-fPIC", "-shared",
+             "-Wall", "-Wextra", "-Werror",
+             str(ROOT / "native/rules_state_ffi.cpp"), "-o", str(binary)],
+            capture_output=True, text=True, timeout=90,
+        )
+        if build.returncode:
+            raise AssertionError(build.stdout + build.stderr)
+        cls.lib = ctypes.CDLL(str(binary))
+        specs = {
+            "open": ([ctypes.c_char_p, ctypes.c_size_t,
+                      ctypes.POINTER(ctypes.c_uint64)], ctypes.c_int),
+            "close": ([ctypes.c_uint64], ctypes.c_int),
+            "legal": ([ctypes.c_uint64, ctypes.c_void_p, ctypes.c_size_t], ctypes.c_int),
+            "sfen": ([ctypes.c_uint64, ctypes.c_void_p, ctypes.c_size_t], ctypes.c_int),
+            "verdict": ([ctypes.c_uint64, ctypes.c_void_p, ctypes.c_size_t], ctypes.c_int),
+            "is_check": ([ctypes.c_uint64], ctypes.c_int),
+            "push": ([ctypes.c_uint64, ctypes.c_char_p, ctypes.c_size_t], ctypes.c_int),
+            "pop": ([ctypes.c_uint64], ctypes.c_int),
+        }
+        for name, (args, result) in specs.items():
+            fn = getattr(cls.lib, "fukaji_state_" + name)
+            fn.argtypes = args
+            fn.restype = result
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.tmp.cleanup()
+
+    def open_board(self, board):
+        data = board.sfen().encode("ascii")
+        handle = ctypes.c_uint64()
+        status = self.lib.fukaji_state_open(data, len(data), ctypes.byref(handle))
+        self.assertEqual(status, 0)
+        self.assertGreater(handle.value, 0)
+        return handle.value
+
+    def read(self, handle, name, capacity=16384):
+        buf = ctypes.create_string_buffer(capacity)
+        size = getattr(self.lib, "fukaji_state_" + name)(handle, buf, len(buf))
+        self.assertGreaterEqual(size, 0, (name, size))
+        return buf.raw[:size].decode("ascii")
+
+    def check(self, handle, board):
+        self.assertEqual(self.read(handle, "sfen"), board.sfen())
+        self.assertEqual(self.lib.fukaji_state_is_check(handle), int(board.is_check()))
+        self.assertEqual(
+            self.read(handle, "legal").split(",") if list(board.legal_moves) else [],
+            [move.usi() for move in board.legal_moves],
+            board.sfen(),
+        )
+
+    def test_special_positions_and_pawn_drop_mate(self):
+        sfens = (
+            shogi.Board().sfen(),
+            "4r3k/9/9/9/9/9/9/4G4/4K4 b - 1",
+            "3pkp3/3p1p3/4G4/9/9/9/9/9/4K4 b P 1",
+            "4k4/9/9/9/9/9/9/9/4K4 b RBGSNLP 1",
+            "4k4/9/9/9/9/9/9/9/4K4 w rbgsnlp 1",
+        )
+        for sfen in sfens:
+            with self.subTest(sfen=sfen):
+                board = shogi.Board(sfen)
+                handle = self.open_board(board)
+                try:
+                    self.check(handle, board)
+                    if "3pkp3" in sfen:
+                        self.assertNotIn("P*5b", self.read(handle, "legal").split(","))
+                finally:
+                    self.assertEqual(self.lib.fukaji_state_close(handle), 0)
+
+    def test_random_reachable_push_pop_and_order(self):
+        rng = random.Random(20271027)
+        for series in range(6):
+            board = shogi.Board()
+            handle = self.open_board(board)
+            try:
+                self.check(handle, board)
+                count = 0
+                for _ in range(50):
+                    moves = list(board.legal_moves)
+                    if not moves:
+                        break
+                    move = rng.choice(moves)
+                    word = move.usi().encode("ascii")
+                    self.assertEqual(self.lib.fukaji_state_push(handle, word, len(word)),
+                                     0, (series, board.sfen(), move.usi()))
+                    board.push(move)
+                    self.check(handle, board)
+                    count += 1
+                for _ in range(count):
+                    self.assertEqual(self.lib.fukaji_state_pop(handle), 0)
+                    board.pop()
+                    self.check(handle, board)
+                self.assertEqual(board.sfen(), shogi.Board().sfen())
+                self.assertEqual(self.read(handle, "verdict"), "none")
+            finally:
+                self.assertEqual(self.lib.fukaji_state_close(handle), 0)
+
+    def test_continuous_check_and_ordinary_repetition(self):
+        cases = (
+            ("4k4/9/5R3/9/9/9/9/9/4K4 b - 1",
+             ("4c5c", "5a4a", "5c4c", "4a5a"), "black_loses"),
+            ("4k4/9/9/9/9/9/5r3/9/4K4 w - 1",
+             ("4g5g", "5i4i", "5g4g", "4i5i"), "white_loses"),
+            ("4k4/9/9/9/9/9/9/9/4K4 b - 1",
+             ("5i5h", "5a5b", "5h5i", "5b5a"), "draw"),
+        )
+        for sfen, cycle, verdict in cases:
+            with self.subTest(verdict=verdict):
+                board = shogi.Board(sfen)
+                handle = self.open_board(board)
+                try:
+                    for repeat in range(3):
+                        for usi in cycle:
+                            move = shogi.Move.from_usi(usi)
+                            self.assertIn(move, board.legal_moves)
+                            self.assertEqual(self.lib.fukaji_state_push(
+                                handle, usi.encode("ascii"), len(usi)), 0)
+                            board.push(move)
+                            self.check(handle, board)
+                        self.assertEqual(self.read(handle, "verdict"),
+                                         verdict if repeat == 2 else "none")
+                    self.assertTrue(board.is_fourfold_repetition())
+                    self.assertEqual(self.lib.fukaji_state_pop(handle), 0)
+                    board.pop()
+                    self.check(handle, board)
+                    self.assertEqual(self.read(handle, "verdict"), "none")
+                finally:
+                    self.assertEqual(self.lib.fukaji_state_close(handle), 0)
+
+    def test_rejected_inputs_and_transactional_state(self):
+        board = shogi.Board()
+        handle = self.open_board(board)
+        try:
+            self.assertLess(self.lib.fukaji_state_push(handle, b"9a9a", 4), 0)
+            self.assertLess(self.lib.fukaji_state_push(handle, b"x\n", 2), 0)
+            self.assertLess(self.lib.fukaji_state_pop(handle), 0)
+            self.assertLess(self.lib.fukaji_state_legal(
+                handle, ctypes.create_string_buffer(2), 2), 0)
+            self.assertLess(self.lib.fukaji_state_is_check(99999999), 0)
+            self.check(handle, board)
+        finally:
+            self.assertEqual(self.lib.fukaji_state_close(handle), 0)
+        self.assertLess(self.lib.fukaji_state_is_check(handle), 0)
+        invalid = ctypes.c_uint64(77)
+        self.assertLess(self.lib.fukaji_state_open(
+            b"invalid", 7, ctypes.byref(invalid)), 0)
+        self.assertEqual(invalid.value, 0)
+
+    def test_handle_capacity_and_no_reuse(self):
+        board = shogi.Board()
+        handles = [self.open_board(board) for _ in range(16)]
+        try:
+            data = board.sfen().encode("ascii")
+            rejected = ctypes.c_uint64(0)
+            self.assertLess(self.lib.fukaji_state_open(
+                data, len(data), ctypes.byref(rejected)), 0)
+            self.assertEqual(rejected.value, 0)
+        finally:
+            for handle in handles:
+                self.assertEqual(self.lib.fukaji_state_close(handle), 0)
+        new_handle = self.open_board(board)
+        self.assertNotIn(new_handle, handles)
+        self.assertEqual(self.lib.fukaji_state_close(new_handle), 0)
+
+
+if __name__ == "__main__":
+    unittest.main()
