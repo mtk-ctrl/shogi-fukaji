@@ -1,5 +1,5 @@
 {
-  "enabled": true,
+  "enabled": false,
   "research_only": true,
   "training_allowed": false,
   "adoption_allowed": false,
