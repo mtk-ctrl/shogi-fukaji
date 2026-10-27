@@ -41,6 +41,7 @@ class StatefulRules:
             "close": ([ctypes.c_uint64], ctypes.c_int),
             "legal": ([ctypes.c_uint64, ctypes.c_void_p, ctypes.c_size_t], ctypes.c_int),
             "scored": ([ctypes.c_uint64, ctypes.c_void_p, ctypes.c_size_t], ctypes.c_int),
+            "scored_packed": ([ctypes.c_uint64, ctypes.POINTER(ctypes.c_uint32), ctypes.c_size_t], ctypes.c_int),
             "sfen": ([ctypes.c_uint64, ctypes.c_void_p, ctypes.c_size_t], ctypes.c_int),
             "verdict": ([ctypes.c_uint64, ctypes.c_void_p, ctypes.c_size_t], ctypes.c_int),
             "is_check": ([ctypes.c_uint64], ctypes.c_int),
@@ -57,6 +58,10 @@ class StatefulRules:
         self.calls = 0
         self.legal_ns = 0
         self.scored_ns = 0
+        self.packed_ns = 0
+        self.packed_decode_ns = 0
+        self.python_push_ns = 0
+        self.python_pop_ns = 0
         self.push_ns = 0
         self.pop_ns = 0
         self.move_ns = 0
@@ -104,6 +109,22 @@ class StatefulRules:
         result = words.split(",") if words else []
         if len(result) != len(set(result)):
             raise RuntimeError("duplicate C++ scored legal move")
+        if self.audit:
+            self.assert_equal(board, full=True)
+        return result
+
+    def scored_packed_order(self, board):
+        """Bounded compact move transport, still generated from frame-validated legal moves."""
+        output = (ctypes.c_uint32 * 1024)()
+        start = time.perf_counter_ns()
+        count = self.lib.fukaji_state_scored_packed(self.handle.value, output, len(output))
+        self.packed_ns += time.perf_counter_ns() - start
+        self.calls += 1
+        if count < 0 or count > len(output):
+            raise RuntimeError(f"native packed scored moves rejected: {count}")
+        result = list(output[:count])
+        if len(result) != len(set(result)):
+            raise RuntimeError("duplicate native packed legal move")
         if self.audit:
             self.assert_equal(board, full=True)
         return result
@@ -161,7 +182,11 @@ class SyncedBoard:
         word = move.usi()
         self.state.push(word)
         try:
-            self.board.push(move)
+            started = time.perf_counter_ns()
+            try:
+                self.board.push(move)
+            finally:
+                self.state.python_push_ns += time.perf_counter_ns() - started
         except BaseException:
             self.state.pop()
             raise
@@ -175,7 +200,11 @@ class SyncedBoard:
         word = self.stack[-1]
         self.state.pop()
         try:
-            move = self.board.pop()
+            started = time.perf_counter_ns()
+            try:
+                move = self.board.pop()
+            finally:
+                self.state.python_pop_ns += time.perf_counter_ns() - started
         except BaseException:
             self.state.push(word)
             raise
@@ -189,23 +218,56 @@ class SyncedBoard:
             raise RuntimeError("search failed to restore Python board")
         self.state.assert_equal(self.board, full=True)
 
+def packed_to_move(code):
+    """Decode only compact coordinates, never treat them as a legality certificate."""
+    if not isinstance(code, int) or code < 0 or code >= (1 << 18):
+        raise ValueError("invalid packed move")
+    to_square = code & 127
+    from_square = (code >> 7) & 127
+    promotion = bool((code >> 14) & 1)
+    drop = (code >> 15) & 7
+    if to_square >= 81 or (from_square >= 81 and from_square != 127):
+        raise ValueError("invalid packed square")
+    if from_square == 127:
+        if not 1 <= drop <= 7 or promotion:
+            raise ValueError("invalid packed drop")
+        return shogi.Move(None, to_square, False, drop)
+    if drop:
+        raise ValueError("invalid packed ordinary move")
+    return shogi.Move(from_square, to_square, promotion, None)
+
+
 @contextmanager
-def stateful_order_search(state, *, cached_moves=False, native_scored=False):
+def stateful_order_search(state, *, cached_moves=False, native_scored=False,
+                          native_packed=False):
     """Research-only bounded move parsing cache; ordering and legality unchanged."""
+    if native_packed and not native_scored:
+        raise ValueError("packed transport requires native scored legal order")
     original = engine.ordered_moves
     # A USI move's coordinates/promotion are position-independent. Cache only
     # the immutable parsed representation, never legal status or board state.
     parse_move = (lru_cache(maxsize=8192)(shogi.Move.from_usi)
                   if cached_moves else shogi.Move.from_usi)
 
+    parse_packed = (lru_cache(maxsize=8192)(packed_to_move)
+                    if cached_moves else packed_to_move)
+
     def ordered(board, fast_move_list=False, fast_legal_guard=False):
         if not (fast_move_list and fast_legal_guard):
             raise RuntimeError("stateful research requires frozen G7 options")
-        words = (state.scored_order(board) if native_scored
-                 else state.legal_pseudo_order(board))
-        started = time.perf_counter_ns()
-        moves = [parse_move(word) for word in words]
-        state.move_ns += time.perf_counter_ns() - started
+        if native_packed:
+            codes = state.scored_packed_order(board)
+            started = time.perf_counter_ns()
+            moves = [parse_packed(code) for code in codes]
+            elapsed = time.perf_counter_ns() - started
+            state.packed_decode_ns += elapsed
+            state.move_ns += elapsed
+        else:
+            words = (state.scored_order(board) if native_scored
+                     else state.legal_pseudo_order(board))
+            started = time.perf_counter_ns()
+            moves = [parse_move(word) for word in words]
+            state.move_ns += time.perf_counter_ns() - started
         if not native_scored:
             started = time.perf_counter_ns()
             def score(move):
@@ -222,6 +284,6 @@ def stateful_order_search(state, *, cached_moves=False, native_scored=False):
     finally:
         engine.ordered_moves = original
         if cached_moves:
-            info = parse_move.cache_info()
+            info = (parse_packed if native_packed else parse_move).cache_info()
             state.parse_cache_hits += info.hits
             state.parse_cache_misses += info.misses
