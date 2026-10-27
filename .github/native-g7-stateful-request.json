@@ -20,8 +20,8 @@
   "variants": [
     "python_guard",
     "native_ordered",
-    "native_stateful_cached",
-    "native_stateful_scored"
+    "native_stateful_scored",
+    "native_stateful_packed"
   ],
   "seed": 20271027
 }
