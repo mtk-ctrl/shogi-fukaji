@@ -1,5 +1,6 @@
 """Safety and equivalence checks for research-only C ABI / 20-way diagnosis."""
 import json
+import random
 import shutil
 import tempfile
 import unittest
@@ -9,7 +10,7 @@ import shogi
 from fukaji import engine
 from native.g7_inprocess_diagnosis import (
     InProcessBridge, build_shared, expected_request, validate_request,
-    aggregate, SHARDS, SAMPLES, VARIANTS,
+    aggregate, ordered_native_direct, native_order_search, SHARDS, SAMPLES, VARIANTS,
 )
 from native.g7_bridge_diagnosis import native_search, ordered_native
 
@@ -43,7 +44,29 @@ class InProcessRulesTests(unittest.TestCase):
                 [m.usi() for m in ordered_native(board, bridge)],
                 [m.usi() for m in engine.ordered_moves(
                     board, fast_move_list=True, fast_legal_guard=True)])
+            self.assertEqual(bridge.legal_pseudo_order(board),
+                             [m.usi() for m in board.legal_moves])
+            self.assertEqual(
+                [m.usi() for m in ordered_native_direct(board, bridge)],
+                [m.usi() for m in engine.ordered_moves(
+                    board, fast_move_list=True, fast_legal_guard=True)])
             self.assertEqual(board.sfen(), canonical)
+
+    def test_native_pseudo_order_reachable_positions(self):
+        bridge = InProcessBridge(self.binary)
+        for seed in range(8):
+            board = shogi.Board()
+            rng = random.Random(20271027 + seed)
+            for _ in range(24):
+                expected = [m.usi() for m in board.legal_moves]
+                self.assertEqual(bridge.legal_pseudo_order(board), expected)
+                self.assertEqual([m.usi() for m in ordered_native_direct(board, bridge)],
+                                 [m.usi() for m in engine.ordered_moves(
+                                     board, fast_move_list=True, fast_legal_guard=True)])
+                legal = list(board.legal_moves)
+                if not legal:
+                    break
+                board.push(rng.choice(legal))
 
     def test_fixed_depth_same_search_and_restore(self):
         bridge = InProcessBridge(self.binary)
@@ -54,6 +77,8 @@ class InProcessRulesTests(unittest.TestCase):
                     fast_move_list=True, fast_legal_guard=True)
         expected = engine.select_move(board, **args)
         with native_search(bridge):
+            self.assertEqual(engine.select_move(board, **args), expected)
+        with native_order_search(bridge):
             self.assertEqual(engine.select_move(board, **args), expected)
         self.assertIs(engine.ordered_moves, original)
         self.assertEqual(board.sfen(), before)
@@ -87,7 +112,7 @@ class AggregateTests(unittest.TestCase):
                         games_sha256="g", model_sha256="m", seed=20271027,
                         records=records)))
             result = aggregate(folder, folder / "out")
-            self.assertEqual(len(result["records"]), 240)
+            self.assertEqual(len(result["records"]), SAMPLES * len(VARIANTS))
             self.assertEqual(result["summary"]["native_inprocess"]["total_nodes"], 9600)
             (folder / "part-19.json").unlink()
             with self.assertRaises(ValueError):
