@@ -1,0 +1,65 @@
+name: FUKAJI frozen generation 5 research training
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/fukaji-generation5-request.json"
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-generation5-training
+  cancel-in-progress: false
+jobs:
+  train:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Verify all tests and frozen G5 request
+        run: |
+          python -m unittest discover -s tests -v
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from fukaji.generation5_train import validate_request
+          validate_request(json.loads(Path('.github/fukaji-generation5-request.json').read_text()))
+          PY
+      - name: Download G4 model, 118 mates and frozen split assignments
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-generation4-research-40418598213
+          run-id: 40418598213
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/generation5/old
+      - name: Download 104 replay-verified G4 selfplay mates
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-generation4-selfplay-aggregate-40421973408
+          run-id: 40421973408
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/generation5/new
+      - name: Train research G5 from G4 using only frozen train parents
+        run: |
+          python -m fukaji.generation5_train \
+            --request .github/fukaji-generation5-request.json \
+            --old-data build/generation5/old/merged_verified_mates.jsonl \
+            --old-report build/generation5/old/generation4_report.json \
+            --old-splits build/generation5/old/frozen_parent_splits.json \
+            --new-data build/generation5/new/verified_mates.jsonl \
+            --new-report build/generation5/new/selfplay_aggregate_report.json \
+            --generation4 build/generation5/old/mover-relative-generation4-research.npz \
+            --out build/generation5/research
+      - name: Upload unadopted G5 candidate, frozen split manifest and mates
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-generation5-research-${{ github.run_id }}
+          path: build/generation5/research/
+          retention-days: 30
+          if-no-files-found: error
