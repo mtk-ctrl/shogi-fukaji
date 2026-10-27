@@ -116,6 +116,39 @@ class StatefulG7Tests(unittest.TestCase):
         finally:
             state.close()
 
+    def test_packed_scored_order_and_fixed_depth_rollback(self):
+        args = dict(max_depth=2, complete_depth=True, root_alpha_beta=True,
+                    fast_move_list=True, fast_legal_guard=True)
+        sfens = (
+            shogi.Board().sfen(),
+            "4r3k/9/9/9/9/9/9/4G4/4K4 b - 1",
+            "3pkp3/3p1p3/4G4/9/9/9/9/9/4K4 b P 1",
+            "4k4/9/9/9/9/9/9/9/4K4 b RBGSNLP 1",
+        )
+        for sfen in sfens:
+            with self.subTest(sfen=sfen):
+                board = shogi.Board(sfen)
+                original = board.sfen()
+                baseline = engine.select_move(board, **args)
+                state = StatefulRules(self.binary, board, audit=True)
+                proxy = SyncedBoard(board, state)
+                try:
+                    with stateful_order_search(
+                            state, cached_moves=True, native_scored=True,
+                            native_packed=True):
+                        expected = [m.usi() for m in engine.ordered_moves(
+                            board, fast_move_list=True, fast_legal_guard=True)]
+                        self.assertEqual(
+                            [m.usi() for m in engine.ordered_moves(
+                                proxy, fast_move_list=True, fast_legal_guard=True)],
+                            expected)
+                        self.assertEqual(engine.select_move(proxy, **args), baseline)
+                    self.assertGreater(state.packed_ns, 0)
+                    self.assertGreater(state.packed_decode_ns, 0)
+                    proxy.assert_restored(original)
+                finally:
+                    state.close()
+
     def test_invalid_native_move_preserves_state(self):
         board = shogi.Board()
         state = StatefulRules(self.binary, board, audit=True)
