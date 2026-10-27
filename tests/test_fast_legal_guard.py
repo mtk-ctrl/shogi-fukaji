@@ -43,6 +43,31 @@ class FastLegalGuardTests(unittest.TestCase):
                     break
                 board.push(rng.choice(moves))
 
+    def test_uchi_fuzume_pawn_drop_is_not_shortcut(self):
+        # A pawn drop at 5b would mate the white king at 5a; prohibited.
+        board = shogi.Board("3pkp3/3p1p3/4G4/9/9/9/9/9/4K4 b P 1")
+        forbidden = shogi.Move.from_usi("P*5b")
+        self.assertNotIn(forbidden, board.legal_moves)
+        self.assertNotIn(forbidden, [m for m in fast_legal_moves(board)])
+        self.check_position(board)
+
+    def test_fourfold_repetition_state_preserved(self):
+        board = shogi.Board("4k4/9/9/9/9/9/9/9/4K4 b - 1")
+        cycle = ("5i5h", "5a5b", "5h5i", "5b5a")
+        for _ in range(3):
+            for usi in cycle:
+                move = shogi.Move.from_usi(usi)
+                self.assertIn(move, board.legal_moves)
+                board.push(move)
+        self.assertTrue(board.is_fourfold_repetition())
+        # python-shogi's push/pop may retain zero-count Counter keys; only
+        # positive repetition counts are semantically meaningful.
+        before = {k: v for k, v in board.transpositions.items() if v > 0}
+        self.check_position(board)
+        after = {k: v for k, v in board.transpositions.items() if v > 0}
+        self.assertEqual(before, after)
+        self.assertTrue(board.is_fourfold_repetition())
+
     def test_fixed_depth_and_default_off(self):
         for moves in ((), ("7g7f", "3c3d"), ("2g2f", "8c8d")):
             board = shogi.Board()
