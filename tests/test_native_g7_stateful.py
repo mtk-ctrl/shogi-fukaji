@@ -96,6 +96,26 @@ class StatefulG7Tests(unittest.TestCase):
         finally:
             state.close()
 
+    def test_native_scored_stable_order_and_fixed_depth(self):
+        board = shogi.Board("4k4/9/9/9/9/9/9/4R4/4K4 b P 1")
+        original = board.sfen()
+        baseline_order = [m.usi() for m in engine.ordered_moves(
+            board, fast_move_list=True, fast_legal_guard=True)]
+        state = StatefulRules(self.binary, board, audit=True)
+        proxy = SyncedBoard(board, state)
+        try:
+            with stateful_order_search(state, cached_moves=True, native_scored=True):
+                for _ in range(3):
+                    moves = engine.ordered_moves(
+                        proxy, fast_move_list=True, fast_legal_guard=True)
+                    self.assertEqual([m.usi() for m in moves], baseline_order)
+                    proxy.push(moves[0])
+                    proxy.pop()
+            proxy.assert_restored(original)
+            self.assertGreater(state.scored_ns, 0)
+        finally:
+            state.close()
+
     def test_invalid_native_move_preserves_state(self):
         board = shogi.Board()
         state = StatefulRules(self.binary, board, audit=True)
