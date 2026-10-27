@@ -76,7 +76,7 @@ def sample_positions(rows):
                 if move not in board.legal_moves:
                     raise ValueError("illegal sampled history")
                 board.push(move)
-            if bool(board.turn) != color or board.is_checkmate():
+            if (board.turn == shogi.BLACK) != color or board.is_checkmate():
                 raise ValueError("wrong side or terminal sample")
             sfen = board.sfen()
             if sfen in seen:
