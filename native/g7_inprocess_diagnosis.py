@@ -54,11 +54,13 @@ def validate_request(request):
 def build_shared(destination):
     if not shutil.which("g++"):
         raise RuntimeError("g++ required")
-    subprocess.run([
+    result = subprocess.run([
         "g++", "-std=c++17", "-O2", "-fPIC", "-shared",
         "-Wall", "-Wextra", "-Werror",
         str(ROOT / "native/rules_ffi.cpp"), "-o", str(destination),
-    ], check=True, capture_output=True, text=True, timeout=90)
+    ], capture_output=True, text=True, timeout=90)
+    if result.returncode:
+        raise RuntimeError("native shared build failed: " + result.stderr[-3000:])
 
 
 class InProcessBridge:
