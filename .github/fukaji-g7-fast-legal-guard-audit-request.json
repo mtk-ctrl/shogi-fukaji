@@ -1,0 +1,11 @@
+{
+  "source_run": 40451970822,
+  "source_shards": 20,
+  "pairs": 128,
+  "games": 256,
+  "model_sha256": "417d18e7b64494c9febdf6d217afbe4e4979e68d04528f16db8b45c0bcde2a0e",
+  "audit_only": true,
+  "training_allowed": false,
+  "new_games_allowed": false,
+  "adoption_allowed": false
+}
