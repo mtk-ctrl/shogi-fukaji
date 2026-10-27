@@ -108,6 +108,12 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: mtk-ctrl/shogi-ai
+          ref: 807db500ee2739c1eb6a527b614eeea40a5993d6
+          path: kumoji-src
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -118,6 +124,8 @@ jobs:
           path: build/equal/parts
           merge-multiple: false
       - name: Replay and audit 64 games / 32 independent swapped pairs
+        env:
+          PYTHONPATH: ${{ github.workspace }}/kumoji-src:${{ github.workspace }}
         run: |
           python -m fukaji.g7_fast_equal_kumoji --mode aggregate \
             --request .github/fukaji-g7-fast-equal-kumoji-request.json \

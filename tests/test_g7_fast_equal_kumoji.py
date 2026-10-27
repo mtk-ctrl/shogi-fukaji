@@ -1,4 +1,5 @@
 import copy
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -60,8 +61,10 @@ class G7EqualKumojiTests(unittest.TestCase):
 
     def test_missing_shards_rejected(self):
         with tempfile.TemporaryDirectory() as d:
+            request = Path(d)/"request.json"
+            request.write_text(json.dumps(expected_request()), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "missing independent shard"):
-                aggregate(Path(d)/"request.json", d, d)
+                aggregate(request, d, d)
 
     def test_workflow_bounded_and_separate(self):
         yml = Path(".github/workflows/g7-fast-equal-kumoji.yml").read_text()
@@ -74,7 +77,7 @@ class G7EqualKumojiTests(unittest.TestCase):
         self.assertIn("fukaji.g7_fast_equal_kumoji", yml)
         self.assertIn("aggregate:", yml)
         self.assertIn("if-no-files-found: error", yml)
-        self.assertEqual(yml.count(".github/fukaji-g7-fast-equal-kumoji-request.json"), 3)
+        self.assertEqual(yml.count(".github/fukaji-g7-fast-equal-kumoji-request.json"), 4)
 
 
 if __name__ == "__main__":
