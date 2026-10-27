@@ -1,0 +1,106 @@
+name: FUKAJI frozen G7 vs G1 and G6 independent paired arena
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/fukaji-generation7-arena-request.json"
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-generation7-arena
+  cancel-in-progress: false
+jobs:
+  paired:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Verify all unit tests and frozen G7 paired protocol
+        run: |
+          python -m unittest discover -s tests -v
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from fukaji.generation7_arena import validate_request
+          validate_request(json.loads(Path('.github/fukaji-generation7-arena-request.json').read_text()))
+          PY
+      - name: Download frozen parent G1
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-relative-trial-40359123574
+          run-id: 40359123574
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/g7_arena/g1
+      - name: Download frozen research G6
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-generation6-research-40429892376
+          run-id: 40429892376
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/g7_arena/g6
+      - name: Download frozen research G7
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-generation7-research-40434466661
+          run-id: 40434466661
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/g7_arena/g7
+      - name: Play sixteen equal-time color-swapped games against G1 and G6
+        run: |
+          python -m fukaji.generation7_arena \
+            --mode play \
+            --request .github/fukaji-generation7-arena-request.json \
+            --g1 build/g7_arena/g1/mover-relative-v1.npz \
+            --g6 build/g7_arena/g6/mover-relative-generation6-research.npz \
+            --g7 build/g7_arena/g7/mover-relative-generation7-research.npz \
+            --shard ${{ matrix.shard }} \
+            --out build/g7_arena/part
+      - name: Upload replay-verified shard
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-g7-arena-part-${{ matrix.shard }}-${{ github.run_id }}
+          path: build/g7_arena/part/
+          retention-days: 30
+          if-no-files-found: warn
+  aggregate:
+    needs: paired
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Download all eight G7 comparison shards
+        uses: actions/download-artifact@v4
+        with:
+          pattern: fukaji-g7-arena-part-*
+          path: build/g7_arena/parts
+          merge-multiple: false
+      - name: Verify all 128 games and 64 color-swapped pairs
+        run: |
+          python -m fukaji.generation7_arena \
+            --mode aggregate \
+            --parts build/g7_arena/parts \
+            --out build/g7_arena/aggregate
+      - name: Upload audited comparison
+        uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-g7-arena-aggregate-${{ github.run_id }}
+          path: build/g7_arena/aggregate/
+          retention-days: 30
+          if-no-files-found: error
