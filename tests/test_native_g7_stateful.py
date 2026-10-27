@@ -8,8 +8,7 @@ from pathlib import Path
 import shogi
 from fukaji import engine
 from native.g7_bridge_diagnosis import search
-from native.g7_inprocess_diagnosis import native_order_search
-from native.g7_stateful_bridge import StatefulRules, SyncedBoard, build_state_shared
+from native.g7_stateful_bridge import StatefulRules, SyncedBoard, build_state_shared, stateful_order_search
 
 
 @unittest.skipUnless(shutil.which("g++"), "g++ required")
@@ -64,7 +63,7 @@ class StatefulG7Tests(unittest.TestCase):
             synced = SyncedBoard(board, state)
             saved = engine.ordered_moves
             try:
-                with native_order_search(state):
+                with stateful_order_search(state):
                     candidate = engine.select_move(synced, **args)
                 self.assertEqual(candidate, baseline)
                 self.assertIs(engine.ordered_moves, saved)
@@ -95,7 +94,7 @@ class StatefulG7Tests(unittest.TestCase):
         state = StatefulRules(self.binary, board)
         synced = SyncedBoard(board, state)
         try:
-            with native_order_search(state):
+            with stateful_order_search(state):
                 move, depth, nodes = engine.select_move(
                     synced, movetime_ms=1, max_depth=4,
                     root_alpha_beta=True, fast_move_list=True,
