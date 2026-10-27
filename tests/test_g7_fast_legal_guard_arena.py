@@ -93,7 +93,7 @@ class G7FastLegalGuardArenaTests(unittest.TestCase):
                                       for field in FIELDS},
                         })
                 games = folder / "paired_games.jsonl"
-                games.write_text("".join(json.dumps(row) + "\\n" for row in rows))
+                games.write_text("".join(json.dumps(row) + "\n" for row in rows))
                 report = {
                     "status": "research_only_not_adopted", "shard": shard,
                     "games": len(rows), "pairs": len(rows) // 2,
