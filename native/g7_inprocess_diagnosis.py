@@ -31,7 +31,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SAMPLES = 80
 SHARDS = 20
 SEED = 20271027
-VARIANTS = ("python_guard", "native_ipc", "native_inprocess")
+VARIANTS = ("python_guard", "native_ipc", "native_inprocess", "native_ordered")
 
 
 def expected_request():
@@ -69,11 +69,14 @@ class InProcessBridge:
         self.function = self.library.fukaji_legal_usi
         self.function.argtypes = (ctypes.c_char_p, ctypes.c_void_p, ctypes.c_size_t)
         self.function.restype = ctypes.c_int
+        self.ordered_function = self.library.fukaji_legal_pseudo_order_usi
+        self.ordered_function.argtypes = self.function.argtypes
+        self.ordered_function.restype = ctypes.c_int
         self.calls = 0
         self.sfen_ns = 0
         self.native_ns = 0
 
-    def legal(self, board):
+    def _legal(self, board, pseudo_order=False):
         started = time.perf_counter_ns()
         before = board.sfen()
         self.sfen_ns += time.perf_counter_ns() - started
@@ -81,17 +84,52 @@ class InProcessBridge:
             raise ValueError("SFEN too large")
         buffer = ctypes.create_string_buffer(16384)
         started = time.perf_counter_ns()
-        length = self.function(before.encode("ascii"), buffer, len(buffer))
+        function = self.ordered_function if pseudo_order else self.function
+        length = function(before.encode("ascii"), buffer, len(buffer))
         self.native_ns += time.perf_counter_ns() - started
         self.calls += 1
         if length < 0 or length >= len(buffer):
             raise ValueError("native ABI rejected SFEN or output capacity")
         words = buffer.raw[:length].decode("ascii").split(",") if length else []
-        if words != sorted(set(words)):
-            raise ValueError("native ABI response is not a sorted unique list")
+        if len(words) != len(set(words)):
+            raise ValueError("native ABI response contains duplicate moves")
+        if not pseudo_order and words != sorted(words):
+            raise ValueError("native ABI response is not sorted")
         if board.sfen() != before:
             raise ValueError("native ABI mutated Python board")
         return words
+
+    def legal(self, board):
+        return self._legal(board)
+
+    def legal_pseudo_order(self, board):
+        return self._legal(board, pseudo_order=True)
+
+
+def ordered_native_direct(board, bridge):
+    """Reconstruct stable capture/promotion order without Python pseudo enumeration."""
+    words = bridge.legal_pseudo_order(board)
+    moves = [shogi.Move.from_usi(word) for word in words]
+    def score(move):
+        target = board.piece_at(move.to_square)
+        return (engine.VALUES.get(target.piece_type, 0) if target else 0) + (
+            200 if move.promotion else 0)
+    moves.sort(key=score, reverse=True)
+    return moves
+
+
+@contextmanager
+def native_order_search(bridge):
+    original = engine.ordered_moves
+    def wrapper(board, fast_move_list=False, fast_legal_guard=False):
+        if not (fast_move_list and fast_legal_guard):
+            raise ValueError("ordered native research requires frozen G7 options")
+        return ordered_native_direct(board, bridge)
+    engine.ordered_moves = wrapper
+    try:
+        yield
+    finally:
+        engine.ordered_moves = original
 
 
 def frozen_positions(rows):
@@ -156,24 +194,32 @@ def run_shard(request, games, model, out, shard):
                 if ipc.legal(board) != original or direct.legal(board) != original:
                     raise ValueError(f"legal set mismatch at {index}")
                 if ([m.usi() for m in ordered_native(board, ipc)] != baseline_order
-                    or [m.usi() for m in ordered_native(board, direct)] != baseline_order):
+                    or [m.usi() for m in ordered_native(board, direct)] != baseline_order
+                    or [m.usi() for m in ordered_native_direct(board, direct)] != baseline_order):
                     raise ValueError(f"legal ordering mismatch at {index}")
                 fixed = search(board, frozen, fixed=True)
                 for bridge in (ipc, direct):
                     with native_search(bridge):
                         if search(board, frozen, fixed=True) != fixed:
                             raise ValueError(f"fixed-depth search mismatch at {index}")
+                with native_order_search(direct):
+                    if search(board, frozen, fixed=True) != fixed:
+                        raise ValueError(f"native pseudo-order fixed-depth mismatch at {index}")
                 # Rotate order to reduce warm-up / frequency drift.
                 modes = list(VARIANTS)
-                modes = modes[index % 3:] + modes[:index % 3]
+                modes = modes[index % len(VARIANTS):] + modes[:index % len(VARIANTS)]
                 for mode in modes:
-                    bridge = {"native_ipc": ipc, "native_inprocess": direct}.get(mode)
+                    bridge = {"native_ipc": ipc, "native_inprocess": direct,
+                              "native_ordered": direct}.get(mode)
                     calls = bridge.calls if bridge else 0
                     native_ns = direct.native_ns
                     sfen_ns = direct.sfen_ns
                     ipc_ns = ipc.io_ns
                     start = time.perf_counter()
-                    if bridge:
+                    if mode == "native_ordered":
+                        with native_order_search(direct):
+                            move, depth, nodes = search(board, frozen)
+                    elif bridge:
                         with native_search(bridge):
                             move, depth, nodes = search(board, frozen)
                     else:
@@ -188,9 +234,9 @@ def run_shard(request, games, model, out, shard):
                         fixed_move=fixed[0], fixed_nodes=fixed[2],
                         calls=bridge.calls - calls if bridge else 0,
                         native_ms=round((direct.native_ns-native_ns)/1e6, 3)
-                            if mode=="native_inprocess" else 0,
+                            if mode in ("native_inprocess", "native_ordered") else 0,
                         sfen_ms=round((direct.sfen_ns-sfen_ns)/1e6, 3)
-                            if mode=="native_inprocess" else 0,
+                            if mode in ("native_inprocess", "native_ordered") else 0,
                         ipc_ms=round((ipc.io_ns-ipc_ns)/1e6, 3)
                             if mode=="native_ipc" else 0,
                     ))
@@ -200,7 +246,7 @@ def run_shard(request, games, model, out, shard):
                   positions_sha256=position_hash, games_sha256=GAMES_SHA,
                   model_sha256=G7_SHA, seed=SEED, records=records,
                   caution="Exploratory search throughput, not playing strength; "
-                          "in-process ABI still uses SFEN and Python pseudo-order.")
+                          "native_ordered removes Python pseudo enumeration, but retains SFEN conversion.")
     target = Path(out)
     target.mkdir(parents=True, exist_ok=True)
     (target / f"part-{shard:02d}.json").write_text(

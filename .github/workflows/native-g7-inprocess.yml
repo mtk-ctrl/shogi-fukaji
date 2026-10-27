@@ -1,4 +1,4 @@
-name: FUKAJI native in-process G7 80 positions 20 runners (research only)
+name: FUKAJI native in-process G7 80 positions 20 runners / four modes (research only)
 on:
   workflow_dispatch:
   pull_request:
@@ -77,7 +77,7 @@ jobs:
           run-id: 40434466661
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path: build/g7
-      - name: Verify 4 distinct positions with frozen model and 3 modes
+      - name: Verify 4 distinct positions with frozen model and 4 modes
         run: |
           python -m native.g7_inprocess_diagnosis \
             --request .github/native-g7-inprocess-request.json \
@@ -108,7 +108,7 @@ jobs:
           pattern: fukaji-inprocess-part-*
           path: build/native-inprocess-parts
           merge-multiple: false
-      - name: Independently validate all 20 shards and 240 measurement rows
+      - name: Independently validate all 20 shards and 320 measurement rows
         run: |
           python -m native.g7_inprocess_diagnosis \
             --parts build/native-inprocess-parts \

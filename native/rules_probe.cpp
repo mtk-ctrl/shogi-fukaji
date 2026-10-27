@@ -255,6 +255,33 @@ static int from_usi_square(char file,char rank) {
   if(file<'1'||file>'9'||rank<'a'||rank>'i')throw runtime_error("invalid USI square");
   return (rank-'a')*9+('9'-file);
 }
+// Python-shogi 1.1.1 pseudo-legal iteration order: piece type 1..14,
+// ascending source and destination square, non-promotion before promotion;
+// then drops by destination square and piece type.  Filtered legal moves
+// preserve that order. This is independent of Python enumeration at runtime.
+static vector<string> ordered_legal_moves(const Board& b) {
+  vector<string> moves=pseudo_moves(b,true);
+  auto key=[&](const string& move)->array<int,4> {
+    int to=from_usi_square(move[2],move[3]);
+    if(move.size()==4 && move[1]=='*') {
+      auto index=string("PLNSGBR").find(move[0]);
+      if(index==string::npos)throw runtime_error("invalid generated drop");
+      return {1,to,static_cast<int>(index),0};
+    }
+    int from=from_usi_square(move[0],move[1]);
+    Piece piece=b.squares[from];
+    const string types=piece.promoted?"PLNSBR":"PLNSGBRK";
+    auto index=types.find(piece.type);
+    if(index==string::npos)throw runtime_error("invalid generated piece");
+    int type_rank=static_cast<int>(index)+(piece.promoted?9:1);
+    return {0,type_rank,from,to*2+(move.size()==5?1:0)};
+  };
+  stable_sort(moves.begin(),moves.end(),[&](const string& a,const string& c){
+    return key(a)<key(c);
+  });
+  return moves;
+}
+
 static void apply_legal_move(Board& b,const string& move) {
   // Validate with the independent full native legal generator before mutating.
   vector<string> legal=pseudo_moves(b,true);
@@ -389,9 +416,10 @@ int main() {
         if(line.size()<6||line[3]!=' '||(line[2]!='b'&&line[2]!='w'))
           throw runtime_error("check protocol");
         cout<<(checked(parse(line.substr(4)),line[2]=='b')?1:0)<<"\n";
-      } else if(line[0]=='P'||line[0]=='H') {
+      } else if(line[0]=='P'||line[0]=='H'||line[0]=='O') {
         Board b=parse(line.substr(2));
-        cout<<encode_moves(pseudo_moves(b,line[0]=='H'))<<"\n";
+        cout<<encode_moves(line[0]=='O' ? ordered_legal_moves(b) :
+                           pseudo_moves(b,line[0]=='H'))<<"\n";
       } else if(line[0]=='R') {
         string key=state_key(parse(line.substr(2)));
         cout<<(++counts[key]>=4?1:0)<<"\n";
