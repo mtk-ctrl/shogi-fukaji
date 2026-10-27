@@ -1,4 +1,4 @@
-"""Stage-1 independent native rule probe; not an engine option or speed claim."""
+"""Independent native rule equivalence; not an engine option or speed claim."""
 from __future__ import annotations
 import random
 import shutil
@@ -145,14 +145,42 @@ class NativeRulesProbeTests(unittest.TestCase):
             self.assertEqual(len(pseudo), len(set(pseudo)), b.sfen())
             self.assertEqual(len(hybrid), len(set(hybrid)), b.sfen())
             self.assertEqual(set(pseudo), expected_pseudo, b.sfen())
-            # Python fallback ONLY for forbidden pawn-drop mates.
-            corrected_hybrid = {
-                usi for usi in hybrid
-                if not (usi.startswith("P*")
-                        and shogi.Move.from_usi(usi) not in b.legal_moves)
-            }
-            self.assertEqual(corrected_hybrid, expected_legal, b.sfen())
+            self.assertEqual(set(hybrid), expected_legal, b.sfen())
             self.assertTrue(set(hybrid).issubset(set(pseudo)), b.sfen())
+
+    def test_native_pawn_drop_mate_and_nonmate(self):
+        # 5b is immediately in front of the opposing king in both positions.
+        # The first pawn is protected and every king escape is blocked;
+        # in the second the king can capture it, so the drop is legal.
+        mate = shogi.Board("3pkp3/3p1p3/4G4/9/9/9/9/9/4K4 b P 1")
+        nonmate = shogi.Board("4k4/9/9/9/9/9/9/9/4K4 b P 1")
+        for b, allowed in ((mate, False), (nonmate, True)):
+            pawn = "P*5b"
+            self.assertEqual(pawn in {m.usi() for m in b.legal_moves},
+                             allowed)
+            pseudo, legal = self.probe(["P " + b.sfen(), "H " + b.sfen()])
+            self.assertIn(pawn, pseudo.split(","))
+            self.assertEqual(pawn in legal.split(","), allowed)
+            self.assertEqual(set(legal.split(",")) if legal else set(),
+                             {m.usi() for m in b.legal_moves})
+
+    def test_native_legal_set_in_later_reachable_positions(self):
+        # Include captures and hand drops beyond the first 20 plies.
+        rng = random.Random(20271028)
+        positions = []
+        for _ in range(8):
+            b = shogi.Board()
+            for ply in range(100):
+                if ply % 5 == 0:
+                    positions.append(shogi.Board(b.sfen()))
+                moves = list(b.legal_moves)
+                if not moves:
+                    break
+                b.push(rng.choice(moves))
+        output = self.probe(["H " + b.sfen() for b in positions])
+        for b, line in zip(positions, output):
+            self.assertEqual(set(line.split(",")) if line else set(),
+                             {m.usi() for m in b.legal_moves}, b.sfen())
 
     def test_invalid_sfen_is_rejected(self):
         p = subprocess.run([self.binary], input="C b invalid\n",

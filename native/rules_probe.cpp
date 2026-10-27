@@ -1,5 +1,5 @@
 // FUKAJI research-only independent C++ attack/repetition probe.
-// No engine integration. This is NOT a complete native legal-move generator.
+// No engine integration. Research-only legal-move generator (no move-state engine).
 // Protocol: C <b|w> <SFEN> => whether that king is attacked; R <SFEN>
 // => fourfold state; Z => reset repetition history.
 #include <algorithm>
@@ -103,8 +103,8 @@ static string state_key(const Board& b) {
   return key+"|"+b.turn+"|"+b.hand;
 }
 
-// Stage 2: independently enumerate pseudo-legal moves and self-check-filtered
-// moves. H intentionally DOES NOT implement the pawn-drop-mate prohibition.
+// Stage 3: independently enumerate pseudo-legal moves and full legal moves.
+// H additionally forbids pawn-drop mate via independent native reply search.
 // Engine integration and speed claims are out of scope.
 static bool can_stay(Piece p,int row) {
   if(p.promoted || (p.type!='P'&&p.type!='L'&&p.type!='N'))return true;
@@ -183,6 +183,18 @@ static vector<string> pseudo_moves(const Board& b,bool self_check_filter) {
         Board next=b;
         next.squares[to]=p;
         if(checked(next,side))continue;
+        // A pawn drop is forbidden only if that pawn directly checks the
+        // opposing king AND the opponent has no self-check-safe reply.
+        // Against adjacent pawn check, a defensive drop cannot interpose,
+        // so the recursive reply enumeration cannot recurse into this rule.
+        if(p.type=='P') {
+          int enemy_king=b.kings[side?1:0];
+          if(enemy_king>=0 &&
+             attacks(next,to/9,to%9,enemy_king/9,enemy_king%9,p)) {
+            next.turn=side?"w":"b";
+            if(pseudo_moves(next,true).empty())continue;
+          }
+        }
       }
       result.push_back(string(1,p.type)+"*"+square_usi(to));
     }
