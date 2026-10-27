@@ -15,6 +15,10 @@ class FastMoveListDiagnosisTests(unittest.TestCase):
             with self.subTest(field=field), self.assertRaises(ValueError):
                 validate_request(config)
 
+    def test_exact_two_modes(self):
+        self.assertEqual(expected_request()['variants'], ['legacy', 'fast_list'])
+        self.assertEqual(expected_request()['samples'], 32)
+
     def test_reject_extra_keys(self):
         config = expected_request()
         config["unapproved"] = True
