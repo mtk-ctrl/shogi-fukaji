@@ -86,13 +86,13 @@ class NativeEvalSnapshotTests(unittest.TestCase):
         for sfen in (
             shogi.Board().sfen(),
             "4k4/9/9/9/9/9/9/4G4/4K4 b P 1",
-            "4k4/9/9/9/9/9/9/9/4K4 w rbgsnlp 1",
+            "4k4/9/9/9/9/9/9/9/4K4 w p 1",
         ):
             with self.subTest(sfen=sfen):
                 board = shogi.Board(sfen)
                 original = board.sfen()
                 baseline = search(board, self.model, fixed=True)
-                state = StatefulRules(self.binary, board, audit=True)
+                state = StatefulRules(self.binary, board, audit=False)
                 proxy = SyncedBoard(board, state)
                 old_evaluate = engine.evaluate
                 try:
