@@ -106,9 +106,11 @@ class G7FastLegalGuardArenaTests(unittest.TestCase):
                     "legal_replay_verified": True, "games_sha256": digest(games),
                 }
                 (folder / "paired_report.json").write_text(json.dumps(report))
-            with patch("fukaji.g7_fast_legal_guard_arena.opening",
-                       side_effect=lambda seed, count: [f"opening-{seed - SEED}"] * count), \\
-                 patch("fukaji.g7_fast_legal_guard_arena.replay_check"):
+            with (
+                patch("fukaji.g7_fast_legal_guard_arena.opening",
+                      side_effect=lambda seed, count: [f"opening-{seed - SEED}"] * count),
+                patch("fukaji.g7_fast_legal_guard_arena.replay_check"),
+            ):
                 report = aggregate(parts, root / "aggregate")
             self.assertEqual((report["games"], report["pairs"], report["unresolved"]),
                              (256, 128, 256))
