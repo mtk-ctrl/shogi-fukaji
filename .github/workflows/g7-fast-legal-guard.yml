@@ -1,0 +1,58 @@
+name: FUKAJI G7 conservative legal-guard frozen diagnosis
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/fukaji-g7-fast-legal-guard-request.json"
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-g7-fast-legal-guard
+  cancel-in-progress: false
+jobs:
+  diagnose:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Validate frozen guard protocol and unit tests
+        run: |
+          python -m unittest discover -s tests -v
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from fukaji.g7_fast_legal_guard_diagnosis import validate_request
+          validate_request(json.loads(Path(".github/fukaji-g7-fast-legal-guard-request.json").read_text()))
+          PY
+      - uses: actions/download-artifact@v4
+        with:
+          name: fukaji-kumoji-aggregate-40436859527
+          run-id: 40436859527
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/source
+      - uses: actions/download-artifact@v4
+        with:
+          name: fukaji-generation7-research-40434466661
+          run-id: 40434466661
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/g7
+      - name: Verify 32 legal sets and fixed-depth search then timed throughput
+        run: |
+          python -m fukaji.g7_fast_legal_guard_diagnosis \
+            --request .github/fukaji-g7-fast-legal-guard-request.json \
+            --games build/source/all_games.jsonl \
+            --model build/g7/mover-relative-generation7-research.npz \
+            --out build/g7-fast-legal-guard
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fukaji-g7-fast-legal-guard-${{ github.run_id }}
+          path: build/g7-fast-legal-guard/
+          retention-days: 30
+          if-no-files-found: warn

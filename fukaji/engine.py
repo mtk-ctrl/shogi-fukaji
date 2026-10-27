@@ -65,18 +65,46 @@ def evaluate_relative_fused(board, model):
     return int(round((1 - model.mix) * classical + model.mix * learned))
 
 
-def ordered_moves(board, fast_move_list=False):
-    # Opt-in research: list() may call python-shogi's costly __len__ first.
-    # A comprehension iterates the same legal moves without a size hint.
-    options=([m for m in board.legal_moves] if fast_move_list
-             else list(board.legal_moves))
+def fast_legal_moves(board):
+    """Conservative legality shortcut, falling back to python-shogi for risk cases.
+
+    When the king is not in check, a non-king move originating outside the
+    king's rank/file/diagonals cannot reveal a sliding attack. A non-pawn
+    drop cannot reveal an attack either. All other moves, especially king
+    moves, pinned pieces, evasions and pawn drops, use the original test.
+    """
+    king = board.king_squares[board.turn]
+    safe = king is not None and not board.is_check()
+    if safe:
+        kfile, krank = divmod(king, 9)
+    for move in board.generate_pseudo_legal_moves():
+        if safe:
+            if move.drop_piece_type:
+                if move.drop_piece_type != shogi.PAWN:
+                    yield move
+                    continue
+            elif move.from_square is not None and move.from_square != king:
+                mfile, mrank = divmod(move.from_square, 9)
+                if (mfile != kfile and mrank != krank
+                        and abs(mfile - kfile) != abs(mrank - krank)):
+                    yield move
+                    continue
+        if not board.is_suicide_or_check_by_dropping_pawn(move):
+            yield move
+
+
+def ordered_moves(board, fast_move_list=False, fast_legal_guard=False):
+    # Opt-in research: default path remains the original python-shogi logic.
+    source = fast_legal_moves(board) if fast_legal_guard else board.legal_moves
+    options=([m for m in source] if fast_move_list or fast_legal_guard
+             else list(source))
     def order(m):
         p=board.piece_at(m.to_square)
         return (VALUES.get(p.piece_type,0) if p else 0) + (200 if m.promotion else 0)
     options.sort(key=order,reverse=True)
     return options
 
-def negamax(board, depth, alpha, beta, deadline, nodes, model=None, fast_relative=False, guard_checkmate=False, fast_move_list=False):
+def negamax(board, depth, alpha, beta, deadline, nodes, model=None, fast_relative=False, guard_checkmate=False, fast_move_list=False, fast_legal_guard=False):
     nodes[0]+=1
     if (nodes[0]&127)==0 and time.monotonic()>=deadline:
         raise TimeoutError()
@@ -93,14 +121,14 @@ def negamax(board, depth, alpha, beta, deadline, nodes, model=None, fast_relativ
         return -1000
     if depth<=0:
         return evaluate(board, model, fast_relative)
-    legal=ordered_moves(board, fast_move_list=fast_move_list)
+    legal=ordered_moves(board, fast_move_list=fast_move_list, fast_legal_guard=fast_legal_guard)
     if not legal:
         return -MATE-depth if board.is_check() else 0
     best=-INF
     for move in legal:
         board.push(move)
         try:
-            score=-negamax(board,depth-1,-beta,-alpha,deadline,nodes,model,fast_relative,guard_checkmate,fast_move_list)
+            score=-negamax(board,depth-1,-beta,-alpha,deadline,nodes,model,fast_relative,guard_checkmate,fast_move_list,fast_legal_guard)
         finally:
             board.pop()
         if score>best:
@@ -110,8 +138,8 @@ def negamax(board, depth, alpha, beta, deadline, nodes, model=None, fast_relativ
             break
     return best
 
-def select_move(board, movetime_ms=200, max_depth=5, model=None, avoid_repetition=True, complete_depth=False, fast_relative=False, root_alpha_beta=False, guard_checkmate=False, fast_move_list=False):
-    moves=ordered_moves(board, fast_move_list=fast_move_list)
+def select_move(board, movetime_ms=200, max_depth=5, model=None, avoid_repetition=True, complete_depth=False, fast_relative=False, root_alpha_beta=False, guard_checkmate=False, fast_move_list=False, fast_legal_guard=False):
+    moves=ordered_moves(board, fast_move_list=fast_move_list, fast_legal_guard=fast_legal_guard)
     # At the root, prefer genuinely new legal positions over repeating an
     # earlier position. The old engine repeated 96/100 games to termination.
     # A move is not discarded if every legal move repeats; all moves remain
@@ -156,7 +184,7 @@ def select_move(board, movetime_ms=200, max_depth=5, model=None, avoid_repetitio
                 board.push(move)
                 try:
                     child_beta = -root_alpha if root_alpha_beta else INF
-                    score=-negamax(board,depth-1,-INF,child_beta,deadline,nodes,model,fast_relative,guard_checkmate,fast_move_list)
+                    score=-negamax(board,depth-1,-INF,child_beta,deadline,nodes,model,fast_relative,guard_checkmate,fast_move_list,fast_legal_guard)
                 finally:
                     board.pop()
                 if score>scorebest:
@@ -182,6 +210,7 @@ def command_loop():
     root_alpha_beta = False
     guard_checkmate = False
     fast_move_list = False
+    fast_legal_guard = False
     for raw in sys.stdin:
         tokens=raw.strip().split()
         if not tokens:
@@ -198,6 +227,7 @@ def command_loop():
             print("option name RootAlphaBeta type check default false")
             print("option name GuardCheckmate type check default false")
             print("option name FastMoveList type check default false")
+            print("option name FastLegalGuard type check default false")
             print("usiok",flush=True)
         elif cmd=="isready":
             if model_path:
@@ -237,6 +267,8 @@ def command_loop():
                 guard_checkmate = tokens[tokens.index("value")+1].lower() == "true"
             if "FastMoveList" in tokens and "value" in tokens:
                 fast_move_list = tokens[tokens.index("value")+1].lower() == "true"
+            if "FastLegalGuard" in tokens and "value" in tokens:
+                fast_legal_guard = tokens[tokens.index("value")+1].lower() == "true"
             if "SearchDepth" in tokens and "value" in tokens:
                 try: depth=max(1,min(6,int(tokens[tokens.index("value")+1])))
                 except (ValueError,IndexError): pass
@@ -264,7 +296,7 @@ def command_loop():
             if "movetime" in tokens:
                 try:ms=max(1,min(10000,int(tokens[tokens.index("movetime")+1])))
                 except (ValueError,IndexError):pass
-            move,finished,nodes=select_move(board,ms,depth,model,fast_relative=fast_relative,root_alpha_beta=root_alpha_beta,guard_checkmate=guard_checkmate,fast_move_list=fast_move_list)
+            move,finished,nodes=select_move(board,ms,depth,model,fast_relative=fast_relative,root_alpha_beta=root_alpha_beta,guard_checkmate=guard_checkmate,fast_move_list=fast_move_list,fast_legal_guard=fast_legal_guard)
             print(f"info depth {finished} nodes {nodes}",flush=True)
             print(f"bestmove {move}",flush=True)
         elif cmd=="quit":
