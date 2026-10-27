@@ -12,6 +12,7 @@ from fukaji.generation5_selfplay import (
 
 class Generation5SelfplayTest(unittest.TestCase):
     def test_request_frozen_and_no_adoption(self):
+        self.assertEqual(MODEL_SHA, "ff1128d9b139fdf71beae1b49a48506bfdcf3e9cd31e08053341783985d92e03")
         cfg = expected_request()
         self.assertEqual(validate_request(cfg), cfg)
         for key, value in (

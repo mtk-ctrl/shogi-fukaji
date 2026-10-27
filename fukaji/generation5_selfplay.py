@@ -17,7 +17,7 @@ from .direct_arena import digest, replay_check
 from .generation_arena import play
 from .relative_value import RelativeValue
 
-MODEL_SHA = "ff1256d9b139fdf71beae1b49a48506bfdcf3e9cd31e08053341783985d92e03"
+MODEL_SHA = "ff1128d9b139fdf71beae1b49a48506bfdcf3e9cd31e08053341783985d92e03"
 SOURCE_RUN = 40424947260
 SEED = 20272827
 GAMES = 256
