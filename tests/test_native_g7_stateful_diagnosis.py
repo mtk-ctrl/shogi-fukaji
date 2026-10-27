@@ -32,7 +32,9 @@ class StatefulRequestTests(unittest.TestCase):
                             nodes=100, depth=2, elapsed_ms=201.0,
                             sfen_ms=0, abi_ms=0, state_legal_ms=0,
                             state_push_ms=0, state_pop_ms=0,
-                            move_construct_ms=0, order_sort_ms=0, state_open_ms=0))
+                            move_construct_ms=0, order_sort_ms=0, state_open_ms=0,
+                            validate_ms=0, apply_ms=0, history_ms=0,
+                            cache_hits=0, fallback_pushes=0, legal_generations=0))
                 (root / f"part-{shard:02d}.json").write_text(json.dumps(dict(
                     shard=shard, positions_sha256="fixed",
                     games_sha256="games", model_sha256="model",

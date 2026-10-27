@@ -105,6 +105,7 @@ def run_shard(request, games, model, out, shard):
                     pop_ns = state.pop_ns
                     move_ns = state.move_ns
                     sort_ns = state.sort_ns
+                    native_before = state.native_profile()
                     start = time.perf_counter()
                     if mode == "native_ordered":
                         with native_order_search(direct):
@@ -115,6 +116,9 @@ def run_shard(request, games, model, out, shard):
                     else:
                         move, depth, nodes = search(board, frozen)
                     elapsed_ms = (time.perf_counter() - start) * 1000
+                    native_after = state.native_profile()
+                    delta = {key: native_after[key]-native_before[key]
+                             for key in native_before}
                     if (board.sfen() != original or move == "resign" or
                         shogi.Move.from_usi(move) not in board.legal_moves):
                         raise RuntimeError(f"illegal timed search at {index}")
@@ -135,13 +139,19 @@ def run_shard(request, games, model, out, shard):
                         move_construct_ms=round((state.move_ns-move_ns)/1e6,3) if mode=="native_stateful" else 0,
                         order_sort_ms=round((state.sort_ns-sort_ns)/1e6,3) if mode=="native_stateful" else 0,
                         state_open_ms=round(open_ms,3) if mode=="native_stateful" else 0,
+                        cache_hits=delta["cache_hits"] if mode=="native_stateful" else 0,
+                        fallback_pushes=delta["fallback_pushes"] if mode=="native_stateful" else 0,
+                        legal_generations=delta["legal_generations"] if mode=="native_stateful" else 0,
+                        validate_ms=round(delta["validate_ns"]/1e6,3) if mode=="native_stateful" else 0,
+                        apply_ms=round(delta["apply_ns"]/1e6,3) if mode=="native_stateful" else 0,
+                        history_ms=round(delta["history_ns"]/1e6,3) if mode=="native_stateful" else 0,
                     ))
             finally:
                 state.close()
     result = dict(shard=shard, shards=SHARDS, samples=SAMPLES, seed=SEED,
                   positions_sha256=positions_sha, games_sha256=GAMES_SHA,
                   model_sha256=G7_SHA, records=records,
-                  caution="Stateful ABI uses bounded Board-only undo; "
+                  caution="Stateful ABI uses frame-validated legal cache and Board-only undo; "
                           "search throughput only, not strength or 10x engine speed.")
     target = Path(out)
     target.mkdir(parents=True, exist_ok=True)
@@ -181,7 +191,10 @@ def aggregate(parts, out):
             depth_distribution=dict(Counter(str(r["depth"]) for r in group)),
             totals_ms={key:round(sum(r[key] for r in group),3) for key in
                        ("sfen_ms","abi_ms","state_legal_ms","state_push_ms",
-                        "state_pop_ms","move_construct_ms","order_sort_ms","state_open_ms")})
+                        "state_pop_ms","move_construct_ms","order_sort_ms","state_open_ms",
+                        "validate_ms","apply_ms","history_ms")},
+            cache_counts={key:sum(r[key] for r in group) for key in
+                          ("cache_hits","fallback_pushes","legal_generations")})
     result = dict(status="research_only_no_training_no_adoption",
                   samples=SAMPLES, shards=SHARDS, positions_sha256=items[0]["positions_sha256"],
                   games_sha256=GAMES_SHA, model_sha256=G7_SHA,

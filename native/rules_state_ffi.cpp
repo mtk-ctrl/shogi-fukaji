@@ -11,12 +11,26 @@
 #include <utility>
 
 namespace {
+struct LegalCache {
+  // Exact search-frame identity; identical SFEN alone cannot reuse a cache.
+  vector<string> moves;
+  string position_key;
+  uint64_t frame_token=0;
+  size_t history_length=0;
+  int ply=0;
+  bool valid=false;
+};
 struct NativeState {
   Board board;
   vector<Board> undo;
   vector<string> history;
   vector<bool> mover_black;
   vector<bool> gave_check;
+  vector<LegalCache> legal_cache;
+  vector<uint64_t> frame_tokens;
+  uint64_t next_frame_token=2;
+  uint64_t cache_hits=0, fallback_pushes=0, legal_generations=0;
+  uint64_t validate_ns=0, apply_ns=0, history_ns=0;
 };
 mutex state_mutex;
 unordered_map<uint64_t,NativeState> state_store;
@@ -62,6 +76,9 @@ extern "C" int fukaji_state_open(const char* sfen,size_t length,
     state.history.reserve(kMaxUndo+1);
     state.mover_black.reserve(kMaxUndo);
     state.gave_check.reserve(kMaxUndo);
+    state.frame_tokens.reserve(kMaxUndo+1);
+    state.frame_tokens.push_back(1);
+    state.legal_cache.resize(kMaxUndo+1);
     state.history.push_back(state_key(board));
     lock_guard<mutex> lock(state_mutex);
     if(state_store.size()>=kMaxStates ||
@@ -82,8 +99,28 @@ extern "C" int fukaji_state_legal(uint64_t handle,char* output,
                                    size_t capacity) noexcept {
   try {
     lock_guard<mutex> lock(state_mutex);
-    return copy_text(encode_moves(ordered_legal_moves(find_state(handle).board)),
-                     output,capacity);
+    NativeState& state=find_state(handle);
+    LegalCache& cache=state.legal_cache[state.undo.size()];
+    const bool valid=cache.valid &&
+      cache.frame_token==state.frame_tokens.back() &&
+      cache.history_length==state.history.size() &&
+      cache.ply==state.board.ply &&
+      cache.position_key==state.history.back();
+    if(valid)return copy_text(encode_moves(cache.moves),output,capacity);
+    vector<string> moves=ordered_legal_moves(state.board);
+    const int rc=copy_text(encode_moves(moves),output,capacity);
+    if(rc>=0) {
+      // No partial cache publication on allocation or output failure.
+      string key=state.history.back();
+      cache.moves=std::move(moves);
+      cache.position_key=std::move(key);
+      cache.frame_token=state.frame_tokens.back();
+      cache.history_length=state.history.size();
+      cache.ply=state.board.ply;
+      cache.valid=true;
+      ++state.legal_generations;
+    }
+    return rc;
   } catch (...) {return -3;}
 }
 
@@ -113,30 +150,55 @@ extern "C" int fukaji_state_is_check(uint64_t handle) noexcept {
   } catch (...) {return -3;}
 }
 
-// Only the current Board is snapshotted per move. Histories are append-only
-// bounded vectors; no NativeState-wide copy on either push or pop.
-// Every potentially throwing operation precedes the first state mutation.
+// A generated legal list is valid only for its exact frame and history.
+// Parent caches survive child push/pop. Missing caches use full validation.
 extern "C" int fukaji_state_push(uint64_t handle,const char* usi,
                                   size_t length) noexcept {
   try {
     const string move=bounded_input(usi,length,5);
     lock_guard<mutex> lock(state_mutex);
     NativeState& state=find_state(handle);
-    if(state.undo.size()>=kMaxUndo)return -2;
+    if(state.undo.size()>=kMaxUndo ||
+       state.next_frame_token==numeric_limits<uint64_t>::max())return -2;
     const bool moved_black=state.board.turn=="b";
     Board next=state.board;
-    apply_legal_move(next,move);
+    const auto started=chrono::steady_clock::now();
+    const LegalCache& cache=state.legal_cache[state.undo.size()];
+    const bool cached=cache.valid &&
+      cache.frame_token==state.frame_tokens.back() &&
+      cache.history_length==state.history.size() &&
+      cache.ply==state.board.ply &&
+      cache.position_key==state.history.back();
+    if(cached) {
+      // A cache hit is not an unchecked push: membership is mandatory.
+      if(find(cache.moves.begin(),cache.moves.end(),move)==cache.moves.end())
+        return -2;
+    } else {
+      const vector<string> legal=pseudo_moves(state.board,true);
+      if(!binary_search(legal.begin(),legal.end(),move))return -2;
+    }
+    const auto validated=chrono::steady_clock::now();
+    apply_validated_move(next,move);
+    const auto applied=chrono::steady_clock::now();
     const bool gave_check=checked(next,next.turn=="b");
     string key=state_key(next);
-    // The only potentially throwing state mutation. std::vector::push_back
-    // preserves its original contents if Board copy construction throws.
+    // All throwing work is complete before committing bounded state.
     state.undo.push_back(state.board);
-    // All capacities were reserved in state_open. Moving string/Board and
-    // appending bools cannot throw with the standard C++17 allocators.
     state.history.push_back(std::move(key));
     state.mover_black.push_back(moved_black);
     state.gave_check.push_back(gave_check);
     state.board=std::move(next);
+    state.frame_tokens.push_back(state.next_frame_token++);
+    state.legal_cache[state.undo.size()].valid=false;
+    if(cached)++state.cache_hits;
+    else ++state.fallback_pushes;
+    const auto finished=chrono::steady_clock::now();
+    state.validate_ns+=static_cast<uint64_t>(
+      chrono::duration_cast<chrono::nanoseconds>(validated-started).count());
+    state.apply_ns+=static_cast<uint64_t>(
+      chrono::duration_cast<chrono::nanoseconds>(applied-validated).count());
+    state.history_ns+=static_cast<uint64_t>(
+      chrono::duration_cast<chrono::nanoseconds>(finished-applied).count());
     return 0;
   } catch (...) {return -3;}
 }
@@ -148,9 +210,26 @@ extern "C" int fukaji_state_pop(uint64_t handle) noexcept {
     if(state.undo.empty())return -2;
     state.board=std::move(state.undo.back());
     state.undo.pop_back();
+    state.frame_tokens.pop_back();
     state.history.pop_back();
     state.mover_black.pop_back();
     state.gave_check.pop_back();
     return 0;
+  } catch (...) {return -3;}
+}
+
+extern "C" int fukaji_state_profile(uint64_t handle,char* output,
+                                     size_t capacity) noexcept {
+  try {
+    lock_guard<mutex> lock(state_mutex);
+    const NativeState& state=find_state(handle);
+    return copy_text(
+      "cache_hits="+to_string(state.cache_hits)+
+      ";fallback_pushes="+to_string(state.fallback_pushes)+
+      ";legal_generations="+to_string(state.legal_generations)+
+      ";validate_ns="+to_string(state.validate_ns)+
+      ";apply_ns="+to_string(state.apply_ns)+
+      ";history_ns="+to_string(state.history_ns),
+      output,capacity);
   } catch (...) {return -3;}
 }
