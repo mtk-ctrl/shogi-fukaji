@@ -13,6 +13,7 @@ import subprocess
 import time
 from contextlib import contextmanager
 from fukaji import engine
+from fukaji.relative_value import RelativeValue
 from pathlib import Path
 
 import shogi
@@ -48,6 +49,7 @@ class StatefulRules:
             "push": ([ctypes.c_uint64, ctypes.c_char_p, ctypes.c_size_t], ctypes.c_int),
             "pop": ([ctypes.c_uint64], ctypes.c_int),
             "profile": ([ctypes.c_uint64, ctypes.c_void_p, ctypes.c_size_t], ctypes.c_int),
+            "eval_snapshot": ([ctypes.c_uint64, ctypes.POINTER(ctypes.c_int16), ctypes.c_size_t], ctypes.c_int),
         }
         for name, (args, result) in signatures.items():
             fn = getattr(self.lib, "fukaji_state_" + name)
@@ -62,6 +64,9 @@ class StatefulRules:
         self.packed_decode_ns = 0
         self.python_push_ns = 0
         self.python_pop_ns = 0
+        self.eval_snapshot_ns = 0
+        self.eval_arithmetic_ns = 0
+        self.eval_snapshot_calls = 0
         self.push_ns = 0
         self.pop_ns = 0
         self.move_ns = 0
@@ -127,6 +132,71 @@ class StatefulRules:
             raise RuntimeError("duplicate native packed legal move")
         if self.audit:
             self.assert_equal(board, full=True)
+        return result
+
+    def eval_snapshot(self, board):
+        """Read a bounded C++ snapshot; never treat it as a legal-move token."""
+        output = (ctypes.c_int16 * 96)()
+        started = time.perf_counter_ns()
+        count = self.lib.fukaji_state_eval_snapshot(self.handle.value, output, len(output))
+        self.eval_snapshot_ns += time.perf_counter_ns() - started
+        self.eval_snapshot_calls += 1
+        if count != 96:
+            raise RuntimeError(f"native evaluation snapshot rejected: {count}")
+        values = tuple(output)
+        if values[95] != int(board.turn):
+            raise RuntimeError("native evaluation snapshot turn mismatch")
+        if self.audit:
+            for sq in range(81):
+                piece = board.piece_at(sq)
+                expected = (piece.piece_type * (1 if piece.color == shogi.BLACK else -1)
+                            if piece else 0)
+                if values[sq] != expected:
+                    raise RuntimeError("native evaluation snapshot square mismatch")
+            for color in (shogi.BLACK, shogi.WHITE):
+                for kind in range(1, 8):
+                    if values[81 + color * 7 + kind - 1] != board.pieces_in_hand[color].get(kind, 0):
+                        raise RuntimeError("native evaluation snapshot hand mismatch")
+        return values
+
+    def evaluate_relative_snapshot(self, board, model):
+        """Exactly reproduce Python fused evaluation using native square data.
+
+        Hand iteration stays on Python's board to preserve floating addition
+        order. Python owns repetition and search; C++ only supplies squares.
+        """
+        if not isinstance(model, RelativeValue) or model.mix <= 0:
+            raise RuntimeError("snapshot requires frozen relative evaluation")
+        values = self.eval_snapshot(board)
+        started = time.perf_counter_ns()
+        turn = int(board.turn)
+        classical = 0
+        logit = model._turn_weight
+        for sq in range(81):
+            code = values[sq]
+            if not code:
+                continue
+            kind = abs(code)
+            if not 1 <= kind <= 14:
+                raise RuntimeError("invalid snapshot piece type")
+            color = shogi.BLACK if code > 0 else shogi.WHITE
+            val = engine.VALUES[kind]
+            if kind != shogi.KING:
+                rank, file = sq % 9, sq // 9
+                val += 2 * (4 - abs(file - 4)) + (4 - abs(rank - 4))
+            classical += val if color == board.turn else -val
+            owner = int(color) ^ turn
+            relative_sq = sq if turn == shogi.BLACK else 80 - sq
+            logit += model._piece_weights[(owner * 14 + kind - 1) * 81 + relative_sq]
+        for color in (shogi.BLACK, shogi.WHITE):
+            owner = int(color) ^ turn
+            factor = 1 if color == board.turn else -1
+            for kind, count in board.pieces_in_hand[color].items():
+                classical += factor * int(count) * engine.VALUES[kind]
+                logit += model._hand_prefix[owner, kind][min(20, int(count))]
+        learned = int(round(max(-10.0, min(10.0, logit)) * model.weight_cp))
+        result = int(round((1 - model.mix) * classical + model.mix * learned))
+        self.eval_arithmetic_ns += time.perf_counter_ns() - started
         return result
 
     def push(self, word):
@@ -239,11 +309,12 @@ def packed_to_move(code):
 
 @contextmanager
 def stateful_order_search(state, *, cached_moves=False, native_scored=False,
-                          native_packed=False):
+                          native_packed=False, native_snapshot_eval=False):
     """Research-only bounded move parsing cache; ordering and legality unchanged."""
     if native_packed and not native_scored:
         raise ValueError("packed transport requires native scored legal order")
     original = engine.ordered_moves
+    original_evaluate = engine.evaluate
     # A USI move's coordinates/promotion are position-independent. Cache only
     # the immutable parsed representation, never legal status or board state.
     parse_move = (lru_cache(maxsize=8192)(shogi.Move.from_usi)
@@ -279,10 +350,19 @@ def stateful_order_search(state, *, cached_moves=False, native_scored=False,
         return moves
 
     engine.ordered_moves = ordered
+    if native_snapshot_eval:
+        def evaluate_with_snapshot(board, model=None, fast_relative=False):
+            if not fast_relative or not isinstance(model, RelativeValue) or model.mix <= 0:
+                return original_evaluate(board, model, fast_relative)
+            if not isinstance(board, SyncedBoard) or board.state is not state:
+                raise RuntimeError("snapshot evaluation requires matching synced board")
+            return state.evaluate_relative_snapshot(board, model)
+        engine.evaluate = evaluate_with_snapshot
     try:
         yield
     finally:
         engine.ordered_moves = original
+        engine.evaluate = original_evaluate
         if cached_moves:
             info = (parse_packed if native_packed else parse_move).cache_info()
             state.parse_cache_hits += info.hits

@@ -280,6 +280,48 @@ extern "C" int fukaji_state_is_check(uint64_t handle) noexcept {
   } catch (...) {return -3;}
 }
 
+// Read-only research evaluation snapshot. Layout: 81 rank-major squares
+// (signed python-shogi piece type; positive=black), 7 black hand counts,
+// 7 white hand counts, and side-to-move (0=black, 1=white).
+// A snapshot is NOT a legality certificate and never changes the state.
+extern "C" int fukaji_state_eval_snapshot(uint64_t handle,int16_t* output,
+                                          size_t capacity) noexcept {
+  constexpr size_t kWords=96;
+  if(!output || capacity<kWords || capacity>1024)return -1;
+  try {
+    lock_guard<mutex> lock(state_mutex);
+    const Board& b=find_state(handle).board;
+    array<int16_t,kWords> values{};
+    const string types="PLNSGBRK";
+    for(size_t sq=0;sq<81;++sq) {
+      const Piece& p=b.squares[sq];
+      if(!p.type)continue;
+      const auto idx=types.find(p.type);
+      if(idx==string::npos)throw runtime_error("invalid snapshot piece");
+      int code=static_cast<int>(idx)+1;
+      if(p.promoted) {
+        switch(p.type) {
+          case 'P':code=9;break;
+          case 'L':code=10;break;
+          case 'N':code=11;break;
+          case 'S':code=12;break;
+          case 'B':code=13;break;
+          case 'R':code=14;break;
+          default:throw runtime_error("invalid promoted snapshot piece");
+        }
+      }
+      values[sq]=static_cast<int16_t>(p.black?code:-code);
+    }
+    const auto hands=parse_hands(b.hand);
+    for(size_t side=0;side<2;++side)
+      for(size_t kind=0;kind<7;++kind)
+        values[81+side*7+kind]=static_cast<int16_t>(hands[side][kind]);
+    values[95]=static_cast<int16_t>(b.turn=="b"?0:1);
+    memcpy(output,values.data(),sizeof(values));
+    return static_cast<int>(kWords);
+  } catch (...) {return -3;}
+}
+
 // A generated legal list is valid only for its exact frame and history.
 // Parent caches survive child push/pop. Missing caches use full validation.
 extern "C" int fukaji_state_push(uint64_t handle,const char* usi,

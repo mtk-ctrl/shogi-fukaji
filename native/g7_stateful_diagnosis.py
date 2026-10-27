@@ -31,7 +31,7 @@ SAMPLES = 80
 SHARDS = 20
 SEED = 20271027
 VARIANTS = ("python_guard", "native_ordered", "native_stateful_scored",
-            "native_stateful_packed")
+            "native_stateful_snapshot")
 
 
 def expected_request():
@@ -109,6 +109,12 @@ def run_shard(request, games, model, out, shard):
                     if search(proxy, frozen, fixed=True) != baseline:
                         raise RuntimeError(f"packed transport fixed-depth mismatch {index}")
                 proxy.assert_restored(original)
+                with stateful_order_search(
+                        state, cached_moves=True, native_scored=True,
+                        native_snapshot_eval=True):
+                    if search(proxy, frozen, fixed=True) != baseline:
+                        raise RuntimeError(f"native evaluation snapshot fixed-depth mismatch {index}")
+                proxy.assert_restored(original)
                 modes = list(VARIANTS)
                 modes = modes[index % len(modes):] + modes[:index % len(modes)]
                 for mode in modes:
@@ -122,6 +128,9 @@ def run_shard(request, games, model, out, shard):
                     packed_decode_ns = state.packed_decode_ns
                     python_push_ns = state.python_push_ns
                     python_pop_ns = state.python_pop_ns
+                    eval_snapshot_ns = state.eval_snapshot_ns
+                    eval_arithmetic_ns = state.eval_arithmetic_ns
+                    eval_snapshot_calls = state.eval_snapshot_calls
                     push_ns = state.push_ns
                     pop_ns = state.pop_ns
                     move_ns = state.move_ns
@@ -133,10 +142,10 @@ def run_shard(request, games, model, out, shard):
                     if mode == "native_ordered":
                         with native_order_search(direct):
                             move, depth, nodes = search(board, frozen)
-                    elif mode in ("native_stateful_scored", "native_stateful_packed"):
+                    elif mode in ("native_stateful_scored", "native_stateful_snapshot"):
                         with stateful_order_search(
                                 state, cached_moves=True, native_scored=True,
-                                native_packed=(mode=="native_stateful_packed")):
+                                native_snapshot_eval=(mode=="native_stateful_snapshot")):
                             move, depth, nodes = search(proxy, frozen)
                     else:
                         move, depth, nodes = search(board, frozen)
@@ -147,9 +156,9 @@ def run_shard(request, games, model, out, shard):
                     if (board.sfen() != original or move == "resign" or
                         shogi.Move.from_usi(move) not in board.legal_moves):
                         raise RuntimeError(f"illegal timed search at {index}")
-                    if mode in ("native_stateful_scored", "native_stateful_packed"):
+                    if mode in ("native_stateful_scored", "native_stateful_snapshot"):
                         proxy.assert_restored(original)
-                    is_stateful = mode in ("native_stateful_scored", "native_stateful_packed")
+                    is_stateful = mode in ("native_stateful_scored", "native_stateful_snapshot")
                     records.append(dict(
                         sample=index, shard=shard, variant=mode,
                         move=move, depth=depth, nodes=nodes,
@@ -165,6 +174,9 @@ def run_shard(request, games, model, out, shard):
                         packed_decode_ms=round((state.packed_decode_ns-packed_decode_ns)/1e6,3) if is_stateful else 0,
                         python_push_ms=round((state.python_push_ns-python_push_ns)/1e6,3) if is_stateful else 0,
                         python_pop_ms=round((state.python_pop_ns-python_pop_ns)/1e6,3) if is_stateful else 0,
+                        eval_snapshot_ms=round((state.eval_snapshot_ns-eval_snapshot_ns)/1e6,3) if is_stateful else 0,
+                        eval_arithmetic_ms=round((state.eval_arithmetic_ns-eval_arithmetic_ns)/1e6,3) if is_stateful else 0,
+                        eval_snapshot_calls=state.eval_snapshot_calls-eval_snapshot_calls if is_stateful else 0,
                         state_push_ms=round((state.push_ns-push_ns)/1e6,3) if is_stateful else 0,
                         state_pop_ms=round((state.pop_ns-pop_ns)/1e6,3) if is_stateful else 0,
                         move_construct_ms=round((state.move_ns-move_ns)/1e6,3) if is_stateful else 0,
@@ -185,7 +197,7 @@ def run_shard(request, games, model, out, shard):
                   positions_sha256=positions_sha, games_sha256=GAMES_SHA,
                   model_sha256=G7_SHA, records=records,
                   caution="Stateful ABI uses frame-validated legal cache and Board-only undo; "
-                          "opt-in packed legal transport retains Python search/evaluation; "
+                          "opt-in native evaluation snapshot retains Python search and hand iteration; "
                           "search throughput only, not strength or 10x engine speed.")
     target = Path(out)
     target.mkdir(parents=True, exist_ok=True)
@@ -225,12 +237,14 @@ def aggregate(parts, out):
             depth_distribution=dict(Counter(str(r["depth"]) for r in group)),
             totals_ms={key:round(sum(r[key] for r in group),3) for key in
                        ("sfen_ms","abi_ms","state_legal_ms","state_scored_ms","state_packed_ms",
-                        "packed_decode_ms","python_push_ms","python_pop_ms","state_push_ms",
+                        "packed_decode_ms","python_push_ms","python_pop_ms",
+                        "eval_snapshot_ms","eval_arithmetic_ms","state_push_ms",
                         "state_pop_ms","move_construct_ms","order_sort_ms","state_open_ms",
                         "validate_ms","apply_ms","history_ms")},
             cache_counts={key:sum(r[key] for r in group) for key in
                           ("cache_hits","fallback_pushes","legal_generations",
-                           "parse_cache_hits","parse_cache_misses")})
+                           "parse_cache_hits","parse_cache_misses",
+                           "eval_snapshot_calls")})
     result = dict(status="research_only_no_training_no_adoption",
                   samples=SAMPLES, shards=SHARDS, positions_sha256=items[0]["positions_sha256"],
                   games_sha256=GAMES_SHA, model_sha256=G7_SHA,
