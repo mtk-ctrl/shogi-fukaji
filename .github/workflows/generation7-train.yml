@@ -1,4 +1,4 @@
-name: FUKAJI frozen generation 6 research training
+name: FUKAJI frozen generation 7 research training
 on:
   workflow_dispatch:
   push:
