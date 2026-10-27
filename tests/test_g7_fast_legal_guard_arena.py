@@ -70,6 +70,64 @@ class G7FastLegalGuardArenaTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "SHA mismatch"):
                 execute(request, model, root / "out", 0)
 
+
+    def test_aggregate_uses_guard_telemetry_and_all_twenty_saved_shards(self):
+        from fukaji.direct_arena import digest
+        from unittest.mock import patch
+        from fukaji.g7_fast_legal_guard_arena import FIELDS
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            parts = root / "parts"
+            for shard in range(SHARDS):
+                folder = parts / f"shard-{shard}"
+                folder.mkdir(parents=True)
+                rows = []
+                for pair in range(shard, PAIRS, SHARDS):
+                    for guard_black in (True, False):
+                        rows.append({
+                            "pair": pair, "guard_black": guard_black,
+                            "opening": [f"opening-{pair}"] * 6,
+                            "moves": [], "status": "move_limit_unresolved",
+                            "winner": None,
+                            "stats": {f"{side}_{field}": 0 for side in ("guard", "baseline")
+                                      for field in FIELDS},
+                        })
+                games = folder / "paired_games.jsonl"
+                games.write_text("".join(json.dumps(row) + "\n" for row in rows))
+                report = {
+                    "status": "research_only_not_adopted", "shard": shard,
+                    "games": len(rows), "pairs": len(rows) // 2,
+                    "seed": SEED, "model_sha256": G7_SHA,
+                    "movetime_ms": 200, "depth": 4, "mix_percent": 25,
+                    "max_plies": MAX_PLIES, "fast_relative": True,
+                    "root_alpha_beta_both": True, "fast_move_list_both": True,
+                    "fast_legal_guard_candidate": True,
+                    "fast_legal_guard_baseline": False,
+                    "legal_replay_verified": True, "games_sha256": digest(games),
+                }
+                (folder / "paired_report.json").write_text(json.dumps(report))
+            with (
+                patch("fukaji.g7_fast_legal_guard_arena.opening",
+                      side_effect=lambda seed, count: [f"opening-{seed - SEED}"] * count),
+                patch("fukaji.g7_fast_legal_guard_arena.replay_check"),
+            ):
+                report = aggregate(parts, root / "aggregate")
+            self.assertEqual((report["games"], report["pairs"], report["unresolved"]),
+                             (256, 128, 256))
+            self.assertEqual(report["guard_wins"], 0)
+            self.assertEqual(report["baseline_wins"], 0)
+            self.assertEqual(report["stats"]["guard_turns"], 0)
+            self.assertNotIn("fast_turns", report["stats"])
+
+    def test_recovery_workflow_never_starts_games(self):
+        content = Path(".github/workflows/g7-fast-legal-guard-audit-recovery.yml").read_text()
+        self.assertIn("run-id: 40451970822", content)
+        self.assertIn("--mode aggregate", content)
+        self.assertNotIn("--mode play", content)
+        self.assertIn("workflow_dispatch:", content)
+        self.assertIn("training_allowed", content)
+        self.assertIn("if-no-files-found: error", content)
+
     def test_workflow_is_bounded_and_separate(self):
         path = Path(".github/workflows/g7-fast-legal-guard-arena.yml")
         text = path.read_text(encoding="utf-8")

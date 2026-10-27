@@ -1,0 +1,60 @@
+name: FUKAJI G7 FastLegalGuard audit-only recovery of original 256 games
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/fukaji-g7-fast-legal-guard-audit-request.json"
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-g7-fast-legal-guard-audit-recovery
+  cancel-in-progress: false
+jobs:
+  audit:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Validate immutable source and audit-only permission before download
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          actual = json.loads(Path(".github/fukaji-g7-fast-legal-guard-audit-request.json").read_text())
+          expected = {
+              "source_run": 40451970822, "source_shards": 20,
+              "pairs": 128, "games": 256, "model_sha256":
+              "417d18e7b64494c9febdf6d217afbe4e4979e68d04528f16db8b45c0bcde2a0e",
+              "audit_only": True, "training_allowed": False,
+              "new_games_allowed": False, "adoption_allowed": False,
+          }
+          if actual != expected:
+              raise SystemExit("recovery request not approved")
+          PY
+      - name: Download only the original twenty completed shard artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: fukaji-g7-legal-guard-arena-part-*-40451970822
+          run-id: 40451970822
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/g7_guard_arena/recovered_parts
+          merge-multiple: false
+      - name: Recheck full original games and aggregate without new play
+        run: |
+          python -m fukaji.g7_fast_legal_guard_arena \
+            --mode aggregate \
+            --parts build/g7_guard_arena/recovered_parts \
+            --out build/g7_guard_arena/recovered_aggregate
+      - name: Upload SHA-verifiable audited original aggregate
+        uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-g7-legal-guard-audited-original-40451970822
+          path: build/g7_guard_arena/recovered_aggregate/
+          retention-days: 30
+          if-no-files-found: error
