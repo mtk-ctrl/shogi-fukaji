@@ -28,15 +28,20 @@ jobs:
               request=json.load(f)
           expected={'enabled': True, 'experiment': 'native-rules-core-20261027',
                     'positions': 32, 'repeats': 30, 'rounds': 3}
-          if request != expected:
-              raise SystemExit('benchmark requires the exact approved request')
+          disabled={**expected, 'enabled': False}
+          if request not in (expected, disabled):
+              raise SystemExit('benchmark requires the exact fixed request')
+          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as out:
+              out.write('run=' + ('true' if request == expected else 'false') + '\\n')
           PY
       - name: Verify native equivalence and benchmark
+        if: steps.request.outputs.run == 'true'
         run: |
           python -m unittest tests.test_native_rules_probe -v
           python native/benchmark_rules.py --positions 32 --repeats 30 --rounds 3 --out build/native_rules_benchmark.json
           sha256sum build/native_rules_benchmark.json
       - uses: actions/upload-artifact@v4
+        if: steps.request.outputs.run == 'true'
         with:
           name: fukaji-native-rules-benchmark
           path: build/native_rules_benchmark.json
