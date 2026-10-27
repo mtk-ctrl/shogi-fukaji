@@ -45,6 +45,17 @@ class CheckmateGuardTests(unittest.TestCase):
                 self.assertEqual(a, b)
                 self.assertEqual(board.sfen(), before)
 
+    def test_usi_option_is_exposed_and_opt_in(self):
+        import subprocess
+        import sys
+        p = subprocess.run(
+            [sys.executable, "-m", "fukaji.engine"],
+            input="usi\nsetoption name GuardCheckmate value true\nisready\nposition startpos\ngo movetime 30\nquit\n",
+            text=True, capture_output=True, timeout=15)
+        self.assertEqual(p.returncode, 0, p.stderr)
+        self.assertIn("option name GuardCheckmate type check default false", p.stdout)
+        self.assertIn("bestmove ", p.stdout)
+
     def test_default_flag_is_false(self):
         import inspect
         self.assertFalse(inspect.signature(select_move).parameters["guard_checkmate"].default)
