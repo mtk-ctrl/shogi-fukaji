@@ -31,6 +31,7 @@ class StatefulRequestTests(unittest.TestCase):
                             fixed_move="7g7f", fixed_nodes=10,
                             nodes=100, depth=2, elapsed_ms=201.0,
                             sfen_ms=0, abi_ms=0, state_legal_ms=0,
+                            state_scored_ms=0,
                             state_push_ms=0, state_pop_ms=0,
                             move_construct_ms=0, order_sort_ms=0, state_open_ms=0,
                             validate_ms=0, apply_ms=0, history_ms=0,
@@ -42,7 +43,7 @@ class StatefulRequestTests(unittest.TestCase):
                     seed=20271027, records=records)))
             result = aggregate(root, root / "out")
             self.assertEqual(len(result["records"]), 320)
-            self.assertEqual(result["summary"]["native_stateful"]["total_nodes"], 8000)
+            self.assertEqual(result["summary"]["native_stateful_scored"]["total_nodes"], 8000)
             (root / "part-19.json").unlink()
             with self.assertRaises(ValueError):
                 aggregate(root, root / "out")
