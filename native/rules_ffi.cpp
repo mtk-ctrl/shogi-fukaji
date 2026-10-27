@@ -9,7 +9,7 @@ static int legal_impl(const char* sfen, char* output, size_t capacity,
   if (!sfen || !output || capacity == 0 || capacity > 65536) return -1;
   try {
     const string input(sfen);
-    if (input.size() > 1024 || input.find('\\n') != string::npos) return -1;
+    if (input.size() > 1024 || input.find('\n') != string::npos) return -1;
     Board board = parse(input);
     (void)parse_hands(board.hand);
     const string moves = encode_moves(pseudo_order
