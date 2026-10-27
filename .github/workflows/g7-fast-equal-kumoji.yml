@@ -1,0 +1,129 @@
+name: FUKAJI G7 FastMoveList vs pinned KUMOJI equal 200ms one-thread
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/fukaji-g7-fast-equal-kumoji-request.json"
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-g7-fast-equal-kumoji
+  cancel-in-progress: false
+jobs:
+  preflight:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Verify full tests and fixed research request
+        run: |
+          python -m unittest discover -s tests -v
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from fukaji.g7_fast_equal_kumoji import validate_request
+          validate_request(json.loads(Path(".github/fukaji-g7-fast-equal-kumoji-request.json").read_text()))
+          PY
+  build:
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: mtk-ctrl/shogi-ai
+          ref: 807db500ee2739c1eb6a527b614eeea40a5993d6
+          path: kumoji-src
+          persist-credentials: false
+      - name: Build pinned KUMOJI read-only
+        run: |
+          (cd kumoji-src && python3 scripts/build.py --output "$GITHUB_WORKSPACE/build/kumoji")
+          sha256sum build/kumoji
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frozen-equal-kumoji-build-${{ github.run_id }}
+          path: build/kumoji
+          if-no-files-found: error
+  paired:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: mtk-ctrl/shogi-ai
+          ref: 807db500ee2739c1eb6a527b614eeea40a5993d6
+          path: kumoji-src
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: frozen-equal-kumoji-build-${{ github.run_id }}
+          path: build
+      - uses: actions/download-artifact@v4
+        with:
+          name: fukaji-generation7-research-40434466661
+          run-id: 40434466661
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/g7
+      - name: Verify frozen model and prepare FUKAJI USI
+        run: |
+          chmod +x build/kumoji
+          printf '#!/bin/sh\nexec python3 -m fukaji.engine\n' > build/fukaji-usi
+          chmod +x build/fukaji-usi
+          echo "417d18e7b64494c9febdf6d217afbe4e4979e68d04528f16db8b45c0bcde2a0e  build/g7/mover-relative-generation7-research.npz" | sha256sum -c -
+      - name: Play independent same-opening color-swapped equal-time games
+        env:
+          PYTHONPATH: ${{ github.workspace }}/kumoji-src:${{ github.workspace }}
+        run: |
+          python -m fukaji.g7_fast_equal_kumoji --mode play \
+            --request .github/fukaji-g7-fast-equal-kumoji-request.json \
+            --g7-model build/g7/mover-relative-generation7-research.npz \
+            --kumoji-engine build/kumoji \
+            --shard ${{ matrix.shard }} --out build/equal/part
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fukaji-equal-kumoji-part-${{ matrix.shard }}-${{ github.run_id }}
+          path: build/equal/part/
+          if-no-files-found: warn
+  aggregate:
+    needs: paired
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: fukaji-equal-kumoji-part-*
+          path: build/equal/parts
+          merge-multiple: false
+      - name: Replay and audit 64 games / 32 independent swapped pairs
+        run: |
+          python -m fukaji.g7_fast_equal_kumoji --mode aggregate \
+            --request .github/fukaji-g7-fast-equal-kumoji-request.json \
+            --parts build/equal/parts --out build/equal/aggregate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-equal-kumoji-aggregate-${{ github.run_id }}
+          path: build/equal/aggregate/
+          if-no-files-found: error
