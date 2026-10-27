@@ -13,6 +13,7 @@ import unittest
 from pathlib import Path
 
 import shogi
+from fukaji import engine
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -37,6 +38,7 @@ class NativeStateFFITests(unittest.TestCase):
                       ctypes.POINTER(ctypes.c_uint64)], ctypes.c_int),
             "close": ([ctypes.c_uint64], ctypes.c_int),
             "legal": ([ctypes.c_uint64, ctypes.c_void_p, ctypes.c_size_t], ctypes.c_int),
+            "scored": ([ctypes.c_uint64, ctypes.c_void_p, ctypes.c_size_t], ctypes.c_int),
             "sfen": ([ctypes.c_uint64, ctypes.c_void_p, ctypes.c_size_t], ctypes.c_int),
             "verdict": ([ctypes.c_uint64, ctypes.c_void_p, ctypes.c_size_t], ctypes.c_int),
             "is_check": ([ctypes.c_uint64], ctypes.c_int),
@@ -73,6 +75,12 @@ class NativeStateFFITests(unittest.TestCase):
         self.assertEqual(
             self.read(handle, "legal").split(",") if list(board.legal_moves) else [],
             [move.usi() for move in board.legal_moves],
+            board.sfen(),
+        )
+        self.assertEqual(
+            self.read(handle, "scored").split(",") if list(board.legal_moves) else [],
+            [move.usi() for move in engine.ordered_moves(
+                board, fast_move_list=True, fast_legal_guard=True)],
             board.sfen(),
         )
 
@@ -143,6 +151,19 @@ class NativeStateFFITests(unittest.TestCase):
                 self.assertEqual(self.lib.fukaji_state_pop(handle), 0)
                 board.pop()
             self.check(handle, board)
+        finally:
+            self.assertEqual(self.lib.fukaji_state_close(handle), 0)
+
+    def test_scored_buffer_failure_does_not_publish_cache(self):
+        board = shogi.Board()
+        handle = self.open_board(board)
+        try:
+            tiny = ctypes.create_string_buffer(2)
+            self.assertEqual(self.lib.fukaji_state_scored(handle, tiny, len(tiny)), -2)
+            self.assertEqual(self.profile(handle)["legal_generations"], 0)
+            move = next(iter(board.legal_moves)).usi().encode("ascii")
+            self.assertEqual(self.lib.fukaji_state_push(handle, move, len(move)), 0)
+            self.assertEqual(self.profile(handle)["fallback_pushes"], 1)
         finally:
             self.assertEqual(self.lib.fukaji_state_close(handle), 0)
 
