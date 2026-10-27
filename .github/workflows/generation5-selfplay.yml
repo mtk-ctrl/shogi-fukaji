@@ -42,7 +42,7 @@ jobs:
           run-id: 40424947260
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path: build/generation5_selfplay/g5
-      - name: Play sixteen independent openings with generation-5 on both seats
+      - name: Play thirty-two independent openings with generation-5 on both seats
         run: |
           python -m fukaji.generation5_selfplay \
             --mode play \

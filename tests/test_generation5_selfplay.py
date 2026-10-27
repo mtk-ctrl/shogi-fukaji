@@ -10,7 +10,7 @@ from fukaji.generation5_selfplay import (
 )
 
 
-class Generation4SelfplayTest(unittest.TestCase):
+class Generation5SelfplayTest(unittest.TestCase):
     def test_request_frozen_and_no_adoption(self):
         cfg = expected_request()
         self.assertEqual(validate_request(cfg), cfg)
@@ -31,7 +31,7 @@ class Generation4SelfplayTest(unittest.TestCase):
 
     def test_unique_parent_ids(self):
         self.assertNotEqual(parent_id(20272827, ["7g7f"]),
-                            parent_id(20272428, ["7g7f"]))
+                            parent_id(20272828, ["7g7f"]))
 
     def test_invalid_shard_and_model_rejected_before_play(self):
         with tempfile.TemporaryDirectory() as td:
