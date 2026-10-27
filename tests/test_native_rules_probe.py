@@ -51,7 +51,7 @@ class NativeRulesProbeTests(unittest.TestCase):
         for _ in range(12):
             b = shogi.Board()
             for _ in range(20):
-                positions.append(b.copy())
+                positions.append(shogi.Board(b.sfen()))
                 moves = [m for m in b.legal_moves]
                 if not moves:
                     break
