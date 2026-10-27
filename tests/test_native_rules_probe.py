@@ -1,4 +1,4 @@
-"""Independent native rule equivalence; not an engine option or speed claim."""
+"""Independent native rule equivalence and bounded timing smoke; not an engine speed claim."""
 from __future__ import annotations
 import random
 import shutil
