@@ -124,6 +124,69 @@ extern "C" int fukaji_state_legal(uint64_t handle,char* output,
   } catch (...) {return -3;}
 }
 
+// Research-only native capture/promotion ordering.  The validated cache
+// retains pseudo-legal iteration order; this function returns a stable
+// score-ordered copy, matching fukaji.engine.ordered_moves exactly.
+static int research_piece_value(const Piece& piece) {
+  if(!piece.type)return 0;
+  if(piece.promoted) {
+    switch(piece.type) {
+      case 'P':return 500;
+      case 'L':return 520;
+      case 'N':return 620;
+      case 'S':return 850;
+      case 'B':return 1100;
+      case 'R':return 650;
+    }
+  }
+  switch(piece.type) {
+    case 'P':return 100;
+    case 'L':return 300;
+    case 'N':return 320;
+    case 'S':return 480;
+    case 'G':return 760;
+    case 'B':return 900;
+    case 'R':return 600;
+    case 'K':return 0;
+  }
+  throw runtime_error("unexpected capture piece");
+}
+extern "C" int fukaji_state_scored(uint64_t handle,char* output,
+                                    size_t capacity) noexcept {
+  try {
+    lock_guard<mutex> lock(state_mutex);
+    NativeState& state=find_state(handle);
+    LegalCache& cache=state.legal_cache[state.undo.size()];
+    const bool valid=cache.valid &&
+      cache.frame_token==state.frame_tokens.back() &&
+      cache.history_length==state.history.size() &&
+      cache.ply==state.board.ply &&
+      cache.position_key==state.history.back();
+    vector<string> pseudo=valid?cache.moves:ordered_legal_moves(state.board);
+    vector<string> scored=pseudo;
+    const auto score=[&](const string& move) {
+      const int to=from_usi_square(move[2],move[3]);
+      return research_piece_value(state.board.squares[to])+
+             (move.size()==5?200:0);
+    };
+    stable_sort(scored.begin(),scored.end(),
+                [&](const string& a,const string& b){return score(a)>score(b);});
+    const int rc=copy_text(encode_moves(scored),output,capacity);
+    if(rc>=0 && !valid) {
+      // Only successful output publishes a frame-validated legal cache.
+      string key=state.history.back();
+      cache.moves=std::move(pseudo);
+      cache.position_key=std::move(key);
+      cache.frame_token=state.frame_tokens.back();
+      cache.history_length=state.history.size();
+      cache.ply=state.board.ply;
+      cache.valid=true;
+      ++state.legal_generations;
+    }
+    return rc;
+  } catch (...) {return -3;}
+}
+
 extern "C" int fukaji_state_sfen(uint64_t handle,char* output,
                                   size_t capacity) noexcept {
   try {
