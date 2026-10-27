@@ -182,6 +182,62 @@ class NativeRulesProbeTests(unittest.TestCase):
             self.assertEqual(set(line.split(",")) if line else set(),
                              {m.usi() for m in b.legal_moves}, b.sfen())
 
+
+    def test_native_stateful_move_and_undo(self):
+        # Each move is checked against python-shogi's exact SFEN, including
+        # capture-to-hand, promotion, drops, side to move and move number.
+        cases = [
+            ("4k4/9/9/9/9/9/4p4/4R4/4K4 b - 1", "5h5g"),
+            ("4k4/9/4P4/9/9/9/9/9/4K4 b - 1", "5c5b+"),
+            ("4k4/9/9/9/9/9/9/9/4K4 b P 1", "P*5e"),
+        ]
+        for sfen, usi in cases:
+            b = shogi.Board(sfen)
+            move = shogi.Move.from_usi(usi)
+            self.assertIn(move, b.legal_moves, (sfen, usi))
+            b.push(move)
+            self.assertEqual(self.probe(["B "+sfen, "M "+usi, "S", "U"]),
+                             [sfen, b.sfen(), b.sfen(), sfen])
+        rng = random.Random(20271029)
+        for _ in range(6):
+            b = shogi.Board()
+            commands = ["B "+b.sfen()]
+            expected = [b.sfen()]
+            n = 0
+            for _ in range(70):
+                legal = [m for m in b.legal_moves]
+                if not legal:
+                    break
+                move = rng.choice(legal)
+                b.push(move)
+                commands.append("M "+move.usi())
+                expected.append(b.sfen())
+                n += 1
+            for _ in range(n):
+                b.pop()
+                commands.append("U")
+                expected.append(b.sfen())
+            self.assertEqual(self.probe(commands), expected)
+            self.assertEqual(b.sfen(), shogi.Board().sfen())
+
+    def test_native_stateful_repetition_and_undo(self):
+        b = shogi.Board("4k4/9/9/9/9/9/9/9/4K4 b - 1")
+        commands = ["B "+b.sfen(), "F"]
+        expected = [b.sfen(), "0"]
+        for _ in range(3):
+            for usi in ("5i5h", "5a5b", "5h5i", "5b5a"):
+                move = shogi.Move.from_usi(usi)
+                self.assertIn(move, b.legal_moves)
+                b.push(move)
+                commands.append("M "+usi)
+                expected.append(b.sfen())
+            commands.append("F")
+            expected.append(str(int(b.is_fourfold_repetition())))
+        b.pop()
+        commands.extend(("U", "F"))
+        expected.extend((b.sfen(), "0"))
+        self.assertEqual(self.probe(commands), expected)
+
     def test_invalid_sfen_is_rejected(self):
         p = subprocess.run([self.binary], input="C b invalid\n",
                            text=True, capture_output=True, timeout=5)
