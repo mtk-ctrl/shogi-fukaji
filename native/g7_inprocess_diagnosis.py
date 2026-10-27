@@ -207,7 +207,7 @@ def run_shard(request, games, model, out, shard):
                         raise ValueError(f"native pseudo-order fixed-depth mismatch at {index}")
                 # Rotate order to reduce warm-up / frequency drift.
                 modes = list(VARIANTS)
-                modes = modes[index % 3:] + modes[:index % 3]
+                modes = modes[index % len(VARIANTS):] + modes[:index % len(VARIANTS)]
                 for mode in modes:
                     bridge = {"native_ipc": ipc, "native_inprocess": direct,
                               "native_ordered": direct}.get(mode)
@@ -236,7 +236,7 @@ def run_shard(request, games, model, out, shard):
                         native_ms=round((direct.native_ns-native_ns)/1e6, 3)
                             if mode in ("native_inprocess", "native_ordered") else 0,
                         sfen_ms=round((direct.sfen_ns-sfen_ns)/1e6, 3)
-                            if mode=="native_inprocess" else 0,
+                            if mode in ("native_inprocess", "native_ordered") else 0,
                         ipc_ms=round((ipc.io_ns-ipc_ns)/1e6, 3)
                             if mode=="native_ipc" else 0,
                     ))
