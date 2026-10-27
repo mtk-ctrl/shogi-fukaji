@@ -11,3 +11,8 @@
 - 速度の根拠にはこの標準入出力プロトコルのテスト所要時間を使用しない。正しさの検査を通過した後、同じ探索条件で専用の速度測定を行う。雲路正式版は変更しない。
 
 再現：`python -m pip install -r requirements.txt && python -m unittest tests.test_native_rules_probe -v`（g++必須）。
+
+## 第6段階：研究専用の独立処理時間測定（正式採用なし）
+
+`Q <回数> <SFEN>` はC++の合法手生成を同一局面で繰り返し、合法手件数の総和と処理時間（ナノ秒）を返す。回数1〜5000に制限し、SFEN読込・標準入出力・コンパイル時間は計測対象外。
+`native/benchmark_rules.py` はseed固定の32局面で、C++ `pseudo_moves(board,true)` とPython `list(board.legal_moves)` を各30回×3試行測定する。計測前に全合法手集合の完全一致を強制し、固定局面SHA、環境、各試行時間をJSON保存する。これは**言語実装別の合法手生成時間**であり、実戦の200ms探索・棋力・10倍の探索効率化とは異なる。研究エンジン未接続、既定OFF。専用requestを明示更新してGitHub Actionsで測定する。

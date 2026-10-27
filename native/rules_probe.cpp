@@ -5,6 +5,8 @@
 // => fourfold state; Z => reset repetition history.
 #include <algorithm>
 #include <array>
+#include <chrono>
+#include <cstdint>
 #include <cctype>
 #include <cstdlib>
 #include <iostream>
@@ -363,6 +365,24 @@ int main() {
         history.push_back(state_key(next));
         mover_black.push_back(moved_black);gave_check.push_back(delivered_check);
         cout<<format_sfen(next)<<"\n";
+        continue;
+      }
+      if(line[0]=='Q') {
+        // Bounded research-only core timing: exclude SFEN parsing and all I/O.
+        // Q <repetitions> <SFEN> -> total_legal_moves elapsed_nanoseconds
+        istringstream args(line.substr(2));
+        int repetitions=0;
+        if(!(args>>repetitions)||repetitions<1||repetitions>5000)
+          throw runtime_error("invalid benchmark repetitions");
+        string sfen;getline(args,sfen);
+        Board b=parse(sfen);
+        (void)parse_hands(b.hand);
+        volatile uint64_t count=0;
+        auto started=chrono::steady_clock::now();
+        for(int i=0;i<repetitions;++i)count+=pseudo_moves(b,true).size();
+        auto elapsed=chrono::duration_cast<chrono::nanoseconds>(
+          chrono::steady_clock::now()-started).count();
+        cout<<count<<" "<<elapsed<<"\n";
         continue;
       }
       if(line[0]=='C') {

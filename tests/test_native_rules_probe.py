@@ -299,6 +299,25 @@ class NativeRulesProbeTests(unittest.TestCase):
                 expected.extend((b.sfen(), "0", "none"))
                 self.assertEqual(self.probe(commands), expected)
 
+    def test_native_bounded_core_timing_protocol(self):
+        b = shogi.Board()
+        legal_count = len(list(b.legal_moves))
+        output = self.probe(["Q 3 " + b.sfen()])
+        count, elapsed = map(int, output[0].split())
+        self.assertEqual(count, legal_count * 3)
+        self.assertGreater(elapsed, 0)
+        bad = subprocess.run([self.binary], input="Q 5001 " + b.sfen() + "\\n",
+                             text=True, capture_output=True, timeout=5)
+        self.assertNotEqual(bad.returncode, 0)
+
+    def test_native_benchmark_smoke(self):
+        p = subprocess.run(
+            ["python", str(ROOT / "native" / "benchmark_rules.py"),
+             "--positions", "4", "--repeats", "2", "--rounds", "1"],
+            text=True, capture_output=True, timeout=60)
+        self.assertEqual(p.returncode, 0, p.stdout + p.stderr)
+        self.assertTrue(__import__("json").loads(p.stdout)["legal_sets_equal"])
+
     def test_invalid_sfen_is_rejected(self):
         p = subprocess.run([self.binary], input="C b invalid\n",
                            text=True, capture_output=True, timeout=5)
