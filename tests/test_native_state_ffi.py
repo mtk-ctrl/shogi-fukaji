@@ -216,10 +216,10 @@ class NativeStateFFITests(unittest.TestCase):
             self.assertEqual(self.lib.fukaji_state_pop(handle), 0)
             board.pop()
             self.check(handle, board)
-            encoded = cycle[511].encode("ascii")
+            encoded = cycle[511 % len(cycle)].encode("ascii")
             self.assertEqual(self.lib.fukaji_state_push(
                 handle, encoded, len(encoded)), 0)
-            board.push(shogi.Move.from_usi(cycle[511]))
+            board.push(shogi.Move.from_usi(cycle[511 % len(cycle)]))
             for _ in range(512):
                 self.assertEqual(self.lib.fukaji_state_pop(handle), 0)
                 board.pop()
