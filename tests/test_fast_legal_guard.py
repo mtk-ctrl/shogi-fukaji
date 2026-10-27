@@ -60,9 +60,12 @@ class FastLegalGuardTests(unittest.TestCase):
                 self.assertIn(move, board.legal_moves)
                 board.push(move)
         self.assertTrue(board.is_fourfold_repetition())
-        before = dict(board.transpositions)
+        # python-shogi's push/pop may retain zero-count Counter keys; only
+        # positive repetition counts are semantically meaningful.
+        before = {k: v for k, v in board.transpositions.items() if v > 0}
         self.check_position(board)
-        self.assertEqual(before, dict(board.transpositions))
+        after = {k: v for k, v in board.transpositions.items() if v > 0}
+        self.assertEqual(before, after)
         self.assertTrue(board.is_fourfold_repetition())
 
     def test_fixed_depth_and_default_off(self):
