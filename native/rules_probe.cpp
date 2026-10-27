@@ -282,10 +282,9 @@ static vector<string> ordered_legal_moves(const Board& b) {
   return moves;
 }
 
-static void apply_legal_move(Board& b,const string& move) {
-  // Validate with the independent full native legal generator before mutating.
-  vector<string> legal=pseudo_moves(b,true);
-  if(!binary_search(legal.begin(),legal.end(),move))throw runtime_error("illegal move");
+// This helper is ONLY for moves previously validated against the exact board.
+// The public CLI and fallback state API must call apply_legal_move instead.
+static void apply_validated_move(Board& b,const string& move) {
   bool side=b.turn=="b";
   auto hands=parse_hands(b.hand);
   const string kinds="PLNSGBR";
@@ -316,6 +315,14 @@ static void apply_legal_move(Board& b,const string& move) {
   b.hand=encode_hand(hands);
   b.turn=side?"w":"b";
   ++b.ply;
+}
+
+static void apply_legal_move(Board& b,const string& move) {
+  // Full independent validation remains mandatory for all untrusted callers.
+  vector<string> legal=pseudo_moves(b,true);
+  if(!binary_search(legal.begin(),legal.end(),move))
+    throw runtime_error("illegal move");
+  apply_validated_move(b,move);
 }
 
 // Distinguish ordinary fourfold repetition from a continuous-check loss.
