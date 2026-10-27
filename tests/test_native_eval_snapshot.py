@@ -118,5 +118,26 @@ class NativeEvalSnapshotTests(unittest.TestCase):
                     state.close()
 
 
+    def test_evaluation_exception_restores_python_and_native_state(self):
+        board = shogi.Board()
+        original = board.sfen()
+        state = StatefulRules(self.binary, board)
+        proxy = SyncedBoard(board, state)
+        previous = engine.evaluate
+        try:
+            def fail_snapshot(_board, _model):
+                raise RuntimeError("injected evaluation failure")
+            state.evaluate_relative_snapshot = fail_snapshot
+            with self.assertRaisesRegex(RuntimeError, "injected evaluation failure"):
+                with stateful_order_search(
+                    state, cached_moves=True, native_scored=True,
+                    native_snapshot_eval=True):
+                    search(proxy, self.model, fixed=True)
+            self.assertIs(engine.evaluate, previous)
+            proxy.assert_restored(original)
+        finally:
+            state.close()
+
+
 if __name__ == "__main__":
     unittest.main()
