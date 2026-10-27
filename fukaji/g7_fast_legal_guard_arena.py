@@ -192,7 +192,7 @@ def aggregate(parts, out):
                 if any(type(v) not in (int, float) or v < 0
                        for v in stats.values()):
                     raise ValueError("invalid search telemetry")
-                turns = stats["fast_turns"] + stats["baseline_turns"]
+                turns = stats["guard_turns"] + stats["baseline_turns"]
                 if turns not in (len(game["moves"]), len(game["moves"]) + 1):
                     raise ValueError("search turn count inconsistent")
                 rows.append(game)
