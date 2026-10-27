@@ -1,0 +1,14 @@
+{
+  "research_only": true,
+  "training_allowed": true,
+  "model_adoption_allowed": false,
+  "source_runs": [
+    40418598213,
+    40421973408
+  ],
+  "preserve_prior_parent_splits": true,
+  "old_test_for_tuning": false,
+  "reuse_frozen_optimizer": true,
+  "parent_model_sha256": "db79c7d32cd6e03e6f417a461789fa1736ac8eb3fe2159030531cb5303afb2fd",
+  "new_mates_sha256": "e50cfffaec7254d35abc2b8fb9797809c8ca664be644526695897ecaa0c4f922"
+}
