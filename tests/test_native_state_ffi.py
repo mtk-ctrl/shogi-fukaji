@@ -189,6 +189,46 @@ class NativeStateFFITests(unittest.TestCase):
         self.assertNotIn(new_handle, handles)
         self.assertEqual(self.lib.fukaji_state_close(new_handle), 0)
 
+    def test_512_move_boundary_and_failed_push_rollback(self):
+        # Reversible king cycle exercises the full bounded history without
+        # declaring fourfold repetition a win or silently truncating it.
+        board = shogi.Board("4k4/9/9/9/9/9/9/9/4K4 b - 1")
+        initial = board.sfen()
+        handle = self.open_board(board)
+        cycle = ("5i5h", "5a5b", "5h5i", "5b5a")
+        try:
+            for step in range(512):
+                usi = cycle[step % len(cycle)]
+                move = shogi.Move.from_usi(usi)
+                self.assertIn(move, board.legal_moves)
+                encoded = usi.encode("ascii")
+                self.assertEqual(self.lib.fukaji_state_push(
+                    handle, encoded, len(encoded)), 0)
+                board.push(move)
+            self.check(handle, board)
+            snapshot = self.read(handle, "sfen")
+            verdict = self.read(handle, "verdict")
+            self.assertEqual(verdict, "draw")
+            self.assertEqual(self.lib.fukaji_state_push(handle, b"5i5h", 4), -2)
+            self.assertEqual(self.lib.fukaji_state_push(handle, b"9a9a", 4), -2)
+            self.assertEqual(self.read(handle, "sfen"), snapshot)
+            self.assertEqual(self.read(handle, "verdict"), verdict)
+            self.assertEqual(self.lib.fukaji_state_pop(handle), 0)
+            board.pop()
+            self.check(handle, board)
+            encoded = cycle[511 % len(cycle)].encode("ascii")
+            self.assertEqual(self.lib.fukaji_state_push(
+                handle, encoded, len(encoded)), 0)
+            board.push(shogi.Move.from_usi(cycle[511 % len(cycle)]))
+            for _ in range(512):
+                self.assertEqual(self.lib.fukaji_state_pop(handle), 0)
+                board.pop()
+            self.check(handle, board)
+            self.assertEqual(board.sfen(), initial)
+            self.assertEqual(self.read(handle, "verdict"), "none")
+        finally:
+            self.assertEqual(self.lib.fukaji_state_close(handle), 0)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -56,6 +56,12 @@ extern "C" int fukaji_state_open(const char* sfen,size_t length,
     if(board.kings[0]<0 || board.kings[1]<0)return -1;
     NativeState state;
     state.board=board;
+    // Preallocate bounded history so successful push/pop cannot allocate after
+    // the new board has been validated. Failure during open is transactional.
+    state.undo.reserve(kMaxUndo);
+    state.history.reserve(kMaxUndo+1);
+    state.mover_black.reserve(kMaxUndo);
+    state.gave_check.reserve(kMaxUndo);
     state.history.push_back(state_key(board));
     lock_guard<mutex> lock(state_mutex);
     if(state_store.size()>=kMaxStates ||
@@ -107,23 +113,30 @@ extern "C" int fukaji_state_is_check(uint64_t handle) noexcept {
   } catch (...) {return -3;}
 }
 
+// Only the current Board is snapshotted per move. Histories are append-only
+// bounded vectors; no NativeState-wide copy on either push or pop.
+// Every potentially throwing operation precedes the first state mutation.
 extern "C" int fukaji_state_push(uint64_t handle,const char* usi,
                                   size_t length) noexcept {
   try {
     const string move=bounded_input(usi,length,5);
     lock_guard<mutex> lock(state_mutex);
-    NativeState trial=find_state(handle);
-    if(trial.undo.size()>=kMaxUndo)return -2;
-    const bool moved_black=trial.board.turn=="b";
-    Board next=trial.board;
+    NativeState& state=find_state(handle);
+    if(state.undo.size()>=kMaxUndo)return -2;
+    const bool moved_black=state.board.turn=="b";
+    Board next=state.board;
     apply_legal_move(next,move);
     const bool gave_check=checked(next,next.turn=="b");
-    trial.undo.push_back(trial.board);
-    trial.board=next;
-    trial.history.push_back(state_key(next));
-    trial.mover_black.push_back(moved_black);
-    trial.gave_check.push_back(gave_check);
-    state_store.at(handle)=std::move(trial);
+    string key=state_key(next);
+    // The only potentially throwing state mutation. std::vector::push_back
+    // preserves its original contents if Board copy construction throws.
+    state.undo.push_back(state.board);
+    // All capacities were reserved in state_open. Moving string/Board and
+    // appending bools cannot throw with the standard C++17 allocators.
+    state.history.push_back(std::move(key));
+    state.mover_black.push_back(moved_black);
+    state.gave_check.push_back(gave_check);
+    state.board=std::move(next);
     return 0;
   } catch (...) {return -3;}
 }
@@ -131,14 +144,13 @@ extern "C" int fukaji_state_push(uint64_t handle,const char* usi,
 extern "C" int fukaji_state_pop(uint64_t handle) noexcept {
   try {
     lock_guard<mutex> lock(state_mutex);
-    NativeState trial=find_state(handle);
-    if(trial.undo.empty())return -2;
-    trial.board=trial.undo.back();
-    trial.undo.pop_back();
-    trial.history.pop_back();
-    trial.mover_black.pop_back();
-    trial.gave_check.pop_back();
-    state_store.at(handle)=std::move(trial);
+    NativeState& state=find_state(handle);
+    if(state.undo.empty())return -2;
+    state.board=std::move(state.undo.back());
+    state.undo.pop_back();
+    state.history.pop_back();
+    state.mover_black.pop_back();
+    state.gave_check.pop_back();
     return 0;
   } catch (...) {return -3;}
 }
