@@ -121,6 +121,39 @@ class NativeRulesProbeTests(unittest.TestCase):
         self.assertEqual(expected[-1], "1")
         self.assertEqual(self.probe(commands), expected)
 
+
+    def test_native_pseudo_legal_generation_and_self_check_filter(self):
+        # P is fully native pseudo-legal enumeration. H also filters self-check,
+        # but intentionally does NOT forbid pawn-drop mate; that one rule is
+        # still checked by python-shogi when comparing complete legal sets.
+        positions = self.positions() + [
+            shogi.Board("k8/4P4/9/9/9/9/9/9/4K4 b - 1"),
+            shogi.Board("4k4/9/9/9/9/9/9/4P4/4K4 b 2P2L2N2S2G2B2R 1"),
+            shogi.Board("4k4/9/9/9/9/9/9/9/4K4 w 2p2l2n2s2g2b2r 1"),
+        ]
+        commands = []
+        for b in positions:
+            commands.extend(("P " + b.sfen(), "H " + b.sfen()))
+        outputs = self.probe(commands)
+        self.assertEqual(len(outputs), len(positions) * 2)
+        for b, pseudo_line, hybrid_line in zip(
+                positions, outputs[::2], outputs[1::2]):
+            pseudo = pseudo_line.split(",") if pseudo_line else []
+            hybrid = hybrid_line.split(",") if hybrid_line else []
+            expected_pseudo = {m.usi() for m in b.generate_pseudo_legal_moves()}
+            expected_legal = {m.usi() for m in b.legal_moves}
+            self.assertEqual(len(pseudo), len(set(pseudo)), b.sfen())
+            self.assertEqual(len(hybrid), len(set(hybrid)), b.sfen())
+            self.assertEqual(set(pseudo), expected_pseudo, b.sfen())
+            # Python fallback ONLY for forbidden pawn-drop mates.
+            corrected_hybrid = {
+                usi for usi in hybrid
+                if not (usi.startswith("P*")
+                        and shogi.Move.from_usi(usi) not in b.legal_moves)
+            }
+            self.assertEqual(corrected_hybrid, expected_legal, b.sfen())
+            self.assertTrue(set(hybrid).issubset(set(pseudo)), b.sfen())
+
     def test_invalid_sfen_is_rejected(self):
         p = subprocess.run([self.binary], input="C b invalid\n",
                            text=True, capture_output=True, timeout=5)
