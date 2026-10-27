@@ -32,7 +32,7 @@ class Generation6SelfplayTest(unittest.TestCase):
 
     def test_unique_parent_ids(self):
         self.assertNotEqual(parent_id(20273427, ["7g7f"]),
-                            parent_id(20272828, ["7g7f"]))
+                            parent_id(20273428, ["7g7f"]))
 
     def test_invalid_shard_and_model_rejected_before_play(self):
         with tempfile.TemporaryDirectory() as td:
