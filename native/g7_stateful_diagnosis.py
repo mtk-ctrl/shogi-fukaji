@@ -141,7 +141,7 @@ def run_shard(request, games, model, out, shard):
     result = dict(shard=shard, shards=SHARDS, samples=SAMPLES, seed=SEED,
                   positions_sha256=positions_sha, games_sha256=GAMES_SHA,
                   model_sha256=G7_SHA, records=records,
-                  caution="Stateful ABI uses full-state copy per push/pop; "
+                  caution="Stateful ABI uses bounded Board-only undo; "
                           "search throughput only, not strength or 10x engine speed.")
     target = Path(out)
     target.mkdir(parents=True, exist_ok=True)
