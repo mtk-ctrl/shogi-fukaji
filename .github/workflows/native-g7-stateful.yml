@@ -1,0 +1,120 @@
+name: FUKAJI stateful C++ G7 80 positions / 20 runners (research only)
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'native/g7_stateful_*.py'
+      - 'native/rules_state_ffi.cpp'
+      - 'tests/test_native_g7_stateful*.py'
+      - '.github/workflows/native-g7-stateful.yml'
+  push:
+    paths:
+      - 'native/g7_stateful_*.py'
+      - 'native/rules_state_ffi.cpp'
+      - 'tests/test_native_g7_stateful*.py'
+      - '.github/workflows/native-g7-stateful.yml'
+      - '.github/native-g7-stateful-request.json'
+      - '.github/workflows/README.md'
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-native-stateful-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      run: ${{ steps.request.outputs.run }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Full C++ state and search safety regression
+        run: python -m unittest discover -s tests -v
+      - name: Validate immutable request
+        id: request
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          from native.g7_stateful_diagnosis import validate_request
+          cfg = json.loads(Path('.github/native-g7-stateful-request.json').read_text())
+          enabled = validate_request(cfg)
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as out:
+              out.write('run=' + ('true' if enabled else 'false') + '\n')
+          PY
+  compare:
+    needs: preflight
+    if: github.ref == 'refs/heads/main' && needs.preflight.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: fukaji-kumoji-aggregate-40436859527
+          run-id: 40436859527
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/source
+      - uses: actions/download-artifact@v4
+        with:
+          name: fukaji-generation7-research-40434466661
+          run-id: 40434466661
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/g7
+      - name: Compare four frozen positions in three 200ms modes
+        run: |
+          python -m native.g7_stateful_diagnosis \
+            --request .github/native-g7-stateful-request.json \
+            --games build/source/all_games.jsonl \
+            --model build/g7/mover-relative-generation7-research.npz \
+            --shard ${{ matrix.shard }} \
+            --out build/stateful
+          sha256sum build/stateful/part-*.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-stateful-part-${{ matrix.shard }}-${{ github.run_id }}
+          path: build/stateful/
+          retention-days: 30
+          if-no-files-found: error
+  aggregate:
+    needs: compare
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: fukaji-stateful-part-*
+          path: build/stateful-parts
+          merge-multiple: false
+      - name: Validate all 20 shards and 240 measurement rows
+        run: |
+          python -m native.g7_stateful_diagnosis \
+            --parts build/stateful-parts \
+            --out build/stateful-aggregate
+          sha256sum build/stateful-aggregate/aggregate.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-stateful-aggregate-${{ github.run_id }}
+          path: build/stateful-aggregate/
+          retention-days: 30
+          if-no-files-found: error
