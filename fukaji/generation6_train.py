@@ -37,7 +37,7 @@ def frozen_assignments(old_mapping, old_groups, new_groups):
     if (len(old_mapping) != 207 or set(old_mapping) != set(old_groups)
             or {k: list(old_mapping.values()).count(k)
                 for k in ("train", "validation", "test")}
-            != {"train": 295, "validation": 36, "test": 36}
+            != {"train": 167, "validation": 20, "test": 20}
             or set(old_mapping.values()) != {"train", "validation", "test"}):
         raise ValueError("prior heldout parent assignments changed")
     if len(new_groups) != 160 or set(old_groups) & set(new_groups):
@@ -91,7 +91,7 @@ def execute(request, old_data, old_report, old_splits, new_data, new_report, gen
                       encoding="utf-8")
     # The strict learner replays every move, checks actual mate and winner.
     rows = load_games(merged, feature_fn=relative_features)
-    if len(rows) != 222 or {r[0] for r in rows} != set(mapping):
+    if len(rows) != 382 or {r[0] for r in rows} != set(mapping):
         raise ValueError("strict learner rejected a source game")
     splits = {k: [] for k in ("train", "validation", "test")}
     old_parts = {k: [] for k in splits}
