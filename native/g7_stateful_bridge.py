@@ -1,0 +1,162 @@
+"""Research-only lockstep Python/C++ board for G7 diagnosis.
+
+The production USI and Python engine remain untouched. The Python board owns
+search/evaluation/repetition; a bounded C++ state mirrors every push/pop.
+Any native failure aborts the experiment rather than falling back silently.
+"""
+from __future__ import annotations
+
+import ctypes
+import shutil
+import subprocess
+import time
+from pathlib import Path
+
+import shogi
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def build_state_shared(destination):
+    if not shutil.which("g++"):
+        raise RuntimeError("g++ required")
+    result = subprocess.run(
+        ["g++", "-std=c++17", "-O2", "-fPIC", "-shared",
+         "-Wall", "-Wextra", "-Werror",
+         str(ROOT / "native/rules_state_ffi.cpp"), "-o", str(destination)],
+        capture_output=True, text=True, timeout=90)
+    if result.returncode:
+        raise RuntimeError("stateful C++ build failed: " + result.stderr[-3000:])
+
+
+class StatefulRules:
+    def __init__(self, binary, board, *, audit=False):
+        self.lib = ctypes.CDLL(str(binary))
+        signatures = {
+            "open": ([ctypes.c_char_p, ctypes.c_size_t,
+                      ctypes.POINTER(ctypes.c_uint64)], ctypes.c_int),
+            "close": ([ctypes.c_uint64], ctypes.c_int),
+            "legal": ([ctypes.c_uint64, ctypes.c_void_p, ctypes.c_size_t], ctypes.c_int),
+            "sfen": ([ctypes.c_uint64, ctypes.c_void_p, ctypes.c_size_t], ctypes.c_int),
+            "verdict": ([ctypes.c_uint64, ctypes.c_void_p, ctypes.c_size_t], ctypes.c_int),
+            "is_check": ([ctypes.c_uint64], ctypes.c_int),
+            "push": ([ctypes.c_uint64, ctypes.c_char_p, ctypes.c_size_t], ctypes.c_int),
+            "pop": ([ctypes.c_uint64], ctypes.c_int),
+        }
+        for name, (args, result) in signatures.items():
+            fn = getattr(self.lib, "fukaji_state_" + name)
+            fn.argtypes = args
+            fn.restype = result
+        self.handle = ctypes.c_uint64(0)
+        self.audit = audit
+        self.calls = 0
+        self.legal_ns = 0
+        self.push_ns = 0
+        self.pop_ns = 0
+        self.move_ns = 0
+        encoded = board.sfen().encode("ascii")
+        rc = self.lib.fukaji_state_open(encoded, len(encoded), ctypes.byref(self.handle))
+        if rc or not self.handle.value:
+            raise RuntimeError(f"stateful open rejected: {rc}")
+        self.assert_equal(board, full=True)
+
+    def _text(self, name):
+        buf = ctypes.create_string_buffer(16384)
+        result = getattr(self.lib, "fukaji_state_" + name)(
+            self.handle.value, buf, len(buf))
+        if result < 0 or result >= len(buf):
+            raise RuntimeError(f"native state {name} rejected: {result}")
+        return buf.raw[:result].decode("ascii")
+
+    def legal_pseudo_order(self, board):
+        start = time.perf_counter_ns()
+        words = self._text("legal")
+        self.legal_ns += time.perf_counter_ns() - start
+        self.calls += 1
+        result = words.split(",") if words else []
+        if len(result) != len(set(result)):
+            raise RuntimeError("duplicate C++ legal move")
+        if self.audit:
+            self.assert_equal(board, full=True)
+        return result
+
+    def push(self, word):
+        encoded = word.encode("ascii")
+        start = time.perf_counter_ns()
+        rc = self.lib.fukaji_state_push(self.handle.value, encoded, len(encoded))
+        self.push_ns += time.perf_counter_ns() - start
+        if rc:
+            raise RuntimeError(f"native state push rejected {word}: {rc}")
+
+    def pop(self):
+        start = time.perf_counter_ns()
+        rc = self.lib.fukaji_state_pop(self.handle.value)
+        self.pop_ns += time.perf_counter_ns() - start
+        if rc:
+            raise RuntimeError(f"native state pop rejected: {rc}")
+
+    def assert_equal(self, board, *, full=False):
+        if self._text("sfen") != board.sfen():
+            raise RuntimeError("Python/C++ board SFEN desynchronized")
+        if full:
+            check = self.lib.fukaji_state_is_check(self.handle.value)
+            if check != int(board.is_check()):
+                raise RuntimeError("Python/C++ check status mismatch")
+            expected = [m.usi() for m in board.legal_moves]
+            legal = self._text("legal")
+            actual = legal.split(",") if legal else []
+            if actual != expected:
+                raise RuntimeError("Python/C++ ordered legal moves mismatch")
+            native_verdict = self._text("verdict")
+            if (native_verdict != "none") != board.is_fourfold_repetition():
+                raise RuntimeError("Python/C++ fourfold repetition mismatch")
+
+    def close(self):
+        if self.handle.value:
+            rc = self.lib.fukaji_state_close(self.handle.value)
+            self.handle.value = 0
+            if rc:
+                raise RuntimeError(f"stateful close failed: {rc}")
+
+
+class SyncedBoard:
+    """Delegates evaluation/repetition to Python, mirrors each search move to C++."""
+    def __init__(self, board, state):
+        self.board = board
+        self.state = state
+        self.stack = []
+
+    def __getattr__(self, name):
+        return getattr(self.board, name)
+
+    def push(self, move):
+        word = move.usi()
+        self.state.push(word)
+        try:
+            self.board.push(move)
+        except BaseException:
+            self.state.pop()
+            raise
+        self.stack.append(word)
+        if self.state.audit:
+            self.state.assert_equal(self.board, full=True)
+
+    def pop(self):
+        if not self.stack:
+            raise RuntimeError("research board pop below starting position")
+        word = self.stack[-1]
+        self.state.pop()
+        try:
+            move = self.board.pop()
+        except BaseException:
+            self.state.push(word)
+            raise
+        self.stack.pop()
+        if self.state.audit:
+            self.state.assert_equal(self.board, full=True)
+        return move
+
+    def assert_restored(self, original):
+        if self.stack or self.board.sfen() != original:
+            raise RuntimeError("search failed to restore Python board")
+        self.state.assert_equal(self.board, full=True)
