@@ -34,6 +34,9 @@ class InProcessRulesTests(unittest.TestCase):
             "4r3k/9/9/9/9/9/9/4G4/4K4 b - 1",
             "4k4/9/9/9/9/9/9/9/4K4 b PGLNS 1",
             "3pkp3/3p1p3/4G4/9/9/9/9/9/4K4 b P 1",
+            "4k4/9/9/9/4+B4/9/9/9/4K4 b - 1",
+            "4k4/9/9/9/4+R4/9/9/9/4K4 b - 1",
+            "4k4/9/9/9/9/9/9/9/4K4 b RBGSNLP 1",
         ]
         for sfen in sfens:
             board = shogi.Board(sfen)
