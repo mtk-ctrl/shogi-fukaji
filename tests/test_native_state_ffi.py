@@ -42,6 +42,7 @@ class NativeStateFFITests(unittest.TestCase):
             "is_check": ([ctypes.c_uint64], ctypes.c_int),
             "push": ([ctypes.c_uint64, ctypes.c_char_p, ctypes.c_size_t], ctypes.c_int),
             "pop": ([ctypes.c_uint64], ctypes.c_int),
+            "profile": ([ctypes.c_uint64, ctypes.c_void_p, ctypes.c_size_t], ctypes.c_int),
         }
         for name, (args, result) in specs.items():
             fn = getattr(cls.lib, "fukaji_state_" + name)
@@ -74,6 +75,89 @@ class NativeStateFFITests(unittest.TestCase):
             [move.usi() for move in board.legal_moves],
             board.sfen(),
         )
+
+    def profile(self, handle):
+        fields = self.read(handle, "profile").split(";")
+        return {key: int(value) for key, value in
+                (field.split("=", 1) for field in fields)}
+
+    def test_validated_cache_parent_sibling_and_stale_child(self):
+        board = shogi.Board()
+        handle = self.open_board(board)
+        try:
+            # No preceding legal query: full validation is mandatory.
+            first = next(iter(board.legal_moves))
+            word = first.usi().encode("ascii")
+            self.assertEqual(self.lib.fukaji_state_push(handle, word, len(word)), 0)
+            board.push(first)
+            self.assertEqual(self.profile(handle)["fallback_pushes"], 1)
+            self.assertEqual(self.lib.fukaji_state_pop(handle), 0)
+            board.pop()
+            self.check(handle, board)
+
+            before = self.profile(handle)["legal_generations"]
+            self.read(handle, "legal")
+            self.assertEqual(self.profile(handle)["legal_generations"], before)
+            root_moves = list(board.legal_moves)
+            self.assertGreaterEqual(len(root_moves), 2)
+
+            # Invalid move is rejected even when the cache is populated.
+            snapshot = self.read(handle, "sfen")
+            counters = self.profile(handle)
+            self.assertEqual(self.lib.fukaji_state_push(handle, b"9a9a", 4), -2)
+            self.assertEqual(self.read(handle, "sfen"), snapshot)
+            self.assertEqual(self.profile(handle), counters)
+
+            for chosen in root_moves[:2]:
+                encoded = chosen.usi().encode("ascii")
+                self.assertEqual(self.lib.fukaji_state_push(
+                    handle, encoded, len(encoded)), 0)
+                board.push(chosen)
+                self.check(handle, board)
+                self.assertEqual(self.lib.fukaji_state_pop(handle), 0)
+                board.pop()
+                self.assertEqual(self.read(handle, "sfen"), snapshot)
+            # Both siblings reuse the root cache across child push/pop.
+            self.assertEqual(self.profile(handle)["cache_hits"], 2)
+
+            # A child cache must never be reused for a different sibling.
+            child = root_moves[0]
+            encoded = child.usi().encode("ascii")
+            self.assertEqual(self.lib.fukaji_state_push(handle, encoded, len(encoded)), 0)
+            board.push(child)
+            self.read(handle, "legal")
+            self.assertEqual(self.lib.fukaji_state_pop(handle), 0)
+            board.pop()
+            other = root_moves[1]
+            encoded = other.usi().encode("ascii")
+            self.assertEqual(self.lib.fukaji_state_push(handle, encoded, len(encoded)), 0)
+            board.push(other)
+            child_move = next(iter(board.legal_moves))
+            encoded = child_move.usi().encode("ascii")
+            previous = self.profile(handle)["fallback_pushes"]
+            self.assertEqual(self.lib.fukaji_state_push(handle, encoded, len(encoded)), 0)
+            board.push(child_move)
+            self.assertEqual(self.profile(handle)["fallback_pushes"], previous + 1)
+            self.check(handle, board)
+            for _ in range(2):
+                self.assertEqual(self.lib.fukaji_state_pop(handle), 0)
+                board.pop()
+            self.check(handle, board)
+        finally:
+            self.assertEqual(self.lib.fukaji_state_close(handle), 0)
+
+    def test_failed_legal_buffer_does_not_publish_cache(self):
+        board = shogi.Board()
+        handle = self.open_board(board)
+        try:
+            tiny = ctypes.create_string_buffer(2)
+            self.assertEqual(self.lib.fukaji_state_legal(handle, tiny, len(tiny)), -2)
+            self.assertEqual(self.profile(handle)["legal_generations"], 0)
+            move = next(iter(board.legal_moves)).usi().encode("ascii")
+            self.assertEqual(self.lib.fukaji_state_push(handle, move, len(move)), 0)
+            self.assertEqual(self.profile(handle)["fallback_pushes"], 1)
+        finally:
+            self.assertEqual(self.lib.fukaji_state_close(handle), 0)
 
     def test_special_positions_and_pawn_drop_mate(self):
         sfens = (
