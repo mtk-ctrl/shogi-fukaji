@@ -5,12 +5,14 @@ on:
     paths:
       - 'native/g7_inprocess_diagnosis.py'
       - 'native/rules_ffi.cpp'
+      - 'native/rules_probe.cpp'
       - 'tests/test_native_g7_inprocess.py'
       - '.github/workflows/native-g7-inprocess.yml'
   push:
     paths:
       - 'native/g7_inprocess_diagnosis.py'
       - 'native/rules_ffi.cpp'
+      - 'native/rules_probe.cpp'
       - 'tests/test_native_g7_inprocess.py'
       - '.github/workflows/native-g7-inprocess.yml'
       - '.github/native-g7-inprocess-request.json'
