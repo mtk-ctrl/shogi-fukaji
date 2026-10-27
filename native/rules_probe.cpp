@@ -1,5 +1,5 @@
 // FUKAJI research-only independent C++ attack/repetition probe.
-// No engine integration. Research-only legal-move generator (no move-state engine).
+// No engine integration. Research-only legal-move generator and reversible state probe.
 // Protocol: C <b|w> <SFEN> => whether that king is attacked; R <SFEN>
 // => fourfold state; Z => reset repetition history.
 #include <algorithm>
@@ -7,6 +7,7 @@
 #include <cctype>
 #include <cstdlib>
 #include <iostream>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -18,6 +19,7 @@ struct Board {
   array<Piece,81> squares{};
   string turn, hand;
   int kings[2]={-1,-1};
+  int ply=1;
 };
 static Board parse(const string& sfen) {
   istringstream in(sfen);
@@ -25,6 +27,10 @@ static Board parse(const string& sfen) {
   if (!(in>>position>>turn>>hand>>ply) || (turn!="b"&&turn!="w"))
     throw runtime_error("invalid SFEN fields");
   Board b; b.turn=turn; b.hand=hand;
+  if(ply.empty() || !all_of(ply.begin(),ply.end(),[](char c){return c>='0'&&c<='9';}))
+    throw runtime_error("invalid move number");
+  b.ply=stoi(ply);
+  if(b.ply<1)throw runtime_error("invalid move number");
   int row=0,col=0; bool promote=false;
   for(char ch:position) {
     if(ch=='/') { if(col!=9||row>=8)throw runtime_error("rank width"); ++row;col=0;continue; }
@@ -213,13 +219,115 @@ static string encode_moves(const vector<string>& moves) {
   return output;
 }
 
+
+static string encode_hand(const array<array<int,7>,2>& counts) {
+  const string order="RBGSNLP", kinds="PLNSGBR";
+  string output;
+  for(int side=0;side<2;++side)for(char kind:order) {
+    int n=counts[side][kinds.find(kind)];
+    if(n<0)throw runtime_error("negative hand count");
+    if(n==0)continue;
+    if(n>1)output+=to_string(n);
+    output+=static_cast<char>(side==0?kind:tolower(static_cast<unsigned char>(kind)));
+  }
+  return output.empty()?"-":output;
+}
+static string format_sfen(const Board& b) {
+  string output;
+  for(int row=0;row<9;++row) {
+    if(row)output+='/';
+    int empty=0;
+    for(int col=0;col<9;++col) {
+      Piece p=b.squares[row*9+col];
+      if(!p.type){++empty;continue;}
+      if(empty){output+=to_string(empty);empty=0;}
+      if(p.promoted)output+='+';
+      output+=static_cast<char>(p.black?p.type:tolower(static_cast<unsigned char>(p.type)));
+    }
+    if(empty)output+=to_string(empty);
+  }
+  return output+" "+b.turn+" "+encode_hand(parse_hands(b.hand))+" "+to_string(b.ply);
+}
+static int from_usi_square(char file,char rank) {
+  if(file<'1'||file>'9'||rank<'a'||rank>'i')throw runtime_error("invalid USI square");
+  return (rank-'a')*9+('9'-file);
+}
+static void apply_legal_move(Board& b,const string& move) {
+  // Validate with the independent full native legal generator before mutating.
+  vector<string> legal=pseudo_moves(b,true);
+  if(!binary_search(legal.begin(),legal.end(),move))throw runtime_error("illegal move");
+  bool side=b.turn=="b";
+  auto hands=parse_hands(b.hand);
+  const string kinds="PLNSGBR";
+  if(move.size()==4&&move[1]=='*') {
+    char kind=move[0];
+    size_t index=kinds.find(kind);
+    if(index==string::npos||hands[side?0:1][index]<=0)
+      throw runtime_error("drop without piece in hand");
+    int to=from_usi_square(move[2],move[3]);
+    if(b.squares[to].type)throw runtime_error("occupied drop square");
+    b.squares[to]={kind,side,false};
+    --hands[side?0:1][index];
+  } else if(move.size()==4||(move.size()==5&&move[4]=='+')) {
+    int from=from_usi_square(move[0],move[1]);
+    int to=from_usi_square(move[2],move[3]);
+    Piece moving=b.squares[from], captured=b.squares[to];
+    if(!moving.type||moving.black!=side)throw runtime_error("invalid moving piece");
+    if(captured.type) {
+      size_t index=kinds.find(captured.type);
+      if(index==string::npos)throw runtime_error("cannot capture a king");
+      ++hands[side?0:1][index];
+    }
+    b.squares[from]={};
+    if(move.size()==5)moving.promoted=true;
+    b.squares[to]=moving;
+    if(moving.type=='K')b.kings[side?0:1]=to;
+  } else throw runtime_error("invalid move format");
+  b.hand=encode_hand(hands);
+  b.turn=side?"w":"b";
+  ++b.ply;
+}
+
 int main() {
   unordered_map<string,int> counts;
+  optional<Board> current;
+  vector<Board> undo;
+  vector<string> history;
   string line;
   while(getline(cin,line)) {
-    if(line=="Z"){counts.clear();cout<<"OK\n";continue;}
+    if(line=="Z"){counts.clear();current.reset();undo.clear();history.clear();cout<<"OK\n";continue;}
     try {
+      if(line=="S"||line=="F"||line=="U") {
+        if(!current)throw runtime_error("no loaded board");
+        if(line=="S")cout<<format_sfen(*current)<<"\n";
+        else if(line=="F") {
+          int repeats=0;
+          for(const auto& key:history)if(key==history.back())++repeats;
+          cout<<(repeats>=4?1:0)<<"\n";
+        } else {
+          if(undo.empty())throw runtime_error("undo stack empty");
+          *current=undo.back();undo.pop_back();history.pop_back();
+          cout<<format_sfen(*current)<<"\n";
+        }
+        continue;
+      }
       if(line.size()<3||line[1]!=' ')throw runtime_error("protocol");
+      if(line[0]=='B') {
+        Board b=parse(line.substr(2));
+        (void)parse_hands(b.hand);
+        current=b;undo.clear();history={state_key(b)};
+        cout<<format_sfen(b)<<"\n";
+        continue;
+      }
+      if(line[0]=='M') {
+        if(!current)throw runtime_error("no loaded board");
+        Board next=*current;
+        apply_legal_move(next,line.substr(2));
+        undo.push_back(*current);*current=next;
+        history.push_back(state_key(next));
+        cout<<format_sfen(next)<<"\n";
+        continue;
+      }
       if(line[0]=='C') {
         if(line.size()<6||line[3]!=' '||(line[2]!='b'&&line[2]!='w'))
           throw runtime_error("check protocol");
