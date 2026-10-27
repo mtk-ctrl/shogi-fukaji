@@ -1,4 +1,4 @@
-"""Read-only cProfile on frozen G7 legal positions: locate search hot paths.
+"""Read-only cProfile A/B on frozen G7 positions: FastMoveList ON/OFF hot paths.
 
 Instrumented time is NOT comparable to uninstrumented 200ms play.
 No training, game result labels, model update or official KUMOJI changes.
