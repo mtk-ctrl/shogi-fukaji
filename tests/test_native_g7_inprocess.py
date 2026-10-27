@@ -36,13 +36,14 @@ class InProcessRulesTests(unittest.TestCase):
         ]
         for sfen in sfens:
             board = shogi.Board(sfen)
+            canonical = board.sfen()
             self.assertEqual(bridge.legal(board),
                              sorted(m.usi() for m in board.legal_moves))
             self.assertEqual(
                 [m.usi() for m in ordered_native(board, bridge)],
                 [m.usi() for m in engine.ordered_moves(
                     board, fast_move_list=True, fast_legal_guard=True)])
-            self.assertEqual(board.sfen(), sfen)
+            self.assertEqual(board.sfen(), canonical)
 
     def test_fixed_depth_same_search_and_restore(self):
         bridge = InProcessBridge(self.binary)
