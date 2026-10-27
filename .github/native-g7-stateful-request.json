@@ -20,7 +20,8 @@
   "variants": [
     "python_guard",
     "native_ordered",
-    "native_stateful"
+    "native_stateful",
+    "native_stateful_cached"
   ],
   "seed": 20271027
 }
