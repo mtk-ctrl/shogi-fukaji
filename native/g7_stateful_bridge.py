@@ -40,6 +40,7 @@ class StatefulRules:
                       ctypes.POINTER(ctypes.c_uint64)], ctypes.c_int),
             "close": ([ctypes.c_uint64], ctypes.c_int),
             "legal": ([ctypes.c_uint64, ctypes.c_void_p, ctypes.c_size_t], ctypes.c_int),
+            "scored": ([ctypes.c_uint64, ctypes.c_void_p, ctypes.c_size_t], ctypes.c_int),
             "sfen": ([ctypes.c_uint64, ctypes.c_void_p, ctypes.c_size_t], ctypes.c_int),
             "verdict": ([ctypes.c_uint64, ctypes.c_void_p, ctypes.c_size_t], ctypes.c_int),
             "is_check": ([ctypes.c_uint64], ctypes.c_int),
@@ -55,6 +56,7 @@ class StatefulRules:
         self.audit = audit
         self.calls = 0
         self.legal_ns = 0
+        self.scored_ns = 0
         self.push_ns = 0
         self.pop_ns = 0
         self.move_ns = 0
@@ -89,6 +91,19 @@ class StatefulRules:
         result = words.split(",") if words else []
         if len(result) != len(set(result)):
             raise RuntimeError("duplicate C++ legal move")
+        if self.audit:
+            self.assert_equal(board, full=True)
+        return result
+
+    def scored_order(self, board):
+        """Native stable capture/promotion scoring, legal-cache authority unchanged."""
+        start = time.perf_counter_ns()
+        words = self._text("scored")
+        self.scored_ns += time.perf_counter_ns() - start
+        self.calls += 1
+        result = words.split(",") if words else []
+        if len(result) != len(set(result)):
+            raise RuntimeError("duplicate C++ scored legal move")
         if self.audit:
             self.assert_equal(board, full=True)
         return result
@@ -175,7 +190,7 @@ class SyncedBoard:
         self.state.assert_equal(self.board, full=True)
 
 @contextmanager
-def stateful_order_search(state, *, cached_moves=False):
+def stateful_order_search(state, *, cached_moves=False, native_scored=False):
     """Research-only bounded move parsing cache; ordering and legality unchanged."""
     original = engine.ordered_moves
     # A USI move's coordinates/promotion are position-independent. Cache only
@@ -186,17 +201,19 @@ def stateful_order_search(state, *, cached_moves=False):
     def ordered(board, fast_move_list=False, fast_legal_guard=False):
         if not (fast_move_list and fast_legal_guard):
             raise RuntimeError("stateful research requires frozen G7 options")
-        words = state.legal_pseudo_order(board)
+        words = (state.scored_order(board) if native_scored
+                 else state.legal_pseudo_order(board))
         started = time.perf_counter_ns()
         moves = [parse_move(word) for word in words]
         state.move_ns += time.perf_counter_ns() - started
-        started = time.perf_counter_ns()
-        def score(move):
-            target = board.piece_at(move.to_square)
-            return (engine.VALUES.get(target.piece_type, 0) if target else 0) + (
-                200 if move.promotion else 0)
-        moves.sort(key=score, reverse=True)
-        state.sort_ns += time.perf_counter_ns() - started
+        if not native_scored:
+            started = time.perf_counter_ns()
+            def score(move):
+                target = board.piece_at(move.to_square)
+                return (engine.VALUES.get(target.piece_type, 0) if target else 0) + (
+                    200 if move.promotion else 0)
+            moves.sort(key=score, reverse=True)
+            state.sort_ns += time.perf_counter_ns() - started
         return moves
 
     engine.ordered_moves = ordered
