@@ -238,6 +238,67 @@ class NativeRulesProbeTests(unittest.TestCase):
         expected.extend((b.sfen(), "0"))
         self.assertEqual(self.probe(commands), expected)
 
+    def test_native_stateful_legal_sets_every_ply_and_undo(self):
+        # The native board must generate legal moves from its own updated state,
+        # not from a newly parsed SFEN supplied by Python.
+        rng = random.Random(20271030)
+        for _ in range(6):
+            b = shogi.Board()
+            commands = ["B " + b.sfen(), "L"]
+            expected = [b.sfen(), ",".join(sorted(m.usi() for m in b.legal_moves))]
+            count = 0
+            for _ in range(60):
+                moves = list(b.legal_moves)
+                if not moves:
+                    break
+                move = rng.choice(moves)
+                b.push(move)
+                commands.extend(("M " + move.usi(), "L"))
+                expected.extend((b.sfen(),
+                                 ",".join(sorted(m.usi() for m in b.legal_moves))))
+                count += 1
+            for _ in range(count):
+                b.pop()
+                commands.extend(("U", "L"))
+                expected.extend((b.sfen(),
+                                 ",".join(sorted(m.usi() for m in b.legal_moves))))
+            self.assertEqual(self.probe(commands), expected)
+
+    def test_native_continuous_check_repetition_and_undo(self):
+        # python-shogi 1.1.1 exposes fourfold repetition but not the
+        # continuous-check loser. Independently assert the shogi rule while
+        # checking every move and repetition against python-shogi.
+        cases = (
+            ("4k4/9/5R3/9/9/9/9/9/4K4 b - 1",
+             ("4c5c", "5a4a", "5c4c", "4a5a"), "black_loses"),
+            ("4k4/9/9/9/9/9/5r3/9/4K4 w - 1",
+             ("4g5g", "5i4i", "5g4g", "4i5i"), "white_loses"),
+            ("4k4/9/9/9/9/9/9/9/4K4 b - 1",
+             ("5i5h", "5a5b", "5h5i", "5b5a"), "draw"),
+        )
+        for sfen, cycle, verdict in cases:
+            with self.subTest(verdict=verdict):
+                b = shogi.Board(sfen)
+                commands = ["B " + sfen, "F", "T"]
+                expected = [sfen, "0", "none"]
+                for repeat in range(3):
+                    for index, usi in enumerate(cycle):
+                        move = shogi.Move.from_usi(usi)
+                        self.assertIn(move, b.legal_moves, (verdict, b.sfen(), usi))
+                        b.push(move)
+                        self.assertEqual(b.is_check(),
+                                         verdict != "draw" and index % 2 == 0)
+                        commands.append("M " + usi)
+                        expected.append(b.sfen())
+                    commands.extend(("F", "T"))
+                    expected.extend(("1" if b.is_fourfold_repetition() else "0",
+                                     verdict if repeat == 2 else "none"))
+                self.assertTrue(b.is_fourfold_repetition())
+                b.pop()
+                commands.extend(("U", "F", "T"))
+                expected.extend((b.sfen(), "0", "none"))
+                self.assertEqual(self.probe(commands), expected)
+
     def test_invalid_sfen_is_rejected(self):
         p = subprocess.run([self.binary], input="C b invalid\n",
                            text=True, capture_output=True, timeout=5)
