@@ -46,7 +46,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: fukaji-generation5-research-40424947260
-          run-id: 40429892376
+          run-id: 40424947260
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path: build/g6_arena/g5
       - name: Download frozen research G6
