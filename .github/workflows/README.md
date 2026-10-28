@@ -99,3 +99,5 @@
 
 | `uct-single-pass-abba.yml` | **UCT合法手リスト単一走査の同一12局面ABBA診断（研究専用・既定OFF）**：固定G8モデルと240局原本をSHA照合・全手合法再生し、親12局面を同一runnerでOFF→ON→ON→OFF各200ms、各方式24観測。合法手と盤面復元・探索時間/反復/超過/48行SHAを監査。明示request時だけ本実験。学習・新対局・正式採用・雲路変更なし。 |
 | `uct-total-clock-abba.yml` | **UCT総時間予算の同一12局面ABBA診断（研究専用・既定OFF）**：単一合法手走査ON固定、総時計OFF→ON→ON→OFF、凍結G8と240局原本のSHA照合・全手合法再生、1runner・200ms・48観測。反復0でも合法手なら記録し、外部/内部時間・超過・着手・盤面復元を監査。別明示requestだけ実測、学習・新対局・正式採用・雲路変更なし。 |
+
+| `uct-cleanup-reserve-abba.yml` | **研究専用・探索木解放予約の固定12親ABBA**：凍結G8/240局をSHA・全手合法再生し、単一走査/総時計/線形根選択ON固定で予約だけOFF→ON→ON→OFF、200ms・48観測・1runner。明示request既定OFF、正式採用・学習・新対局なし。 |
