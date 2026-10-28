@@ -3,10 +3,13 @@ import unittest
 from unittest.mock import patch
 
 import shogi
+from fukaji.g8_longthink import live_history
 
 from fukaji.g8_followup import (
     expected_request, validate_request, select_changed, opponent_reply,
+
     SHARDS, PER_SHARD, FOLLOWUP_SHA,
+
 )
 
 
@@ -78,7 +81,7 @@ class FollowupTests(unittest.TestCase):
     def test_opponent_branch_undo_and_legality(self):
         board = shogi.Board()
         before = board.sfen()
-        history = dict(board.transpositions)
+        history = live_history(board)
         with patch("fukaji.g8_followup.search",
                    return_value={"move": "3c3d", "completed_depth": 2,
                                  "elapsed_ms": 1000.0, "nodes": 10}) as mocked:
@@ -86,7 +89,7 @@ class FollowupTests(unittest.TestCase):
         self.assertEqual(result["terminal"], "nonterminal")
         self.assertEqual(result["reply"]["move"], "3c3d")
         self.assertEqual(board.sfen(), before)
-        self.assertEqual(dict(board.transpositions), history)
+        self.assertEqual(live_history(board), history)
         mocked.assert_called_once()
         with self.assertRaises(ValueError):
             opponent_reply(board, "invalid", object())
