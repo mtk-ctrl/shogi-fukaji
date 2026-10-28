@@ -14,6 +14,18 @@ from dataclasses import dataclass, field
 from .engine import evaluate
 
 
+def _legal_moves_once(board, *, single_pass=False):
+    """Materialize legal moves without changing order; opt-in avoids __len__.
+
+    python-shogi's LegalMoveGenerator.__len__ enumerates legal moves. The
+    built-in list() requests that length before iterating, so the default
+    path can enumerate twice. A comprehension requests only the iterator.
+    """
+    if single_pass:
+        return [move for move in board.legal_moves]
+    return list(board.legal_moves)
+
+
 @dataclass
 class Node:
     move: object = None
@@ -38,7 +50,7 @@ def _uct_child(node, exploration):
 
 def select_mcts(board, movetime_ms=200, model=None, *, fast_relative=False,
                 max_iterations=None, max_tree_depth=12, exploration=1.4,
-                seed=0, iteration_trace=None):
+                seed=0, iteration_trace=None, single_pass_legal_moves=False):
     """Return (legal USI move, iterations, elapsed milliseconds).
 
     max_iterations can fix the sample budget for reproducible research. When
@@ -59,8 +71,10 @@ def select_mcts(board, movetime_ms=200, model=None, *, fast_relative=False,
         raise ValueError('invalid exploration constant')
     if iteration_trace is not None and not hasattr(iteration_trace, 'append'):
         raise ValueError('iteration_trace must support append')
+    if type(single_pass_legal_moves) is not bool:
+        raise ValueError('single_pass_legal_moves must be bool')
 
-    root_moves = list(board.legal_moves)
+    root_moves = _legal_moves_once(board, single_pass=single_pass_legal_moves)
     if not root_moves:
         return 'resign', 0, 0.0
     root_sfen = board.sfen()
@@ -110,7 +124,7 @@ def select_mcts(board, movetime_ms=200, model=None, *, fast_relative=False,
                             phases['repetition_ms'] = (time.monotonic() - clock) * 1000.0
                         if not is_repetition:
                             clock = time.monotonic() if phases is not None else None
-                            moves = list(board.legal_moves)
+                            moves = _legal_moves_once(board, single_pass=single_pass_legal_moves)
                             if phases is not None:
                                 phases['legal_moves_ms'] = (time.monotonic() - clock) * 1000.0
                                 clock = time.monotonic()

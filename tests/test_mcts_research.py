@@ -147,6 +147,56 @@ class MctsResearchTests(unittest.TestCase):
                         'legal_moves_ms', 'child_nodes_ms', 'push_ms'):
                 self.assertEqual(row[key], 0.0)
 
+    def test_single_pass_avoids_generator_length_prepass(self):
+        board = shogi.Board()
+        before = (board.sfen(), tuple(board.move_stack))
+        # list(LegalMoveGenerator) invokes __len__, while a comprehension
+        # iterates once. This must cover both root and tree expansions.
+        with patch.object(shogi.LegalMoveGenerator, "__len__",
+                          side_effect=AssertionError("unexpected length prepass")):
+            move, count, _ = select_mcts(
+                board, movetime_ms=2000, max_iterations=8,
+                seed=41, max_tree_depth=3, single_pass_legal_moves=True)
+        self.assertEqual(count, 8)
+        self.assertIn(shogi.Move.from_usi(move), board.legal_moves)
+        self.assertEqual((board.sfen(), tuple(board.move_stack)), before)
+
+    def test_single_pass_preserves_moves_order_and_undo(self):
+        boards = [
+            shogi.Board(),
+            shogi.Board("4k4/9/4R4/9/9/9/9/9/4K4 w - 1"),
+            shogi.Board("4k4/9/9/9/9/9/9/9/4K4 b Pp 1"),
+            shogi.Board("4k4/9/3RGR3/9/9/9/9/9/4K4 b P 1"),
+            shogi.Board("4k4/3GRG3/9/9/9/9/9/9/4K4 w - 1"),
+        ]
+        repeated = shogi.Board("4k4/9/9/9/9/9/9/9/4K4 b - 1")
+        for word in ("5i6i", "5a6a", "6i5i", "6a5a") * 3:
+            repeated.push(shogi.Move.from_usi(word))
+        self.assertTrue(repeated.is_fourfold_repetition())
+        boards.append(repeated)
+        for board in boards:
+            with self.subTest(sfen=board.sfen()):
+                before = (board.sfen(), tuple(board.move_stack))
+                self.assertEqual(
+                    [move.usi() for move in list(board.legal_moves)],
+                    [move.usi() for move in board.legal_moves])
+                if board.is_checkmate():
+                    self.assertEqual(list(board.legal_moves), [])
+                if board.sfen().startswith("4k4/9/3RGR3"):
+                    self.assertNotIn(shogi.Move.from_usi("P*5b"), board.legal_moves)
+                original = select_mcts(
+                    board, movetime_ms=2000, max_iterations=8,
+                    max_tree_depth=3, seed=41)
+                candidate = select_mcts(
+                    board, movetime_ms=2000, max_iterations=8,
+                    max_tree_depth=3, seed=41, single_pass_legal_moves=True)
+                self.assertEqual(original[:2], candidate[:2])
+                self.assertEqual((board.sfen(), tuple(board.move_stack)), before)
+
+    def test_single_pass_rejects_non_boolean_flag(self):
+        with self.assertRaises(ValueError):
+            select_mcts(shogi.Board(), single_pass_legal_moves=1)
+
     def test_rejects_invalid_research_parameters(self):
         board = shogi.Board()
         for kwargs in ({"movetime_ms": 0}, {"max_iterations": 0},
