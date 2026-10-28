@@ -1,0 +1,11 @@
+{
+  "enabled": false,
+  "research_only": true,
+  "model_adoption_allowed": false,
+  "source_run": 40637486947,
+  "g8_model_run": 40636602223,
+  "positions_per_category": 3,
+  "max_ply": 240,
+  "movetime_ms": 200,
+  "runner_jobs": 1
+}
