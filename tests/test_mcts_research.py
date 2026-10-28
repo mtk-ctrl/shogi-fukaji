@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import shogi
 
-from fukaji.mcts_research import Node, _uct_child, select_mcts
+from fukaji.mcts_research import Node, _uct_child, _best_root_child, select_mcts
 
 
 class MctsResearchTests(unittest.TestCase):
@@ -224,6 +224,53 @@ class MctsResearchTests(unittest.TestCase):
                     self.assertGreaterEqual(trace[0][key], 0)
                 self.assertEqual((board.sfen(), tuple(board.move_stack)),
                                  original)
+
+    def test_linear_root_choice_exact_ties_and_no_index_prepass(self):
+        class IndexForbidden(list):
+            def index(self, *args, **kwargs):
+                raise AssertionError("quadratic root index lookup")
+
+        for visits in ((0, 0, 0), (2, 7, 7), (5, 1, 9), (1, 1, 1)):
+            moves = IndexForbidden([object() for _ in visits])
+            root = Node(children=[
+                Node(move=move, visits=count)
+                for move, count in zip(moves, visits)])
+            expected = max(root.children,
+                           key=lambda child: (child.visits,
+                                              -list(moves).index(child.move)))
+            self.assertIs(_best_root_child(root, moves, linear=True), expected)
+
+    def test_linear_root_choice_matches_default_on_legal_positions(self):
+        boards = [
+            shogi.Board(),
+            shogi.Board("4k4/9/4R4/9/9/9/9/9/4K4 w - 1"),
+            shogi.Board("4k4/9/9/9/9/9/9/9/4K4 b Pp 1"),
+            shogi.Board("4k4/9/3RGR3/9/9/9/9/9/4K4 b P 1"),
+            shogi.Board("4k4/3GRG3/9/9/9/9/9/9/4K4 w - 1"),
+        ]
+        repeated = shogi.Board("4k4/9/9/9/9/9/9/9/4K4 b - 1")
+        for word in ("5i6i", "5a6a", "6i5i", "6a5a") * 3:
+            repeated.push(shogi.Move.from_usi(word))
+        self.assertTrue(repeated.is_fourfold_repetition())
+        boards.append(repeated)
+        for board in boards:
+            with self.subTest(sfen=board.sfen()):
+                before = (board.sfen(), tuple(board.move_stack))
+                opts = dict(movetime_ms=2000, max_iterations=8,
+                            max_tree_depth=3, seed=41,
+                            single_pass_legal_moves=True,
+                            total_budget_from_call=True)
+                old = select_mcts(board, **opts)
+                new = select_mcts(board, linear_root_choice=True, **opts)
+                self.assertEqual(old[:2], new[:2])
+                self.assertEqual((board.sfen(), tuple(board.move_stack)),
+                                 before)
+                if old[0] != "resign":
+                    self.assertIn(shogi.Move.from_usi(old[0]), board.legal_moves)
+
+    def test_linear_root_choice_rejects_non_boolean_flag(self):
+        with self.assertRaises(ValueError):
+            select_mcts(shogi.Board(), linear_root_choice=1)
 
     def test_return_clock_trace_handles_no_legal_move(self):
         board = shogi.Board("4k4/3GRG3/9/9/9/9/9/9/4K4 w - 1")
