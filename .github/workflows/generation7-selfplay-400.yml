@@ -1,0 +1,149 @@
+name: FUKAJI frozen G7 400 selfplay research (20 runners)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/fukaji-generation7-selfplay-request.json"
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-generation7-selfplay-400
+  cancel-in-progress: false
+jobs:
+  preflight:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      enabled: ${{ steps.protocol.outputs.enabled }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Verify tests and fail-closed frozen research request
+        id: protocol
+        run: |
+          python -m unittest discover -s tests -v
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          from fukaji.generation7_selfplay import expected_request, validate_request
+          cfg = json.loads(Path('.github/fukaji-generation7-selfplay-request.json').read_text())
+          if cfg == {**expected_request(), 'enabled': False}:
+              enabled = 'false'
+          else:
+              validate_request(cfg)
+              enabled = 'true'
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              f.write('enabled=' + enabled + '\n')
+          print('G7 400 selfplay enabled:', enabled)
+          PY
+      - name: Download SHA-frozen G7 research model before fanout
+        if: steps.protocol.outputs.enabled == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-generation7-research-40434466661
+          run-id: 40434466661
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/g7_400/model
+      - name: Verify model SHA before fanout
+        if: steps.protocol.outputs.enabled == 'true'
+        run: |
+          python - <<'PY'
+          from fukaji.direct_arena import digest
+          from fukaji.generation7_selfplay import MODEL_SHA
+          p = 'build/g7_400/model/mover-relative-generation7-research.npz'
+          if digest(p) != MODEL_SHA:
+              raise SystemExit('G7 source SHA mismatch')
+          print('G7 source SHA verified', MODEL_SHA)
+          PY
+      - name: Exercise actual G7-vs-G7 legal play before twenty runners
+        if: steps.protocol.outputs.enabled == 'true'
+        run: |
+          python - <<'PY'
+          from fukaji.arena import opening
+          from fukaji.direct_arena import replay_check
+          from fukaji.generation_arena import play
+          from fukaji.relative_value import RelativeValue
+          from fukaji.generation7_selfplay import SEED
+          model = RelativeValue('build/g7_400/model/mover-relative-generation7-research.npz', mix_percent=25)
+          head = opening(SEED, 6)
+          row = play(head, True, model, model, max_plies=12)
+          replay_check(head, row['moves'], row)
+          if len(head) + len(row['moves']) > 12 or row['winner'] is not None and row['status'] != 'checkmate':
+              raise SystemExit('invalid G7 short-game smoke')
+          print('G7 actual legal-play smoke passed:', len(row['moves']), row['status'])
+          PY
+  selfplay:
+    needs: preflight
+    if: needs.preflight.outputs.enabled == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Download SHA-frozen G7 research model
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-generation7-research-40434466661
+          run-id: 40434466661
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/g7_400/model
+      - name: Play twenty independent games with G7 on both seats
+        run: |
+          python -m fukaji.generation7_selfplay \
+            --mode play \
+            --request .github/fukaji-generation7-selfplay-request.json \
+            --model build/g7_400/model/mover-relative-generation7-research.npz \
+            --shard ${{ matrix.shard }} \
+            --out build/g7_400/part
+      - name: Upload actual played moves and verified outcomes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-g7-400-part-${{ matrix.shard }}-${{ github.run_id }}
+          path: build/g7_400/part/
+          retention-days: 30
+          if-no-files-found: warn
+  aggregate:
+    needs: [preflight, selfplay]
+    if: needs.preflight.outputs.enabled == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Download exactly twenty completed selfplay shards
+        uses: actions/download-artifact@v4
+        with:
+          pattern: fukaji-g7-400-part-*
+          path: build/g7_400/parts
+          merge-multiple: false
+      - name: Verify 400 legal games, outcome labels, parents and SHA
+        run: |
+          python -m fukaji.generation7_selfplay \
+            --mode aggregate \
+            --parts build/g7_400/parts \
+            --out build/g7_400/aggregate
+      - name: Upload all games and strictly verified mate dataset
+        uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-g7-400-aggregate-${{ github.run_id }}
+          path: build/g7_400/aggregate/
+          retention-days: 30
+          if-no-files-found: error
