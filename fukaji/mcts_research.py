@@ -38,12 +38,16 @@ def _uct_child(node, exploration):
 
 def select_mcts(board, movetime_ms=200, model=None, *, fast_relative=False,
                 max_iterations=None, max_tree_depth=12, exploration=1.4,
-                seed=0):
+                seed=0, iteration_trace=None):
     """Return (legal USI move, iterations, elapsed milliseconds).
 
     max_iterations can fix the sample budget for reproducible research. When
     supplied, it is still bounded by the wall-clock deadline. The caller
     must record actual iterations and elapsed time, not assume equal nodes.
+
+    Optional iteration_trace is an append-only list of phase timings. It is
+    diagnostic instrumentation: extra clock reads and recording change timing,
+    so traced runs must NOT be compared directly with untraced 200ms runs.
     """
     if not (1 <= movetime_ms <= 60000):
         raise ValueError('movetime_ms outside 1..60000')
@@ -53,6 +57,8 @@ def select_mcts(board, movetime_ms=200, model=None, *, fast_relative=False,
         raise ValueError('max_tree_depth must be a positive integer')
     if not math.isfinite(exploration) or exploration < 0:
         raise ValueError('invalid exploration constant')
+    if iteration_trace is not None and not hasattr(iteration_trace, 'append'):
+        raise ValueError('iteration_trace must support append')
 
     root_moves = list(board.legal_moves)
     if not root_moves:
@@ -69,6 +75,8 @@ def select_mcts(board, movetime_ms=200, model=None, *, fast_relative=False,
         while (time.monotonic() < deadline and
                (max_iterations is None or iterations < max_iterations)):
             iteration_started = time.monotonic()
+            phase_started = iteration_started
+            phases = {} if iteration_trace is not None else None
             node = root
             path = [root]
             pushed = 0
@@ -80,6 +88,10 @@ def select_mcts(board, movetime_ms=200, model=None, *, fast_relative=False,
                     pushed += 1
                     node = child
                     path.append(node)
+                if phases is not None:
+                    now = time.monotonic()
+                    phases['selection_ms'] = (now - phase_started) * 1000.0
+                    phase_started = now
                 if (pushed < max_tree_depth and not node.expanded
                         and not board.is_checkmate()
                         and not board.is_fourfold_repetition()):
@@ -92,6 +104,10 @@ def select_mcts(board, movetime_ms=200, model=None, *, fast_relative=False,
                         pushed += 1
                         node = child
                         path.append(node)
+                if phases is not None:
+                    now = time.monotonic()
+                    phases['expansion_ms'] = (now - phase_started) * 1000.0
+                    phase_started = now
                 if board.is_checkmate():
                     value = -1.0
                 elif board.is_fourfold_repetition():
@@ -99,21 +115,41 @@ def select_mcts(board, movetime_ms=200, model=None, *, fast_relative=False,
                     value = -0.5
                 else:
                     value = math.tanh(evaluate(board, model, fast_relative) / 600.0)
+                if phases is not None:
+                    now = time.monotonic()
+                    phases['leaf_ms'] = (now - phase_started) * 1000.0
+                    phase_started = now
                 for visited in reversed(path):
                     visited.visits += 1
                     visited.value_sum += value
                     value = -value
                 iterations += 1
+                if phases is not None:
+                    now = time.monotonic()
+                    phases['backup_ms'] = (now - phase_started) * 1000.0
+                    phase_started = now
             finally:
                 for _ in range(pushed):
                     board.pop()
+                if phases is not None:
+                    phases['undo_ms'] = (time.monotonic() - phase_started) * 1000.0
             # An iteration cannot be interrupted safely while a board is pushed.
             # Reserve time based on observed full-iteration costs instead of
             # beginning another iteration just before the deadline. This is a
             # best-effort guard, not a hard real-time guarantee.
+            iteration_seconds = time.monotonic() - iteration_started
             longest_iteration_seconds = max(
-                longest_iteration_seconds, time.monotonic() - iteration_started)
+                longest_iteration_seconds, iteration_seconds)
             reserve = max(0.003, 1.5 * longest_iteration_seconds)
+            if phases is not None:
+                iteration_trace.append({
+                    'iteration': iterations, 'depth': pushed,
+                    'root_legal_moves': len(root_moves),
+                    'total_ms': iteration_seconds * 1000.0,
+                    'reserve_ms': reserve * 1000.0,
+                    'remaining_ms': (deadline - time.monotonic()) * 1000.0,
+                    **phases,
+                })
             if deadline - time.monotonic() <= reserve:
                 break
     finally:
