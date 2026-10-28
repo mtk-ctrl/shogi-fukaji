@@ -1,0 +1,118 @@
+name: FUKAJI G8 forty changed-move follow-up (read-only, 20 runners)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/fukaji-g8-followup-request.json"
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-g8-followup40
+  cancel-in-progress: false
+jobs:
+  preflight:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    outputs:
+      enabled: ${{ steps.protocol.outputs.enabled }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Verify full test suite and frozen disabled-by-default request
+        id: protocol
+        run: |
+          python -m unittest discover -s tests -v
+          python -m fukaji.g8_followup --mode check --request .github/fukaji-g8-followup-request.json
+      - name: Retrieve both SHA-pinned original artifacts and legally replay all sixty source positions
+        if: steps.protocol.outputs.enabled == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }
+        run: |
+          python -m fukaji.g8_followup --mode prepare --request .github/fukaji-g8-followup-request.json --out build/g8_followup/input
+      - name: Preserve frozen forty and provenance
+        if: steps.protocol.outputs.enabled == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-g8-followup-input-${{ github.run_id }
+          path: build/g8_followup/input/
+          retention-days: 30
+          if-no-files-found: error
+  analyze:
+    needs: preflight
+    if: needs.preflight.outputs.enabled == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: fukaji-g8-followup-input-${{ github.run_id }
+          path: build/g8_followup/input
+      - uses: actions/download-artifact@v4
+        with:
+          name: fukaji-generation7-research-40434466661
+          run-id: 40434466661
+          github-token: ${{ secrets.GITHUB_TOKEN }
+          path: build/g8_followup/model
+      - name: Independent repeat, thirty-second search and both opponent replies
+        run: |
+          python -m fukaji.g8_followup --mode shard \
+            --request .github/fukaji-g8-followup-request.json \
+            --input build/g8_followup/input \
+            --model build/g8_followup/model/mover-relative-generation7-research.npz \
+            --shard ${{ matrix.shard } --out build/g8_followup/part
+      - name: Preserve two analyzed positions and SHA receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-g8-followup-part-${{ matrix.shard }-${{ github.run_id }
+          path: build/g8_followup/part/
+          retention-days: 30
+          if-no-files-found: warn
+  aggregate:
+    needs: [preflight, analyze]
+    if: needs.preflight.outputs.enabled == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: fukaji-g8-followup-input-${{ github.run_id }
+          path: build/g8_followup/input
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: fukaji-g8-followup-part-*
+          path: build/g8_followup/parts
+          merge-multiple: false
+      - name: Validate all forty rows, legal candidate and opponent moves, SHA and undo
+        run: |
+          python -m fukaji.g8_followup --mode aggregate \
+            --request .github/fukaji-g8-followup-request.json \
+            --input build/g8_followup/input \
+            --parts build/g8_followup/parts --out build/g8_followup/aggregate
+      - name: Preserve aggregate diagnostics (not teacher labels)
+        uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-g8-followup-aggregate-${{ github.run_id }
+          path: build/g8_followup/aggregate/
+          retention-days: 30
+          if-no-files-found: error

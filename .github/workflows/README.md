@@ -85,3 +85,5 @@
 | `g8-legal-selection.yml` | **G8研究用・読取専用の本選定（既定OFF）**：完了G7自己対局run40610843978の集約ZIPと旧G7学習run40434466661の元ZIPをGitHub Actions上でSHA256/出所固定して取得（認証をartifact redirect先へ送らない）。python-shogiで400局全手の合法性・終局を再生し、旧557親群のholdoutを守り、新400親群train320/validation40/test40を凍結。train限定100局面のSFEN重複除外・選定結果・receiptを30日artifactへ保存。学習/対局/正式採用/雲路変更なし。初回workflow_dispatchあり、明示requestの別commitだけで本実行。 |
 | `g8-longthink-60.yml` | **G8研究用60局面長考・20runner×各3局面（既定OFF）**：全400局合法再生済みG8確定100候補artifact ZIP SHAを固定して取得。train親群限定、24/12/12/12局面種別・先後30/30の事前固定選定。G7凍結モデルの実200ms/深さ2と20秒/最大深さ5の合法手・深さ・節点・全盤面/履歴復元を比較。preflight→20分析job→aggregate、21+入力ZIPのSHA/出所・全60行監査。長考着手は正解教師とみなさず、学習/採用/雲路変更は行わない。別commitの明示requestでのみ起動。 |
 
+
+| `g8-followup40.yml` | **G8独立再分析40局面・研究専用**：凍結60局面のうち長考で着手変更した40局面を元artifact/SHA固定で抽出し、20runner×各2局面で20秒再探索・30秒独立探索・元手/長考手後の相手5秒応手を観測。全合法性/盤面・反復履歴復元/分割隔離/20分割+集約SHA検証。request初期OFF、未決着教師化・自動学習・正式採用・雲路変更なし。 |
