@@ -16,7 +16,7 @@ from .direct_arena import replay_check
 SEED = "fukaji-g8-selection-v1|20261028|40610843978"
 SOURCE_RUN = 40610843978
 SOURCE_AGGREGATE_SHA = "4b906197065ee8f50f50dad53b65185d57e04eb78706b39005cf5866402e7508"
-G7_MODEL_SHA = "417d18e7b64494c9febdf6d217afbe4e4979e68d04528f16db8b45c0bcde2a0e"
+G7_MODEL_SHA = "417d18e7b64494c9febdf6d217afbe4e4979e68d04528f16db8b45c0bcde2a0e"\nOLD_G7_ZIP_SHA = "7ae19b39789a8c1086f0513f306cf15feeebd14f76a0c0b110a120b457ed4fae"
 QUOTAS = (("mate_tail", 40), ("mate_middle", 20),
           ("unresolved_late", 20), ("early_mixed", 20))
 
