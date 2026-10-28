@@ -64,9 +64,11 @@ def select_mcts(board, movetime_ms=200, model=None, *, fast_relative=False,
     start = time.monotonic()
     deadline = start + movetime_ms / 1000.0
     iterations = 0
+    longest_iteration_seconds = 0.0
     try:
         while (time.monotonic() < deadline and
                (max_iterations is None or iterations < max_iterations)):
+            iteration_started = time.monotonic()
             node = root
             path = [root]
             pushed = 0
@@ -105,6 +107,15 @@ def select_mcts(board, movetime_ms=200, model=None, *, fast_relative=False,
             finally:
                 for _ in range(pushed):
                     board.pop()
+            # An iteration cannot be interrupted safely while a board is pushed.
+            # Reserve time based on observed full-iteration costs instead of
+            # beginning another iteration just before the deadline. This is a
+            # best-effort guard, not a hard real-time guarantee.
+            longest_iteration_seconds = max(
+                longest_iteration_seconds, time.monotonic() - iteration_started)
+            reserve = max(0.003, 1.5 * longest_iteration_seconds)
+            if deadline - time.monotonic() <= reserve:
+                break
     finally:
         if board.sfen() != root_sfen or len(board.move_stack) != root_stack:
             raise AssertionError('MCTS corrupted caller board')

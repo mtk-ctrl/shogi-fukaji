@@ -1,5 +1,6 @@
 """Bounded correctness tests for the opt-in MCTS research prototype."""
 import unittest
+from unittest.mock import patch
 
 import shogi
 
@@ -48,6 +49,46 @@ class MctsResearchTests(unittest.TestCase):
         root = Node(visits=20, children=[
             positive_for_opponent, negative_for_opponent])
         self.assertIs(_uct_child(root, 1.4), negative_for_opponent)
+
+    def test_checked_king_only_chooses_legal_evasion(self):
+        board = shogi.Board("4k4/9/4R4/9/9/9/9/9/4K4 w - 1")
+        self.assertTrue(board.is_check())
+        self.assertFalse(board.is_checkmate())
+        before = (board.sfen(), tuple(board.move_stack))
+        move, iterations, _ = select_mcts(
+            board, movetime_ms=1000, max_iterations=12, seed=19,
+            max_tree_depth=3,
+        )
+        self.assertGreater(iterations, 0)
+        self.assertIn(shogi.Move.from_usi(move), board.legal_moves)
+        self.assertEqual((board.sfen(), tuple(board.move_stack)), before)
+
+    def test_checkmated_side_resigns_without_mutating_board(self):
+        board = shogi.Board("4k4/3GRG3/9/9/9/9/9/9/4K4 w - 1")
+        self.assertTrue(board.is_checkmate())
+        before = (board.sfen(), tuple(board.move_stack))
+        self.assertEqual(select_mcts(board, movetime_ms=200),
+                         ("resign", 0, 0.0))
+        self.assertEqual((board.sfen(), tuple(board.move_stack)), before)
+
+    def test_adaptive_reserve_avoids_starting_an_unsafe_iteration(self):
+        # Deterministic fake clock: every leaf evaluation costs 15 ms.
+        # At 40 ms, starting a third iteration would exceed the budget.
+        clock = [0.0]
+        def fake_evaluate(*args, **kwargs):
+            clock[0] += 0.015
+            return 0
+        with patch("fukaji.mcts_research.time.monotonic",
+                   side_effect=lambda: clock[0]), \
+             patch("fukaji.mcts_research.evaluate",
+                   side_effect=fake_evaluate):
+            move, iterations, elapsed = select_mcts(
+                shogi.Board(), movetime_ms=40, max_iterations=10,
+                seed=4, max_tree_depth=1,
+            )
+        self.assertEqual(iterations, 2)
+        self.assertLessEqual(elapsed, 40.0)
+        self.assertNotEqual(move, "resign")
 
     def test_rejects_invalid_research_parameters(self):
         board = shogi.Board()
