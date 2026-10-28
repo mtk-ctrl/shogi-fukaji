@@ -197,6 +197,48 @@ class MctsResearchTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             select_mcts(shogi.Board(), single_pass_legal_moves=1)
 
+    def test_opt_in_return_clock_trace_preserves_fixed_iteration_move(self):
+        for total_budget in (False, True):
+            with self.subTest(total_budget=total_budget):
+                board = shogi.Board()
+                original = (board.sfen(), tuple(board.move_stack))
+                baseline = select_mcts(
+                    board, movetime_ms=1000, max_iterations=5, seed=17,
+                    max_tree_depth=3, total_budget_from_call=total_budget)
+                trace = []
+                observed = select_mcts(
+                    board, movetime_ms=1000, max_iterations=5, seed=17,
+                    max_tree_depth=3, total_budget_from_call=total_budget,
+                    clock_phase_trace=trace)
+                self.assertEqual(baseline[:2], observed[:2])
+                self.assertEqual(len(trace), 1)
+                self.assertEqual(trace[0]['root_legal_moves'],
+                                 len([m for m in board.legal_moves]))
+                self.assertEqual(trace[0]['iterations'], 5)
+                self.assertEqual(trace[0]['total_budget_from_call'],
+                                 total_budget)
+                self.assertFalse(trace[0]['terminal_no_legal_moves'])
+                for key in ('root_setup_ms', 'search_loop_ms',
+                            'restore_verify_ms', 'root_choice_ms',
+                            'return_clock_ms', 'internal_elapsed_ms'):
+                    self.assertGreaterEqual(trace[0][key], 0)
+                self.assertEqual((board.sfen(), tuple(board.move_stack)),
+                                 original)
+
+    def test_return_clock_trace_handles_no_legal_move(self):
+        board = shogi.Board("4k4/3GRG3/9/9/9/9/9/9/4K4 w - 1")
+        trace = []
+        move, count, elapsed = select_mcts(
+            board, clock_phase_trace=trace)
+        self.assertEqual((move, count, elapsed), ('resign', 0, 0.0))
+        self.assertEqual(len(trace), 1)
+        self.assertTrue(trace[0]['terminal_no_legal_moves'])
+        self.assertEqual(trace[0]['root_legal_moves'], 0)
+
+    def test_return_clock_trace_rejects_invalid_sink(self):
+        with self.assertRaises(ValueError):
+            select_mcts(shogi.Board(), clock_phase_trace=object())
+
     def test_rejects_invalid_research_parameters(self):
         board = shogi.Board()
         for kwargs in ({"movetime_ms": 0}, {"max_iterations": 0},
