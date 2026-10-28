@@ -51,7 +51,7 @@ def _uct_child(node, exploration):
 def select_mcts(board, movetime_ms=200, model=None, *, fast_relative=False,
                 max_iterations=None, max_tree_depth=12, exploration=1.4,
                 seed=0, iteration_trace=None, single_pass_legal_moves=False,
-                total_budget_from_call=False):
+                total_budget_from_call=False, clock_phase_trace=None):
     """Return (legal USI move, iterations, elapsed milliseconds).
 
     max_iterations can fix the sample budget for reproducible research. When
@@ -65,10 +65,16 @@ def select_mcts(board, movetime_ms=200, model=None, *, fast_relative=False,
     total_budget_from_call is opt-in and includes validation, root legal move
     generation, and root setup in the same best-effort wall-clock budget.
     It cannot preempt a long iteration or guarantee a hard deadline.
+
+    clock_phase_trace is opt-in diagnostic instrumentation, not a time
+    compliance measurement. It records root setup, iterations, restoration,
+    final move choice and the internal return clock boundary. Its own extra
+    clock reads and append overhead change caller-observed elapsed time.
     """
     # Research-only opt-in: start before validation and root move generation.
     # The default clock boundary and return values remain unchanged.
     call_started = time.monotonic() if total_budget_from_call is True else None
+    phase_call_started = time.monotonic() if clock_phase_trace is not None else None
     if not (1 <= movetime_ms <= 60000):
         raise ValueError('movetime_ms outside 1..60000')
     if max_iterations is not None and (type(max_iterations) is not int or max_iterations < 1):
@@ -83,11 +89,19 @@ def select_mcts(board, movetime_ms=200, model=None, *, fast_relative=False,
         raise ValueError('single_pass_legal_moves must be bool')
     if type(total_budget_from_call) is not bool:
         raise ValueError('total_budget_from_call must be bool')
+    if clock_phase_trace is not None and not hasattr(clock_phase_trace, 'append'):
+        raise ValueError('clock_phase_trace must support append')
 
     root_moves = _legal_moves_once(board, single_pass=single_pass_legal_moves)
     if not root_moves:
         elapsed = ((time.monotonic() - call_started) * 1000.0
                    if call_started is not None else 0.0)
+        if clock_phase_trace is not None:
+            clock_phase_trace.append({
+                'terminal_no_legal_moves': True,
+                'root_setup_ms': (time.monotonic() - phase_call_started) * 1000.0,
+                'root_legal_moves': 0, 'iterations': 0,
+            })
         return 'resign', 0, elapsed
     root_sfen = board.sfen()
     root_stack = len(board.move_stack)
@@ -95,6 +109,7 @@ def select_mcts(board, movetime_ms=200, model=None, *, fast_relative=False,
     rng = random.Random(seed)
     start = call_started if call_started is not None else time.monotonic()
     deadline = start + movetime_ms / 1000.0
+    root_ready = time.monotonic() if clock_phase_trace is not None else None
     iterations = 0
     longest_iteration_seconds = 0.0
     try:
@@ -202,9 +217,26 @@ def select_mcts(board, movetime_ms=200, model=None, *, fast_relative=False,
                 })
             if deadline - time.monotonic() <= reserve:
                 break
+        loop_finished = time.monotonic() if clock_phase_trace is not None else None
     finally:
         if board.sfen() != root_sfen or len(board.move_stack) != root_stack:
             raise AssertionError('MCTS corrupted caller board')
+    verified = time.monotonic() if clock_phase_trace is not None else None
     # Child visits measure how often each root move was examined.
     best = max(root.children, key=lambda c: (c.visits, -root_moves.index(c.move)))
-    return best.move.usi(), iterations, (time.monotonic() - start) * 1000.0
+    choice_finished = time.monotonic() if clock_phase_trace is not None else None
+    elapsed = (time.monotonic() - start) * 1000.0
+    if clock_phase_trace is not None:
+        return_clock_finished = time.monotonic()
+        clock_phase_trace.append({
+            'terminal_no_legal_moves': False,
+            'root_legal_moves': len(root_moves), 'iterations': iterations,
+            'total_budget_from_call': total_budget_from_call,
+            'root_setup_ms': (root_ready - phase_call_started) * 1000.0,
+            'search_loop_ms': (loop_finished - root_ready) * 1000.0,
+            'restore_verify_ms': (verified - loop_finished) * 1000.0,
+            'root_choice_ms': (choice_finished - verified) * 1000.0,
+            'return_clock_ms': (return_clock_finished - choice_finished) * 1000.0,
+            'internal_elapsed_ms': elapsed,
+        })
+    return best.move.usi(), iterations, elapsed
