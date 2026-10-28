@@ -1,0 +1,16 @@
+{
+  "enabled": false,
+  "research_only": true,
+  "model_adoption_allowed": false,
+  "source_run": 40637486947,
+  "g8_model_run": 40636602223,
+  "parent_index": 7,
+  "target_ply": 50,
+  "movetime_ms": 200,
+  "runner_jobs": 1,
+  "calls": 8,
+  "cleanup_aware_reserve": true,
+  "single_pass_legal_moves": true,
+  "total_budget_from_call": true,
+  "linear_root_choice": true
+}
