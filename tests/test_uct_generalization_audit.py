@@ -79,6 +79,18 @@ class GeneralizationProtocol(unittest.TestCase):
             validate_holdout_abba(rows, self.hold, model_sha256=MODEL,
                                   source_sha256=SOURCE)
 
+    def test_wrong_model_and_elapsed_rejected(self):
+        rows = observations(self.hold)
+        rows[0]["model_sha256"] = "0" * 64
+        with self.assertRaisesRegex(ValueError, "metadata"):
+            validate_holdout_abba(rows, self.hold, model_sha256=MODEL,
+                                  source_sha256=SOURCE)
+        rows = observations(self.hold)
+        rows[0]["external_ms"] = float("nan")
+        with self.assertRaisesRegex(ValueError, "elapsed"):
+            validate_holdout_abba(rows, self.hold, model_sha256=MODEL,
+                                  source_sha256=SOURCE)
+
     def test_zero_iteration_with_legal_move_is_allowed(self):
         rows = observations(self.hold)
         self.assertTrue(all(r["iterations"] == 0 for r in rows))
