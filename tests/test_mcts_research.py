@@ -296,5 +296,95 @@ class MctsResearchTests(unittest.TestCase):
                 select_mcts(board, **kwargs)
 
 
+    def test_cleanup_reserve_grows_with_generated_nodes(self):
+        from fukaji.mcts_research import _cleanup_reserve_seconds
+        self.assertAlmostEqual(_cleanup_reserve_seconds(0), 0.001)
+        self.assertAlmostEqual(_cleanup_reserve_seconds(1000), 0.00125)
+        self.assertAlmostEqual(_cleanup_reserve_seconds(6000), 0.0025)
+
+    def test_cleanup_aware_guard_stops_before_expensive_next_iteration(self):
+        # Synthetic clock: leaf evaluation costs 10 ms per iteration.
+        # A separate 10 ms cleanup estimate leaves room for return cleanup.
+        # This checks the decision boundary, not real 200 ms compliance.
+        def simulate(aware):
+            clock = [0.0]
+            def fake_evaluate(*args, **kwargs):
+                clock[0] += 0.010
+                return 0
+            board = shogi.Board()
+            original = (board.sfen(), tuple(board.move_stack))
+            with patch("fukaji.mcts_research.time.monotonic",
+                       side_effect=lambda: clock[0]), \\
+                 patch("fukaji.mcts_research.evaluate",
+                       side_effect=fake_evaluate), \\
+                 patch("fukaji.mcts_research._cleanup_reserve_seconds",
+                       return_value=0.010):
+                move, count, elapsed = select_mcts(
+                    board, movetime_ms=40, max_iterations=8,
+                    seed=19, max_tree_depth=1,
+                    total_budget_from_call=True,
+                    cleanup_aware_reserve=aware)
+            self.assertIn(shogi.Move.from_usi(move), board.legal_moves)
+            self.assertEqual((board.sfen(), tuple(board.move_stack)), original)
+            return count, elapsed
+        self.assertEqual(simulate(False)[0], 3)
+        count, elapsed = simulate(True)
+        self.assertEqual(count, 2)
+        self.assertLessEqual(elapsed, 40.0)
+
+    def test_cleanup_guard_returns_legal_move_after_root_exhausts_budget(self):
+        import fukaji.mcts_research as mcts
+        clock = [0.0]
+        original_legal = mcts._legal_moves_once
+        def expensive_root(board, *, single_pass=False):
+            result = original_legal(board, single_pass=single_pass)
+            clock[0] += 0.050
+            return result
+        board = shogi.Board()
+        original = (board.sfen(), tuple(board.move_stack))
+        with patch("fukaji.mcts_research.time.monotonic",
+                   side_effect=lambda: clock[0]), \\
+             patch("fukaji.mcts_research._legal_moves_once",
+                   side_effect=expensive_root):
+            move, count, elapsed = select_mcts(
+                board, movetime_ms=20, max_iterations=8,
+                total_budget_from_call=True, cleanup_aware_reserve=True)
+        self.assertEqual(count, 0)
+        self.assertGreaterEqual(elapsed, 50)
+        self.assertIn(shogi.Move.from_usi(move), board.legal_moves)
+        self.assertEqual((board.sfen(), tuple(board.move_stack)), original)
+
+    def test_cleanup_guard_fixed_iteration_legality_and_repetition(self):
+        boards = [shogi.Board(),
+                  shogi.Board("4k4/9/4R4/9/9/9/9/9/4K4 w - 1"),
+                  shogi.Board("4k4/9/9/9/9/9/9/9/4K4 b Pp 1"),
+                  shogi.Board("4k4/9/3RGR3/9/9/9/9/9/4K4 b P 1")]
+        repeated = shogi.Board("4k4/9/9/9/9/9/9/9/4K4 b - 1")
+        for word in ("5i6i", "5a6a", "6i5i", "6a5a") * 3:
+            repeated.push(shogi.Move.from_usi(word))
+        self.assertTrue(repeated.is_fourfold_repetition())
+        boards.append(repeated)
+        for board in boards:
+            with self.subTest(sfen=board.sfen()):
+                original = (board.sfen(), tuple(board.move_stack))
+                options = dict(movetime_ms=2000, max_iterations=8, seed=41,
+                               max_tree_depth=3, single_pass_legal_moves=True,
+                               total_budget_from_call=True,
+                               linear_root_choice=True)
+                old = select_mcts(board, **options)
+                new = select_mcts(board, cleanup_aware_reserve=True, **options)
+                self.assertEqual(old[:2], new[:2])
+                self.assertIn(shogi.Move.from_usi(new[0]), board.legal_moves)
+                self.assertEqual((board.sfen(), tuple(board.move_stack)), original)
+        mate = shogi.Board("4k4/3GRG3/9/9/9/9/9/9/4K4 w - 1")
+        self.assertEqual(select_mcts(mate, cleanup_aware_reserve=True)[:2],
+                         ("resign", 0))
+
+    def test_cleanup_guard_rejects_nonboolean(self):
+        with self.assertRaises(ValueError):
+            select_mcts(shogi.Board(), cleanup_aware_reserve=1)
+
+
+
 if __name__ == "__main__":
     unittest.main()
