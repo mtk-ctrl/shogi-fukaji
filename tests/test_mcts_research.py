@@ -108,8 +108,15 @@ class MctsResearchTests(unittest.TestCase):
             self.assertGreaterEqual(record['depth'], 1)
             self.assertGreater(record['root_legal_moves'], 0)
             for phase in ('selection_ms', 'expansion_ms', 'leaf_ms',
-                          'backup_ms', 'undo_ms'):
+                          'backup_ms', 'undo_ms', 'checkmate_ms',
+                          'repetition_ms', 'legal_moves_ms',
+                          'child_nodes_ms', 'push_ms'):
                 self.assertGreaterEqual(record[phase], 0)
+            subphases = ('checkmate_ms', 'repetition_ms',
+                         'legal_moves_ms', 'child_nodes_ms', 'push_ms')
+            self.assertLessEqual(
+                sum(record[p] for p in subphases),
+                record['expansion_ms'] + 0.5)
             self.assertGreaterEqual(record['total_ms'], 0)
             self.assertGreaterEqual(record['reserve_ms'], 3)
             self.assertLessEqual(
@@ -117,6 +124,28 @@ class MctsResearchTests(unittest.TestCase):
                                        'leaf_ms', 'backup_ms', 'undo_ms')),
                 record['total_ms'] + 0.1,
             )
+
+    def test_subphase_trace_preserves_fixed_iteration_move(self):
+        untraced = select_mcts(
+            shogi.Board(), movetime_ms=1000, max_iterations=6,
+            seed=31, max_tree_depth=3)
+        trace = []
+        traced = select_mcts(
+            shogi.Board(), movetime_ms=1000, max_iterations=6,
+            seed=31, max_tree_depth=3, iteration_trace=trace)
+        self.assertEqual(untraced[:2], traced[:2])
+        self.assertEqual(len(trace), 6)
+        self.assertTrue(any(row['legal_moves_ms'] > 0 for row in trace))
+
+    def test_no_expansion_records_zero_subphase_times(self):
+        trace = []
+        select_mcts(shogi.Board(), movetime_ms=1000, max_iterations=4,
+                    max_tree_depth=1, seed=9, iteration_trace=trace)
+        self.assertEqual(len(trace), 4)
+        for row in trace:
+            for key in ('checkmate_ms', 'repetition_ms',
+                        'legal_moves_ms', 'child_nodes_ms', 'push_ms'):
+                self.assertEqual(row[key], 0.0)
 
     def test_rejects_invalid_research_parameters(self):
         board = shogi.Board()
