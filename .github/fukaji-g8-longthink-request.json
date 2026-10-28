@@ -1,0 +1,18 @@
+{
+  "enabled": false,
+  "research_only": true,
+  "training_allowed": false,
+  "adoption_allowed": false,
+  "source_run": 40624316138,
+  "source_artifact_id": 12788612272,
+  "source_zip_sha256": "5206f1ffbf9cd0e8a71ac65f8d6d2f9828853b408eaf5c3189ed285b8e47db52",
+  "candidates_sha256": "54192b94cf4e60347790907262b3e516f04ca78dd367d6fdc6d5cb310e63f2be",
+  "model_sha256": "417d18e7b64494c9febdf6d217afbe4e4979e68d04528f16db8b45c0bcde2a0e",
+  "selection_seed": "fukaji-g8-longthink60-v1|20261028|40624316138",
+  "positions": 60,
+  "shards": 20,
+  "baseline_ms": 200,
+  "long_ms": 20000,
+  "baseline_depth": 2,
+  "long_depth": 5
+}
