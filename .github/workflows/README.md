@@ -87,3 +87,5 @@
 
 
 | `g8-followup40.yml` | **G8独立再分析40局面・研究専用**：凍結60局面のうち長考で着手変更した40局面を元artifact/SHA固定で抽出し、20runner×各2局面で20秒再探索・30秒独立探索・元手/長考手後の相手5秒応手を観測。全合法性/盤面・反復履歴復元/分割隔離/20分割+集約SHA検証。request初期OFF、未決着教師化・自動学習・正式採用・雲路変更なし。 |
+
+| `generation8-train.yml` | **G8研究候補の凍結親群学習（初期OFF）**：旧G7の572詰み・557親割当、G7自己対局400局の実詰み258と新400親割当、合法再生確定artifactの3原本ZIP/SHAを固定。旧validation/testを保護し、新train206のみ追加教師として旧train459と合計665局で凍結optimizer8epoch・lr0.02・更新縮小0.5のG8候補を生成。未決着・長考変更手は教師にしない。保留群は学習/調整禁止、モデル・分割・診断を保存。研究未採用、雲路不変更、明示request enabled時だけ学習。固定PLAN：[G8_FROZEN_TRAIN_PLAN](../../docs/G8_FROZEN_TRAIN_PLAN_20261028.md)。 |
