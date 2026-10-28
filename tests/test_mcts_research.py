@@ -314,9 +314,9 @@ class MctsResearchTests(unittest.TestCase):
             board = shogi.Board()
             original = (board.sfen(), tuple(board.move_stack))
             with patch("fukaji.mcts_research.time.monotonic",
-                       side_effect=lambda: clock[0]), \\
+                       side_effect=lambda: clock[0]), \
                  patch("fukaji.mcts_research.evaluate",
-                       side_effect=fake_evaluate), \\
+                       side_effect=fake_evaluate), \
                  patch("fukaji.mcts_research._cleanup_reserve_seconds",
                        return_value=0.010):
                 move, count, elapsed = select_mcts(
@@ -343,7 +343,7 @@ class MctsResearchTests(unittest.TestCase):
         board = shogi.Board()
         original = (board.sfen(), tuple(board.move_stack))
         with patch("fukaji.mcts_research.time.monotonic",
-                   side_effect=lambda: clock[0]), \\
+                   side_effect=lambda: clock[0]), \
              patch("fukaji.mcts_research._legal_moves_once",
                    side_effect=expensive_root):
             move, count, elapsed = select_mcts(
