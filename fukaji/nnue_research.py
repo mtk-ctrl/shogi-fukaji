@@ -105,10 +105,14 @@ class DualAccumulator:
         self.acc = {p: model.full_accumulator(board, p)
                     for p in (shogi.BLACK, shogi.WHITE)}
         self.history = []
+        # Catch external board replacement even when the move-stack depth agrees.
+        self.position_hash = board.zobrist_hash()
 
     def _check_depth(self):
         if len(self.board.move_stack) != self.base_depth + len(self.history):
             raise ValueError("board stack modified outside incremental evaluator")
+        if self.board.zobrist_hash() != self.position_hash:
+            raise ValueError("board position modified outside incremental evaluator")
 
     def _snapshot(self, squares):
         pieces = {sq: self.board.piece_at(sq) for sq in squares}
@@ -150,11 +154,13 @@ class DualAccumulator:
                 for sign, index in changes[perspective]:
                     self.acc[perspective] += sign * self.model.hidden_weights[index]
             self.history.append(changes)
+            self.position_hash = self.board.zobrist_hash()
         except BaseException:
             # A failed research update must not leave the caller board pushed.
             self.board.pop()
             self.acc = {p: self.model.full_accumulator(self.board, p)
                         for p in (shogi.BLACK, shogi.WHITE)}
+            self.position_hash = self.board.zobrist_hash()
             raise
 
     def pop(self):
@@ -167,6 +173,7 @@ class DualAccumulator:
             for sign, index in reversed(changes[perspective]):
                 self.acc[perspective] -= sign * self.model.hidden_weights[index]
         self.history.pop()
+        self.position_hash = self.board.zobrist_hash()
         return move
 
     def logit(self):

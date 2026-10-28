@@ -87,5 +87,96 @@ class NNUEFoundationTests(unittest.TestCase):
             SmallNNUE(np.zeros((INPUTS, HIDDEN)), np.zeros(32), np.zeros(32), float("inf"))
 
 
+    def test_checked_king_evasion_preserves_full_recalculation(self):
+        board = shogi.Board("4k4/9/4R4/9/9/9/9/9/4K4 w - 1")
+        self.assertTrue(board.is_check())
+        self.assertFalse(board.is_checkmate())
+        start = board.sfen()
+        state = DualAccumulator(board, self.model)
+        move = next(iter(board.legal_moves))
+        state.push(move)
+        self.assertTrue(state.verify())
+        self.assertAlmostEqual(state.logit(), self.model.logit(board), places=9)
+        state.pop()
+        self.assertEqual(board.sfen(), start)
+        self.assertTrue(board.is_check())
+        self.assertTrue(state.verify())
+
+    def test_checkmate_has_no_incremental_legal_move(self):
+        board = shogi.Board("4k4/3GRG3/9/9/9/9/9/9/4K4 w - 1")
+        self.assertTrue(board.is_checkmate())
+        state = DualAccumulator(board, self.model)
+        start = board.sfen()
+        self.assertEqual(list(board.legal_moves), [])
+        with self.assertRaises(ValueError):
+            state.push(shogi.Move.from_usi("5a5b"))
+        self.assertEqual(board.sfen(), start)
+        self.assertTrue(state.verify())
+
+    def test_fourfold_repetition_preserves_history_and_accumulators(self):
+        board = shogi.Board("4k4/9/9/9/9/9/9/9/4K4 b - 1")
+        start = board.sfen()
+        state = DualAccumulator(board, self.model)
+        cycle = ("5i6i", "5a6a", "6i5i", "6a5a")
+        self.assertFalse(board.is_fourfold_repetition())
+        for word in cycle * 3:
+            move = shogi.Move.from_usi(word)
+            self.assertIn(move, board.legal_moves)
+            state.push(move)
+            self.assertTrue(state.verify())
+        self.assertTrue(board.is_fourfold_repetition())
+        for _ in range(12):
+            state.pop()
+            self.assertTrue(state.verify())
+        self.assertEqual(board.sfen(), start)
+        self.assertFalse(board.is_fourfold_repetition())
+
+    def test_illegal_pawn_drop_mate_is_rejected(self):
+        # The rook/gold net leaves the white king no escape after P*5b.
+        board = shogi.Board("4k4/9/3RGR3/9/9/9/9/9/4K4 b P 1")
+        state = DualAccumulator(board, self.model)
+        start = board.sfen()
+        move = shogi.Move.from_usi("P*5b")
+        self.assertNotIn(move, board.legal_moves)
+        with self.assertRaises(ValueError):
+            state.push(move)
+        self.assertEqual(board.sfen(), start)
+        self.assertTrue(state.verify())
+
+    def test_long_legal_history_reversible(self):
+        import random
+        rng = random.Random(127)
+        board = shogi.Board()
+        start = board.sfen()
+        state = DualAccumulator(board, self.model)
+        count = 0
+        for _ in range(60):
+            if board.is_game_over():
+                break
+            choices = list(board.legal_moves)
+            move = choices[rng.randrange(len(choices))]
+            state.push(move)
+            count += 1
+            self.assertTrue(state.verify())
+            self.assertAlmostEqual(state.logit(), self.model.logit(board), places=9)
+        self.assertGreater(count, 0)
+        for _ in range(count):
+            state.pop()
+            self.assertTrue(state.verify())
+        self.assertEqual(board.sfen(), start)
+        self.assertEqual(len(board.move_stack), 0)
+
+    def test_external_same_depth_position_replacement_is_rejected(self):
+        board = shogi.Board()
+        board.push(shogi.Move.from_usi("7g7f"))
+        state = DualAccumulator(board, self.model)
+        board.pop()
+        board.push(shogi.Move.from_usi("2g2f"))
+        self.assertEqual(len(board.move_stack), state.base_depth)
+        with self.assertRaisesRegex(ValueError, "position modified"):
+            state.verify()
+        with self.assertRaisesRegex(ValueError, "position modified"):
+            state.push(next(iter(board.legal_moves)))
+
 if __name__ == "__main__":
     unittest.main()
