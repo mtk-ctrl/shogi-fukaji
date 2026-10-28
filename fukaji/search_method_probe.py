@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import statistics
 import time
 from pathlib import Path
@@ -21,10 +22,29 @@ from .g8_paired_arena import G8_SHA
 from .mcts_research import select_mcts
 from .relative_value import RelativeValue
 
+REQUEST_FILE = '.github/fukaji-g8-alpha-uct-probe-request.json'
+EXPECTED_REQUEST = {
+    'enabled': False, 'research_only': True, 'model_adoption_allowed': False,
+    'source_run': 40637486947, 'g8_model_run': 40636602223,
+    'positions': 12, 'movetime_ms': 200, 'runner_jobs': 1,
+}
 TARGET_PLIES = (12, 50, 110)
 POSITIONS_PER_STAGE = 4
 MODEL_MIX = 25
 MOVE_TIME_MS = 200
+
+
+def validate_request(path):
+    request = json.loads(Path(path).read_text(encoding='utf-8'))
+    disabled = EXPECTED_REQUEST
+    enabled = dict(EXPECTED_REQUEST, enabled=True)
+    if request not in (disabled, enabled):
+        raise ValueError('unapproved G8 alpha/UCT probe request')
+    is_enabled = request['enabled']
+    if os.environ.get('GITHUB_OUTPUT'):
+        with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as handle:
+            print('enabled=' + str(is_enabled).lower(), file=handle)
+    return is_enabled
 
 
 def sha256(raw):
@@ -195,11 +215,19 @@ def probe(games_path, report_path, model_path, out_path):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--games", required=True)
-    parser.add_argument("--source-report", required=True)
-    parser.add_argument("--model", required=True)
-    parser.add_argument("--out", required=True)
+    parser.add_argument("--check-request")
+    parser.add_argument("--games")
+    parser.add_argument("--source-report")
+    parser.add_argument("--model")
+    parser.add_argument("--out")
     args = parser.parse_args()
+    if args.check_request:
+        print(json.dumps({"enabled": validate_request(args.check_request)}))
+        return
+    if not all((args.games, args.source_report, args.model, args.out)):
+        parser.error("missing source/model/out arguments")
+    if not validate_request(REQUEST_FILE):
+        raise ValueError("probe request is disabled")
     print(json.dumps(probe(args.games, args.source_report, args.model, args.out),
                      ensure_ascii=False, indent=2))
 
