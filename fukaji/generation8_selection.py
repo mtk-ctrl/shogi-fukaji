@@ -136,6 +136,30 @@ def select(games, splits):
     return selected
 
 
+
+def verify_all_games(games):
+    """Independently replay ALL 400 source games, not just selected candidates."""
+    from .arena import opening
+    from .generation7_selfplay import SEED as GAME_SEED, MAX_PLIES, parent_id
+
+    if (len(games) != 400 or
+            {g.get("game_id") for g in games} != set(range(400))):
+        raise ValueError("missing/duplicate source game IDs")
+    total_plies = 0
+    for g in games:
+        game_id = g["game_id"]
+        expected_opening = opening(GAME_SEED + game_id, 6)
+        full = g["opening"] + g["moves"]
+        if (g["opening"] != expected_opening or
+                g["parent_id"] != parent_id(GAME_SEED + game_id, expected_opening) or
+                len(full) > MAX_PLIES or
+                (g["status"] == "move_limit_unresolved" and len(full) != MAX_PLIES)):
+            raise ValueError("G7 source opening/parent/ply count mismatch")
+        replay_check(g["opening"], g["moves"], g)
+        total_plies += len(full)
+    return total_plies
+
+
 def execute(aggregate_zip, old_model_zip, output):
     if digest(Path(aggregate_zip).read_bytes()) != SOURCE_AGGREGATE_SHA:
         raise ValueError("aggregate GitHub artifact SHA mismatch")
@@ -158,6 +182,7 @@ def execute(aggregate_zip, old_model_zip, output):
     if old_report["g7_model_sha256"] != G7_MODEL_SHA:
         raise ValueError("wrong G7 frozen parent")
     splits = frozen_splits(games, old)
+    full_replayed_plies = verify_all_games(games)
     selected = select(games, splits)
     root = Path(output)
     root.mkdir(parents=True, exist_ok=True)
@@ -171,6 +196,9 @@ def execute(aggregate_zip, old_model_zip, output):
         "status": "research_only_legal_replayed_candidate_selection_not_trained",
         "source_run": SOURCE_RUN, "source_aggregate_sha256": SOURCE_AGGREGATE_SHA,
         "g7_model_sha256": G7_MODEL_SHA, "selection_seed": SEED,
+        "all_400_games_full_legal_replay_verified": True,
+        "full_replayed_game_count": len(games),
+        "full_replayed_plies": full_replayed_plies,
         "candidate_count": len(selected),
         "candidate_groups": dict(Counter(x["reason_category"] for x in selected)),
         "new_parent_splits": dict(Counter(splits.values())),
