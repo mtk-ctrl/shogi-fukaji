@@ -43,7 +43,7 @@ def validate_request(path):
     is_enabled = request['enabled']
     if os.environ.get('GITHUB_OUTPUT'):
         with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as handle:
-            handle.write('enabled=' + str(is_enabled).lower() + '\\n')
+            print('enabled=' + str(is_enabled).lower(), file=handle)
     return is_enabled
 
 
