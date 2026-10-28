@@ -150,6 +150,8 @@ def execute(aggregate_zip, old_model_zip, output):
         report["legal_replay_verified"] is not True):
         raise ValueError("invalid frozen aggregate provenance")
     games = [json.loads(s) for s in raw.decode().splitlines()]
+    if digest(Path(old_model_zip).read_bytes()) != OLD_G7_ZIP_SHA:
+        raise ValueError("old G7 artifact ZIP SHA mismatch")
     with ZipFile(old_model_zip) as z:
         old = json.loads(z.read("frozen_parent_splits.json"))
         old_report = json.loads(z.read("generation7_report.json"))
