@@ -23,8 +23,6 @@ jobs:
       - run: python -m pip install -r requirements.txt
       - name: Validate workflow and research regression
         run: |
-          python3 scripts/check_match_workflows.py
-          python3 scripts/check_workflow_inventory.py
           python -m unittest discover -s tests -p 'test_uct_holdout_cleanup_abba.py' -v
           python -m unittest discover -s tests -p 'test_uct_generalization_audit.py' -v
       - name: Check explicit holdout-only request (default OFF)

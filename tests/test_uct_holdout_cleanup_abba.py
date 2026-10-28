@@ -80,6 +80,17 @@ class HoldoutReserveProtocolTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             summarize(tampered)
 
+    def test_workflow_preflight_references_existing_entrypoints(self):
+        workflow = Path(".github/workflows/uct-holdout-reserve-abba.yml").read_text()
+        readme = Path(".github/workflows/README.md").read_text()
+        self.assertIn("uct-holdout-reserve-abba.yml", readme)
+        self.assertIn("test_uct_holdout_cleanup_abba.py", workflow)
+        self.assertIn("test_uct_generalization_audit.py", workflow)
+        self.assertNotIn("scripts/check_match_workflows.py", workflow)
+        self.assertNotIn("scripts/check_workflow_inventory.py", workflow)
+        self.assertIn("steps.protocol.outputs.enabled == 'true'", workflow)
+        self.assertIn("cancel-in-progress: false", workflow)
+
     def test_reject_manifest_overlap_before_any_search(self):
         bad = {"holdout": [{"pair": i, "seed": 0} for i in range(12)]}
         with self.assertRaises(ValueError):
