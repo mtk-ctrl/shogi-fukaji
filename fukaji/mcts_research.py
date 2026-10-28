@@ -50,7 +50,8 @@ def _uct_child(node, exploration):
 
 def select_mcts(board, movetime_ms=200, model=None, *, fast_relative=False,
                 max_iterations=None, max_tree_depth=12, exploration=1.4,
-                seed=0, iteration_trace=None, single_pass_legal_moves=False):
+                seed=0, iteration_trace=None, single_pass_legal_moves=False,
+                total_budget_from_call=False):
     """Return (legal USI move, iterations, elapsed milliseconds).
 
     max_iterations can fix the sample budget for reproducible research. When
@@ -60,7 +61,14 @@ def select_mcts(board, movetime_ms=200, model=None, *, fast_relative=False,
     Optional iteration_trace is an append-only list of phase timings. It is
     diagnostic instrumentation: extra clock reads and recording change timing,
     so traced runs must NOT be compared directly with untraced 200ms runs.
+
+    total_budget_from_call is opt-in and includes validation, root legal move
+    generation, and root setup in the same best-effort wall-clock budget.
+    It cannot preempt a long iteration or guarantee a hard deadline.
     """
+    # Research-only opt-in: start before validation and root move generation.
+    # The default clock boundary and return values remain unchanged.
+    call_started = time.monotonic() if total_budget_from_call is True else None
     if not (1 <= movetime_ms <= 60000):
         raise ValueError('movetime_ms outside 1..60000')
     if max_iterations is not None and (type(max_iterations) is not int or max_iterations < 1):
@@ -73,15 +81,19 @@ def select_mcts(board, movetime_ms=200, model=None, *, fast_relative=False,
         raise ValueError('iteration_trace must support append')
     if type(single_pass_legal_moves) is not bool:
         raise ValueError('single_pass_legal_moves must be bool')
+    if type(total_budget_from_call) is not bool:
+        raise ValueError('total_budget_from_call must be bool')
 
     root_moves = _legal_moves_once(board, single_pass=single_pass_legal_moves)
     if not root_moves:
-        return 'resign', 0, 0.0
+        elapsed = ((time.monotonic() - call_started) * 1000.0
+                   if call_started is not None else 0.0)
+        return 'resign', 0, elapsed
     root_sfen = board.sfen()
     root_stack = len(board.move_stack)
     root = Node(expanded=True, children=[Node(move=m) for m in root_moves])
     rng = random.Random(seed)
-    start = time.monotonic()
+    start = call_started if call_started is not None else time.monotonic()
     deadline = start + movetime_ms / 1000.0
     iterations = 0
     longest_iteration_seconds = 0.0
