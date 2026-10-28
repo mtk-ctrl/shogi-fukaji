@@ -1,5 +1,5 @@
 {
-  "enabled": false,
+  "enabled": true,
   "research_only": true,
   "model_adoption_allowed": false,
   "source_run": 40637486947,
