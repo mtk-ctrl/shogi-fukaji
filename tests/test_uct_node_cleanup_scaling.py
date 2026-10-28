@@ -20,6 +20,7 @@ class UctNodeCleanupScalingProbe(unittest.TestCase):
         )
         original_node = mcts.Node
         for name, sfen in positions:
+            prior_generated_nodes = 0
             for budget in (12, 48, 96):
                 board = shogi.Board() if sfen == "startpos" else shogi.Board(sfen)
                 before = (board.sfen(), tuple(board.move_stack))
@@ -79,6 +80,9 @@ class UctNodeCleanupScalingProbe(unittest.TestCase):
                 self.assertEqual(len({x["move"] for x in samples}), 1)
                 self.assertEqual(len({x["node_count"] for x in samples}), 1)
                 self.assertEqual(len({x["root_children"] for x in samples}), 1)
+                # A longer fixed-seed prefix cannot undo earlier node creation.
+                self.assertGreaterEqual(samples[0]["node_count"], prior_generated_nodes)
+                prior_generated_nodes = samples[0]["node_count"]
                 print("UCT_NODE_CLEANUP_SCALING " + json.dumps({
                     "position": name, "fixed_iterations": budget,
                     "observations": samples,
