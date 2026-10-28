@@ -148,10 +148,7 @@ def select_mcts(board, movetime_ms=200, model=None, *, fast_relative=False,
     root_ready = time.monotonic() if clock_phase_trace is not None else None
     iterations = 0
     longest_iteration_seconds = 0.0
-    # Diagnostic-only: no extra clock reads on the default search path.
-    last_iteration_seconds = None
-    last_iteration_start_remaining_seconds = None
-    last_iteration_end_remaining_seconds = None
+    # The last iteration's existing locals are read only if tracing is ON.
     try:
         while (time.monotonic() < deadline and
                (max_iterations is None or iterations < max_iterations)):
@@ -163,8 +160,6 @@ def select_mcts(board, movetime_ms=200, model=None, *, fast_relative=False,
                         _cleanup_reserve_seconds(generated_nodes)):
                     break
             iteration_started = time.monotonic()
-            if clock_phase_trace is not None:
-                last_iteration_start_remaining_seconds = deadline - iteration_started
             phase_started = iteration_started
             phases = {} if iteration_trace is not None else None
             node = root
@@ -253,10 +248,6 @@ def select_mcts(board, movetime_ms=200, model=None, *, fast_relative=False,
             # beginning another iteration just before the deadline. This is a
             # best-effort guard, not a hard real-time guarantee.
             iteration_seconds = time.monotonic() - iteration_started
-            if clock_phase_trace is not None:
-                last_iteration_seconds = iteration_seconds
-                last_iteration_end_remaining_seconds = (
-                    deadline - (iteration_started + iteration_seconds))
             longest_iteration_seconds = max(
                 longest_iteration_seconds, iteration_seconds)
             reserve = max(0.003, 1.5 * longest_iteration_seconds)
@@ -296,14 +287,14 @@ def select_mcts(board, movetime_ms=200, model=None, *, fast_relative=False,
             'internal_elapsed_ms': elapsed,
             'generated_nodes': generated_nodes,
             'longest_iteration_ms': longest_iteration_seconds * 1000.0,
-            'last_iteration_ms': (None if last_iteration_seconds is None
-                                  else last_iteration_seconds * 1000.0),
+            'last_iteration_ms': (
+                None if iterations == 0 else iteration_seconds * 1000.0),
             'last_iteration_start_remaining_ms': (
-                None if last_iteration_start_remaining_seconds is None
-                else last_iteration_start_remaining_seconds * 1000.0),
+                None if iterations == 0
+                else (deadline - iteration_started) * 1000.0),
             'last_iteration_end_remaining_ms': (
-                None if last_iteration_end_remaining_seconds is None
-                else last_iteration_end_remaining_seconds * 1000.0),
+                None if iterations == 0
+                else (deadline - iteration_started - iteration_seconds) * 1000.0),
             'internal_deadline_overrun_ms': max(0.0, elapsed - movetime_ms),
         })
     return best.move.usi(), iterations, elapsed
