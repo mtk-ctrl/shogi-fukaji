@@ -109,5 +109,28 @@ class CleanupReserveABBAProtocolTest(unittest.TestCase):
         self.assertFalse(result["model_promoted"])
 
 
+    def test_fixed_conditions_and_reserve_identity_are_required(self):
+        rows = []
+        for label, flag in ORDER:
+            for i in range(12):
+                rows.append({
+                    "pass": label, "single_pass": True, "total_budget": True,
+                    "linear_root_choice": True, "cleanup_reserve": flag,
+                    "pair": i, "target_ply": (12, 50, 110)[i // 4],
+                    "sfen": "fixed_" + str(i), "move": "7g7f",
+                    "iterations": 1, "elapsed_ms": 199.0,
+                    "internal_elapsed_ms": 198.0,
+                })
+        self.assertEqual(summarize(rows)["on_over_200ms"], 0)
+        for field, value in (
+            ("single_pass", False), ("total_budget", False),
+            ("linear_root_choice", False), ("cleanup_reserve", False),
+        ):
+            changed = [dict(row) for row in rows]
+            changed[12][field] = value
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                summarize(changed)
+
+
 if __name__ == "__main__":
     unittest.main()
