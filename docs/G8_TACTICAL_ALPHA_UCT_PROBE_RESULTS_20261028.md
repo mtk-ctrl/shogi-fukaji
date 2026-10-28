@@ -58,3 +58,7 @@
 ## 物語素材（実測と演出を区別）
 
 前回は王手中の局面が0だった。今回は詰み終局3・王手回避3を実棋譜から見つけ、持駒も含めて9局面を検査できた。しかし反復危険は0で、未解決の穴が残った。『見つかった局面を調べるだけでなく、見つからない理由を調べる』という次の研究の転機。数値と本人発言は原本どおり、演出セリフは後日創作する。
+
+## Google Drive原本保存（2026-10-28 17:52 JST追記）
+
+[深路G8戦術局面の専用フォルダ](https://drive.google.com/drive/folders/1JSPpAj9r1qHrXhVADsGO2OQ1UYuUW262) に実験成果物ZIPを保存した。保存した[ZIP](https://drive.google.com/file/d/10_tUORg4cYxGiWi0N2VCeNlllrf2N_pP/view)をGoogle Driveから再取得し、GitHub artifact ID12802498030の実バイトと**完全一致**（4,224バイト、SHA256 `a4328266f7ac0d490014465d39eff5374833841db996b9ed0a92a14fcf51091e`）を独立確認した。初回のGoogle Drive upload_fileはfile_uriの型不整合で拒否、続くcontainer_path方式はcontainer_session_unavailableで失敗したが、Files Libraryの正式なsource_file_refによるGoogle Drive create-only uploadが成功。失敗した方法と成功した方法を混同しない。
