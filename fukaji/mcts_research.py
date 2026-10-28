@@ -92,18 +92,42 @@ def select_mcts(board, movetime_ms=200, model=None, *, fast_relative=False,
                     now = time.monotonic()
                     phases['selection_ms'] = (now - phase_started) * 1000.0
                     phase_started = now
-                if (pushed < max_tree_depth and not node.expanded
-                        and not board.is_checkmate()
-                        and not board.is_fourfold_repetition()):
-                    moves = list(board.legal_moves)
-                    node.children = [Node(move=m) for m in moves]
-                    node.expanded = True
-                    if node.children:
-                        child = rng.choice(node.children)
-                        board.push(child.move)
-                        pushed += 1
-                        node = child
-                        path.append(node)
+                # Optional research timing: subdivide the composite expansion.
+                # Keep the short-circuit order and the untraced search identical.
+                if phases is not None:
+                    for name in ('checkmate_ms', 'repetition_ms',
+                                 'legal_moves_ms', 'child_nodes_ms', 'push_ms'):
+                        phases[name] = 0.0
+                if pushed < max_tree_depth and not node.expanded:
+                    clock = time.monotonic() if phases is not None else None
+                    is_mate = board.is_checkmate()
+                    if phases is not None:
+                        phases['checkmate_ms'] = (time.monotonic() - clock) * 1000.0
+                    if not is_mate:
+                        clock = time.monotonic() if phases is not None else None
+                        is_repetition = board.is_fourfold_repetition()
+                        if phases is not None:
+                            phases['repetition_ms'] = (time.monotonic() - clock) * 1000.0
+                        if not is_repetition:
+                            clock = time.monotonic() if phases is not None else None
+                            moves = list(board.legal_moves)
+                            if phases is not None:
+                                phases['legal_moves_ms'] = (time.monotonic() - clock) * 1000.0
+                                clock = time.monotonic()
+                            node.children = [Node(move=m) for m in moves]
+                            node.expanded = True
+                            if node.children:
+                                child = rng.choice(node.children)
+                            if phases is not None:
+                                phases['child_nodes_ms'] = (time.monotonic() - clock) * 1000.0
+                            if node.children:
+                                clock = time.monotonic() if phases is not None else None
+                                board.push(child.move)
+                                pushed += 1
+                                node = child
+                                path.append(node)
+                                if phases is not None:
+                                    phases['push_ms'] = (time.monotonic() - clock) * 1000.0
                 if phases is not None:
                     now = time.monotonic()
                     phases['expansion_ms'] = (now - phase_started) * 1000.0
