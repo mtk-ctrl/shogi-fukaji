@@ -21,10 +21,11 @@ class MctsResearchTests(unittest.TestCase):
 
     def test_restores_nonempty_history_and_hands(self):
         board = shogi.Board()
-        for usi in ("7g7f", "3c3d", "2g2f", "8c8d", "2f2e", "8d8e"):
+        for usi in ("7g7f", "7c7d", "7f7e", "3c3d", "7e7d"):
             move = shogi.Move.from_usi(usi)
             self.assertIn(move, board.legal_moves)
             board.push(move)
+        self.assertEqual(board.pieces_in_hand[shogi.BLACK][shogi.PAWN], 1)
         before = (board.sfen(), tuple(board.move_stack))
         move, iterations, _ = select_mcts(
             board, movetime_ms=1000, max_iterations=12, seed=11,
