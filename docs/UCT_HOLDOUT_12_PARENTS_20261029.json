@@ -1,0 +1,278 @@
+{
+  "schema_version": 1,
+  "status": "research_holdout_frozen_not_measured",
+  "source_run": 40637486947,
+  "source_sha256": "60eb9ab4dadc3776e43ac49cf27bd04137477c339850fdaa7db2265248a8d3bf",
+  "model_run": 40636602223,
+  "model_sha256": "18b39f647caa458389a1900b875337adadac74ae37e27343e7f0094ed663c492",
+  "development": [
+    {
+      "parent_id": "dev-pair-000-ply-12",
+      "game_id": "pair-000-g8-black",
+      "pair": 0,
+      "game_row_index": 0,
+      "g8_black": true,
+      "ply": 12,
+      "seed": 20279028,
+      "sfen": "lnsgk1s2/1r2g2bl/ppppppp1n/8p/7p1/9/PPPPPPPPP/1BK1GS1R1/LNS2G1NL b - 13",
+      "source_sha256": "60eb9ab4dadc3776e43ac49cf27bd04137477c339850fdaa7db2265248a8d3bf"
+    },
+    {
+      "parent_id": "dev-pair-001-ply-12",
+      "game_id": "pair-001-g8-black",
+      "pair": 1,
+      "game_row_index": 2,
+      "g8_black": true,
+      "ply": 12,
+      "seed": 20279029,
+      "sfen": "lns1k1s1l/1rg1g4/p1ppppnpp/1p4p2/9/3bPP3/PPP3PPP/1B1KG1SR1/LNS2G1NL b p 13",
+      "source_sha256": "60eb9ab4dadc3776e43ac49cf27bd04137477c339850fdaa7db2265248a8d3bf"
+    },
+    {
+      "parent_id": "dev-pair-002-ply-12",
+      "game_id": "pair-002-g8-black",
+      "pair": 2,
+      "game_row_index": 4,
+      "g8_black": true,
+      "ply": 12,
+      "seed": 20279030,
+      "sfen": "1nsk3n1/lrg1g1sbl/ppppppppp/9/9/6P2/PPPPPP1PP/1BGRKS3/LNS2G1NL b - 13",
+      "source_sha256": "60eb9ab4dadc3776e43ac49cf27bd04137477c339850fdaa7db2265248a8d3bf"
+    },
+    {
+      "parent_id": "dev-pair-003-ply-12",
+      "game_id": "pair-003-g8-black",
+      "pair": 3,
+      "game_row_index": 6,
+      "g8_black": true,
+      "ply": 12,
+      "seed": 20279031,
+      "sfen": "ln1g3nl/1rskgs1b1/ppp1p1ppp/3p1p3/9/4P4/PPPP1PPPP/LB1SGK2R/1N3GSNL b - 13",
+      "source_sha256": "60eb9ab4dadc3776e43ac49cf27bd04137477c339850fdaa7db2265248a8d3bf"
+    },
+    {
+      "parent_id": "dev-pair-004-ply-50",
+      "game_id": "pair-004-g8-black",
+      "pair": 4,
+      "game_row_index": 8,
+      "g8_black": true,
+      "ply": 50,
+      "seed": 20279032,
+      "sfen": "3g5/lr2g1kbl/p1ns1s1pn/3pppp2/Ppp5p/2PPPPPP1/NPBS1KS1P/L2RG3L/5G1N1 b - 51",
+      "source_sha256": "60eb9ab4dadc3776e43ac49cf27bd04137477c339850fdaa7db2265248a8d3bf"
+    },
+    {
+      "parent_id": "dev-pair-005-ply-50",
+      "game_id": "pair-005-g8-black",
+      "pair": 5,
+      "game_row_index": 10,
+      "g8_black": true,
+      "ply": 50,
+      "seed": 20279033,
+      "sfen": "ln7/2gsg3+L/p1pks1bp1/3pppp2/2B6/3PP2P1/2PS1PP1+n/+r2RGKS2/5G3 b LP2nl4p 51",
+      "source_sha256": "60eb9ab4dadc3776e43ac49cf27bd04137477c339850fdaa7db2265248a8d3bf"
+    },
+    {
+      "parent_id": "dev-pair-006-ply-50",
+      "game_id": "pair-006-g8-black",
+      "pair": 6,
+      "game_row_index": 12,
+      "g8_black": true,
+      "ply": 50,
+      "seed": 20279034,
+      "sfen": "ln1k1r3/1rs1g4/p1p1s1+N2/3pppp2/Pp7/2P1PP3/NP1PS3P/LBKSG4/3G4L b BGNL4P 51",
+      "source_sha256": "60eb9ab4dadc3776e43ac49cf27bd04137477c339850fdaa7db2265248a8d3bf"
+    },
+    {
+      "parent_id": "dev-pair-007-ply-50",
+      "game_id": "pair-007-g8-black",
+      "pair": 7,
+      "game_row_index": 14,
+      "g8_black": true,
+      "ply": 50,
+      "seed": 20279035,
+      "sfen": "3g5/1rskg3l/2p2s1pn/4p1p2/ln+B3n1p/+b1P1PP1P1/3PS1P1P/3SGK1R1/5G1NL b 5Plp 51",
+      "source_sha256": "60eb9ab4dadc3776e43ac49cf27bd04137477c339850fdaa7db2265248a8d3bf"
+    },
+    {
+      "parent_id": "dev-pair-008-ply-110",
+      "game_id": "pair-008-g8-black",
+      "pair": 8,
+      "game_row_index": 16,
+      "g8_black": true,
+      "ply": 110,
+      "seed": 20279036,
+      "sfen": "3k3n1/4gr1bl/+L1p1ssppp/2+N1p4/Pp3g1P1/2P6/3+p2P1P/7R1/5K2L b SL5Pb2gs2np 111",
+      "source_sha256": "60eb9ab4dadc3776e43ac49cf27bd04137477c339850fdaa7db2265248a8d3bf"
+    },
+    {
+      "parent_id": "dev-pair-009-ply-110",
+      "game_id": "pair-009-g8-black",
+      "pair": 9,
+      "game_row_index": 18,
+      "g8_black": true,
+      "ply": 110,
+      "seed": 20279037,
+      "sfen": "3g5/2s1gr3/3k1p1p1/2pp4l/Pp1npKPPp/4P4/2+n3S1P/4G4/5G1NL b SLr2bsnl6p 111",
+      "source_sha256": "60eb9ab4dadc3776e43ac49cf27bd04137477c339850fdaa7db2265248a8d3bf"
+    },
+    {
+      "parent_id": "dev-pair-010-ply-110",
+      "game_id": "pair-010-g8-black",
+      "pair": 10,
+      "game_row_index": 20,
+      "g8_black": true,
+      "ply": 110,
+      "seed": 20279038,
+      "sfen": "1n1g5/l1skg2b1/p3s4/2pp1p3/4P1+RPp/2S1LP3/1P2SKP1P/1B2G3L/3+r1G1N1 b 2nl7p 111",
+      "source_sha256": "60eb9ab4dadc3776e43ac49cf27bd04137477c339850fdaa7db2265248a8d3bf"
+    },
+    {
+      "parent_id": "dev-pair-011-ply-110",
+      "game_id": "pair-011-g8-black",
+      "pair": 11,
+      "game_row_index": 22,
+      "g8_black": true,
+      "ply": 110,
+      "seed": 20279039,
+      "sfen": "ln1k5/4g4/p1p1s1+N2/9/PP1K1P2p/2P3P2/3P4P/9/5G2L b RBG2SNL8Prbgsnl 111",
+      "source_sha256": "60eb9ab4dadc3776e43ac49cf27bd04137477c339850fdaa7db2265248a8d3bf"
+    }
+  ],
+  "holdout": [
+    {
+      "parent_id": "holdout-pair-012-ply-12",
+      "game_id": "pair-012-g8-black",
+      "pair": 12,
+      "game_row_index": 24,
+      "g8_black": true,
+      "ply": 12,
+      "seed": 20279128,
+      "sfen": "lnsg4l/1r1kgs1b1/pp1pppnpp/2p3p2/9/3P1P3/PPPSP1PPP/1B2GS1R1/LN2KG1NL b - 13",
+      "source_sha256": "60eb9ab4dadc3776e43ac49cf27bd04137477c339850fdaa7db2265248a8d3bf"
+    },
+    {
+      "parent_id": "holdout-pair-013-ply-12",
+      "game_id": "pair-013-g8-black",
+      "pair": 13,
+      "game_row_index": 26,
+      "g8_black": true,
+      "ply": 12,
+      "seed": 20279129,
+      "sfen": "l2g2snl/1rs1gk1b1/npppp1ppp/p4p3/9/4P4/PPPP1PPPP/1B1SGS1R1/LN2KG1NL b - 13",
+      "source_sha256": "60eb9ab4dadc3776e43ac49cf27bd04137477c339850fdaa7db2265248a8d3bf"
+    },
+    {
+      "parent_id": "holdout-pair-014-ply-12",
+      "game_id": "pair-014-g8-black",
+      "pair": 14,
+      "game_row_index": 28,
+      "g8_black": true,
+      "ply": 12,
+      "seed": 20279130,
+      "sfen": "ln1g2s1l/1rskg2b1/ppppp1npp/5pp2/9/9/PPPPPPPPP/1B1SGKSR1/LN3G1NL b - 13",
+      "source_sha256": "60eb9ab4dadc3776e43ac49cf27bd04137477c339850fdaa7db2265248a8d3bf"
+    },
+    {
+      "parent_id": "holdout-pair-015-ply-12",
+      "game_id": "pair-015-g8-black",
+      "pair": 15,
+      "game_row_index": 30,
+      "g8_black": true,
+      "ply": 12,
+      "seed": 20279131,
+      "sfen": "l1sg3n1/1r1kgs1bl/npppppppp/p8/9/9/PPPPPPPPP/1B1SGKSR1/LN3G1NL b - 13",
+      "source_sha256": "60eb9ab4dadc3776e43ac49cf27bd04137477c339850fdaa7db2265248a8d3bf"
+    },
+    {
+      "parent_id": "holdout-pair-016-ply-50",
+      "game_id": "pair-016-g8-black",
+      "pair": 16,
+      "game_row_index": 32,
+      "g8_black": true,
+      "ply": 50,
+      "seed": 20279132,
+      "sfen": "l2g5/1r1kg2bl/n1s2spp1/p3p3p/LpB4R1/2P1PP3/1PNPSKP1P/2G2S2L/5G1N1 b N5P 51",
+      "source_sha256": "60eb9ab4dadc3776e43ac49cf27bd04137477c339850fdaa7db2265248a8d3bf"
+    },
+    {
+      "parent_id": "holdout-pair-017-ply-50",
+      "game_id": "pair-017-g8-black",
+      "pair": 17,
+      "game_row_index": 34,
+      "g8_black": true,
+      "ply": 50,
+      "seed": 20279133,
+      "sfen": "3g5/1+L2gksbl/+N4pppn/2ps+B4/Pp2p3p/3P5/1PPSPPPPP/4GKSR1/5G1NL b RL2Pn 51",
+      "source_sha256": "60eb9ab4dadc3776e43ac49cf27bd04137477c339850fdaa7db2265248a8d3bf"
+    },
+    {
+      "parent_id": "holdout-pair-018-ply-50",
+      "game_id": "pair-018-g8-black",
+      "pair": 18,
+      "game_row_index": 36,
+      "g8_black": true,
+      "ply": 50,
+      "seed": 20279134,
+      "sfen": "lns6/1rgkg4/p1p1s1bp+R/3ppp3/Pp6p/2PPPP3/NP1SS1P1P/LBK1G4/5G1NL b NL2P 51",
+      "source_sha256": "60eb9ab4dadc3776e43ac49cf27bd04137477c339850fdaa7db2265248a8d3bf"
+    },
+    {
+      "parent_id": "holdout-pair-019-ply-50",
+      "game_id": "pair-019-g8-black",
+      "pair": 19,
+      "game_row_index": 38,
+      "g8_black": true,
+      "ply": 50,
+      "seed": 20279135,
+      "sfen": "1n1g1rs2/l1skg3l/p1pppp1p1/6+B1p/bp5P1/2P1P1P2/3GS3P/L5GR1/1K5NL b 2NPs4p 51",
+      "source_sha256": "60eb9ab4dadc3776e43ac49cf27bd04137477c339850fdaa7db2265248a8d3bf"
+    },
+    {
+      "parent_id": "holdout-pair-020-ply-110",
+      "game_id": "pair-020-g8-black",
+      "pair": 20,
+      "game_row_index": 40,
+      "g8_black": true,
+      "ply": 110,
+      "seed": 20279136,
+      "sfen": "ln1g5/2s6/p1p6/3k5/1p2pNPPp/2P1P4/PPSPKP2P/L2RG4/5G2L b RGSL2P2bs2n2p 111",
+      "source_sha256": "60eb9ab4dadc3776e43ac49cf27bd04137477c339850fdaa7db2265248a8d3bf"
+    },
+    {
+      "parent_id": "holdout-pair-021-ply-110",
+      "game_id": "pair-021-g8-black",
+      "pair": 21,
+      "game_row_index": 42,
+      "g8_black": true,
+      "ply": 110,
+      "seed": 20279137,
+      "sfen": "1+P1k5/4gg2l/4sp1pn/4p1p2/PpPps3p/9/1P1P1K+n1P/L1GR5/5G2L b RLP2b2s2n4p 111",
+      "source_sha256": "60eb9ab4dadc3776e43ac49cf27bd04137477c339850fdaa7db2265248a8d3bf"
+    },
+    {
+      "parent_id": "holdout-pair-022-ply-110",
+      "game_id": "pair-022-g8-black",
+      "pair": 22,
+      "game_row_index": 44,
+      "g8_black": true,
+      "ply": 110,
+      "seed": 20279138,
+      "sfen": "3g5/4g3l/2s1k2p1/2p2p3/Pp1Pp2Np/3p2S2/+l5P2/3R1K3/5G2L b SNr2bgs2nl8p 111",
+      "source_sha256": "60eb9ab4dadc3776e43ac49cf27bd04137477c339850fdaa7db2265248a8d3bf"
+    },
+    {
+      "parent_id": "holdout-pair-023-ply-110",
+      "game_id": "pair-023-g8-black",
+      "pair": 23,
+      "game_row_index": 46,
+      "g8_black": true,
+      "ply": 110,
+      "seed": 20279139,
+      "sfen": "l2g5/6k2/p3gpnp1/2p5l/PP1Pp2Pp/2P1PPP2/4SK2N/L2RG4/5+n2L b BGS3Prb2snp 111",
+      "source_sha256": "60eb9ab4dadc3776e43ac49cf27bd04137477c339850fdaa7db2265248a8d3bf"
+    }
+  ],
+  "measurement_started": false,
+  "unresolved_used_as_teacher": false
+}
