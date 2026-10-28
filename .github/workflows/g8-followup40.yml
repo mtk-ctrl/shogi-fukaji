@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - ".github/fukaji-g8-followup-request.json"
+      - ".github/workflows/g8-followup40.yml"
 permissions:
   contents: read
   actions: read
