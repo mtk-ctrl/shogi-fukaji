@@ -386,5 +386,25 @@ class MctsResearchTests(unittest.TestCase):
 
 
 
+    def test_cleanup_guard_tracks_new_nodes_after_expansion(self):
+        from fukaji.mcts_research import _cleanup_reserve_seconds
+        board = shogi.Board()
+        root_size = len([move for move in board.legal_moves]) + 1
+        original = (board.sfen(), tuple(board.move_stack))
+        with patch("fukaji.mcts_research._cleanup_reserve_seconds",
+                   wraps=_cleanup_reserve_seconds) as reserve:
+            move, count, _ = select_mcts(
+                board, movetime_ms=2000, max_iterations=5, seed=13,
+                max_tree_depth=3, single_pass_legal_moves=True,
+                total_budget_from_call=True, cleanup_aware_reserve=True)
+        self.assertEqual(count, 5)
+        self.assertIn(shogi.Move.from_usi(move), board.legal_moves)
+        self.assertTrue(reserve.called)
+        self.assertGreater(max(call.args[0] for call in reserve.call_args_list),
+                           root_size)
+        self.assertEqual((board.sfen(), tuple(board.move_stack)), original)
+
+
+
 if __name__ == "__main__":
     unittest.main()
