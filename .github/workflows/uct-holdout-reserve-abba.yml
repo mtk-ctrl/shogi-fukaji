@@ -1,0 +1,64 @@
+name: FUKAJI UCT frozen holdout cleanup reserve ABBA (research only)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/fukaji-uct-holdout-reserve-abba-request.json'
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-uct-holdout-reserve-abba
+  cancel-in-progress: false
+jobs:
+  holdout-abba:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Validate workflow and research regression
+        run: |
+          python3 scripts/check_match_workflows.py
+          python3 scripts/check_workflow_inventory.py
+          python -m unittest discover -s tests -p 'test_uct_holdout_cleanup_abba.py' -v
+          python -m unittest discover -s tests -p 'test_uct_generalization_audit.py' -v
+      - name: Check explicit holdout-only request (default OFF)
+        id: protocol
+        run: python -m fukaji.uct_holdout_cleanup_abba --check-request .github/fukaji-uct-holdout-reserve-abba-request.json
+      - name: Download SHA-frozen G8 model
+        if: steps.protocol.outputs.enabled == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-generation8-research-40636602223
+          run-id: 40636602223
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/uct_holdout_reserve/model
+      - name: Download SHA-frozen 240-game source
+        if: steps.protocol.outputs.enabled == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-g8-paired-aggregate-40637486947
+          run-id: 40637486947
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/uct_holdout_reserve/source
+      - name: Replay all games and run frozen holdout-only 48 observations
+        if: steps.protocol.outputs.enabled == 'true'
+        run: |
+          python -m fukaji.uct_holdout_cleanup_abba \
+            --games build/uct_holdout_reserve/source/all_paired_games.jsonl \
+            --report build/uct_holdout_reserve/source/paired_aggregate_report.json \
+            --model build/uct_holdout_reserve/model/mover-relative-generation8-research.npz \
+            --out build/uct_holdout_reserve/results
+      - name: Preserve raw holdout observations and SHA receipt
+        if: steps.protocol.outputs.enabled == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-uct-holdout-reserve-abba-${{ github.run_id }}
+          path: build/uct_holdout_reserve/results/
+          retention-days: 30
+          if-no-files-found: error
