@@ -3,10 +3,24 @@ import unittest
 
 import shogi
 
-from fukaji.search_method_probe import build_positions, _board_from_prefix
+from fukaji.search_method_probe import build_positions, _board_from_prefix, validate_request, EXPECTED_REQUEST
+from pathlib import Path
+import json
+import tempfile
 
 
 class SearchMethodProbeTests(unittest.TestCase):
+    def test_request_disabled_by_default_and_rejects_drift(self):
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d) / 'request.json'
+            path.write_text(json.dumps(EXPECTED_REQUEST), encoding='utf-8')
+            self.assertFalse(validate_request(path))
+            path.write_text(json.dumps(dict(EXPECTED_REQUEST, enabled=True)), encoding='utf-8')
+            self.assertTrue(validate_request(path))
+            path.write_text(json.dumps(dict(EXPECTED_REQUEST, positions=240)), encoding='utf-8')
+            with self.assertRaises(ValueError):
+                validate_request(path)
+
     def test_selection_restores_actual_history(self):
         seq = ["7g7f", "7c7d", "7f7e", "3c3d", "7e7d"]
         row = {"pair": 0, "g8_black": True, "opening": seq[:2],

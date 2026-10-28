@@ -1,6 +1,6 @@
 # G8固定評価・αβ探索対UCTの200ms局面診断
 
-状態：研究専用、未採用。実行は手動のみ。GitHub Actions `g8-alpha-uct-probe.yml` の1 runnerで実施し、重い240局対局は行わない。
+状態：研究専用、未採用。実行は専用requestの明示有効化（既定OFF）または手動入口。手動入口でもrequestがOFFなら重い診断を実行しない。GitHub Actions `g8-alpha-uct-probe.yml` の1 runnerで実施し、重い240局対局は行わない。
 
 - G8モデル：run 40636602223、モデルSHA256 `18b39f647caa458389a1900b875337adadac74ae37e27343e7f0094ed663c492`。実ファイルのSHAを照合。
 - 局面原本：独立G8対G7 run 40637486947 の集約240局。集約JSONLのSHAと120先後交替ペアを再検査し、全240局を再度合法再生。
