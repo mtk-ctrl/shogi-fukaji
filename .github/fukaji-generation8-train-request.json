@@ -1,7 +1,7 @@
 {
-  "enabled": false,
+  "enabled": true,
   "research_only": true,
-  "training_allowed": false,
+  "training_allowed": true,
   "model_adoption_allowed": false,
   "old_run": 40434466661,
   "old_artifact_id": 12702814791,
