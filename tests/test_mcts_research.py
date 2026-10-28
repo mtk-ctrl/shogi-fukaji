@@ -79,7 +79,7 @@ class MctsResearchTests(unittest.TestCase):
             clock[0] += 0.015
             return 0
         with patch("fukaji.mcts_research.time.monotonic",
-                   side_effect=lambda: clock[0]), \\
+                   side_effect=lambda: clock[0]), \
              patch("fukaji.mcts_research.evaluate",
                    side_effect=fake_evaluate):
             move, iterations, elapsed = select_mcts(
