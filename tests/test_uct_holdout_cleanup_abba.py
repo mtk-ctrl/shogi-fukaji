@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 from fukaji.uct_holdout_cleanup_abba import (
     REQUEST, ORDER, validate_request, prepare_holdout_positions,
+    attest_replayed_legality,
 )
 from fukaji.uct_cleanup_reserve_abba import summarize, MODEL_SHA, SOURCE_SHA
 from fukaji.uct_generalization_audit import validate_holdout_abba
@@ -90,6 +91,22 @@ class HoldoutReserveProtocolTests(unittest.TestCase):
         self.assertNotIn("scripts/check_workflow_inventory.py", workflow)
         self.assertIn("steps.protocol.outputs.enabled == 'true'", workflow)
         self.assertIn("cancel-in-progress: false", workflow)
+
+    def test_legality_receipt_only_after_actual_replay(self):
+        metadata = {"legality_replayed": False, "observations": 48}
+        for receipt in ({}, {"legality_replayed": False},
+                        {"legality_replayed": True,
+                         "source_games_legally_replayed": 239,
+                         "holdout_prefixes_legally_replayed": 12}):
+            with self.assertRaises(ValueError):
+                attest_replayed_legality(metadata, receipt)
+        complete = {"legality_replayed": True,
+                    "source_games_legally_replayed": 240,
+                    "holdout_prefixes_legally_replayed": 12}
+        attested = attest_replayed_legality(metadata, complete)
+        self.assertTrue(attested["legality_replayed"])
+        self.assertEqual(attested["source_games_legally_replayed"], 240)
+        self.assertFalse(metadata["legality_replayed"])
 
     def test_reject_manifest_overlap_before_any_search(self):
         bad = {"holdout": [{"pair": i, "seed": 0} for i in range(12)]}

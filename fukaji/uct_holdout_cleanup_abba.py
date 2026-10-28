@@ -75,6 +75,17 @@ def prepare_holdout_positions(rows, manifest):
     return positions
 
 
+def attest_replayed_legality(metadata_validation, replay_receipt):
+    """Promote a metadata-only audit flag only after actual legal replay."""
+    if (replay_receipt.get("legality_replayed") is not True
+            or replay_receipt.get("source_games_legally_replayed") != 240
+            or replay_receipt.get("holdout_prefixes_legally_replayed") != 12):
+        raise ValueError("cannot attest legality without full replay")
+    return {**metadata_validation, "legality_replayed": True,
+            "source_games_legally_replayed": 240,
+            "holdout_prefixes_legally_replayed": 12}
+
+
 def probe(games_path, report_path, model_path, out_path):
     if digest(Path(model_path).read_bytes()) != MODEL_SHA:
         raise ValueError("G8 model bytes mismatch")
@@ -120,9 +131,11 @@ def probe(games_path, report_path, model_path, out_path):
                 "elapsed_ms": external_ms,
                 "internal_elapsed_ms": round(internal_ms, 3),
             })
-    validation = validate_holdout_abba(
-        observations, manifest["holdout"],
-        model_sha256=MODEL_SHA, source_sha256=SOURCE_SHA)
+    validation = attest_replayed_legality(
+        validate_holdout_abba(
+            observations, manifest["holdout"],
+            model_sha256=MODEL_SHA, source_sha256=SOURCE_SHA),
+        receipt)
     summary = summarize(observations)
     summary.update({
         "split": "frozen_holdout_only", "holdout_manifest": str(MANIFEST),
