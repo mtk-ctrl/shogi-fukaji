@@ -1,0 +1,94 @@
+name: FUKAJI UCT time-reserve same-position ABBA (research only)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/fukaji-uct-guard-ab-request.json'
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-uct-time-reserve-abba
+  cancel-in-progress: false
+jobs:
+  guard-abba:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Test strict protocol and offline audit
+        run: |
+          python -m unittest discover -s tests -p 'test_uct_guard_ab_audit.py' -v
+          python -m unittest discover -s tests -p 'test_mcts_research.py' -v
+      - name: Verify explicit default-disabled request
+        id: protocol
+        run: python -m fukaji.uct_guard_ab_audit --check-request .github/fukaji-uct-guard-ab-request.json
+      - name: Download frozen G8 model
+        if: steps.protocol.outputs.enabled == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-generation8-research-40636602223
+          run-id: 40636602223
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/uct_guard_ab/model
+      - name: Download audited G8/G7 240-game source
+        if: steps.protocol.outputs.enabled == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-g8-paired-aggregate-40637486947
+          run-id: 40637486947
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/uct_guard_ab/source
+      - name: Checkout exact pre-reserve revision
+        if: steps.protocol.outputs.enabled == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: b2001063bac5f84d4ee28004616a599c8c3da574
+          path: build/uct_guard_ab/baseline
+      - name: Checkout exact post-reserve revision
+        if: steps.protocol.outputs.enabled == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: 378bd6426a193eac8d9a936c3f4252242b8707f4
+          path: build/uct_guard_ab/guard
+      - name: Replay all 240 games and probe identical 12 positions ABBA
+        if: steps.protocol.outputs.enabled == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="$GITHUB_WORKSPACE/build/uct_guard_ab"
+          for label in baseline_a guard_a guard_b baseline_b; do
+            case "$label" in
+              baseline*) variant=baseline ;;
+              guard*) variant=guard ;;
+            esac
+            ( cd "$ROOT/$variant"
+              python -c 'import sys; from fukaji.search_method_probe import probe; probe(*sys.argv[1:])' \
+                "$ROOT/source/all_paired_games.jsonl" \
+                "$ROOT/source/paired_aggregate_report.json" \
+                "$ROOT/model/mover-relative-generation8-research.npz" \
+                "$ROOT/results/$label"
+            )
+          done
+      - name: Independently audit paired timings and frozen provenance
+        if: steps.protocol.outputs.enabled == 'true'
+        run: |
+          python -m fukaji.uct_guard_ab_audit \
+            --base-a build/uct_guard_ab/results/baseline_a \
+            --guard-a build/uct_guard_ab/results/guard_a \
+            --guard-b build/uct_guard_ab/results/guard_b \
+            --base-b build/uct_guard_ab/results/baseline_b \
+            --out build/uct_guard_ab/results/audit
+      - name: Preserve four raw probes and independent audit
+        if: steps.protocol.outputs.enabled == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-uct-guard-abba-${{ github.run_id }}
+          path: build/uct_guard_ab/results/
+          retention-days: 30
+          if-no-files-found: error
