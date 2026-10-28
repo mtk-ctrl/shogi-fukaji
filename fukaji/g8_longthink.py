@@ -27,6 +27,7 @@ SOURCE_SHA = "5206f1ffbf9cd0e8a71ac65f8d6d2f9828853b408eaf5c3189ed285b8e47db52"
 CANDIDATES_SHA = "54192b94cf4e60347790907262b3e516f04ca78dd367d6fdc6d5cb310e63f2be"
 MODEL_SHA = "417d18e7b64494c9febdf6d217afbe4e4979e68d04528f16db8b45c0bcde2a0e"
 SEED = "fukaji-g8-longthink60-v1|20261028|40624316138"
+SELECTED_SHA = "db318cc1ae757bb768b0dec130b64e44f14cdda7e323be48506d3163198dcedd"
 QUOTAS = {"mate_tail": 24, "mate_middle": 12,
           "unresolved_late": 12, "early_mixed": 12}
 SHARDS, PER_SHARD = 20, 3
@@ -146,6 +147,8 @@ def prepare(request, out):
     root.mkdir(parents=True, exist_ok=True)
     payload = "".join(json.dumps(x, sort_keys=True, ensure_ascii=False) + "\n"
                       for x in chosen).encode()
+    if sha(payload) != SELECTED_SHA:
+        raise ValueError("frozen 60-position selection SHA mismatch")
     (root / "selected60.jsonl").write_bytes(payload)
     receipt = dict(status="read_only_research_prepared", source_run=SOURCE_RUN,
                    source_artifact_id=SOURCE_ID, source_zip_sha256=SOURCE_SHA,
@@ -166,7 +169,7 @@ def read_selected(root):
     root = Path(root)
     raw = (root / "selected60.jsonl").read_bytes()
     receipt = json.loads((root / "selection_receipt.json").read_text())
-    if (receipt.get("selected_sha256") != sha(raw) or
+    if (receipt.get("selected_sha256") != SELECTED_SHA or sha(raw) != SELECTED_SHA or
             receipt.get("source_zip_sha256") != SOURCE_SHA or
             receipt.get("model_sha256") != MODEL_SHA or
             receipt.get("positions") != 60 or receipt.get("shards") != 20):
