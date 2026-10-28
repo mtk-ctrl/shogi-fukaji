@@ -51,6 +51,10 @@ class UctParent7LightTrace(unittest.TestCase):
                                         entry["root_legal_moves"] + 1)
                 self.assertGreaterEqual(entry["longest_iteration_ms"], 0.0)
                 self.assertGreaterEqual(entry["internal_deadline_overrun_ms"], 0.0)
+                for phase_name in ("root_setup_ms", "search_loop_ms",
+                                   "restore_verify_ms", "root_choice_ms",
+                                   "return_clock_ms"):
+                    self.assertGreaterEqual(entry[phase_name], 0.0)
                 if iterations:
                     self.assertGreaterEqual(entry["longest_iteration_ms"],
                                             entry["last_iteration_ms"])
