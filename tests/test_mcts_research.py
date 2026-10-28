@@ -166,13 +166,24 @@ class MctsResearchTests(unittest.TestCase):
             shogi.Board(),
             shogi.Board("4k4/9/4R4/9/9/9/9/9/4K4 w - 1"),
             shogi.Board("4k4/9/9/9/9/9/9/9/4K4 b Pp 1"),
+            shogi.Board("4k4/9/3RGR3/9/9/9/9/9/4K4 b P 1"),
+            shogi.Board("4k4/3GRG3/9/9/9/9/9/9/4K4 w - 1"),
         ]
+        repeated = shogi.Board("4k4/9/9/9/9/9/9/9/4K4 b - 1")
+        for word in ("5i6i", "5a6a", "6i5i", "6a5a") * 3:
+            repeated.push(shogi.Move.from_usi(word))
+        self.assertTrue(repeated.is_fourfold_repetition())
+        boards.append(repeated)
         for board in boards:
             with self.subTest(sfen=board.sfen()):
                 before = (board.sfen(), tuple(board.move_stack))
                 self.assertEqual(
                     [move.usi() for move in list(board.legal_moves)],
                     [move.usi() for move in board.legal_moves])
+                if board.is_checkmate():
+                    self.assertEqual(list(board.legal_moves), [])
+                if board.sfen().startswith("4k4/9/3RGR3"):
+                    self.assertNotIn(shogi.Move.from_usi("P*5b"), board.legal_moves)
                 original = select_mcts(
                     board, movetime_ms=2000, max_iterations=8,
                     max_tree_depth=3, seed=41)
