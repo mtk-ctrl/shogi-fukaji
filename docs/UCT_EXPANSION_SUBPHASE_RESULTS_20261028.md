@@ -30,7 +30,7 @@
 - artifact ID `12818321495`、ZIP 14,501バイト、GitHub公表SHA256 `c276996b78a3ded5481465a2fffc77c1dcea78555f80ea93bac1c763c5eec1de`。別取得のZIP実バイトでSHA256一致。
 - ZIP内部 `phase_iterations.jsonl` 4行のSHA256 `885c557ae1d27b3dbb74c36ec5f90631d5b7a096660ee4539da75e069b157d76` が `summary.json` と一致。全119反復について内訳非負・内訳小計が展開合計を超えないこと、親6/11各2行、凍結SHA・合法手数・反復数・合計を独立再計算して一致。
 - [Google Driveの原本ZIP](https://drive.google.com/file/d/1gddRs_6WhXdVR5fQ-D1v4RSadv0L5RA3/view)に保存、再取得ZIPのサイズ14,501バイト・SHA256一致。[前段の原本ZIP](https://drive.google.com/file/d/1KaueVaF-NoEyNP8l2mROxtgPn8DZmPuO/view)も今回長期保存し再取得SHA256 `49c9cda4f975bbed7b41686721b4b921f0f2dc8818dadf02a047584a2af18843` 一致。
-- requestをcommit `8f9aa9d5b3ccfad6a176f79ecfe4e1d172b71221` で `enabled:false` に復帰。後続のskip CIは別途確認する。
+- requestをcommit `8f9aa9d5b3ccfad6a176f79ecfe4e1d172b71221` で `enabled:false` に復帰。[skip run40693584474](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/40693584474) completed/success。事前検査は成功、モデル取得・240局再生・計測・artifact保存の重い工程はすべてskippedと直接確認。
 
 ## 判断・次工程
 1. **律速の候補は `list(board.legal_moves)` に絞られた。** python-shogiのリスト化における `__len__` の事前走査、列挙、王手・打ち歩詰・持駒の合法性検査を、挙動を変えず分離測定する。
