@@ -90,11 +90,40 @@ class MctsResearchTests(unittest.TestCase):
         self.assertLessEqual(elapsed, 40.0)
         self.assertNotEqual(move, "resign")
 
+    def test_opt_in_phase_trace_is_complete_and_board_is_restored(self):
+        board = shogi.Board()
+        original = (board.sfen(), tuple(board.move_stack))
+        trace = []
+        move, count, elapsed = select_mcts(
+            board, movetime_ms=1000, max_iterations=5,
+            max_tree_depth=3, seed=23, iteration_trace=trace,
+        )
+        self.assertEqual(count, 5)
+        self.assertEqual(len(trace), count)
+        self.assertIn(shogi.Move.from_usi(move), board.legal_moves)
+        self.assertEqual((board.sfen(), tuple(board.move_stack)), original)
+        self.assertGreaterEqual(elapsed, 0)
+        for index, record in enumerate(trace, start=1):
+            self.assertEqual(record['iteration'], index)
+            self.assertGreaterEqual(record['depth'], 1)
+            self.assertGreater(record['root_legal_moves'], 0)
+            for phase in ('selection_ms', 'expansion_ms', 'leaf_ms',
+                          'backup_ms', 'undo_ms'):
+                self.assertGreaterEqual(record[phase], 0)
+            self.assertGreaterEqual(record['total_ms'], 0)
+            self.assertGreaterEqual(record['reserve_ms'], 3)
+            self.assertLessEqual(
+                sum(record[p] for p in ('selection_ms', 'expansion_ms',
+                                       'leaf_ms', 'backup_ms', 'undo_ms')),
+                record['total_ms'] + 0.1,
+            )
+
     def test_rejects_invalid_research_parameters(self):
         board = shogi.Board()
         for kwargs in ({"movetime_ms": 0}, {"max_iterations": 0},
                        {"max_tree_depth": 0}, {"exploration": -1},
-                       {"exploration": float("nan")}):
+                       {"exploration": float("nan")},
+                       {"iteration_trace": object()}):
             with self.subTest(kwargs=kwargs), self.assertRaises(ValueError):
                 select_mcts(board, **kwargs)
 
