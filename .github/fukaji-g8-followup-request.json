@@ -1,0 +1,22 @@
+{
+  "enabled": false,
+  "research_only": true,
+  "training_allowed": false,
+  "adoption_allowed": false,
+  "source_run": 40630630178,
+  "input_artifact_id": 12791352643,
+  "input_zip_sha256": "0d11ac42493bb595b9a74769781a364703f8d4f521c66c8f9ba78aa17583672c",
+  "aggregate_artifact_id": 12791512324,
+  "aggregate_zip_sha256": "cfb8278806940f7e845e6ae0475b4500777308a0d077537c6d2f4b8134d279d5",
+  "selected_sha256": "db318cc1ae757bb768b0dec130b64e44f14cdda7e323be48506d3163198dcedd",
+  "results_sha256": "ef6a73d03f3ce6f28436e6ca45b5a3724325aa67ff7b6420b408a35028116e30",
+  "followup_sha256": "5a801a692b0cdaf9d97a7622da0d5676b553a01ff933183fc0018b07f1a4d6bb",
+  "model_sha256": "417d18e7b64494c9febdf6d217afbe4e4979e68d04528f16db8b45c0bcde2a0e",
+  "positions": 40,
+  "shards": 20,
+  "repeat_ms": 20000,
+  "independent_ms": 30000,
+  "reply_ms": 5000,
+  "max_depth": 5,
+  "reply_depth": 4
+}
