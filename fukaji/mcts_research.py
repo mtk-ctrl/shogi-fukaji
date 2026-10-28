@@ -148,6 +148,7 @@ def select_mcts(board, movetime_ms=200, model=None, *, fast_relative=False,
     root_ready = time.monotonic() if clock_phase_trace is not None else None
     iterations = 0
     longest_iteration_seconds = 0.0
+    # The last iteration's existing locals are read only if tracing is ON.
     try:
         while (time.monotonic() < deadline and
                (max_iterations is None or iterations < max_iterations)):
@@ -284,5 +285,16 @@ def select_mcts(board, movetime_ms=200, model=None, *, fast_relative=False,
             'root_choice_ms': (choice_finished - verified) * 1000.0,
             'return_clock_ms': (return_clock_finished - choice_finished) * 1000.0,
             'internal_elapsed_ms': elapsed,
+            'generated_nodes': generated_nodes,
+            'longest_iteration_ms': longest_iteration_seconds * 1000.0,
+            'last_iteration_ms': (
+                None if iterations == 0 else iteration_seconds * 1000.0),
+            'last_iteration_start_remaining_ms': (
+                None if iterations == 0
+                else (deadline - iteration_started) * 1000.0),
+            'last_iteration_end_remaining_ms': (
+                None if iterations == 0
+                else (deadline - iteration_started - iteration_seconds) * 1000.0),
+            'internal_deadline_overrun_ms': max(0.0, elapsed - movetime_ms),
         })
     return best.move.usi(), iterations, elapsed
