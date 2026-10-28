@@ -48,5 +48,26 @@ class Parent7G8Protocol(unittest.TestCase):
             summarize(rows)
 
 
+    def test_summary_rejects_trace_without_phase_and_wrong_seed(self):
+        rows = []
+        for name in ORDER:
+            traced = name.startswith("traced")
+            rows.append({
+                "pass": name, "traced": traced, "sfen": PARENT7_SFEN,
+                "seed": SEED, "target_ply": 50, "iterations": 0,
+                "move": "7e8e", "external_ms": 198.0,
+                "internal_ms": 197.0, "cpu_ms": 196.0,
+                "phase": {} if traced else None,
+            })
+        self.assertEqual(summarize(rows)["trace_calls"], 4)
+        rows[0]["phase"] = None
+        with self.assertRaises(ValueError):
+            summarize(rows)
+        rows[0]["phase"] = {}
+        rows[1]["seed"] = SEED + 1
+        with self.assertRaises(ValueError):
+            summarize(rows)
+
+
 if __name__ == "__main__":
     unittest.main()
