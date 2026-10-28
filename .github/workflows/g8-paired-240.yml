@@ -1,0 +1,112 @@
+name: FUKAJI G8 vs G7 240 paired games (research only)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/fukaji-g8-paired-240-request.json"
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-g8-paired-240
+  cancel-in-progress: false
+jobs:
+  preflight:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      enabled: ${{ steps.protocol.outputs.enabled }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Verify all tests and frozen G8/G7 240-game request
+        id: protocol
+        run: |
+          python -m unittest discover -s tests -v
+          python -m fukaji.g8_paired_arena --mode validate --request .github/fukaji-g8-paired-240-request.json
+      - name: Independently audit G8 training artifact and stage two frozen models
+        if: steps.protocol.outputs.enabled == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python -m fukaji.g8_paired_arena --mode prepare \
+            --request .github/fukaji-g8-paired-240-request.json \
+            --out build/g8_paired/models
+      - name: Preserve verified model inputs and SHA audit receipt
+        if: steps.protocol.outputs.enabled == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-g8-paired-models-${{ github.run_id }}
+          path: build/g8_paired/models/
+          retention-days: 30
+          if-no-files-found: error
+  paired:
+    needs: preflight
+    if: needs.preflight.outputs.enabled == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 80
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Download frozen and audited models from preflight
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-g8-paired-models-${{ github.run_id }}
+          path: build/g8_paired/models
+      - name: Play six new-seed color-swapped pairs (12 games)
+        run: |
+          python -m fukaji.g8_paired_arena --mode play \
+            --request .github/fukaji-g8-paired-240-request.json \
+            --g7 build/g8_paired/models/g7.npz \
+            --g8 build/g8_paired/models/g8.npz \
+            --shard ${{ matrix.shard }} \
+            --out build/g8_paired/part
+      - name: Preserve each 12-game replay-verified shard
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-g8-paired-part-${{ matrix.shard }}-${{ github.run_id }}
+          path: build/g8_paired/part/
+          retention-days: 30
+          if-no-files-found: warn
+  aggregate:
+    needs: [preflight, paired]
+    if: needs.preflight.outputs.enabled == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Download all twenty paired shards
+        uses: actions/download-artifact@v4
+        with:
+          pattern: fukaji-g8-paired-part-*
+          path: build/g8_paired/parts
+          merge-multiple: false
+      - name: Replay all 240 games and audit 120 color-swapped pairs
+        run: |
+          python -m fukaji.g8_paired_arena --mode aggregate \
+            --parts build/g8_paired/parts \
+            --out build/g8_paired/aggregate
+      - name: Save 240-game independent comparison and SHA receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-g8-paired-aggregate-${{ github.run_id }}
+          path: build/g8_paired/aggregate/
+          retention-days: 30
+          if-no-files-found: error
