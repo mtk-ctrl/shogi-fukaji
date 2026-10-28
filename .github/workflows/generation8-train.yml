@@ -1,0 +1,57 @@
+name: FUKAJI G8 frozen parent-disjoint research training
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/fukaji-generation8-train-request.json"
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-generation8-training
+  cancel-in-progress: false
+jobs:
+  preflight:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    outputs:
+      enabled: ${{ steps.protocol.outputs.enabled }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Verify all tests and exact G8 frozen request
+        id: protocol
+        run: |
+          python -m unittest discover -s tests -v
+          python -m fukaji.generation8_train --request .github/fukaji-generation8-train-request.json
+  train:
+    needs: preflight
+    if: needs.preflight.outputs.enabled == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Verify three original artifact ZIPs and legally replay all sources before training
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: mtk-ctrl/shogi-fukaji
+        run: |
+          python -m fukaji.generation8_train \
+            --request .github/fukaji-generation8-train-request.json \
+            --out build/generation8/research
+      - name: Save G8 candidate, immutable parent splits and report
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-generation8-research-${{ github.run_id }}
+          path: build/generation8/research/
+          retention-days: 30
+          if-no-files-found: error
