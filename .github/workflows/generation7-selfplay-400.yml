@@ -61,6 +61,23 @@ jobs:
               raise SystemExit('G7 source SHA mismatch')
           print('G7 source SHA verified', MODEL_SHA)
           PY
+      - name: Exercise actual G7-vs-G7 legal play before twenty runners
+        if: steps.protocol.outputs.enabled == 'true'
+        run: |
+          python - <<'PY'
+          from fukaji.arena import opening
+          from fukaji.direct_arena import replay_check
+          from fukaji.generation_arena import play
+          from fukaji.relative_value import RelativeValue
+          from fukaji.generation7_selfplay import SEED
+          model = RelativeValue('build/g7_400/model/mover-relative-generation7-research.npz', mix_percent=25)
+          head = opening(SEED, 6)
+          row = play(head, True, model, model, max_plies=12)
+          replay_check(head, row['moves'], row)
+          if len(head) + len(row['moves']) > 12 or row['winner'] is not None and row['status'] != 'checkmate':
+              raise SystemExit('invalid G7 short-game smoke')
+          print('G7 actual legal-play smoke passed:', len(row['moves']), row['status'])
+          PY
   selfplay:
     needs: preflight
     if: needs.preflight.outputs.enabled == 'true'
