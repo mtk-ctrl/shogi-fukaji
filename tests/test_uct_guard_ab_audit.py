@@ -67,6 +67,19 @@ class GuardAbbaAuditTests(unittest.TestCase):
             self.assertEqual(summary["abba_positions_sha256"],
                              hashlib.sha256(raw).hexdigest())
 
+    def test_rejects_wrong_frozen_source_sha(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            for name in ("base-a", "guard-a", "guard-b", "base-b"):
+                make_run(root / name, 198.0)
+            path = root / "guard-a" / "summary.json"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["source_games_sha256"] = "0" * 64
+            path.write_text(json.dumps(data), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "SHA"):
+                audit(*(root / n for n in ("base-a", "guard-a", "guard-b",
+                                            "base-b")), root / "out")
+
     def test_rejects_changed_position_and_corrupt_raw(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
