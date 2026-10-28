@@ -83,3 +83,5 @@
 | `generation7-selfplay-400.yml` | **G7研究親の400局自己対局（研究専用・初期OFF）**：凍結G7モデルrun40434466661/SHA固定、独立seed20276127〜20276526、20runner×各20局、200ms/深さ2/最大240手。事前検査・モデルSHA→400局の全手合法再生・詰み勝者/未決着区別・親群ID/分割SHA→集約。未決着を勝ち扱いせず、教師候補は詰みだけ。分析・学習・新旧比較は別工程。main CI後に別commitでrequest enabled=trueを明示し、終了後disabledへ戻す。雲路・正式採用は不変更。固定PLAN：[G7_400_SELFPLAY_PLAN](../../docs/G7_400_SELFPLAY_PLAN.md)。 |
 
 | `g8-legal-selection.yml` | **G8研究用・読取専用の本選定（既定OFF）**：完了G7自己対局run40610843978の集約ZIPと旧G7学習run40434466661の元ZIPをGitHub Actions上でSHA256/出所固定して取得（認証をartifact redirect先へ送らない）。python-shogiで400局全手の合法性・終局を再生し、旧557親群のholdoutを守り、新400親群train320/validation40/test40を凍結。train限定100局面のSFEN重複除外・選定結果・receiptを30日artifactへ保存。学習/対局/正式採用/雲路変更なし。初回workflow_dispatchあり、明示requestの別commitだけで本実行。 |
+
+| `g8-longthink-60.yml` | **G8研究用60局面長考・20runner×各3局面（既定OFF）**：全400局合法再生済みG8確定100候補artifact ZIP SHAを固定して取得。train親群限定、24/12/12/12局面種別・先後30/30の事前固定選定。G7凍結モデルの実200ms/深さ2と20秒/最大深さ5の合法手・深さ・節点・全盤面/履歴復元を比較。preflight→20分析job→aggregate、21+入力ZIPのSHA/出所・全60行監査。長考着手は正解教師とみなさず、学習/採用/雲路変更は行わない。別commitの明示requestでのみ起動。 |
