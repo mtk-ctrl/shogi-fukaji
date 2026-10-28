@@ -26,6 +26,15 @@ def _legal_moves_once(board, *, single_pass=False):
     return list(board.legal_moves)
 
 
+def _cleanup_reserve_seconds(generated_nodes):
+    """Conservative research estimate for returning and releasing the tree.
+
+    Fixed 1 ms floor plus 0.25 ms per 1,000 generated nodes, based on the
+    measured small-tree cleanup scaling. This is a heuristic, not a hard bound.
+    """
+    return 0.001 + 0.00000025 * generated_nodes
+
+
 @dataclass
 class Node:
     move: object = None
@@ -65,7 +74,7 @@ def select_mcts(board, movetime_ms=200, model=None, *, fast_relative=False,
                 max_iterations=None, max_tree_depth=12, exploration=1.4,
                 seed=0, iteration_trace=None, single_pass_legal_moves=False,
                 total_budget_from_call=False, clock_phase_trace=None,
-                linear_root_choice=False):
+                linear_root_choice=False, cleanup_aware_reserve=False):
     """Return (legal USI move, iterations, elapsed milliseconds).
 
     max_iterations can fix the sample budget for reproducible research. When
@@ -83,6 +92,10 @@ def select_mcts(board, movetime_ms=200, model=None, *, fast_relative=False,
     linear_root_choice is a research-only opt-in that replaces the quadratic
     root final-choice tie-break with a linear scan in identical move order.
     It does not change the deadline or guarantee 200ms compliance.
+
+    cleanup_aware_reserve is an opt-in best-effort guard. Before starting
+    another iteration it reserves estimated iteration and tree cleanup time.
+    It does not defer cleanup, guarantee a hard deadline, or change defaults.
 
     clock_phase_trace is opt-in diagnostic instrumentation, not a time
     compliance measurement. It records root setup, iterations, restoration,
@@ -111,6 +124,8 @@ def select_mcts(board, movetime_ms=200, model=None, *, fast_relative=False,
         raise ValueError('clock_phase_trace must support append')
     if type(linear_root_choice) is not bool:
         raise ValueError('linear_root_choice must be bool')
+    if type(cleanup_aware_reserve) is not bool:
+        raise ValueError('cleanup_aware_reserve must be bool')
 
     root_moves = _legal_moves_once(board, single_pass=single_pass_legal_moves)
     if not root_moves:
@@ -126,6 +141,7 @@ def select_mcts(board, movetime_ms=200, model=None, *, fast_relative=False,
     root_sfen = board.sfen()
     root_stack = len(board.move_stack)
     root = Node(expanded=True, children=[Node(move=m) for m in root_moves])
+    generated_nodes = len(root_moves) + 1
     rng = random.Random(seed)
     start = call_started if call_started is not None else time.monotonic()
     deadline = start + movetime_ms / 1000.0
@@ -135,6 +151,13 @@ def select_mcts(board, movetime_ms=200, model=None, *, fast_relative=False,
     try:
         while (time.monotonic() < deadline and
                (max_iterations is None or iterations < max_iterations)):
+            if cleanup_aware_reserve:
+                # A pre-iteration check is essential: checking only after
+                # an iteration cannot reserve its cost or return cleanup.
+                predicted_iteration = max(0.003, 1.5 * longest_iteration_seconds)
+                if deadline - time.monotonic() <= (predicted_iteration +
+                        _cleanup_reserve_seconds(generated_nodes)):
+                    break
             iteration_started = time.monotonic()
             phase_started = iteration_started
             phases = {} if iteration_trace is not None else None
@@ -176,6 +199,7 @@ def select_mcts(board, movetime_ms=200, model=None, *, fast_relative=False,
                                 phases['legal_moves_ms'] = (time.monotonic() - clock) * 1000.0
                                 clock = time.monotonic()
                             node.children = [Node(move=m) for m in moves]
+                            generated_nodes += len(moves)
                             node.expanded = True
                             if node.children:
                                 child = rng.choice(node.children)
@@ -226,6 +250,8 @@ def select_mcts(board, movetime_ms=200, model=None, *, fast_relative=False,
             longest_iteration_seconds = max(
                 longest_iteration_seconds, iteration_seconds)
             reserve = max(0.003, 1.5 * longest_iteration_seconds)
+            if cleanup_aware_reserve:
+                reserve += _cleanup_reserve_seconds(generated_nodes)
             if phases is not None:
                 iteration_trace.append({
                     'iteration': iterations, 'depth': pushed,
