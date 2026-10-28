@@ -74,7 +74,7 @@ class TotalClockABBAProtocolTest(unittest.TestCase):
         for label, flag in ORDER:
             for i in range(12):
                 records.append({
-                    "pass": label, "single_pass": flag,
+                    "pass": label, "single_pass": True, "total_budget": flag,
                     "pair": i, "target_ply": (12, 50, 110)[i // 4],
                     "sfen": "unique_" + str(i), "move": "resign",
                     "iterations": 0, "elapsed_ms": 0, "internal_elapsed_ms": 0,
