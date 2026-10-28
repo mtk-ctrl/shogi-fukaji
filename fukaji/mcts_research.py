@@ -48,10 +48,24 @@ def _uct_child(node, exploration):
     )
 
 
+def _best_root_child(root, root_moves, *, linear=False):
+    """Choose highest visits, breaking ties by original legal-move order.
+
+    The opt-in path uses the invariant that root.children was created in
+    root_moves order and is never reordered. It avoids repeated list.index.
+    """
+    if linear:
+        return max(enumerate(root.children),
+                   key=lambda pair: (pair[1].visits, -pair[0]))[1]
+    return max(root.children,
+               key=lambda child: (child.visits, -root_moves.index(child.move)))
+
+
 def select_mcts(board, movetime_ms=200, model=None, *, fast_relative=False,
                 max_iterations=None, max_tree_depth=12, exploration=1.4,
                 seed=0, iteration_trace=None, single_pass_legal_moves=False,
-                total_budget_from_call=False, clock_phase_trace=None):
+                total_budget_from_call=False, clock_phase_trace=None,
+                linear_root_choice=False):
     """Return (legal USI move, iterations, elapsed milliseconds).
 
     max_iterations can fix the sample budget for reproducible research. When
@@ -65,6 +79,10 @@ def select_mcts(board, movetime_ms=200, model=None, *, fast_relative=False,
     total_budget_from_call is opt-in and includes validation, root legal move
     generation, and root setup in the same best-effort wall-clock budget.
     It cannot preempt a long iteration or guarantee a hard deadline.
+
+    linear_root_choice is a research-only opt-in that replaces the quadratic
+    root final-choice tie-break with a linear scan in identical move order.
+    It does not change the deadline or guarantee 200ms compliance.
 
     clock_phase_trace is opt-in diagnostic instrumentation, not a time
     compliance measurement. It records root setup, iterations, restoration,
@@ -91,6 +109,8 @@ def select_mcts(board, movetime_ms=200, model=None, *, fast_relative=False,
         raise ValueError('total_budget_from_call must be bool')
     if clock_phase_trace is not None and not hasattr(clock_phase_trace, 'append'):
         raise ValueError('clock_phase_trace must support append')
+    if type(linear_root_choice) is not bool:
+        raise ValueError('linear_root_choice must be bool')
 
     root_moves = _legal_moves_once(board, single_pass=single_pass_legal_moves)
     if not root_moves:
@@ -223,7 +243,7 @@ def select_mcts(board, movetime_ms=200, model=None, *, fast_relative=False,
             raise AssertionError('MCTS corrupted caller board')
     verified = time.monotonic() if clock_phase_trace is not None else None
     # Child visits measure how often each root move was examined.
-    best = max(root.children, key=lambda c: (c.visits, -root_moves.index(c.move)))
+    best = _best_root_child(root, root_moves, linear=linear_root_choice)
     choice_finished = time.monotonic() if clock_phase_trace is not None else None
     elapsed = (time.monotonic() - start) * 1000.0
     if clock_phase_trace is not None:
