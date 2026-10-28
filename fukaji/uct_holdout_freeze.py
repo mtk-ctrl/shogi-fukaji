@@ -47,6 +47,7 @@ def verify(games_path, report_path, manifest_path=MANIFEST):
             raise ValueError("holdout has no legal move")
     result = validate_parent_split(m["development"], m["holdout"], source_sha256=SOURCE_SHA)
     result.update({"status":"verified_frozen_holdout_no_timing_or_training",
+                   "legality_replayed":True,
                    "source_games_legally_replayed":len(games),
                    "holdout_prefixes_legally_replayed":12,
                    "model_bytes_checked":False,"measurement_started":False})
