@@ -82,6 +82,23 @@ class TotalClockABBAProtocolTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             summarize(records)
 
+    def test_mixed_parent_timing_is_counted_without_strength_claim(self):
+        records = []
+        for label, flag in ORDER:
+            for i in range(12):
+                records.append({
+                    "pass": label, "single_pass": True, "total_budget": flag,
+                    "pair": i, "target_ply": (12, 50, 110)[i // 4],
+                    "sfen": "unique_" + str(i), "move": "7g7f",
+                    "iterations": 10, "internal_elapsed_ms": 180.0,
+                    "elapsed_ms": (210.0 if i in (1, 7) else 190.0) if flag else 200.0,
+                })
+        result = summarize(records)
+        self.assertEqual(result["on_faster_positions"], 10)
+        self.assertEqual(result["on_over_200ms"], 4)
+        self.assertEqual(result["off_over_200ms"], 0)
+        self.assertFalse(result["model_promoted"])
+
 
 if __name__ == "__main__":
     unittest.main()
