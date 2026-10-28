@@ -1,0 +1,13 @@
+{
+  "enabled": false,
+  "research_only": true,
+  "training_allowed": false,
+  "adoption_allowed": false,
+  "source_run_id": 40610843978,
+  "source_artifact_id": 12783855111,
+  "source_artifact_sha256": "4b906197065ee8f50f50dad53b65185d57e04eb78706b39005cf5866402e7508",
+  "old_run_id": 40434466661,
+  "old_artifact_id": 12702814791,
+  "old_artifact_sha256": "7ae19b39789a8c1086f0513f306cf15feeebd14f76a0c0b110a120b457ed4fae",
+  "selection_seed": "fukaji-g8-selection-v1|20261028|40610843978"
+}
