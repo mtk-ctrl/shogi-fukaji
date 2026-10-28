@@ -31,7 +31,7 @@ class G8PairedTests(unittest.TestCase):
 
     def test_wilson_decisive_only(self):
         self.assertIsNone(wilson(0, 0))
-        self.assertEqual(wilson(0, 10)[0], 0)
+        self.assertAlmostEqual(wilson(0, 10)[0], 0.0, places=12)
         lo, hi = wilson(50, 50)
         self.assertLess(lo, 0.5)
         self.assertGreater(hi, 0.5)
