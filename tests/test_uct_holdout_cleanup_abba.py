@@ -108,6 +108,17 @@ class HoldoutReserveProtocolTests(unittest.TestCase):
         self.assertEqual(attested["source_games_legally_replayed"], 240)
         self.assertFalse(metadata["legality_replayed"])
 
+    def test_frozen_holdout_result_document_provenance(self):
+        report = Path("docs/UCT_HOLDOUT_RESERVE_ABBA_RESULTS_20261029.md").read_text()
+        manifest = json.loads(Path("docs/UCT_HOLDOUT_12_PARENTS_20261029.json").read_text())
+        self.assertIn(manifest["source_sha256"], report)
+        self.assertIn(manifest["model_sha256"], report)
+        self.assertIn("40785258037", report)
+        self.assertIn("f0bbbb95ea02718aa63a0613d65e552dde2380368f8de35c23582319c273a05b", report)
+        self.assertIn("32982d7c81c646b316644cb4bc42bdfb6904a6921817e0671fd7e94ee03de0dd", report)
+        self.assertIn("200.677ms", report)
+        self.assertIn("厳密保証", report)
+
     def test_reject_manifest_overlap_before_any_search(self):
         bad = {"holdout": [{"pair": i, "seed": 0} for i in range(12)]}
         with self.assertRaises(ValueError):
