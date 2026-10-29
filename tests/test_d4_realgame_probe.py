@@ -32,7 +32,7 @@ class D4RealgameProbeTests(unittest.TestCase):
         self.assertEqual([c["stage"] for c in cases],
                          [stage for stage in STAGES for _ in range(6)])
         self.assertEqual(cases, freeze_cases(games))
-        self.assertEqual(SEED, "D4-20261030-frozen-real-games-v1")
+        self.assertEqual(SEED, "D4-20261030-first-proof-holdout-v1")
 
     def test_legal_history_and_illegal_history(self):
         board = board_from_moves(["7g7f", "3c3d"])

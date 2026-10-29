@@ -12,9 +12,10 @@
   "g8_zip_sha256": "9b5c004446f4b93a529d52fa96243ccbd5ac434373fe1ff69191bee9c8e6306e",
   "g8_model_sha256": "18b39f647caa458389a1900b875337adadac74ae37e27343e7f0094ed663c492",
   "sample_parent_pairs": 24,
-  "selection_seed": "D4-20261030-frozen-real-games-v1",
+  "selection_seed": "D4-20261030-first-proof-holdout-v1",
   "movetime_ms": 200,
   "proof_budget_ms": 25,
   "search_max_depth": 4,
-  "abba": true
+  "abba": true,
+  "early_exit": true
 }

@@ -48,7 +48,8 @@ def _checking_mates_in_one(board, budget):
     return tuple(result)
 
 
-def prove_mate_up_to_three(board, *, max_legal_moves=50000, deadline=None):
+def prove_mate_up_to_three(board, *, max_legal_moves=50000, deadline=None,
+                           stop_after_first=False):
     """Exhaustive 1/3-ply proof using python-shogi's full legal-move rules.
 
     A three-ply proof contains the COMPLETE set of defender replies, each
@@ -58,10 +59,20 @@ def prove_mate_up_to_three(board, *, max_legal_moves=50000, deadline=None):
     positional moves, perpetual-check adjudication, or actual playing strength.
     """
     budget = _Budget(max_legal_moves, deadline)
+    if type(stop_after_first) is not bool:
+        raise ValueError("stop_after_first must be boolean")
     mate_one = []
     mate_three = []
     checked_first_moves = 0
     checked_defenses = 0
+
+    def result(scope):
+        return {"scope": scope, "mate_in_one": tuple(mate_one),
+                "mate_in_three": tuple(mate_three),
+                "first_moves_checked": checked_first_moves,
+                "defenses_checked": checked_defenses,
+                "legal_moves_examined": budget.examined}
+
     for first in tuple(board.legal_moves):
         budget.step()
         checked_first_moves += 1
@@ -72,6 +83,8 @@ def prove_mate_up_to_three(board, *, max_legal_moves=50000, deadline=None):
             replies = tuple(board.legal_moves)
             if not replies:
                 mate_one.append(first.usi())
+                if stop_after_first:
+                    return result("first_proven_mate_only_not_all_root_moves")
                 continue
             defenses = []
             for reply in replies:
@@ -90,16 +103,11 @@ def prove_mate_up_to_three(board, *, max_legal_moves=50000, deadline=None):
                     "first": first.usi(),
                     "defenses": tuple(defenses),
                 })
+                if stop_after_first:
+                    return result("first_proven_mate_only_not_all_root_moves")
         finally:
             board.pop()
-    return {
-        "scope": "complete_legal_mate_in_1_or_3_not_best_move_or_Elo",
-        "mate_in_one": tuple(mate_one),
-        "mate_in_three": tuple(mate_three),
-        "first_moves_checked": checked_first_moves,
-        "defenses_checked": checked_defenses,
-        "legal_moves_examined": budget.examined,
-    }
+    return result("complete_legal_mate_in_1_or_3_not_best_move_or_Elo")
 
 
 def main():

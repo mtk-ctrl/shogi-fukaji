@@ -22,7 +22,8 @@ DEVELOPMENT_POSITIONS = (
 
 
 def select_with_mate_assist(board, *, movetime_ms=200, max_depth=2,
-                            model=None, proof_ms=25, max_legal_moves=1500):
+                            model=None, proof_ms=25, max_legal_moves=1500,
+                            early_exit=False):
     """Research-only candidate. Return proof status and total measured time.
 
     If a complete mate-in-1 or mate-in-3 is proved, return that legal first
@@ -41,7 +42,8 @@ def select_with_mate_assist(board, *, movetime_ms=200, max_depth=2,
     try:
         proof = prove_mate_up_to_three(
             board, max_legal_moves=max_legal_moves,
-            deadline=started + limit_ms / 1000)
+            deadline=started + limit_ms / 1000,
+            stop_after_first=early_exit)
     except ProofIncomplete:
         proof = None
         status = "incomplete"

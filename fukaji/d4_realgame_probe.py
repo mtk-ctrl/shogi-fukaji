@@ -31,12 +31,15 @@ SOURCE_ID = 12793918544
 SOURCE_NAME = "fukaji-g8-paired-aggregate-40637486947"
 SOURCE_ZIP_SHA = "a3a8bee0a63478b296c7362cc33adb33c31d37407ae3b28527b0e1c9688c3b14"
 SOURCE_GAMES_SHA = "60eb9ab4dadc3776e43ac49cf27bd04137477c339850fdaa7db2265248a8d3bf"
-SEED = "D4-20261030-frozen-real-games-v1"
+SEED = "D4-20261030-first-proof-holdout-v1"
 STAGES = ("terminal_minus_1", "terminal_minus_3", "terminal_minus_2", "midgame_ply_40")
 PER_STAGE = 6
 SAMPLES = PER_STAGE * len(STAGES)
-FROZEN_PAIRS = (70, 80, 88, 79, 100, 73, 76, 69, 66, 67, 113, 108,
-                62, 90, 60, 63, 65, 91, 116, 57, 50, 95, 71, 119)
+EXCLUDED_DEVELOPMENT_PAIRS = frozenset((
+    70, 80, 88, 79, 100, 73, 76, 69, 66, 67, 113, 108,
+    62, 90, 60, 63, 65, 91, 116, 57, 50, 95, 71, 119))
+FROZEN_PAIRS = (77, 98, 106, 75, 97, 85, 58, 107, 53, 118, 55, 56,
+                92, 89, 104, 83, 96, 112, 99, 102, 94, 105, 81, 103)
 
 
 def digest(raw):
@@ -51,6 +54,7 @@ def expected_request(enabled=False):
             "g8_artifact_id": G8_ID, "g8_zip_sha256": G8_ZIP_SHA,
             "g8_model_sha256": G8_SHA, "sample_parent_pairs": SAMPLES,
             "selection_seed": SEED, "movetime_ms": 200,
+            "early_exit": True,
             "proof_budget_ms": 25, "search_max_depth": 4, "abba": True}
 
 
@@ -87,7 +91,8 @@ def freeze_cases(games):
     by_pair = {}
     for row in games:
         if (row["status"] == "checkmate" and len(row["moves"]) >= 48
-                and row["pair"] >= 48):
+                and row["pair"] >= 48
+                and row["pair"] not in EXCLUDED_DEVELOPMENT_PAIRS):
             by_pair.setdefault(row["pair"], []).append(row)
     order = sorted(by_pair, key=lambda pair: digest((SEED + "|" + str(pair)).encode()))
     if len(order) < SAMPLES:
@@ -199,7 +204,8 @@ def probe_case(case, model):
         else:
             result = select_with_mate_assist(
                 board, movetime_ms=200, max_depth=4, model=model,
-                proof_ms=25, max_legal_moves=1500)
+                proof_ms=25, max_legal_moves=1500,
+                early_exit=True)
             move, depth, nodes = (result["move"], result["search_depth"],
                                   result["nodes"])
             elapsed, status, proof_elapsed = (
