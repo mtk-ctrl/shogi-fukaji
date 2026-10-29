@@ -7,6 +7,8 @@ on:
       - 'tests/test_d4_three_only_probe.py'
       - 'fukaji/d4_three_only_probe.py'
       - 'fukaji/d4_mate_assist.py'
+      - 'fukaji/d4_realgame_probe.py'
+      - 'tests/test_d4_realgame_probe.py'
       - 'tests/test_d4_mate_assist.py'
       - '.github/workflows/d4-mate-ci.yml'
   push:
@@ -17,6 +19,8 @@ on:
       - 'tests/test_d4_three_only_probe.py'
       - 'fukaji/d4_three_only_probe.py'
       - 'fukaji/d4_mate_assist.py'
+      - 'fukaji/d4_realgame_probe.py'
+      - 'tests/test_d4_realgame_probe.py'
       - 'tests/test_d4_mate_assist.py'
       - '.github/workflows/d4-mate-ci.yml'
   workflow_dispatch:
@@ -40,4 +44,5 @@ jobs:
       - run: python -m unittest discover -s tests -p 'test_d4_three_only_probe.py' -v
       - run: python -m fukaji.d4_three_only_probe --max-positions 500 --max-legal-moves 4000 --max-examples 2
       - run: python -m unittest discover -s tests -p 'test_d4_mate_assist.py' -v
+      - run: python -m unittest discover -s tests -p 'test_d4_realgame_probe.py' -v
       - run: python -m fukaji.d4_mate_assist
