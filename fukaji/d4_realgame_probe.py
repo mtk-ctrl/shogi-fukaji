@@ -35,6 +35,8 @@ SEED = "D4-20261030-frozen-real-games-v1"
 STAGES = ("terminal_minus_1", "terminal_minus_3", "terminal_minus_2", "midgame_ply_40")
 PER_STAGE = 6
 SAMPLES = PER_STAGE * len(STAGES)
+FROZEN_PAIRS = (70, 80, 88, 79, 100, 73, 76, 69, 66, 67, 113, 108,
+                62, 90, 60, 63, 65, 91, 116, 57, 50, 95, 71, 119)
 
 
 def digest(raw):
@@ -84,7 +86,8 @@ def freeze_cases(games):
     """Choose one completed game per parent; never use played moves as labels."""
     by_pair = {}
     for row in games:
-        if row["status"] == "checkmate" and len(row["moves"]) >= 48:
+        if (row["status"] == "checkmate" and len(row["moves"]) >= 48
+                and row["pair"] >= 48):
             by_pair.setdefault(row["pair"], []).append(row)
     order = sorted(by_pair, key=lambda pair: digest((SEED + "|" + str(pair)).encode()))
     if len(order) < SAMPLES:
@@ -181,6 +184,7 @@ def probe_case(case, model):
             b["first"] for b in oracle["mate_in_three"]]
     except ProofIncomplete:
         oracle_status, oracle_moves = "unknown", []
+    oracle_elapsed_ms = (time.monotonic() - oracle_start) * 1000
     if snapshot(board) != before:
         raise AssertionError("oracle changed board/history")
     observations = []
@@ -213,7 +217,7 @@ def probe_case(case, model):
     return {k: v for k, v in case.items() if k not in ("moves", "_full_moves")} | {
         "position_sfen": board.sfen(), "in_check": board.is_check(),
         "oracle_status": oracle_status, "oracle_first_moves": oracle_moves,
-        "oracle_ms": round((time.monotonic() - oracle_start) * 1000, 3),
+        "oracle_ms": round(oracle_elapsed_ms, 3),
         "observations": observations}
 
 
@@ -235,6 +239,8 @@ def run(out):
     model_file.write_bytes(raw_model)
     model = RelativeValue(model_file, mix_percent=25)
     cases = freeze_cases(source_rows(source))
+    if tuple(case["pair"] for case in cases) != FROZEN_PAIRS:
+        raise ValueError("frozen source parent selection changed")
     results = [probe_case(case, model) for case in cases]
     data = {"scope": "D4_new_source_not_training_not_general_strength",
             "source_run": SOURCE_RUN, "source_zip_sha256": SOURCE_ZIP_SHA,
