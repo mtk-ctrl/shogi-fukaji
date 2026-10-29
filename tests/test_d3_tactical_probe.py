@@ -122,6 +122,10 @@ class D3TacticalProbeTests(unittest.TestCase):
         for observation in diagnostic["results"]:
             self.assertGreater(observation["nodes"], 0)
             self.assertIsInstance(observation["takes_defended_silver"], bool)
+        self.assertEqual([x["move"] for x in diagnostic["results"]],
+                         ["5e5d", "5e7e", "5e7e"])
+        self.assertEqual([x["takes_defended_silver"] for x in diagnostic["results"]],
+                         [True, False, False])
         # A legal recapture is a tactical risk, not proof of a unique best move.
 
     def test_order_is_abba(self):
