@@ -5,6 +5,9 @@ on:
       - 'fukaji/quiescence.py'
       - 'fukaji/engine.py'
       - 'tests/test_d3_quiescence.py'
+      - 'fukaji/d3_tactical_probe.py'
+      - 'tests/test_d3_tactical_probe.py'
+      - '.github/fukaji-d3-tactical-request.json'
       - '.github/workflows/d3-quiescence-ci.yml'
   workflow_dispatch:
 permissions:
@@ -21,3 +24,6 @@ jobs:
       - run: python -m pip install -r requirements.txt
       - run: python -m unittest discover -s tests -p 'test_d3_quiescence.py' -v
       - run: python -m unittest discover -s tests -p 'test_engine.py' -v
+      - run: python -m unittest discover -s tests -p 'test_d3_tactical_probe.py' -v
+      - run: python -m fukaji.d3_tactical_probe --self-check
+      - run: python -m fukaji.d3_tactical_probe --check-request .github/fukaji-d3-tactical-request.json
