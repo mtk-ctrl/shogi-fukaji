@@ -1,6 +1,6 @@
 # D2：同じ総200msで合法手列挙の重複を削減できるか
 
-状態：計画確定、実装・実測未実施。強化軸は深路の**探索高速化**。D1は深さ上限を広げても深く読めず、呼出全体の超過が増えたため、次は単一律速に限定する。正式USI・モデル・既定値・採用は変更しない。
+状態：研究専用・既定OFFの比較実装をPR#102で研究mainへ統合（2026-10-29、commit `b91dbb82e8ded9692066025ed4c72172e3f4f747`）。branch D2 CI [40865218885](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/40865218885) とD1回帰 [40865218939](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/40865218939) は成功。main CIは取得・検証待ち。固定48親の実測・独立成果物監査・40局対局・棋力向上は未実施。強化軸は深路の**探索高速化**。D1は深さ上限を広げても深く読めず、呼出全体の超過が増えたため、次は単一律速に限定する。正式USI・モデル・既定値・採用は変更しない。
 
 ## 問いと比較の公平性
 同じG8モデル・同じ合法局面・同じ総200ms・同じ深さ上限6で、既定OFFの`FastMoveList`相当の単一走査合法手列挙だけを有効にすると、合法性・着手選択を壊さず完了深さが増えるか。
@@ -23,3 +23,9 @@ D1は探索の内部期限がroot準備後に始まり、Bの超過96/96だっ�
 D2の初期コード・テスト・PR/CIは45〜90分の作業見積り（実測ではない）。48×4×200msは探索本体38.4秒相当だが、モデル/原本取得・再生・CI・集計・待機を含まない。次工程の終了見込みは実進捗で更新し、同一単発タスク`6adf4925c5288191af0f19a1dec5a0ad`をその時刻へ更新する。新規タスク・RRULEなし。
 
 参照：[D1実測結果](D1_DEPTH_CAP_RESULTS_20261029.md)／[ROADMAP](ROADMAP.md)。
+
+## 2026-10-29 実装進捗と次工程
+- 研究PR [#102](https://github.com/mtk-ctrl/shogi-fukaji/pull/102) をsquash研究mainへ統合。`fukaji/d2_fastmove_probe.py`、`tests/test_d2_fastmove_probe.py`、既存`tests/test_d2_deadline.py`、専用`d2-fastmove-probe.yml`、明示request（既定`enabled:false`）を整備。
+- D1の48親選定manifest SHA `823d97b85df4a8a6c8638e9fb6cdbcafc1a5d08edff1c03f34256df9c1a56d73` を固定照合。固定深さ2の各群最大3親で着手・深さ・節点・合法性・履歴復元一致を確認してから48親×ABBAへ進む。計測はA/B共通の呼出開始200ms時計、上限6、FastMoveListだけOFF/ON。
+- branch CIのD2検査7件、D1回帰6件、既存Engine6件を実runログで確認。実測の合法性・速度・棋力改善を証明する検査ではない。
+- **次工程**：研究mainのCIを実取得確認→重いrun直前に27repo5状態と同目的重複を監査→1runnerの別明示requestで固定48親を実測→SHA/合法性/集計/成果物を独立監査→requestをdisabledへ戻しskip確認。main CIや全repo空き状況が取得できない場合は実測を起動せず、未確認事項を記録して同じタイマーで追跡する。
