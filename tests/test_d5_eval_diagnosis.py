@@ -3,7 +3,7 @@ import unittest
 
 from fukaji.d5_eval_diagnosis import (
     EXCLUDED, REMAINING, PLIES, auc, frozen_split, pair_bootstrap,
-    score_summary, verify_source,
+    score_summary, verify_source, feature_snapshot, development_error_cases,
 )
 
 
@@ -43,6 +43,31 @@ class D5EvaluationDiagnosisTests(unittest.TestCase):
         # rather than silently reporting zero losses.
         with self.assertRaises(ValueError):
             verify_source([])
+
+    def test_feature_snapshot_is_read_only_and_mover_relative(self):
+        import shogi
+        board = shogi.Board()
+        before = (board.sfen(), board.zobrist_hash(), len(board.move_stack))
+        features = feature_snapshot(board)
+        self.assertEqual(features["board_material_cp"], 0)
+        self.assertEqual(features["hand_material_cp"], 0)
+        self.assertIsInstance(features["own_king_zone_attacks"], int)
+        self.assertIsInstance(features["opponent_king_zone_attacks"], int)
+        self.assertEqual((board.sfen(), board.zobrist_hash(),
+                          len(board.move_stack)), before)
+
+    def test_error_cases_exclude_correct_predictions(self):
+        def row(pair, g8, classical, outcome):
+            return {"pair": pair, "ply": 20, "g8_black": True,
+                    "g8": g8, "classical": classical, "outcome": outcome,
+                    "features": {"board_material_cp": 0}}
+        errors = development_error_cases([
+            row(1, 100, 100, 1), row(2, -100, 100, 1),
+            row(3, -100, -100, -1),
+        ])
+        self.assertEqual([r["pair"] for r in errors], [2])
+        self.assertFalse(errors[0]["g8_correct"])
+        self.assertTrue(errors[0]["classical_correct"])
 
 
 if __name__ == "__main__":
