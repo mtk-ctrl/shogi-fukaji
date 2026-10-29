@@ -41,6 +41,22 @@ class D3QuiescenceTests(unittest.TestCase):
         self.assertEqual(run_q(board, quiet_left=1), expected)
         self.assertEqual((board.sfen(), tuple(board.move_stack)), before)
 
+    def test_poison_capture_horizon_has_independent_reply(self):
+        # Black rook can capture a silver, but the white rook behind it
+        # immediately recaptures. The static leaf overvalues that capture.
+        board = shogi.Board("8k/9/4r4/4s4/4R4/9/9/9/8K b - 1")
+        bad = shogi.Move.from_usi("5e5d")
+        reply = shogi.Move.from_usi("5c5d")
+        self.assertIn(bad, board.legal_moves)
+        board.push(bad)
+        try:
+            self.assertIn(reply, board.legal_moves)
+            static_for_black = -evaluate(board)
+            corrected_for_black = -run_q(board, quiet_left=1)
+            self.assertLess(corrected_for_black, static_for_black)
+        finally:
+            board.pop()
+
     def test_capture_is_selected_from_legal_moves(self):
         board = shogi.Board("4k4/9/9/4p4/4R4/9/9/9/4K4 b - 1")
         capture = shogi.Move.from_usi("5e5d")
