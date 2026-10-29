@@ -57,6 +57,25 @@ class D3QuiescenceTests(unittest.TestCase):
         finally:
             board.pop()
 
+    def test_non_capture_promotion_is_tactical(self):
+        board = shogi.Board("8k/9/4P4/9/9/9/9/9/8K b - 1")
+        promoted = shogi.Move.from_usi("5c5b+")
+        quiet = shogi.Move.from_usi("5c5b")
+        self.assertIn(promoted, board.legal_moves)
+        self.assertIn(quiet, board.legal_moves)
+        tactical = tactical_moves(board, ordered_moves(board))
+        self.assertIn(promoted, tactical)
+        self.assertNotIn(quiet, tactical)
+
+    def test_pawn_drop_mate_is_not_a_tactical_move(self):
+        # White king has no free escape square; a black pawn dropped at 5b
+        # would be supported by the black gold on 5c. Uchi-fuzume is illegal.
+        board = shogi.Board("3nkn3/3p1p3/4G4/9/9/9/9/9/8K b P 1")
+        drop = shogi.Move.from_usi("P*5b")
+        self.assertIn(drop, board.generate_pseudo_legal_moves())
+        self.assertNotIn(drop, board.legal_moves)
+        self.assertNotIn(drop, tactical_moves(board, ordered_moves(board)))
+
     def test_capture_is_selected_from_legal_moves(self):
         board = shogi.Board("4k4/9/9/4p4/4R4/9/9/9/4K4 b - 1")
         capture = shogi.Move.from_usi("5e5d")
