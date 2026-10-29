@@ -1,0 +1,16 @@
+{
+  "enabled": false,
+  "research_only": true,
+  "adoption_allowed": false,
+  "training_allowed": false,
+  "g8_model_run": 40636602223,
+  "model_sha256": "18b39f647caa458389a1900b875337adadac74ae37e27343e7f0094ed663c492",
+  "movetime_ms": 200,
+  "depth_cap": 6,
+  "mix_percent": 25,
+  "fast_relative": true,
+  "root_alpha_beta": true,
+  "deadline_from_call": true,
+  "fast_move_list": false,
+  "runner_jobs": 1
+}
