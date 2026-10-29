@@ -10,10 +10,11 @@ UNGUARDED = "8k/9/7R1/9/9/9/9/9/8K b - 1"
 
 
 def snapshot(board):
+    # python-shogi leaves zero-count keys after push/pop; compare live history.
     return (
         board.sfen(),
         tuple(move.usi() for move in board.move_stack),
-        dict(board.transpositions),
+        {key: count for key, count in board.transpositions.items() if count > 0},
         board.zobrist_hash(),
     )
 
