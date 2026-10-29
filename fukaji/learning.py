@@ -30,9 +30,9 @@ def features(board):
     x[-1] = 1.0 if board.turn == shogi.BLACK else -1.0
     return x
 
-def load_games(path, feature_fn=features):
+def iter_games(path, feature_fn=features):
+    """Yield one fully validated completed game at a time."""
     seen = set()
-    rows = []
     for line_no, line in enumerate(Path(path).read_text(encoding="utf-8").splitlines(), 1):
         if not line.strip():
             continue
@@ -74,8 +74,12 @@ def load_games(path, feature_fn=features):
                 raise ValueError(f"line {line_no}: inconsistent winner")
         else:
             continue
-        rows.append((group_key, np.stack(positions), np.array([1.0 if turn == g["winner"] else 0.0 for turn in turns], dtype=np.float32)))
-    return rows
+        yield (group_key, np.stack(positions), np.array([1.0 if turn == g["winner"] else 0.0 for turn in turns], dtype=np.float32))
+
+
+def load_games(path, feature_fn=features):
+    """Compatibility list API; validation and ordering are unchanged."""
+    return list(iter_games(path, feature_fn=feature_fn))
 
 def partition_rows(rows):
     """Deterministic independent *parent-game* partition, not position split.

@@ -20,7 +20,7 @@ import numpy as np
 
 from .g8_artifact_selection import artifact_bytes
 from .generation8_train import safe_read
-from .learning import load_games
+from .learning import iter_games
 from .relative_value import relative_features
 from .nnue_research import HIDDEN, INPUTS, SmallNNUE
 
@@ -79,6 +79,16 @@ def frozen_parts(rows, mapping):
     return parts
 
 
+def bounded_training_rows(rows, mapping):
+    """Retain exactly the optimizer's fixed sample, never sample holdouts."""
+    for group, x, y in rows:
+        if mapping.get(group) == "train" and len(y) > MAX_POSITIONS_PER_GAME:
+            selected = np.linspace(0, len(y) - 1, MAX_POSITIONS_PER_GAME,
+                                   dtype=np.int64)
+            x, y = x[selected], y[selected]
+        yield group, x, y
+
+
 def fit_train_only(train, *, epochs=EPOCHS, learning_rate=LEARNING_RATE,
                    seed=SEED, max_positions=MAX_POSITIONS_PER_GAME,
                    weight_decay=WEIGHT_DECAY):
@@ -132,7 +142,9 @@ def fit_train_only(train, *, epochs=EPOCHS, learning_rate=LEARNING_RATE,
 def loss(part, model):
     total = 0.0
     samples = 0
+    games = 0
     for x, y in part:
+        games += 1
         if x.shape[1] != INPUTS + 1 or len(x) != len(y):
             raise ValueError("invalid evaluation rows")
         for start in range(0, len(y), 128):
@@ -143,7 +155,7 @@ def loss(part, model):
             logits = hidden @ model.output_weights + model.output_bias
             total += float((np.logaddexp(0, logits) - labels * logits).sum())
             samples += len(labels)
-    return {"games": len(part), "positions": samples,
+    return {"games": games, "positions": samples,
             "log_loss": total / samples if samples else None}
 
 
@@ -176,11 +188,20 @@ def run(request_path, out_dir=None):
     with TemporaryDirectory() as tmp:
         path = Path(tmp) / "mates.jsonl"
         path.write_bytes(games_raw)
-        rows = load_games(path, feature_fn=relative_features)
-    if len(rows) != 830:
-        raise ValueError("unexpected verified mate count")
-    parts = frozen_parts(rows, mapping)
-    model, stats = fit_train_only(parts["train"])
+        rows = list(bounded_training_rows(
+            iter_games(path, feature_fn=relative_features), mapping))
+        if len(rows) != 830:
+            raise ValueError("unexpected verified mate count")
+        parts = frozen_parts(rows, mapping)
+        model, stats = fit_train_only(parts["train"])
+        metrics = {key: loss(value, model) for key, value in parts.items()
+                   if key != "train"}
+        # Report train loss over every original position, as before. The
+        # second pass holds at most one full training game at a time.
+        metrics["train"] = loss(
+            ((x, y) for group, x, y in iter_games(
+                path, feature_fn=relative_features)
+             if mapping[group] == "train"), model)
     root = Path(out_dir)
     root.mkdir(parents=True, exist_ok=True)
     model_path = root / "small-nnue-research-unadopted.npz"
@@ -198,7 +219,10 @@ def run(request_path, out_dir=None):
         "training": {**stats, "lr": LEARNING_RATE, "seed": SEED,
                      "weight_decay": WEIGHT_DECAY, "train_games_only": 665,
                      "validation_test_used_for_tuning": False},
-        "metrics": {key: loss(value, model) for key, value in parts.items()},
+        "metrics": metrics,
+        "feature_storage": {"train_positions_per_game_max": MAX_POSITIONS_PER_GAME,
+                            "holdout_positions": "all",
+                            "reported_train_loss": "all_positions_streamed"},
         "unresolved_teacher_games": 0, "longthink_teacher_games": 0,
         "model_promoted": False, "engine_modified": False,
         "strength_proven": False,
