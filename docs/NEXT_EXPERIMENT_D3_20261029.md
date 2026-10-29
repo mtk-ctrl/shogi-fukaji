@@ -1,6 +1,20 @@
 # 深路D3：戦術の取り返し・王手応手を正しく読む静止探索
 
-状態：**研究PR#103を研究mainへsquash統合（971f377053afc2587dcbf1b269c35e735ff391b2）、branch軽量CI成功。main push CIは実run ID未取得。G8実測・対局・正式採用は未実施**。根拠：[D1診断](D1_DEPTH_CAP_RESULTS_20261029.md)、[D2実測](D2_FASTMOVE_RESULTS_20261029.md)。研究対象は深路のみ、雲路mainは読み取り専用。
+状態：**D3第7の関数別プロファイルPR#109・高速戦術手生成候補PR#110、第8のG8明示起動入口PR#111を研究mainへ統合。候補は既定OFF。branch軽量CI成功、mainのG8実200ms/独立対局/棋力向上は未実施。**
+
+
+## 2026-10-30 02:50〜03:00 JST：D3第7・第8工程（戦術の読みを保って計算負荷を削減）
+
+**強化軸**：戦術の正確さと計算効率。**実験**：D3静止探索の関数別負荷→非王手時の戦術手だけ先に合法性検査する単独候補→G8同時間実測入口。**実棋力検証**：今回の結果は古典評価・固定深さの開発用速度測定。棋力は固定G8総200msの独立戦術診断・先後交替40局、別seed240局で別途判定する。
+
+1. [PR#109](https://github.com/mtk-ctrl/shogi-fukaji/pull/109) squash研究main `74f9e93b7eda562fcdbc1a3de1136ac01357bba2`。cProfileで人工6局面×静止探索OFF/ON=12実探索の関数別自己CPU時間を計測。[branch CI #40925401886](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/40925401886) completed success（既存10+6+12、新規2テスト）。Q ONは合法手生成・王手判定・盤面履歴、及びその内部の攻撃判定/bit scanで負荷が増大。計測器によるオーバーヘッドがあるため自己CPU時間を200ms実戦速度と混同しない。[main push CI #40925670298](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/40925670298) completed success。
+2. [PR#110](https://github.com/mtk-ctrl/shogi-fukaji/pull/110) squash研究main `b752fd657c850d76a1baf2093db52fca1c0b9b63`。**研究用既定OFF**の `quiescence_fast_tactical` を追加。王手中は従来の全合法応手を維持。非王手中のみ駒取り・成り以外を疑似合法手段階で除外し、残りは従来の完全合法性判定と同じ安定順序で並べる。人工局面・合法到達局面で全戦術合法手と順序、固定深さ1の着手・節点・盤面/履歴を完全一致させる。打ち歩詰の不合法、王手回避、成りも回帰。既存D3/Engine/計測器28件+profile2件+新4件=34件の軽量テスト成功。[branch CI #40926027614](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/40926027614) completed success。D1/D2軽量CIは成功、重いdiagnosticはskip。[main push CI #40926147712](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/40926147712) completed success。
+3. **実計測**：同じCI runnerで6人工局面×各候補6回のABBA比較=72探索。計測器なし、古典評価・時間無制限・固定深さ1。各局面の従来→高速候補の時間中央値（ms）：銀51.1583→13.7163（比0.2681）、歩41.6218→11.6484（0.2799）、角29.8275→10.3793（0.3480）、先後反転42.4416→12.5460（0.2956）、王手回避8.0479→4.2759（0.5313）、成り0.7233→0.5702（0.7884）。**6局面すべてで選択手・探索節点一致、実時間短縮を観測**。ただし同系統の人工局面・同一CI環境の探索的測定であり、G8総200msの完了深さ・未見正答率・実戦勝率を示さない。cProfileでの6局面Q ON合計自己CPU時間は旧約980ms→候補約299ms（計測器あり、比較の補助値）。
+4. [PR#111](https://github.com/mtk-ctrl/shogi-fukaji/pull/111) squash研究main `39e0067e0f634331f5aa170abc603e84ca810ac2`。既存D3 workflowに、**明示requestがenabled=trueの時だけ**固定G8 SHAを元学習runから取得して1runnerで200ms×人工5局面×ABBA20探索し、合法性・時間・深さ・節点・証明/観測原本SHAを期限付きartifactへ保存する入口を追加。READMEを同一commitで同期。requestは**初期OFF**、[branch CI #40926403121](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/40926403121) completed success、diagnostic jobはskip。正式USI/モデル/既定値/雲路mainは不変。
+5. GitHubの正規REST読取 `github.fetch` によりmain push CI runと全27所有repoの稼働状態を取得可能と判明。27repoの最新100runを確認し、100件を超える8repoについては queued/in_progress/pending/waiting/requested の5状態を個別に追加取得した。監査時に深路の軽量CI実行中があり、**重いG8実測は未起動**。別目的runは停止していない。次は新しいmain CIと27repo5状態・同目的重複を再取得し、runner空き確認後のみ明示requestを1回ON→結果/モデルSHA/全合法性/統計/成果物独立照合→OFF/skipに戻す。高速候補のG8同時間効果は別実験として差分を混ぜない。
+
+**注意**：この段階で証明したのは「同じ探索手・節点を維持して人工局面の固定深さ計算を速くした」こと。G8の実棋力向上、正式採用、独立対局、未見正答率は未実施。
+
 
 ## 2026-10-30 01:52 JST：D3第6工程・複数人工戦術局面の実探索
 
