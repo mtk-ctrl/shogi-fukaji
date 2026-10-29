@@ -99,5 +99,16 @@ class UctLegalSnapshotTests(unittest.TestCase):
         self.assertNotEqual(g1, g2)
 
 
+    def test_real_snapshot_ready_after_deadline_is_not_timely(self):
+        board = shogi.Board()
+        supervisor = ResponseSupervisorModel()
+        _, snapshot = begin_with_legal_snapshot(
+            supervisor, board, go_received_at=0.0, fallback_ready_at=0.201)
+        self.assertTrue(snapshot.legal_moves)
+        move = supervisor.prepare(at=0.21)
+        receipt = supervisor.mark_sent(move=move, at=0.22)
+        self.assertFalse(receipt.fallback_ready_in_time)
+        self.assertFalse(receipt.response_sent_in_time)
+
 if __name__ == '__main__':
     unittest.main()
