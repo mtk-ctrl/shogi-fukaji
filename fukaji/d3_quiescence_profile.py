@@ -10,6 +10,7 @@ import argparse
 import cProfile
 import json
 import pstats
+import statistics
 import time
 
 import shogi
@@ -108,11 +109,65 @@ def run_profile(compare_fast=False):
     }
 
 
+
+def compare_uninstrumented():
+    """Small same-runner ABBA timing diagnostic; NOT a 200ms or strength test."""
+    scenarios = [(name, sfen) for name, sfen, *_ in RECAPTURE_VARIANTS]
+    for name in ("check_evasion", "quiet_promotion"):
+        scenarios.append((name, dict(CASES)[name]))
+    rows = []
+    for name, sfen in scenarios:
+        board = shogi.Board(sfen)
+        before = snapshot(board)
+        observations = []
+        for _ in range(3):
+            for fast in (False, True, True, False):
+                start = time.perf_counter()
+                move, depth, nodes = select_move(
+                    board, movetime_ms=200, max_depth=1, model=None,
+                    complete_depth=True, avoid_repetition=False,
+                    fast_relative=False, root_alpha_beta=True,
+                    fast_move_list=False, deadline_from_call=True,
+                    quiescence=True, quiescence_fast_tactical=fast,
+                )
+                ms = (time.perf_counter() - start) * 1000
+                if snapshot(board) != before:
+                    raise AssertionError(name + ": timing changed board/history")
+                if move == "resign" or shogi.Move.from_usi(move) not in board.legal_moves:
+                    raise AssertionError(name + ": illegal timed move")
+                observations.append({"fast": fast, "move": move,
+                                     "depth": depth, "nodes": nodes, "ms": ms})
+        if len({(x["move"], x["depth"], x["nodes"]) for x in observations}) != 1:
+            raise AssertionError(name + ": candidate changed search decision/nodes")
+        base = [x["ms"] for x in observations if not x["fast"]]
+        fast = [x["ms"] for x in observations if x["fast"]]
+        rows.append({
+            "case": name, "move": observations[0]["move"],
+            "nodes": observations[0]["nodes"],
+            "baseline_median_ms": round(statistics.median(base), 4),
+            "candidate_median_ms": round(statistics.median(fast), 4),
+            "ratio_candidate_to_baseline": round(
+                statistics.median(fast) / statistics.median(base), 4),
+            "samples_per_variant": len(base),
+        })
+    return {
+        "experiment": "D3_early_filter_uninstrumented_ABBA",
+        "scope": "6_constructed_development_positions_fixed_depth1_classical_no_G8",
+        "runs": 72, "samples_per_variant_per_position": 6,
+        "timing": "single CI runner exploratory wall time; no equal-200ms or Elo claim",
+        "rows": rows,
+    }
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--compare-fast", action="store_true")
+    parser.add_argument("--compare-wall", action="store_true")
     args = parser.parse_args()
+    if args.compare_wall:
+        print(json.dumps(compare_uninstrumented(), sort_keys=True, indent=2))
+        return
     result = run_profile(compare_fast=args.compare_fast)
     if args.json:
         print(json.dumps(result, sort_keys=True))
