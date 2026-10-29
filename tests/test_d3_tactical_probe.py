@@ -82,8 +82,9 @@ class D3TacticalProbeTests(unittest.TestCase):
         guarded_before, unguarded_before = snapshot(guarded), snapshot(unguarded)
         guarded_mates = enumerate_mate_in_one(guarded)
         unguarded_mates = enumerate_mate_in_one(unguarded)
-        self.assertIn("2c2b+", guarded_mates)
-        self.assertNotIn("2c2b+", unguarded_mates)
+        self.assertEqual(set(guarded_mates),
+                         {"2c1c", "2c1c+", "2c2a+", "2c2b+"})
+        self.assertEqual(unguarded_mates, ())
         self.assertEqual(len(guarded_mates), len(set(guarded_mates)))
         self.assertEqual(snapshot(guarded), guarded_before)
         self.assertEqual(snapshot(unguarded), unguarded_before)
