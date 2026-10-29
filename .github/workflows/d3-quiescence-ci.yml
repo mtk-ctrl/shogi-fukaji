@@ -9,6 +9,7 @@ on:
       - 'fukaji/d3_quiescence_profile.py'
       - 'tests/test_d3_quiescence_profile.py'
       - 'tests/test_d3_fast_tactical.py'
+      - 'tests/test_d3_workflow_gate.py'
       - 'tests/test_d3_tactical_probe.py'
       - '.github/fukaji-d3-tactical-request.json'
       - '.github/fukaji-d3-fast-tactical-request.json'
@@ -17,6 +18,7 @@ on:
   push:
     paths:
       - '.github/fukaji-d3-tactical-request.json'
+      - '.github/fukaji-d3-fast-tactical-request.json'
 permissions:
   contents: read
   actions: read
@@ -39,6 +41,7 @@ jobs:
       - run: python -m unittest discover -s tests -p 'test_d3_tactical_probe.py' -v
       - run: python -m unittest discover -s tests -p 'test_d3_quiescence_profile.py' -v
       - run: python -m unittest discover -s tests -p 'test_d3_fast_tactical.py' -v
+      - run: python -m unittest discover -s tests -p 'test_d3_workflow_gate.py' -v
       - run: python -m fukaji.d3_quiescence_profile
       - run: python -m fukaji.d3_quiescence_profile --compare-fast
       - run: python -m fukaji.d3_quiescence_profile --compare-wall
