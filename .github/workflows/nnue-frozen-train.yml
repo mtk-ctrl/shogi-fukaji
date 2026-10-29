@@ -1,0 +1,57 @@
+name: FUKAJI NNUE frozen 665-game train (research only)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/fukaji-nnue-train-request.json"
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-nnue-frozen-training
+  cancel-in-progress: false
+jobs:
+  preflight:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    outputs:
+      enabled: ${{ steps.protocol.outputs.enabled }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Verify unit tests and exact frozen NNUE request
+        id: protocol
+        run: |
+          python -m unittest discover -s tests -v
+          python -m fukaji.nnue_train_research --request .github/fukaji-nnue-train-request.json
+  train:
+    needs: preflight
+    if: needs.preflight.outputs.enabled == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: SHA-verify G8 artifact and train only frozen 665 checkmates
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: mtk-ctrl/shogi-fukaji
+        run: |
+          python -m fukaji.nnue_train_research \
+            --request .github/fukaji-nnue-train-request.json \
+            --out build/nnue/research
+      - name: Save unadopted NNUE model and frozen-split loss report
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-nnue-research-${{ github.run_id }}
+          path: build/nnue/research/
+          retention-days: 30
+          if-no-files-found: error
