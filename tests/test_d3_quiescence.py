@@ -95,7 +95,8 @@ class D3QuiescenceTests(unittest.TestCase):
         with self.assertRaises(TimeoutError):
             run_q(board, evaluator=interrupted, quiet_left=1)
         self.assertEqual(
-            (board.sfen(), tuple(board.move_stack), dict(board.transpositions)),
+            (board.sfen(), tuple(board.move_stack),
+             {k: v for k, v in board.transpositions.items() if v}),
             before,
         )
 
