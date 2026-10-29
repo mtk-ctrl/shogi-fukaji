@@ -4,7 +4,7 @@ This is an independent tactical *oracle*, not a USI engine feature or a
 trained label.  The attacker's first move must give check. Every legal reply
 must permit a checking mate on the next attacking move. A move limit raises
 INCOMPLETE rather than silently treating an unsearched line as no mate.
-All board mutations are undone, including on budget exhaustion.
+Board position and effective repetition counts are restored on every exit.\npython-shogi may retain harmless zero-count repetition dictionary keys.
 """
 from __future__ import annotations
 
