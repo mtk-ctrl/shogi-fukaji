@@ -11,6 +11,7 @@ on:
       - 'tests/test_d3_fast_tactical.py'
       - 'tests/test_d3_tactical_probe.py'
       - '.github/fukaji-d3-tactical-request.json'
+      - '.github/fukaji-d3-fast-tactical-request.json'
       - '.github/workflows/d3-quiescence-ci.yml'
   workflow_dispatch:
   push:
@@ -45,6 +46,7 @@ jobs:
       - run: python -m fukaji.d3_tactical_probe --mate-choice-check
       - run: python -m fukaji.d3_tactical_probe --poison-choice-check
       - run: python -m fukaji.d3_tactical_probe --check-request .github/fukaji-d3-tactical-request.json
+      - run: python -m fukaji.d3_tactical_probe --check-fast-request .github/fukaji-d3-fast-tactical-request.json
   diagnostic:
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
@@ -60,11 +62,16 @@ jobs:
         run: |
           python - <<'PY'
           import os
-          from fukaji.d3_tactical_probe import validate_request
-          enabled = validate_request(".github/fukaji-d3-tactical-request.json")
+          from fukaji.d3_tactical_probe import validate_request, validate_fast_request
+          baseline = validate_request(".github/fukaji-d3-tactical-request.json")
+          fast = validate_fast_request(".github/fukaji-d3-fast-tactical-request.json")
+          if baseline and fast:
+              raise ValueError("Only one D3 measurement request may be enabled")
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as out:
-              out.write("enabled=" + str(enabled).lower() + "\n")
-          print("D3_REQUEST_ENABLED=" + str(enabled).lower())
+              out.write("enabled=" + str(baseline or fast).lower() + "\n")
+              out.write("fast=" + str(fast).lower() + "\n")
+          print("D3_REQUEST_ENABLED=" + str(baseline or fast).lower())
+          print("D3_FAST_TACTICAL=" + str(fast).lower())
           PY
       - name: Download frozen G8 model
         if: steps.protocol.outputs.enabled == 'true'
@@ -76,10 +83,18 @@ jobs:
           path: build/d3/model
       - name: Run 1-runner fixed G8 200ms ABBA development probe
         if: steps.protocol.outputs.enabled == 'true'
+        env:
+          FAST_TACTICAL: ${{ steps.protocol.outputs.fast }}
         run: |
-          python -m fukaji.d3_tactical_probe \
-            --model build/d3/model/mover-relative-generation8-research.npz \
-            --out build/d3/results
+          if [ "$FAST_TACTICAL" = "true" ]; then
+            python -m fukaji.d3_tactical_probe --fast-tactical \
+              --model build/d3/model/mover-relative-generation8-research.npz \
+              --out build/d3/results
+          else
+            python -m fukaji.d3_tactical_probe \
+              --model build/d3/model/mover-relative-generation8-research.npz \
+              --out build/d3/results
+          fi
       - name: Save hash-pinned D3 research evidence
         if: steps.protocol.outputs.enabled == 'true'
         uses: actions/upload-artifact@v4
