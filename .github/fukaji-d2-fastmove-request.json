@@ -1,0 +1,16 @@
+{
+  "enabled": false,
+  "research_only": true,
+  "training_allowed": false,
+  "adoption_allowed": false,
+  "source_run": 40637486947,
+  "g8_model_run": 40636602223,
+  "max_positions": 48,
+  "movetime_ms": 200,
+  "depth_cap": 6,
+  "mix_percent": 25,
+  "fast_relative": true,
+  "root_alpha_beta": true,
+  "deadline_from_call": true,
+  "runner_jobs": 1
+}
