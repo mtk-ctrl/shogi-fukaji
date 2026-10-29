@@ -1,0 +1,20 @@
+{
+  "enabled": false,
+  "research_only": true,
+  "adoption_allowed": false,
+  "training_allowed": false,
+  "source_run": 40637486947,
+  "source_artifact_id": 12793918544,
+  "source_zip_sha256": "a3a8bee0a63478b296c7362cc33adb33c31d37407ae3b28527b0e1c9688c3b14",
+  "source_games_sha256": "60eb9ab4dadc3776e43ac49cf27bd04137477c339850fdaa7db2265248a8d3bf",
+  "g8_run": 40636602223,
+  "g8_artifact_id": 12793956048,
+  "g8_zip_sha256": "9b5c004446f4b93a529d52fa96243ccbd5ac434373fe1ff69191bee9c8e6306e",
+  "g8_model_sha256": "18b39f647caa458389a1900b875337adadac74ae37e27343e7f0094ed663c492",
+  "sample_parent_pairs": 24,
+  "selection_seed": "D4-20261030-frozen-real-games-v1",
+  "movetime_ms": 200,
+  "proof_budget_ms": 25,
+  "search_max_depth": 4,
+  "abba": true
+}
