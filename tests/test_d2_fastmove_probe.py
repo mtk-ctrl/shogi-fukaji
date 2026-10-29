@@ -58,6 +58,21 @@ class D2FastMoveTests(unittest.TestCase):
             with self.assertRaises(AssertionError):
                 fixed_depth_parity([p], None, per_category=1)
 
+    def test_in_check_and_hand_drop_legal_move_order_parity(self):
+        from fukaji.engine import ordered_moves
+        # Two deliberately small positions exercise check evasions and hand drops.
+        for sfen in (
+            "4k4/9/9/9/9/9/4r4/9/4K4 b - 1",
+            "4k4/9/9/9/9/9/9/9/4K4 b P 1",
+        ):
+            board = shogi.Board(sfen)
+            before = (board.sfen(), tuple(board.move_stack))
+            a = [move.usi() for move in ordered_moves(board, fast_move_list=False)]
+            b = [move.usi() for move in ordered_moves(board, fast_move_list=True)]
+            self.assertEqual(a, b)
+            self.assertTrue(a)
+            self.assertEqual((board.sfen(), tuple(board.move_stack)), before)
+
     def test_actual_fixed_depth_one_preserves_history(self):
         b = shogi.Board()
         before = (b.sfen(), tuple(b.move_stack))
