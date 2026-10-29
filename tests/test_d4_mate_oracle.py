@@ -26,7 +26,14 @@ class D4MateOracleTests(unittest.TestCase):
         result = prove_mate_up_to_three(board)
         self.assertEqual(set(result["mate_in_one"]),
                          {"2c1c", "2c1c+", "2c2a+", "2c2b+"})
-        # The CI proof found a distinct 3-ply forcing line: rook to 2a,\n        # the sole legal king evasion 1a1b, then rook promotion on 2b.\n        self.assertEqual(result["mate_in_three"], (\n            {"first": "2c2a", "defenses": (\n                {"reply": "1a1b", "mates": ("2a2b+",)},\n            )},\n        ))\n        self.assertEqual(result["first_moves_checked"],
+        # The CI proof found a distinct 3-ply forcing line: rook to 2a,
+        # the sole legal king evasion 1a1b, then rook promotion on 2b.
+        self.assertEqual(result["mate_in_three"], (
+            {"first": "2c2a", "defenses": (
+                {"reply": "1a1b", "mates": ("2a2b+",)},
+            )},
+        ))
+        self.assertEqual(result["first_moves_checked"],
                          len(tuple(board.legal_moves)))
         self.assertIn("not_best_move", result["scope"])
         self.assertEqual(snapshot(board), before)
