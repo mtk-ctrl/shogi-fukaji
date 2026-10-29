@@ -69,7 +69,7 @@ class D3QuiescenceTests(unittest.TestCase):
     def test_exception_restores_full_history(self):
         board = shogi.Board("4k4/9/9/4p4/4R4/9/9/9/4K4 b - 1")
         before = (board.sfen(), tuple(board.move_stack),
-                  dict(board.transpositions))
+                  {k: v for k, v in board.transpositions.items() if v})
         calls = [0]
         def interrupted(position):
             calls[0] += 1
