@@ -1,7 +1,7 @@
 """Research-only live child and history-bound legal fallback tests."""
 import unittest
 import shogi
-from fukaji.uct_live_supervisor_probe import run_live_supervisor_probe
+from fukaji.uct_live_supervisor_probe import (run_live_supervisor_probe, LiveProbeSession)
 
 
 class LiveSupervisorTests(unittest.TestCase):
@@ -86,6 +86,63 @@ class LiveSupervisorTests(unittest.TestCase):
             run_live_supervisor_probe('untrusted', board=self.board)
         with self.assertRaises(ValueError):
             run_live_supervisor_probe('normal', board=self.board, respond_after_ms=401)
+
+    def test_one_supervisor_across_two_go_commands(self):
+        session = LiveProbeSession()
+        first = run_live_supervisor_probe('normal', board=self.board,
+                                          session=session, respond_after_ms=30)
+        second = run_live_supervisor_probe('stale', board=self.board,
+                                           session=session, respond_after_ms=30)
+        self.assertEqual((first.generation, second.generation), (1, 2))
+        self.assertEqual(second.selected_move, second.fallback_move)
+        self.assertFalse(second.candidate_accepted)
+        self.assertEqual(first.outstanding_generations, ())
+        self.assertEqual(second.prior_outstanding_generations, ())
+        self.assertEqual(second.outstanding_generations, ())
+        self.assertTrue(first.board_unchanged and second.board_unchanged)
+
+    def test_synthetic_old_worker_ledger_survives_new_go(self):
+        # This is an intentionally SYNTHETIC unreleased generation, NOT
+        # a claim that a real OS child remained running.
+        session = LiveProbeSession()
+        model = session.model
+        model.position(key='old-history', legal_moves=('7g7f',), at=0.0)
+        old = model.go(at=0.0, fallback_ready_at=0.0, budget_ms=200)
+        model.stop(at=0.0)
+        model.confirm_sent(move='7g7f', at=0.0)
+        result = run_live_supervisor_probe('normal', board=self.board,
+                                           session=session, respond_after_ms=30)
+        self.assertEqual(result.generation, old + 1)
+        self.assertEqual(result.prior_outstanding_generations, (old,))
+        self.assertEqual(result.outstanding_generations, (old,))
+        self.assertFalse(result.worker_resources_released)
+        self.assertTrue(result.child_reaped and result.pipes_closed)
+
+    def test_failed_send_prevents_next_go_in_same_supervisor(self):
+        session = LiveProbeSession()
+        failed = run_live_supervisor_probe('normal', board=self.board,
+                                           session=session, simulate_sink_closed=True,
+                                           respond_after_ms=20)
+        self.assertFalse(failed.sent_confirmed)
+        with self.assertRaises(RuntimeError):
+            run_live_supervisor_probe('normal', board=self.board,
+                                      session=session, respond_after_ms=20)
+
+    def test_flush_lag_is_observed_not_assumed_zero(self):
+        r = run_live_supervisor_probe('silent', board=self.board,
+                                      budget_ms=400, respond_after_ms=10)
+        self.assertEqual(r.planned_response_at_ms, 10)
+        self.assertIsNotNone(r.response_flush_at_ms)
+        self.assertGreaterEqual(r.flush_delay_from_plan_ms, 0.0)
+        self.assertAlmostEqual(r.flush_delay_from_plan_ms,
+                               r.response_flush_at_ms - 10, places=6)
+        self.assertAlmostEqual(r.over_budget_at_flush_ms,
+                               max(0.0, r.response_flush_at_ms - 400), places=6)
+        self.assertFalse(r.gui_delivery_verified)
+
+    def test_invalid_session_rejected_before_child_spawn(self):
+        with self.assertRaises(ValueError):
+            run_live_supervisor_probe('normal', board=self.board, session=object())
 
 
 if __name__ == '__main__':

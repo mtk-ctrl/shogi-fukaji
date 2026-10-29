@@ -4,7 +4,7 @@ NOT connected to official USI, GUI, G8, training, or an engine. No shell,
 external command, forced termination, signals, or hard real-time guarantee.
 All children are fixed finite fixtures; child-reap is separate from response.
 """
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import json
 import os
 import select
@@ -18,6 +18,17 @@ from fukaji.uct_synthetic_ipc import SyntheticIpcModel
 _MODES = frozenset(('normal', 'delayed', 'fragmented', 'stale', 'wrong_key',
                     'malformed', 'silent', 'abrupt', 'linger'))
 _MAX_LINE = 4096
+
+
+@dataclass
+class LiveProbeSession:
+    """Persistent research-only supervisor clock and generation/resource ledger.
+
+    A ledger entry alone is NOT evidence of an actual surviving OS child.
+    Only the fixed finite fixture is launched by run_live_supervisor_probe.
+    """
+    model: SyntheticIpcModel = field(default_factory=SyntheticIpcModel)
+    epoch_ns: int = field(default_factory=time.monotonic_ns)
 
 
 @dataclass(frozen=True)
@@ -43,6 +54,11 @@ class LiveProbeResult:
     failed_sends: int
     rejected_messages: int
     board_unchanged: bool
+    generation: int = 0
+    prior_outstanding_generations: tuple[int, ...] = ()
+    planned_response_at_ms: float = 0.0
+    flush_delay_from_plan_ms: float | None = None
+    over_budget_at_flush_ms: float | None = None
 
 
 def _fixed_child(mode, generation, key):
@@ -75,7 +91,7 @@ def _fixed_child(mode, generation, key):
 
 def run_live_supervisor_probe(mode, *, board, budget_ms=400,
                               respond_after_ms=200, stop_after_ms=None,
-                              simulate_sink_closed=False):
+                              simulate_sink_closed=False, session=None):
     """Supervise a LIVE fixed child and send one bestmove to a PRIVATE pipe.
 
     All timings use the parent's monotonic clock. go is stamped before the
@@ -92,15 +108,24 @@ def run_live_supervisor_probe(mode, *, board, budget_ms=400,
         raise ValueError('invalid stop threshold')
     if type(simulate_sink_closed) is not bool:
         raise ValueError('invalid private sink fixture')
-    start_ns = time.monotonic_ns()
-    now_ms = lambda: (time.monotonic_ns() - start_ns) / 1e6
+    if session is not None and not isinstance(session, LiveProbeSession):
+        raise ValueError('invalid research supervisor session')
+    session = session if session is not None else LiveProbeSession()
+    # Session time is monotonic across multiple go calls. Result timings
+    # remain relative to the start of THIS go, not the first go.
+    now_ms = lambda: (time.monotonic_ns() - session.epoch_ns) / 1e6
+    go_at_ms = now_ms()
+    elapsed_ms = lambda: now_ms() - go_at_ms
     before_sfen = board.sfen()
     before_moves = tuple(m.usi() for m in board.move_stack)
-    model = SyntheticIpcModel()
+    model = session.model
+    prior_outstanding = model.outstanding_generations()
     snapshot = snapshot_from_board(board)
     ready_ms = now_ms()
-    model.position(key=snapshot.position_key, legal_moves=snapshot.legal_moves, at=0.0)
-    generation = model.go(at=0.0, fallback_ready_at=ready_ms / 1000.0,
+    model.position(key=snapshot.position_key, legal_moves=snapshot.legal_moves,
+                   at=go_at_ms / 1000.0)
+    generation = model.go(at=go_at_ms / 1000.0,
+                          fallback_ready_at=ready_ms / 1000.0,
                           budget_ms=budget_ms)
     fallback = snapshot.legal_moves[0] if snapshot.legal_moves else 'resign'
     process = subprocess.Popen(
@@ -124,7 +149,8 @@ def run_live_supervisor_probe(mode, *, board, budget_ms=400,
         child_fd = process.stdout.fileno()
         # Respond at a predetermined time or earlier on explicit stop; do not
         # wait for the child to exit before choosing a legal fallback.
-        threshold = min(respond_after_ms, stop_after_ms) if stop_after_ms is not None else respond_after_ms
+        planned_ms = min(respond_after_ms, stop_after_ms) if stop_after_ms is not None else respond_after_ms
+        threshold = go_at_ms + planned_ms
         while now_ms() < threshold:
             remaining = max(0.0, (threshold - now_ms()) / 1000.0)
             ready, _, _ = select.select([child_fd], [], [], min(0.005, remaining))
@@ -170,19 +196,19 @@ def run_live_supervisor_probe(mode, *, board, budget_ms=400,
         try:
             writer.write(payload)
             writer.flush()
-            flush_ms = now_ms()
-            receipt = model.confirm_sent(move=move, at=flush_ms / 1000.0)
+            flush_ms = elapsed_ms()
+            receipt = model.confirm_sent(move=move, at=now_ms() / 1000.0)
             sent = True
             sent_in_time = receipt.response_sent_in_time
             if read_fd is not None:
                 data = os.read(read_fd, len(payload))
-                read_ms = now_ms()
+                read_ms = elapsed_ms()
                 received = data == payload
         except (BrokenPipeError, OSError):
             model.send_failed(at=now_ms() / 1000.0)
         # Cooperative stop is sent AFTER the bestmove attempt. This does not
         # terminate or signal any unrelated process or GitHub Actions run.
-        stop_ms = now_ms()
+        stop_ms = elapsed_ms()
         try:
             process.stdin.write(b'stop\n')
             process.stdin.flush()
@@ -217,12 +243,17 @@ def run_live_supervisor_probe(mode, *, board, budget_ms=400,
             if pipes_closed:
                 model.resources_released(generation=generation, at=now_ms() / 1000.0)
     return LiveProbeResult(
-        mode, fallback, accepted, move, ready_ms, flush_ms, read_ms,
+        mode, fallback, accepted, move, ready_ms - go_at_ms, flush_ms, read_ms,
         sent_in_time, sent, received, False, alive_at_response, reaped,
         exit_code, pipes_closed, stop_ms, not model.outstanding_generations(),
         model.outstanding_generations(), model.failed_sends, rejected,
         board.sfen() == before_sfen and
-        tuple(m.usi() for m in board.move_stack) == before_moves)
+        tuple(m.usi() for m in board.move_stack) == before_moves,
+        generation=generation,
+        prior_outstanding_generations=prior_outstanding,
+        planned_response_at_ms=planned_ms,
+        flush_delay_from_plan_ms=(flush_ms - planned_ms if flush_ms is not None else None),
+        over_budget_at_flush_ms=(max(0.0, flush_ms - budget_ms) if flush_ms is not None else None))
 
 
 def _main(argv):
