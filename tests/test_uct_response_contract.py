@@ -122,5 +122,12 @@ class ResponseContractTests(unittest.TestCase):
         self.assertFalse(s.mark_sent(move=move, at=0.03).worker_stopped)
 
 
+    def test_offer_at_exact_deadline_is_rejected(self):
+        s, g = self.begin()
+        self.assertFalse(s.offer(generation=g, position_key='board-a',
+                                 move='2g2f', received_at=0.2))
+        self.assertEqual(s.prepare(at=0.2), '7g7f')
+
+
 if __name__ == '__main__':
     unittest.main()
