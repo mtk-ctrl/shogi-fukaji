@@ -1,6 +1,6 @@
 # 深路D4：独立した有界詰み・受けの合法証明
 
-状態：研究用の1手/3手詰み完全合法応手oracleをPR#114で検証中。正式USI/G8/既定値へ未接続、実戦棋力向上未証明。
+状態：D4第1工程の全合法応手oracleをPR#114→研究main `0df12a256de19018342597e3b07466bbf54eeb42`へ統合し、branch/main軽量CI成功。正式USI/G8/既定値へ未接続、実戦棋力向上未証明。
 
 ## 目的・先行結果
 - **強化軸**：詰ませる力と受けの正確さ。**実験**：D4・全合法応手による1手/3手詰み証明。**実棋力検証法**：開発用詰み正解集合→独立した未見局面での正答率/誤詰み/計算時間→同一G8・総200msでの選択手と時間→有望時に先後交替40局、別seed240局。実装数や人工局面だけで棋力向上としない。
@@ -21,4 +21,4 @@
 
 ## 実行記録
 - PR [#114](https://github.com/mtk-ctrl/shogi-fukaji/pull/114)。初回軽量CI [#40929894050](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/40929894050) 5件失敗。原因はpython-shogiのpop後に残る反復履歴の0回キーを実効履歴と誤認したテスト比較。0回を除く正規化で修正。
-- 修正後の軽量CI [#40929998105](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/40929998105) completed success。5件成功、実CLI出力で1手詰み4手と3手詰みの強制手順を取得。後続の3手詰み固定回帰・main統合/CIは別途確認して追記する。
+- 修正後の軽量CI [#40929998105](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/40929998105) completed success。5件成功、実CLI出力で1手詰み4手と3手詰みの強制手順を取得。3手詰み強制手順の固定回帰を追加する際、改行のエスケープを誤りbranch CI #40930110148が失敗。文字列の改行を修正して再実行した最終[branch CI #40930203363](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/40930203363)は5件成功・実CLI出力一致。PR#114をsquash統合し、[main push CI #40930313912](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/40930313912) completed success。mainのコード・テスト・workflow・README・D4正本5ファイルを読戻し。関連する既存のbranch push CIは古い失敗commitを参照したものがあり、最新の成功と混同しない。
