@@ -311,6 +311,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--self-check", action="store_true")
     parser.add_argument("--mate-choice-check", action="store_true")
+    parser.add_argument("--poison-choice-check", action="store_true")
     parser.add_argument("--check-request")
     parser.add_argument("--model")
     parser.add_argument("--out")
@@ -320,6 +321,9 @@ def main():
         return
     if args.mate_choice_check:
         print(json.dumps(mate_choice_diagnostic(), indent=2))
+        return
+    if args.poison_choice_check:
+        print(json.dumps(poison_capture_choice_diagnostic(), indent=2))
         return
     if args.check_request:
         print(json.dumps({"enabled": validate_request(args.check_request)}))
