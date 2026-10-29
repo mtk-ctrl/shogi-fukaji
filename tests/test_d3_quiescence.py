@@ -47,7 +47,7 @@ class D3QuiescenceTests(unittest.TestCase):
         self.assertIn(capture, board.legal_moves)
         self.assertIn(capture, tactical_moves(board, ordered_moves(board)))
         before = (board.sfen(), tuple(board.move_stack))
-        run_q(board)
+        run_q(board, quiet_left=1)
         self.assertEqual((board.sfen(), tuple(board.move_stack)), before)
 
     def test_in_check_never_stands_pat(self):
@@ -57,7 +57,7 @@ class D3QuiescenceTests(unittest.TestCase):
         def guarded_evaluate(position):
             self.assertFalse(position.is_check(), "static evaluation in check")
             return evaluate(position)
-        result = run_q(board, evaluator=guarded_evaluate)
+        result = run_q(board, evaluator=guarded_evaluate, quiet_left=0)
         self.assertIsInstance(result, int)
         self.assertEqual((board.sfen(), tuple(board.move_stack)), before)
 
@@ -77,7 +77,7 @@ class D3QuiescenceTests(unittest.TestCase):
                 raise TimeoutError("forced leaf interruption")
             return evaluate(position)
         with self.assertRaises(TimeoutError):
-            run_q(board, evaluator=interrupted)
+            run_q(board, evaluator=interrupted, quiet_left=1)
         self.assertEqual(
             (board.sfen(), tuple(board.move_stack), dict(board.transpositions)),
             before,
