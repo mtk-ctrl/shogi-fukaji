@@ -180,6 +180,48 @@ def mate_choice_diagnostic():
     return results
 
 
+
+def poison_capture_choice_diagnostic():
+    """Observe a real depth-one horizon effect, not a proven optimal move.
+
+    The independent legal oracle establishes only that 5e5d captures a
+    silver and 5c5d can immediately recapture the rook. It does NOT prove
+    that the capture is objectively losing or that any alternative is best.
+    """
+    name, sfen = next(x for x in CASES if x[0] == "poison_recapture")
+    board = shogi.Board(sfen)
+    before = snapshot(board)
+    legal_fact = verify_case(name, board)
+    results = []
+    for label, depth_cap, enabled in (
+        ("A_depth1_no_q", 1, False),
+        ("B_depth1_with_q", 1, True),
+        ("control_depth2_no_q", 2, False),
+    ):
+        move, depth, nodes = select_move(
+            board, movetime_ms=200, max_depth=depth_cap, model=None,
+            complete_depth=True, avoid_repetition=False,
+            fast_relative=False, root_alpha_beta=True,
+            fast_move_list=False, deadline_from_call=True,
+            quiescence=enabled,
+        )
+        if snapshot(board) != before:
+            raise AssertionError("poison diagnostic changed board/history")
+        if move == "resign" or shogi.Move.from_usi(move) not in board.legal_moves:
+            raise AssertionError("poison diagnostic returned illegal move")
+        results.append({
+            "variant": label, "move": move, "depth": depth,
+            "nodes": nodes, "takes_defended_silver": move == "5e5d",
+        })
+    return {
+        "case": name, "sfen": sfen, "legal_fact": legal_fact["evidence"],
+        "known_recapture": "5e5d then 5c5d",
+        "results": results, "model": "classical_no_G8",
+        "clock": "fixed_depth_unbounded_not_200ms",
+        "scope": "constructed_development_fact_not_optimal_move_or_strength",
+    }
+
+
 def validate_request(path):
     config = json.loads(Path(path).read_text(encoding="utf-8"))
     if config not in (EXPECTED, dict(EXPECTED, enabled=True)):
