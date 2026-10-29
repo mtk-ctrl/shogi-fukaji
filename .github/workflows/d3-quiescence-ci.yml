@@ -13,10 +13,18 @@ on:
       - '.github/fukaji-d3-tactical-request.json'
       - '.github/workflows/d3-quiescence-ci.yml'
   workflow_dispatch:
+  push:
+    paths:
+      - '.github/fukaji-d3-tactical-request.json'
 permissions:
   contents: read
+  actions: read
+concurrency:
+  group: fukaji-d3-tactical
+  cancel-in-progress: false
 jobs:
   verify:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
@@ -37,3 +45,46 @@ jobs:
       - run: python -m fukaji.d3_tactical_probe --mate-choice-check
       - run: python -m fukaji.d3_tactical_probe --poison-choice-check
       - run: python -m fukaji.d3_tactical_probe --check-request .github/fukaji-d3-tactical-request.json
+  diagnostic:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Validate strict default-OFF protocol
+        id: protocol
+        run: |
+          python - <<'PY'
+          import os
+          from fukaji.d3_tactical_probe import validate_request
+          enabled = validate_request(".github/fukaji-d3-tactical-request.json")
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as out:
+              out.write("enabled=" + str(enabled).lower() + "\n")
+          print("D3_REQUEST_ENABLED=" + str(enabled).lower())
+          PY
+      - name: Download frozen G8 model
+        if: steps.protocol.outputs.enabled == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-generation8-research-40636602223
+          run-id: 40636602223
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/d3/model
+      - name: Run 1-runner fixed G8 200ms ABBA development probe
+        if: steps.protocol.outputs.enabled == 'true'
+        run: |
+          python -m fukaji.d3_tactical_probe \
+            --model build/d3/model/mover-relative-generation8-research.npz \
+            --out build/d3/results
+      - name: Save hash-pinned D3 research evidence
+        if: steps.protocol.outputs.enabled == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-d3-tactical-${{ github.run_id }}
+          path: build/d3/results/
+          retention-days: 30
+          if-no-files-found: error
