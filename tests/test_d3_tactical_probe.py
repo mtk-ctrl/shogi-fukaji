@@ -9,6 +9,7 @@ import shogi
 from fukaji.d3_tactical_probe import (
     CASES, EXPECTED, ORDER, MATE_ONE_SFEN, MATE_ONE_COUNTEREXAMPLE_SFEN,
     enumerate_mate_in_one, mate_choice_diagnostic,
+    poison_capture_choice_diagnostic,
     frozen_proofs, snapshot, validate_request, verify_case,
 )
 
@@ -107,6 +108,21 @@ class D3TacticalProbeTests(unittest.TestCase):
         # negamax leaf. This test must not be cited as a D3 strength gain.
         for choice in diagnostics[0]["choices"]:
             self.assertTrue(choice["is_proven_mate_in_one"])
+
+    def test_actual_poison_recapture_choice_is_legal_and_restores_history(self):
+        diagnostic = poison_capture_choice_diagnostic()
+        self.assertEqual(diagnostic["case"], "poison_recapture")
+        self.assertEqual(diagnostic["known_recapture"], "5e5d then 5c5d")
+        self.assertEqual(diagnostic["model"], "classical_no_G8")
+        self.assertEqual(diagnostic["clock"], "fixed_depth_unbounded_not_200ms")
+        self.assertEqual([x["variant"] for x in diagnostic["results"]],
+                         ["A_depth1_no_q", "B_depth1_with_q",
+                          "control_depth2_no_q"])
+        self.assertEqual([x["depth"] for x in diagnostic["results"]], [1, 1, 2])
+        for observation in diagnostic["results"]:
+            self.assertGreater(observation["nodes"], 0)
+            self.assertIsInstance(observation["takes_defended_silver"], bool)
+        # A legal recapture is a tactical risk, not proof of a unique best move.
 
     def test_order_is_abba(self):
         self.assertEqual(ORDER, ("A", "B", "B", "A"))
