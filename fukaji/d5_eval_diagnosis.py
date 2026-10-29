@@ -97,6 +97,50 @@ def verify_source(games):
     return dict(statuses)
 
 
+
+def feature_snapshot(board):
+    """Interpretable, side-to-move material and king-zone risk (not labels)."""
+    from .engine import VALUES
+    own, other = int(board.turn), int(not board.turn)
+    board_balance = 0
+    for square in range(81):
+        piece = board.piece_at(square)
+        if piece is not None and piece.piece_type != 8:
+            board_balance += VALUES[piece.piece_type] * (1 if int(piece.color) == own else -1)
+    hand_balance = 0
+    for color in (own, other):
+        factor = 1 if color == own else -1
+        for kind, count in board.pieces_in_hand[color].items():
+            hand_balance += factor * VALUES[kind] * int(count)
+
+    def king_zone_attacks(color):
+        king = board.king_squares[color]
+        if king is None:
+            return None
+        file, rank = divmod(king, 9)
+        enemy = int(not color)
+        return sum(board.is_attacked_by(enemy, nf * 9 + nr)
+                   for nf in range(max(0, file - 1), min(8, file + 1) + 1)
+                   for nr in range(max(0, rank - 1), min(8, rank + 1) + 1))
+    return {"board_material_cp": board_balance, "hand_material_cp": hand_balance,
+            "own_king_zone_attacks": king_zone_attacks(own),
+            "opponent_king_zone_attacks": king_zone_attacks(other),
+            "in_check": bool(board.is_check())}
+
+
+def development_error_cases(observations):
+    """Only inspected development observations; sealed group is untouched."""
+    return [
+        {"pair": row["pair"], "ply": row["ply"], "g8_black": row["g8_black"],
+         "outcome": row["outcome"], "classical": row["classical"], "g8": row["g8"],
+         "classical_correct": (row["classical"] * row["outcome"] > 0),
+         "g8_correct": (row["g8"] * row["outcome"] > 0),
+         "features": row["features"]}
+        for row in observations
+        if row["g8"] * row["outcome"] <= 0 or
+           row["classical"] * row["outcome"] <= 0
+    ]
+
 def development_scores(games, model):
     """Do not inspect or compute scores for sealed parent games."""
     development, sealed = frozen_split()
@@ -133,6 +177,7 @@ def development_scores(games, model):
                 "classical_ms": round(classical_ms, 6),
                 "g8_ms": round(learned_ms, 6),
                 "sfen_sha256": sha(board.sfen().encode()),
+                "features": feature_snapshot(board),
             })
         if not board.is_checkmate() or row["winner"] != int(not board.turn):
             raise ValueError("decisive game does not end in proven mate")
@@ -164,6 +209,7 @@ def report(games, model):
         "development_decisive_games": sum(r["pair"] in set(development) and
                                           r["status"] == "checkmate" for r in games),
         "observations": observations, "by_ply": stages,
+        "development_error_cases": development_error_cases(observations),
         "training_executed": False, "games_played": 0, "model_adopted": False,
     }
 
@@ -191,6 +237,7 @@ def run(output):
         json.dumps(result, ensure_ascii=False, sort_keys=True, indent=2) + "\n")
     summary = {k: v for k, v in result.items() if k != "observations"}
     summary["observation_count"] = len(result["observations"])
+    summary["development_error_count"] = len(result["development_error_cases"])
     (root / "d5-summary.json").write_text(
         json.dumps(summary, ensure_ascii=False, sort_keys=True, indent=2) + "\n")
     print(json.dumps(summary, ensure_ascii=False, sort_keys=True))
