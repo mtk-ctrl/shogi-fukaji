@@ -29,7 +29,7 @@ class D3TacticalProbeTests(unittest.TestCase):
 
     def test_poison_capture_has_forced_legal_recapture(self):
         board = shogi.Board(dict(CASES)["poison_recapture"])
-        board.push_usi("5e5d")
+        board.push(shogi.Move.from_usi("5e5d"))
         self.assertIn(shogi.Move.from_usi("5c5d"), board.legal_moves)
 
     def test_pawn_drop_mate_is_illegal(self):
