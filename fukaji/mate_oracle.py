@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import time
 import shogi
 
 
@@ -18,15 +19,18 @@ class ProofIncomplete(RuntimeError):
 
 
 class _Budget:
-    def __init__(self, maximum):
+    def __init__(self, maximum, deadline=None):
         if not isinstance(maximum, int) or isinstance(maximum, bool) or maximum < 1:
             raise ValueError("maximum must be a positive integer")
         self.maximum = maximum
+        self.deadline = deadline
         self.examined = 0
 
     def step(self):
         if self.examined >= self.maximum:
             raise ProofIncomplete("legal-move budget exhausted")
+        if self.deadline is not None and time.monotonic() >= self.deadline:
+            raise ProofIncomplete("wall-time budget exhausted")
         self.examined += 1
 
 
@@ -44,7 +48,7 @@ def _checking_mates_in_one(board, budget):
     return tuple(result)
 
 
-def prove_mate_up_to_three(board, *, max_legal_moves=50000):
+def prove_mate_up_to_three(board, *, max_legal_moves=50000, deadline=None):
     """Exhaustive 1/3-ply proof using python-shogi's full legal-move rules.
 
     A three-ply proof contains the COMPLETE set of defender replies, each
@@ -53,7 +57,7 @@ def prove_mate_up_to_three(board, *, max_legal_moves=50000):
     never returns an unproved negative. This routine does not decide best
     positional moves, perpetual-check adjudication, or actual playing strength.
     """
-    budget = _Budget(max_legal_moves)
+    budget = _Budget(max_legal_moves, deadline)
     mate_one = []
     mate_three = []
     checked_first_moves = 0
