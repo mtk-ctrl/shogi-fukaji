@@ -46,9 +46,11 @@ class SyntheticIpcTests(unittest.TestCase):
 
     def test_late_deadline_and_late_candidate(self):
         model, generation = self.setup_go()
+        # Use the exact stored deadline: 0.01 + 0.2 may round above 0.21.
+        deadline = model.supervisor._deadline
         self.assertFalse(model.worker_offer(generation=generation, key='history-a',
-                                            move='2g2f', received_at=0.21))
-        self.assertTrue(model.deadline(at=0.211))
+                                            move='2g2f', received_at=deadline))
+        self.assertTrue(model.deadline(at=deadline + 0.001))
         self.assertFalse(model.confirm_sent(move='7g7f', at=0.212).response_sent_in_time)
 
     def test_deadline_cannot_be_anticipated(self):
