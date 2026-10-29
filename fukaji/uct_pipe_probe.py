@@ -32,6 +32,7 @@ class PipeProbeResult:
     first_byte_read_ms: float | None
     elapsed_ms: float
     gui_delivery_verified: bool = False
+    accepted_at_ms: float | None = None  # complete-line parent receipt, not first byte
 
 
 def _worker(mode, generation, key):
@@ -94,6 +95,7 @@ def run_pipe_probe(mode, *, generation=1, key='history-a',
     accepted = None
     count = rejected = 0
     first_read_ms = None
+    accepted_at_ms = None
     stopped = False
     exit_code = None
     reaped = False
@@ -134,6 +136,7 @@ def run_pipe_probe(mode, *, generation=1, key='history-a',
                     valid = False
                 if valid and accepted is None and not stopped and read_ms < budget_ms:
                     accepted = obj['move']
+                    accepted_at_ms = read_ms
                 else:
                     rejected += 1
         else:
@@ -153,7 +156,8 @@ def run_pipe_probe(mode, *, generation=1, key='history-a',
                            len(buffer), stopped, exit_code, reaped,
                            process.stdout.closed,
                            first_read_ms,
-                           (time.monotonic_ns()-started)/1e6)
+                           (time.monotonic_ns()-started)/1e6,
+                           accepted_at_ms=accepted_at_ms)
 
 
 def _main(argv):
