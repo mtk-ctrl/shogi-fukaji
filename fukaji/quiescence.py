@@ -18,7 +18,8 @@ def tactical_moves(board, ordered):
 
 
 def quiesce(board, alpha, beta, deadline, nodes, evaluator, legal_order,
-            *, quiet_left=4, check_left=8, ply=0, count_node=False):
+            *, quiet_left=4, check_left=8, ply=0, count_node=False,
+            fast_tactical=False):
     """Fail-soft negamax; TimeoutError aborts the entire unfinished iteration.
 
     This is a bounded tactical probe, not a proof of no mate. The caller must
@@ -51,7 +52,8 @@ def quiesce(board, alpha, beta, deadline, nodes, evaluator, legal_order,
             alpha = standing
         if quiet_left <= 0:
             return standing
-        choices = tactical_moves(board, legal_order(board))
+        choices = (legal_order(board, tactical_only=True) if fast_tactical
+                   else tactical_moves(board, legal_order(board)))
 
     best = -10**9 if in_check else standing
     for move in choices:
@@ -64,6 +66,7 @@ def quiesce(board, alpha, beta, deadline, nodes, evaluator, legal_order,
                 quiet_left=quiet_left - (0 if in_check else 1),
                 check_left=check_left - 1,
                 ply=ply + 1, count_node=True,
+                fast_tactical=fast_tactical,
             )
         finally:
             board.pop()
