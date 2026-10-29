@@ -64,6 +64,12 @@ class PipeProbeTests(unittest.TestCase):
         self.assertIsNone(r.accepted_move)
         self.assertEqual(r.rejected_messages, 1)
 
+    def test_stop_threshold_checked_after_pipe_wait(self):
+        r = run_pipe_probe('delayed', stop_after_ms=1)
+        self.assertTrue(r.stop_observed)
+        self.assertIsNone(r.accepted_move)
+        self.assertEqual(r.rejected_messages, 1)
+
     def test_untrusted_command_and_input_rejected(self):
         with self.assertRaises(ValueError):
             run_pipe_probe('shell')
