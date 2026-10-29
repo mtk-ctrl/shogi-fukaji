@@ -1,0 +1,62 @@
+name: FUKAJI UCT cleanup-aware reserve ABBA (research only)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/fukaji-uct-cleanup-reserve-abba-request.json'
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-uct-cleanup-reserve-abba
+  cancel-in-progress: false
+jobs:
+  total-clock-abba:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Test request, audit and UCT regression
+        run: |
+          python -m unittest discover -s tests -p 'test_uct_cleanup_reserve_abba.py' -v
+          python -m unittest discover -s tests -p 'test_mcts_research.py' -v
+      - name: Check explicit default-disabled research request
+        id: protocol
+        run: python -m fukaji.uct_cleanup_reserve_abba --check-request .github/fukaji-uct-cleanup-reserve-abba-request.json
+      - name: Download frozen G8 model
+        if: steps.protocol.outputs.enabled == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-generation8-research-40636602223
+          run-id: 40636602223
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/uct_cleanup_reserve/model
+      - name: Download audited G8/G7 240-game source
+        if: steps.protocol.outputs.enabled == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-g8-paired-aggregate-40637486947
+          run-id: 40637486947
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/uct_cleanup_reserve/source
+      - name: Legally replay 240 games and probe cleanup reserve OFF-ON-ON-OFF
+        if: steps.protocol.outputs.enabled == 'true'
+        run: |
+          python -m fukaji.uct_cleanup_reserve_abba \
+            --games build/uct_cleanup_reserve/source/all_paired_games.jsonl \
+            --report build/uct_cleanup_reserve/source/paired_aggregate_report.json \
+            --model build/uct_cleanup_reserve/model/mover-relative-generation8-research.npz \
+            --out build/uct_cleanup_reserve/results
+      - name: Preserve all 48 raw observations and SHA receipt
+        if: steps.protocol.outputs.enabled == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-uct-cleanup-reserve-abba-${{ github.run_id }}
+          path: build/uct_cleanup_reserve/results/
+          retention-days: 30
+          if-no-files-found: error

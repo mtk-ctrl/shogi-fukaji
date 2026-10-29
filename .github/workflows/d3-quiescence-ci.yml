@@ -1,0 +1,108 @@
+name: FUKAJI D3 quiescence research CI
+on:
+  pull_request:
+    paths:
+      - 'fukaji/quiescence.py'
+      - 'fukaji/engine.py'
+      - 'tests/test_d3_quiescence.py'
+      - 'fukaji/d3_tactical_probe.py'
+      - 'fukaji/d3_quiescence_profile.py'
+      - 'tests/test_d3_quiescence_profile.py'
+      - 'tests/test_d3_fast_tactical.py'
+      - 'tests/test_d3_workflow_gate.py'
+      - 'tests/test_d3_tactical_probe.py'
+      - '.github/fukaji-d3-tactical-request.json'
+      - '.github/fukaji-d3-fast-tactical-request.json'
+      - '.github/workflows/d3-quiescence-ci.yml'
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/fukaji-d3-tactical-request.json'
+      - '.github/fukaji-d3-fast-tactical-request.json'
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-d3-tactical
+  cancel-in-progress: false
+jobs:
+  verify:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - run: python -m unittest discover -s tests -p 'test_d3_quiescence.py' -v
+      - run: python -m unittest discover -s tests -p 'test_engine.py' -v
+      - run: python -m unittest discover -s tests -p 'test_d3_tactical_probe.py' -v
+      - run: python -m unittest discover -s tests -p 'test_d3_quiescence_profile.py' -v
+      - run: python -m unittest discover -s tests -p 'test_d3_fast_tactical.py' -v
+      - run: python -m unittest discover -s tests -p 'test_d3_workflow_gate.py' -v
+      - run: python -m fukaji.d3_quiescence_profile
+      - run: python -m fukaji.d3_quiescence_profile --compare-fast
+      - run: python -m fukaji.d3_quiescence_profile --compare-wall
+      - run: python -m fukaji.d3_tactical_probe --self-check
+      - run: python -m fukaji.d3_tactical_probe --mate-choice-check
+      - run: python -m fukaji.d3_tactical_probe --poison-choice-check
+      - run: python -m fukaji.d3_tactical_probe --check-request .github/fukaji-d3-tactical-request.json
+      - run: python -m fukaji.d3_tactical_probe --check-fast-request .github/fukaji-d3-fast-tactical-request.json
+  diagnostic:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Validate strict default-OFF protocol
+        id: protocol
+        run: |
+          python - <<'PY'
+          import os
+          from fukaji.d3_tactical_probe import validate_request, validate_fast_request
+          baseline = validate_request(".github/fukaji-d3-tactical-request.json")
+          fast = validate_fast_request(".github/fukaji-d3-fast-tactical-request.json")
+          if baseline and fast:
+              raise ValueError("Only one D3 measurement request may be enabled")
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as out:
+              out.write("enabled=" + str(baseline or fast).lower() + "\n")
+              out.write("fast=" + str(fast).lower() + "\n")
+          print("D3_REQUEST_ENABLED=" + str(baseline or fast).lower())
+          print("D3_FAST_TACTICAL=" + str(fast).lower())
+          PY
+      - name: Download frozen G8 model
+        if: steps.protocol.outputs.enabled == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-generation8-research-40636602223
+          run-id: 40636602223
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/d3/model
+      - name: Run 1-runner fixed G8 200ms ABBA development probe
+        if: steps.protocol.outputs.enabled == 'true'
+        env:
+          FAST_TACTICAL: ${{ steps.protocol.outputs.fast }}
+        run: |
+          if [ "$FAST_TACTICAL" = "true" ]; then
+            python -m fukaji.d3_tactical_probe --fast-tactical \
+              --model build/d3/model/mover-relative-generation8-research.npz \
+              --out build/d3/results
+          else
+            python -m fukaji.d3_tactical_probe \
+              --model build/d3/model/mover-relative-generation8-research.npz \
+              --out build/d3/results
+          fi
+      - name: Save hash-pinned D3 research evidence
+        if: steps.protocol.outputs.enabled == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-d3-tactical-${{ github.run_id }}
+          path: build/d3/results/
+          retention-days: 30
+          if-no-files-found: error

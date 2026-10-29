@@ -13,6 +13,7 @@ import time
 import shogi
 from .value_model import LinearValue
 from .relative_value import RelativeValue
+from .quiescence import quiesce
 
 VALUES = {1:100,2:300,3:320,4:480,5:760,6:900,7:600,8:0,9:500,10:520,11:620,12:850,13:1100,14:650}
 INF=10**9
@@ -93,18 +94,26 @@ def fast_legal_moves(board):
             yield move
 
 
-def ordered_moves(board, fast_move_list=False, fast_legal_guard=False):
+def ordered_moves(board, fast_move_list=False, fast_legal_guard=False, tactical_only=False):
     # Opt-in research: default path remains the original python-shogi logic.
-    source = fast_legal_moves(board) if fast_legal_guard else board.legal_moves
-    options=([m for m in source] if fast_move_list or fast_legal_guard
-             else list(source))
+    if tactical_only:
+        # Q-only: reject quiet pseudo-moves *before* costly legality checks.
+        # Captures/promotions still receive the original full legality guard.
+        # Never use this in check, where every legal evasion is required.
+        options = [m for m in board.generate_pseudo_legal_moves()
+                   if (m.promotion or board.piece_at(m.to_square) is not None)
+                   and not board.is_suicide_or_check_by_dropping_pawn(m)]
+    else:
+        source = fast_legal_moves(board) if fast_legal_guard else board.legal_moves
+        options=([m for m in source] if fast_move_list or fast_legal_guard
+                 else list(source))
     def order(m):
         p=board.piece_at(m.to_square)
         return (VALUES.get(p.piece_type,0) if p else 0) + (200 if m.promotion else 0)
     options.sort(key=order,reverse=True)
     return options
 
-def negamax(board, depth, alpha, beta, deadline, nodes, model=None, fast_relative=False, guard_checkmate=False, fast_move_list=False, fast_legal_guard=False):
+def negamax(board, depth, alpha, beta, deadline, nodes, model=None, fast_relative=False, guard_checkmate=False, fast_move_list=False, fast_legal_guard=False, quiescence=False, quiescence_fast_tactical=False):
     nodes[0]+=1
     if (nodes[0]&127)==0 and time.monotonic()>=deadline:
         raise TimeoutError()
@@ -120,6 +129,15 @@ def negamax(board, depth, alpha, beta, deadline, nodes, model=None, fast_relativ
     if board.transpositions[board.zobrist_hash()] >= 2:
         return -1000
     if depth<=0:
+        if quiescence:
+            return quiesce(
+                board, alpha, beta, deadline, nodes,
+                lambda position: evaluate(position, model, fast_relative),
+                lambda position, tactical_only=False: ordered_moves(
+                    position, fast_move_list, fast_legal_guard,
+                    tactical_only=tactical_only),
+                fast_tactical=quiescence_fast_tactical,
+            )
         return evaluate(board, model, fast_relative)
     legal=ordered_moves(board, fast_move_list=fast_move_list, fast_legal_guard=fast_legal_guard)
     if not legal:
@@ -128,7 +146,7 @@ def negamax(board, depth, alpha, beta, deadline, nodes, model=None, fast_relativ
     for move in legal:
         board.push(move)
         try:
-            score=-negamax(board,depth-1,-beta,-alpha,deadline,nodes,model,fast_relative,guard_checkmate,fast_move_list,fast_legal_guard)
+            score=-negamax(board,depth-1,-beta,-alpha,deadline,nodes,model,fast_relative,guard_checkmate,fast_move_list,fast_legal_guard,quiescence,quiescence_fast_tactical)
         finally:
             board.pop()
         if score>best:
@@ -138,7 +156,9 @@ def negamax(board, depth, alpha, beta, deadline, nodes, model=None, fast_relativ
             break
     return best
 
-def select_move(board, movetime_ms=200, max_depth=5, model=None, avoid_repetition=True, complete_depth=False, fast_relative=False, root_alpha_beta=False, guard_checkmate=False, fast_move_list=False, fast_legal_guard=False):
+def select_move(board, movetime_ms=200, max_depth=5, model=None, avoid_repetition=True, complete_depth=False, fast_relative=False, root_alpha_beta=False, guard_checkmate=False, fast_move_list=False, fast_legal_guard=False, telemetry=None, deadline_from_call=False, quiescence=False, quiescence_fast_tactical=False):
+    # Optional research-only timing and whole-call budget; USI defaults unchanged.
+    call_started = time.monotonic() if telemetry is not None or deadline_from_call else None
     moves=ordered_moves(board, fast_move_list=fast_move_list, fast_legal_guard=fast_legal_guard)
     # At the root, prefer genuinely new legal positions over repeating an
     # earlier position. The old engine repeated 96/100 games to termination.
@@ -159,12 +179,19 @@ def select_move(board, movetime_ms=200, max_depth=5, model=None, avoid_repetitio
         least=min(counts)
         moves=[m for m,count in zip(moves,counts) if count==least]
 
+    prepared_at = time.monotonic() if telemetry is not None else None
     if not moves:
+        if telemetry is not None:
+            telemetry.update(root_preparation_ms=(prepared_at-call_started)*1000,
+                             internal_search_ms=0.0, total_call_ms=(prepared_at-call_started)*1000,
+                             completed_depth=0, nodes=0)
         return "resign",0,0
     # Diagnostic mode removes wall-clock cutoffs. Both engines must complete
     # the same search depth to isolate evaluation quality from inference cost.
     # This mode is for bounded-depth research, not timed USI competition.
-    deadline=float("inf") if complete_depth else time.monotonic()+max(1,movetime_ms)/1000
+    deadline=(float("inf") if complete_depth else
+              (call_started if deadline_from_call else time.monotonic()) + max(1,movetime_ms)/1000)
+    search_started = time.monotonic() if telemetry is not None else None
     best=moves[0]
     nodes=[0]
     complete_depth=0
@@ -184,7 +211,7 @@ def select_move(board, movetime_ms=200, max_depth=5, model=None, avoid_repetitio
                 board.push(move)
                 try:
                     child_beta = -root_alpha if root_alpha_beta else INF
-                    score=-negamax(board,depth-1,-INF,child_beta,deadline,nodes,model,fast_relative,guard_checkmate,fast_move_list,fast_legal_guard)
+                    score=-negamax(board,depth-1,-INF,child_beta,deadline,nodes,model,fast_relative,guard_checkmate,fast_move_list,fast_legal_guard,quiescence,quiescence_fast_tactical)
                 finally:
                     board.pop()
                 if score>scorebest:
@@ -197,6 +224,12 @@ def select_move(board, movetime_ms=200, max_depth=5, model=None, avoid_repetitio
         best,current=current,best
         complete_depth=depth
         moves.sort(key=lambda m: 0 if m==best else 1)
+    if telemetry is not None:
+        returned_at = time.monotonic()
+        telemetry.update(root_preparation_ms=(prepared_at-call_started)*1000,
+                         internal_search_ms=(returned_at-search_started)*1000,
+                         total_call_ms=(returned_at-call_started)*1000,
+                         completed_depth=complete_depth, nodes=nodes[0])
     return best.usi(),complete_depth,nodes[0]
 
 def command_loop():

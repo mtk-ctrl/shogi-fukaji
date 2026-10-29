@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import shogi
 
-from fukaji.mcts_research import Node, _uct_child, select_mcts
+from fukaji.mcts_research import Node, _uct_child, _best_root_child, select_mcts
 
 
 class MctsResearchTests(unittest.TestCase):
@@ -90,13 +90,320 @@ class MctsResearchTests(unittest.TestCase):
         self.assertLessEqual(elapsed, 40.0)
         self.assertNotEqual(move, "resign")
 
+    def test_opt_in_phase_trace_is_complete_and_board_is_restored(self):
+        board = shogi.Board()
+        original = (board.sfen(), tuple(board.move_stack))
+        trace = []
+        move, count, elapsed = select_mcts(
+            board, movetime_ms=1000, max_iterations=5,
+            max_tree_depth=3, seed=23, iteration_trace=trace,
+        )
+        self.assertEqual(count, 5)
+        self.assertEqual(len(trace), count)
+        self.assertIn(shogi.Move.from_usi(move), board.legal_moves)
+        self.assertEqual((board.sfen(), tuple(board.move_stack)), original)
+        self.assertGreaterEqual(elapsed, 0)
+        for index, record in enumerate(trace, start=1):
+            self.assertEqual(record['iteration'], index)
+            self.assertGreaterEqual(record['depth'], 1)
+            self.assertGreater(record['root_legal_moves'], 0)
+            for phase in ('selection_ms', 'expansion_ms', 'leaf_ms',
+                          'backup_ms', 'undo_ms', 'checkmate_ms',
+                          'repetition_ms', 'legal_moves_ms',
+                          'child_nodes_ms', 'push_ms'):
+                self.assertGreaterEqual(record[phase], 0)
+            subphases = ('checkmate_ms', 'repetition_ms',
+                         'legal_moves_ms', 'child_nodes_ms', 'push_ms')
+            self.assertLessEqual(
+                sum(record[p] for p in subphases),
+                record['expansion_ms'] + 0.5)
+            self.assertGreaterEqual(record['total_ms'], 0)
+            self.assertGreaterEqual(record['reserve_ms'], 3)
+            self.assertLessEqual(
+                sum(record[p] for p in ('selection_ms', 'expansion_ms',
+                                       'leaf_ms', 'backup_ms', 'undo_ms')),
+                record['total_ms'] + 0.1,
+            )
+
+    def test_subphase_trace_preserves_fixed_iteration_move(self):
+        untraced = select_mcts(
+            shogi.Board(), movetime_ms=1000, max_iterations=6,
+            seed=31, max_tree_depth=3)
+        trace = []
+        traced = select_mcts(
+            shogi.Board(), movetime_ms=1000, max_iterations=6,
+            seed=31, max_tree_depth=3, iteration_trace=trace)
+        self.assertEqual(untraced[:2], traced[:2])
+        self.assertEqual(len(trace), 6)
+        self.assertTrue(any(row['legal_moves_ms'] > 0 for row in trace))
+
+    def test_no_expansion_records_zero_subphase_times(self):
+        trace = []
+        select_mcts(shogi.Board(), movetime_ms=1000, max_iterations=4,
+                    max_tree_depth=1, seed=9, iteration_trace=trace)
+        self.assertEqual(len(trace), 4)
+        for row in trace:
+            for key in ('checkmate_ms', 'repetition_ms',
+                        'legal_moves_ms', 'child_nodes_ms', 'push_ms'):
+                self.assertEqual(row[key], 0.0)
+
+    def test_single_pass_avoids_generator_length_prepass(self):
+        board = shogi.Board()
+        before = (board.sfen(), tuple(board.move_stack))
+        # list(LegalMoveGenerator) invokes __len__, while a comprehension
+        # iterates once. This must cover both root and tree expansions.
+        with patch.object(shogi.LegalMoveGenerator, "__len__",
+                          side_effect=AssertionError("unexpected length prepass")):
+            move, count, _ = select_mcts(
+                board, movetime_ms=2000, max_iterations=8,
+                seed=41, max_tree_depth=3, single_pass_legal_moves=True)
+        self.assertEqual(count, 8)
+        self.assertIn(shogi.Move.from_usi(move), board.legal_moves)
+        self.assertEqual((board.sfen(), tuple(board.move_stack)), before)
+
+    def test_single_pass_preserves_moves_order_and_undo(self):
+        boards = [
+            shogi.Board(),
+            shogi.Board("4k4/9/4R4/9/9/9/9/9/4K4 w - 1"),
+            shogi.Board("4k4/9/9/9/9/9/9/9/4K4 b Pp 1"),
+            shogi.Board("4k4/9/3RGR3/9/9/9/9/9/4K4 b P 1"),
+            shogi.Board("4k4/3GRG3/9/9/9/9/9/9/4K4 w - 1"),
+        ]
+        repeated = shogi.Board("4k4/9/9/9/9/9/9/9/4K4 b - 1")
+        for word in ("5i6i", "5a6a", "6i5i", "6a5a") * 3:
+            repeated.push(shogi.Move.from_usi(word))
+        self.assertTrue(repeated.is_fourfold_repetition())
+        boards.append(repeated)
+        for board in boards:
+            with self.subTest(sfen=board.sfen()):
+                before = (board.sfen(), tuple(board.move_stack))
+                self.assertEqual(
+                    [move.usi() for move in list(board.legal_moves)],
+                    [move.usi() for move in board.legal_moves])
+                if board.is_checkmate():
+                    self.assertEqual(list(board.legal_moves), [])
+                if board.sfen().startswith("4k4/9/3RGR3"):
+                    self.assertNotIn(shogi.Move.from_usi("P*5b"), board.legal_moves)
+                original = select_mcts(
+                    board, movetime_ms=2000, max_iterations=8,
+                    max_tree_depth=3, seed=41)
+                candidate = select_mcts(
+                    board, movetime_ms=2000, max_iterations=8,
+                    max_tree_depth=3, seed=41, single_pass_legal_moves=True)
+                self.assertEqual(original[:2], candidate[:2])
+                self.assertEqual((board.sfen(), tuple(board.move_stack)), before)
+
+    def test_single_pass_rejects_non_boolean_flag(self):
+        with self.assertRaises(ValueError):
+            select_mcts(shogi.Board(), single_pass_legal_moves=1)
+
+    def test_opt_in_return_clock_trace_preserves_fixed_iteration_move(self):
+        for total_budget in (False, True):
+            with self.subTest(total_budget=total_budget):
+                board = shogi.Board()
+                original = (board.sfen(), tuple(board.move_stack))
+                baseline = select_mcts(
+                    board, movetime_ms=1000, max_iterations=5, seed=17,
+                    max_tree_depth=3, total_budget_from_call=total_budget)
+                trace = []
+                observed = select_mcts(
+                    board, movetime_ms=1000, max_iterations=5, seed=17,
+                    max_tree_depth=3, total_budget_from_call=total_budget,
+                    clock_phase_trace=trace)
+                self.assertEqual(baseline[:2], observed[:2])
+                self.assertEqual(len(trace), 1)
+                self.assertEqual(trace[0]['root_legal_moves'],
+                                 len([m for m in board.legal_moves]))
+                self.assertEqual(trace[0]['iterations'], 5)
+                self.assertEqual(trace[0]['total_budget_from_call'],
+                                 total_budget)
+                self.assertFalse(trace[0]['terminal_no_legal_moves'])
+                for key in ('root_setup_ms', 'search_loop_ms',
+                            'restore_verify_ms', 'root_choice_ms',
+                            'return_clock_ms', 'internal_elapsed_ms'):
+                    self.assertGreaterEqual(trace[0][key], 0)
+                self.assertEqual((board.sfen(), tuple(board.move_stack)),
+                                 original)
+
+    def test_linear_root_choice_exact_ties_and_no_index_prepass(self):
+        class IndexForbidden(list):
+            def index(self, *args, **kwargs):
+                raise AssertionError("quadratic root index lookup")
+
+        for visits in ((0, 0, 0), (2, 7, 7), (5, 1, 9), (1, 1, 1)):
+            moves = IndexForbidden([object() for _ in visits])
+            root = Node(children=[
+                Node(move=move, visits=count)
+                for move, count in zip(moves, visits)])
+            expected = max(root.children,
+                           key=lambda child: (child.visits,
+                                              -list(moves).index(child.move)))
+            self.assertIs(_best_root_child(root, moves, linear=True), expected)
+
+    def test_linear_root_choice_matches_default_on_legal_positions(self):
+        boards = [
+            shogi.Board(),
+            shogi.Board("4k4/9/4R4/9/9/9/9/9/4K4 w - 1"),
+            shogi.Board("4k4/9/9/9/9/9/9/9/4K4 b Pp 1"),
+            shogi.Board("4k4/9/3RGR3/9/9/9/9/9/4K4 b P 1"),
+            shogi.Board("4k4/3GRG3/9/9/9/9/9/9/4K4 w - 1"),
+        ]
+        repeated = shogi.Board("4k4/9/9/9/9/9/9/9/4K4 b - 1")
+        for word in ("5i6i", "5a6a", "6i5i", "6a5a") * 3:
+            repeated.push(shogi.Move.from_usi(word))
+        self.assertTrue(repeated.is_fourfold_repetition())
+        boards.append(repeated)
+        for board in boards:
+            with self.subTest(sfen=board.sfen()):
+                before = (board.sfen(), tuple(board.move_stack))
+                opts = dict(movetime_ms=2000, max_iterations=8,
+                            max_tree_depth=3, seed=41,
+                            single_pass_legal_moves=True,
+                            total_budget_from_call=True)
+                old = select_mcts(board, **opts)
+                new = select_mcts(board, linear_root_choice=True, **opts)
+                self.assertEqual(old[:2], new[:2])
+                self.assertEqual((board.sfen(), tuple(board.move_stack)),
+                                 before)
+                if old[0] != "resign":
+                    self.assertIn(shogi.Move.from_usi(old[0]), board.legal_moves)
+
+    def test_linear_root_choice_rejects_non_boolean_flag(self):
+        with self.assertRaises(ValueError):
+            select_mcts(shogi.Board(), linear_root_choice=1)
+
+    def test_return_clock_trace_handles_no_legal_move(self):
+        board = shogi.Board("4k4/3GRG3/9/9/9/9/9/9/4K4 w - 1")
+        trace = []
+        move, count, elapsed = select_mcts(
+            board, clock_phase_trace=trace)
+        self.assertEqual((move, count, elapsed), ('resign', 0, 0.0))
+        self.assertEqual(len(trace), 1)
+        self.assertTrue(trace[0]['terminal_no_legal_moves'])
+        self.assertEqual(trace[0]['root_legal_moves'], 0)
+
+    def test_return_clock_trace_rejects_invalid_sink(self):
+        with self.assertRaises(ValueError):
+            select_mcts(shogi.Board(), clock_phase_trace=object())
+
     def test_rejects_invalid_research_parameters(self):
         board = shogi.Board()
         for kwargs in ({"movetime_ms": 0}, {"max_iterations": 0},
                        {"max_tree_depth": 0}, {"exploration": -1},
-                       {"exploration": float("nan")}):
+                       {"exploration": float("nan")},
+                       {"iteration_trace": object()}):
             with self.subTest(kwargs=kwargs), self.assertRaises(ValueError):
                 select_mcts(board, **kwargs)
+
+
+    def test_cleanup_reserve_grows_with_generated_nodes(self):
+        from fukaji.mcts_research import _cleanup_reserve_seconds
+        self.assertAlmostEqual(_cleanup_reserve_seconds(0), 0.001)
+        self.assertAlmostEqual(_cleanup_reserve_seconds(1000), 0.00125)
+        self.assertAlmostEqual(_cleanup_reserve_seconds(6000), 0.0025)
+
+    def test_cleanup_aware_guard_stops_before_expensive_next_iteration(self):
+        # Synthetic clock: leaf evaluation costs 10 ms per iteration.
+        # A separate 10 ms cleanup estimate leaves room for return cleanup.
+        # This checks the decision boundary, not real 200 ms compliance.
+        def simulate(aware):
+            clock = [0.0]
+            def fake_evaluate(*args, **kwargs):
+                clock[0] += 0.010
+                return 0
+            board = shogi.Board()
+            original = (board.sfen(), tuple(board.move_stack))
+            with patch("fukaji.mcts_research.time.monotonic",
+                       side_effect=lambda: clock[0]), \
+                 patch("fukaji.mcts_research.evaluate",
+                       side_effect=fake_evaluate), \
+                 patch("fukaji.mcts_research._cleanup_reserve_seconds",
+                       return_value=0.010):
+                move, count, elapsed = select_mcts(
+                    board, movetime_ms=40, max_iterations=8,
+                    seed=19, max_tree_depth=1,
+                    total_budget_from_call=True,
+                    cleanup_aware_reserve=aware)
+            self.assertIn(shogi.Move.from_usi(move), board.legal_moves)
+            self.assertEqual((board.sfen(), tuple(board.move_stack)), original)
+            return count, elapsed
+        self.assertEqual(simulate(False)[0], 3)
+        count, elapsed = simulate(True)
+        self.assertEqual(count, 2)
+        self.assertLessEqual(elapsed, 40.0)
+
+    def test_cleanup_guard_returns_legal_move_after_root_exhausts_budget(self):
+        import fukaji.mcts_research as mcts
+        clock = [0.0]
+        original_legal = mcts._legal_moves_once
+        def expensive_root(board, *, single_pass=False):
+            result = original_legal(board, single_pass=single_pass)
+            clock[0] += 0.050
+            return result
+        board = shogi.Board()
+        original = (board.sfen(), tuple(board.move_stack))
+        with patch("fukaji.mcts_research.time.monotonic",
+                   side_effect=lambda: clock[0]), \
+             patch("fukaji.mcts_research._legal_moves_once",
+                   side_effect=expensive_root):
+            move, count, elapsed = select_mcts(
+                board, movetime_ms=20, max_iterations=8,
+                total_budget_from_call=True, cleanup_aware_reserve=True)
+        self.assertEqual(count, 0)
+        self.assertGreaterEqual(elapsed, 50)
+        self.assertIn(shogi.Move.from_usi(move), board.legal_moves)
+        self.assertEqual((board.sfen(), tuple(board.move_stack)), original)
+
+    def test_cleanup_guard_fixed_iteration_legality_and_repetition(self):
+        boards = [shogi.Board(),
+                  shogi.Board("4k4/9/4R4/9/9/9/9/9/4K4 w - 1"),
+                  shogi.Board("4k4/9/9/9/9/9/9/9/4K4 b Pp 1"),
+                  shogi.Board("4k4/9/3RGR3/9/9/9/9/9/4K4 b P 1")]
+        repeated = shogi.Board("4k4/9/9/9/9/9/9/9/4K4 b - 1")
+        for word in ("5i6i", "5a6a", "6i5i", "6a5a") * 3:
+            repeated.push(shogi.Move.from_usi(word))
+        self.assertTrue(repeated.is_fourfold_repetition())
+        boards.append(repeated)
+        for board in boards:
+            with self.subTest(sfen=board.sfen()):
+                original = (board.sfen(), tuple(board.move_stack))
+                options = dict(movetime_ms=2000, max_iterations=8, seed=41,
+                               max_tree_depth=3, single_pass_legal_moves=True,
+                               total_budget_from_call=True,
+                               linear_root_choice=True)
+                old = select_mcts(board, **options)
+                new = select_mcts(board, cleanup_aware_reserve=True, **options)
+                self.assertEqual(old[:2], new[:2])
+                self.assertIn(shogi.Move.from_usi(new[0]), board.legal_moves)
+                self.assertEqual((board.sfen(), tuple(board.move_stack)), original)
+        mate = shogi.Board("4k4/3GRG3/9/9/9/9/9/9/4K4 w - 1")
+        self.assertEqual(select_mcts(mate, cleanup_aware_reserve=True)[:2],
+                         ("resign", 0))
+
+    def test_cleanup_guard_rejects_nonboolean(self):
+        with self.assertRaises(ValueError):
+            select_mcts(shogi.Board(), cleanup_aware_reserve=1)
+
+
+
+    def test_cleanup_guard_tracks_new_nodes_after_expansion(self):
+        from fukaji.mcts_research import _cleanup_reserve_seconds
+        board = shogi.Board()
+        root_size = len([move for move in board.legal_moves]) + 1
+        original = (board.sfen(), tuple(board.move_stack))
+        with patch("fukaji.mcts_research._cleanup_reserve_seconds",
+                   wraps=_cleanup_reserve_seconds) as reserve:
+            move, count, _ = select_mcts(
+                board, movetime_ms=2000, max_iterations=5, seed=13,
+                max_tree_depth=3, single_pass_legal_moves=True,
+                total_budget_from_call=True, cleanup_aware_reserve=True)
+        self.assertEqual(count, 5)
+        self.assertIn(shogi.Move.from_usi(move), board.legal_moves)
+        self.assertTrue(reserve.called)
+        self.assertGreater(max(call.args[0] for call in reserve.call_args_list),
+                           root_size)
+        self.assertEqual((board.sfen(), tuple(board.move_stack)), original)
+
 
 
 if __name__ == "__main__":

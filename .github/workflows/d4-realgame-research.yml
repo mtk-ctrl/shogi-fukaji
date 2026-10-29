@@ -1,0 +1,51 @@
+name: FUKAJI D4 frozen real-game mate comparison (research only)
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/d4-realgame-request.json'
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-d4-realgame-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    outputs:
+      enabled: ${{ steps.validate.outputs.enabled }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Validate exact disabled-by-default request
+        id: validate
+        run: python -m fukaji.d4_realgame_probe --mode validate --request .github/d4-realgame-request.json
+  compare:
+    needs: gate
+    if: needs.gate.outputs.enabled == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Verify original ZIP and model SHA; replay frozen real games; compare ABBA
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python -m fukaji.d4_realgame_probe --mode run --request .github/d4-realgame-request.json --out d4-realgame-output
+      - name: Store bounded research observations (no model upload)
+        uses: actions/upload-artifact@v4
+        with:
+          name: d4-realgame-frozen-results-${{ github.run_id }}
+          path: |
+            d4-realgame-output/frozen_realgame_results.json
+            d4-realgame-output/frozen_realgame_summary.json
+          retention-days: 30

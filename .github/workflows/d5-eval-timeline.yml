@@ -1,0 +1,44 @@
+name: FUKAJI D5 development three-parent timeline (read-only)
+on:
+  pull_request:
+    paths:
+      - 'fukaji/d5_eval_timeline.py'
+      - 'tests/test_d5_eval_timeline.py'
+      - '.github/workflows/d5-eval-timeline.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'fukaji/d5_eval_timeline.py'
+      - 'tests/test_d5_eval_timeline.py'
+      - '.github/workflows/d5-eval-timeline.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-d5-timeline-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  read-only-timeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Check split and timeline safety
+        run: python -m unittest discover -s tests -p 'test_d5_eval_timeline.py' -v
+      - name: Inspect three development parents from SHA-locked source only
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python -m fukaji.d5_eval_timeline --out d5-timeline-output
+      - name: Save read-only timeline and summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: d5-timeline-${{ github.run_id }}
+          path: |
+            d5-timeline-output/d5-three-parent-timeline.json
+            d5-timeline-output/d5-three-parent-summary.json
+          retention-days: 30

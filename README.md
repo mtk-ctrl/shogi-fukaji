@@ -1,36 +1,22 @@
 # 深路（ふかじ） / FUKAJI
 
-雲路 KUMOJI と独立した、自己対局と価値学習による将棋AI研究プロジェクト。
+自分自身の対局・研究から学び、棋力を高め続ける独立将棋AI。コード正本はこのリポジトリ。雲路は参照・比較対象。
 
-## 現在の実装
-- `fukaji/selfplay.py`: python-shogiの合法手を使うランダム基準器の自己対局生成（詰み以外を勝ちとして扱わない）
-- `fukaji/learning.py`: JSONL棋譜の全着手検証、詰みと勝者照合、重複排除、対局単位の分割、NumPy線形valueモデル訓練
-- `tests/`: 特徴量、学習、違法手拒否の単体検査
-- `.github/workflows/learning-smoke.yml`: テストはpushごと。手動起動で自己対局→学習→モデル成果物を保存
+## 現在地（2026-10-29確認）
+- `fukaji/engine.py` はpython-shogiのルール処理と自作の反復深化・αβ探索を使う。`RelativeValue` の学習評価を読み込んで実際に対局できる。
+- G8は手番相対2549特徴の線形評価。NNUEではない。研究比較は学習評価25%・高速相対評価と根元α境界再利用ON・200ms・深さ上限2。
+- G8対G7の240局は88勝59敗・未決着93。優位の兆候はあるが、先後ペアを考慮した検定では確証に届かない。G8は研究候補で、正式採用はしていない。
+- 小型NNUEの推論・差分更新・学習器、UCT、C++ルール処理は研究基盤。学習済みNNUEの実戦効果やUCTの棋力優位は未確認。
+- 現行USI初期設定は研究比較と異なり、モデル未指定・SearchDepth=4。起動だけでG8になるわけではない。
 
-**制約**: value-v0はNNUEではなく、モデル推論はまだ対局エンジンに接続していない。生成器も雲路エンジンではない。棋力向上は未検証。外部AIの評価値や最善手は使わない。
+## これからの研究
+[研究方針と根拠](docs/ROADMAP.md) に従い、探索の浅さ・戦術見落とし、評価学習、詰みと詰まされ回避、全体の計算時間配分を順に改善する。[次のD1実験](docs/NEXT_EXPERIMENT_D1_20261029.md) は深さ2制限の影響を切り分ける診断。まだ実施していない。
 
-## 実行
-Actions → FUKAJI learning pipeline → Run workflow（初期attempts=40, epochs=4）。完了した詰み棋譜がないときは失敗させる。学習済みモデルはActions artifactで取得。
+作業開始は [AGENTS.md](AGENTS.md) → [開発ルーター](docs/00_開発ルーター.md)。実行入口は [Actions一覧](.github/workflows/README.md)。既存の時間保証・OSパイプ研究は記録を保全し、追加研究を保留する。
 
-ローカル:
-```bash
-python -m pip install -r requirements.txt
-python -m unittest discover -s tests -v
-python -m fukaji.selfplay --attempts 40 --out build/selfplay.jsonl
-python -m fukaji.learning --games build/selfplay.jsonl --out build/model
-```
+## 実行・データ
+`python -m unittest discover -s tests -v` で既存の検査を実行する。依存は `requirements.txt` を用いる。研究対局は各workflowの固定モデルSHA・入力・明示requestを確認して起動する。
 
-入力は1行1局のJSONL、キーは `start_sfen`, `moves`（USI手の配列）, `winner`（先手0、後手1、未決着null）, `source`（selfplay）の4つ。勝敗付きの入力は詰み終了を検証する。未終局・出所不明・非合法手を教師データにしない。
+`selfplay.py` と `learning.py` のランダム対局・線形value-v0は初期基盤として残る。初期READMEの「モデル未接続」は現在のG8研究経路には当てはまらない。
 
-## 今後の必須工程
-1. 雲路の特定commitのルール層・USI・探索を、GPL条件と出所表示を維持して必要部分だけ独立移植
-2. 真正な雲路由来の自作探索による深路の自己対局を学習の入口に接続
-3. 小型NNUE型モデルを実装・学習し、対局時の評価関数として推論接続
-4. 分岐局面の研究、未使用対局の評価と旧版・雲路比較を自動化
-
-新AIのコード、Actions、学習重み、研究世代は元リポジトリへ影響させない。
-
-## G7 対 雲路の正式条件（研究比較）
-
-[専用Workflow](.github/workflows/g7-kumoji-official.yml) は独立研究専用。G7は200ms・深さ2・学習評価25%・高速相対評価/root αβ ON。雲路は固定commit 807db500ee2739c1eb6a527b614eeea40a5993d6 の実バイナリを読み取り専用ビルドし、200ms・条件付き長考ON・先読みON・採用済み163局面知識ON・2スレッドで比較する。32独立序盤・先後交替64局。**双方の計算資源は同一ではない**ため、等時間モデル比較と混同しない。未決着は勝利扱いせず、比較棋譜を学習に使わず、正式採用しない。依頼ファイルの明示変更はコード・CI検証後に別commitで行う。
+外部AIの評価値・PV・推奨手は教師にしない。未決着を勝ちや引分の教師にしない。研究実装・学習実行・実戦検証・正式採用を別々に記録する。
