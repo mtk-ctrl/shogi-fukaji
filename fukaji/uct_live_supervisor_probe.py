@@ -147,7 +147,9 @@ def run_live_supervisor_probe(mode, *, board, budget_ms=400,
                              and type(obj['move']) is str)
                 except (UnicodeError, ValueError, TypeError):
                     valid = False
-                if valid:
+                # A stop/response threshold may expire while select/read blocks.
+                # Recheck the parent receipt time before accepting the offer.
+                if valid and at_ms < threshold:
                     accepted_now = model.worker_offer(
                         generation=obj['generation'], key=obj['key'],
                         move=obj['move'], received_at=at_ms / 1000.0)
