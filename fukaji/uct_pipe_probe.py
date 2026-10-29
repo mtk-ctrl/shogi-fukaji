@@ -109,6 +109,9 @@ def run_pipe_probe(mode, *, generation=1, key='history-a',
                 continue
             chunk = os.read(fd, 1024)
             read_ms = (time.monotonic_ns() - started) / 1e6
+            # Recheck after select/read: stop can expire while blocked in select.
+            if stop_after_ms is not None and read_ms >= stop_after_ms:
+                stopped = True
             if not chunk:
                 break
             if first_read_ms is None:
