@@ -40,6 +40,7 @@ class UctHardDeadlineBoundaryTests(unittest.TestCase):
 
         self.assertEqual(iterations, 1)
         self.assertAlmostEqual(internal_ms, 5.0)
+        self.assertLessEqual(internal_ms, 20.0)  # internal timer meets its budget
         self.assertGreaterEqual(released[0], 20)
         self.assertGreater(caller_ms, 20.0)
         self.assertGreater(caller_ms - internal_ms, 20.0)
