@@ -171,6 +171,18 @@ class D3TacticalProbeTests(unittest.TestCase):
         print("D3_VARIATIONS_JSON=" + json.dumps(observations, sort_keys=True))
 
 
+    def test_fast_request_is_disabled_and_strict(self):
+        from fukaji.d3_tactical_probe import FAST_EXPECTED, validate_fast_request
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "fast.json"
+            path.write_text(json.dumps(FAST_EXPECTED))
+            self.assertFalse(validate_fast_request(path))
+            path.write_text(json.dumps(dict(FAST_EXPECTED, enabled=True)))
+            self.assertTrue(validate_fast_request(path))
+            path.write_text(json.dumps(dict(FAST_EXPECTED, depth_cap=7)))
+            with self.assertRaises(ValueError):
+                validate_fast_request(path)
+
     def test_order_is_abba(self):
         self.assertEqual(ORDER, ("A", "B", "B", "A"))
 

@@ -27,6 +27,8 @@ EXPECTED = {
     "mix_percent": 25, "fast_relative": True, "root_alpha_beta": True,
     "deadline_from_call": True, "fast_move_list": False, "runner_jobs": 1,
 }
+FAST_REQUEST = ".github/fukaji-d3-fast-tactical-request.json"
+FAST_EXPECTED = dict(EXPECTED, mode="fast_tactical")
 ORDER = ("A", "B", "B", "A")
 CASES = (
     ("poison_recapture", "8k/9/4r4/4s4/4R4/9/9/9/8K b - 1"),
@@ -337,7 +339,14 @@ def validate_request(path):
     return config["enabled"]
 
 
-def run_probe(model_path, out_path):
+def validate_fast_request(path):
+    config = json.loads(Path(path).read_text(encoding="utf-8"))
+    if config not in (FAST_EXPECTED, dict(FAST_EXPECTED, enabled=True)):
+        raise ValueError("D3 fast-tactical request differs from fixed protocol")
+    return config["enabled"]
+
+
+def run_probe(model_path, out_path, fast_tactical=False):
     raw_model = Path(model_path).read_bytes()
     if digest(raw_model) != G8_SHA:
         raise ValueError("frozen G8 model SHA mismatch")
@@ -357,7 +366,9 @@ def run_probe(model_path, out_path):
                 board, movetime_ms=200, max_depth=6, model=model,
                 fast_relative=True, root_alpha_beta=True,
                 fast_move_list=False, deadline_from_call=True,
-                quiescence=(variant == "B"), telemetry=timing)
+                quiescence=(variant == "B"),
+                quiescence_fast_tactical=(fast_tactical and variant == "B"),
+                telemetry=timing)
             outer_ms = (time.perf_counter() - started) * 1000
             if snapshot(board) != before:
                 raise AssertionError("D3 engine changed board/history")
@@ -369,6 +380,7 @@ def run_probe(model_path, out_path):
                 raise AssertionError("D3 inconsistent wall time")
             observations.append({
                 "variant": variant, "quiescence": variant == "B",
+                "fast_tactical": fast_tactical and variant == "B",
                 "move": move, "completed_depth": depth, "nodes": nodes,
                 "outer_call_ms": round(outer_ms, 3),
                 "engine_call_ms": round(timing["total_call_ms"], 3),
@@ -386,7 +398,9 @@ def run_probe(model_path, out_path):
     a = [v for row in records for v in row["observations"] if v["variant"] == "A"]
     b = [v for row in records for v in row["observations"] if v["variant"] == "B"]
     summary = {
-        "experiment": "D3_quiescence_G8_development_tactical_ABBA",
+        "experiment": ("D3_fast_quiescence_G8_ABBA" if fast_tactical
+                       else "D3_quiescence_G8_development_tactical_ABBA"),
+        "fast_tactical_candidate": fast_tactical,
         "status": "development_diagnostic_not_playing_strength",
         "model_sha256": G8_SHA, "positions": len(records),
         "observations": len(a) + len(b), "order": list(ORDER),
@@ -421,6 +435,8 @@ def main():
     parser.add_argument("--mate-choice-check", action="store_true")
     parser.add_argument("--poison-choice-check", action="store_true")
     parser.add_argument("--check-request")
+    parser.add_argument("--check-fast-request")
+    parser.add_argument("--fast-tactical", action="store_true")
     parser.add_argument("--model")
     parser.add_argument("--out")
     args = parser.parse_args()
@@ -436,11 +452,17 @@ def main():
     if args.check_request:
         print(json.dumps({"enabled": validate_request(args.check_request)}))
         return
+    if args.check_fast_request:
+        print(json.dumps({"enabled": validate_fast_request(args.check_fast_request)}))
+        return
     if not args.model or not args.out:
         parser.error("model and out required")
-    if not validate_request(REQUEST):
+    if args.fast_tactical:
+        if not validate_fast_request(FAST_REQUEST):
+            raise ValueError("D3 fast request is disabled; no real measurements")
+    elif not validate_request(REQUEST):
         raise ValueError("D3 request is disabled; no real measurements")
-    print(json.dumps(run_probe(args.model, args.out), indent=2))
+    print(json.dumps(run_probe(args.model, args.out, fast_tactical=args.fast_tactical), indent=2))
 
 
 if __name__ == "__main__":
