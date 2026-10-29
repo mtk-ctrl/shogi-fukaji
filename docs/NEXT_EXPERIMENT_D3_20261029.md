@@ -1,6 +1,18 @@
 # 深路D3：戦術の取り返し・王手応手を正しく読む静止探索
 
-状態：**D3第7の関数別プロファイルPR#109・高速戦術手生成候補PR#110、第8のG8明示起動入口PR#111を研究mainへ統合。候補は既定OFF。branch軽量CI成功、mainのG8実200ms/独立対局/棋力向上は未実施。**
+状態：**D3第7の高速戦術手生成候補は既定OFFのまま、古典評価・固定深さで6人工局面72探索の速度改善を確認。第8の固定G8・総200ms・静止探索OFF/通常ON比較はrun40926873207で完了したが、通常ONは3/5局面で完了深さが低下し20/20呼出が200ms超過。第9の高速ON比較PR#112と起動漏れ修正PR#113は研究main統合済、実G8高速ON比較は未実施。棋力向上未証明。**
+
+
+
+## 2026-10-30 03:01〜03:10 JST：固定G8の総200ms実測・高速Q比較準備
+
+**強化軸**：戦術の正確さと同時間での探索深さ。**実験**：D3通常静止探索OFF/ONの固定G8・総200ms・ABBA、続いて早期戦術手選別ONの別実験を準備。**棋力検証**：人工局面の深さ・合法性・時間だけでは実戦棋力を証明しない。独立した40局先後交替と別seed240局は候補が有望な場合に計画する。
+
+- **初めてのG8実計測**：[run #40926873207](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/40926873207) completed success。1runner・固定G8内部モデルSHA `18b39f647caa458389a1900b875337adadac74ae37e27343e7f0094ed663c492`・人工5局面×ABBA=20実探索。A=静止探索OFF、B=通常静止探索ON、全呼出総200ms期限。**20/20呼出で実際の外側時間が200msを超過**（A10/10、B10/10）。外側時間中央値A208.666ms、B200.796ms。完了深さ中央値A3、B2。局面別A→Bは毒銀2→1、直接捕獲3→2、王手回避3→2、成り4→4、打ち歩詰2→2。Bの深さ退行3/5、同点2/5、改善0/5。選択手は王手回避でA`5a4b`→B`5a6b`のみ変化、どちらが優れているかは未証明。
+- 成果物artifact ID `12921061488`、ZIP SHA-256 `3920e17a11719bcf97ad1ec32148a611211ae375d763577af4a8b16227cf801f`（GitHub metadata digestとダウンロード実体一致）。ZIP内 `observations.jsonl` SHA `aaa8471c66eb97b2d8cf506cea2eb43470870dcefc7813b3337ddf54288b83b3`、`proofs.json` SHA `7c91dcc4a41db6f4527e68cca9b60d1fe0e6ecc279367fad5f80ae76028ba1e6`、`summary.json` SHA `2607552416eb74a5f3ffd85179b4116bd49ce942de665ed629eb8f884ee1daed`。独立にZIP構成、20行ABBA、5ユニークSFEN、モデルSHA記載、時間・深さ・超過統計・USI形式を再計算一致。合法手・盤面復元はrun側python-shogi検査済み。ただし別実装による完全合法性の再検証は未実施。
+- requestを明示ONにしたcommit `9318916`で計測後、commit `5b640b3`で**OFFへ戻し**、[skip run #40926974352](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/40926974352)でモデル取得・実測・artifact生成が全てskipされたことを確認。
+- **次の別実験**：[PR#112](https://github.com/mtk-ctrl/shogi-fukaji/pull/112)→研究main `9173536d3ccc8fe81bc72a5f5b31a2e04d2682d6`。新しい厳格な初期OFF requestで A=静止探索OFF、B=静止探索ON+高速戦術手選別を固定G8・同総200msで比較する。branch [CI#40927335224](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/40927335224)成功（既存D3/Engine/計測器/高速回帰含む35件）、main push CI `40927458132` 他で実状態確認。初回requestをONにしたがrunが作成されず、原因は**workflowのpush.pathsに高速Q requestを記載し忘れた**こと。requestはOFFへ戻し、[PR#113](https://github.com/mtk-ctrl/shogi-fukaji/pull/113)→研究main `884f5e983fc2ca82211fbcef2ee4206c4c838ec6`で両requestのpush入口を修正し、回帰2件を追加。[branch CI#40928019736](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/40928019736)成功（計37件）。再発防止はpush.pathsをCIで直接検査する仕組み。
+- **次**：PR#113のmain CI・全27repoのqueued/in_progress/pending/waiting/requestedと同目的重複を再取得し、空きrunnerがあれば別明示requestで高速Q版20探索を1runner実行→artifact独立照合→request OFF/skip。新旧D3の条件を混同しない。正式USI・G8・雲路mainは不変。40/240局・未見正答率・棋力改善は未実施。
 
 
 ## 2026-10-30 02:50〜03:00 JST：D3第7・第8工程（戦術の読みを保って計算負荷を削減）
