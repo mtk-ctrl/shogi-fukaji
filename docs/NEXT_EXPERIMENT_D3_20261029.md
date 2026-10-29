@@ -1,7 +1,20 @@
 # 深路D3：戦術の取り返し・王手応手を正しく読む静止探索
 
-状態：**D3第7の高速戦術手生成候補は既定OFFのまま、古典評価・固定深さで6人工局面72探索の速度改善を確認。第8の固定G8・総200ms・静止探索OFF/通常ON比較はrun40926873207で完了したが、通常ONは3/5局面で完了深さが低下し20/20呼出が200ms超過。第9の高速ON比較PR#112と起動漏れ修正PR#113は研究main統合済、実G8高速ON比較は未実施。棋力向上未証明。**
+状態：**D3第7〜第9の研究・G8総200ms実測2種類を完了。固定深さの高速Q候補は人工6局面72探索で着手/節点一致・速度改善。しかしG8同200msでは通常Qも高速Qも深さが退行（通常3/5局面、高速4/5局面）、両runとも20/20呼出で200ms超過。実戦棋力向上未証明のため40/240局対局と正式採用は見送り、次は独立した詰み防御・評価軸へ移る。両request OFF・skip確認。**
 
+
+
+
+## 2026-10-30 03:11〜03:13 JST：高速Q版G8実測完了・D3採否判断（研究候補はOFF維持）
+
+**強化軸**：戦術の正確さを実時間内で維持。**実験**：固定G8・総200ms・人工5局面×ABBA、A=静止探索OFF、B=静止探索ON+高速戦術手選別。**棋力検証法**：同条件の着手・完了深さ・時間を観測し、独立した先後交替実戦で確認する前段階。今回の人工局面結果だけでは実棋力向上を証明しない。
+
+- [PR#112](https://github.com/mtk-ctrl/shogi-fukaji/pull/112)→研究main `9173536d3ccc8fe81bc72a5f5b31a2e04d2682d6`。新規厳格request既定OFF、旧requestとの同時ON禁止、G8 SHA固定、branch CI [#40927335224](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/40927335224) success（35テスト）、main push CI [#40927458132](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/40927458132) success。初回起動漏れはpush.paths不足と判明し、[PR#113](https://github.com/mtk-ctrl/shogi-fukaji/pull/113)→main `884f5e983fc2ca82211fbcef2ee4206c4c838ec6`で修正。branch CI [#40928019736](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/40928019736) success（37テスト）、main push CI [#40928151750](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/40928151750) success。workflow push.pathsを直接検査する新規2回帰を追加。
+- 起動直前に所有27repoの直近100run、100件超の8repoの5状態（queued/in_progress/pending/waiting/requested）を正規APIで再取得し、全0件・同目的重複なし、main CI成功を確認。別目的run停止なし。
+- **実G8高速Q比較**：[run #40928504046](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/40928504046) completed success、1runner・固定G8 SHA `18b39f647caa458389a1900b875337adadac74ae37e27343e7f0094ed663c492`・人工5局面×ABBA20探索。A静止探索OFFの完了深さは毒銀3/直接捕獲3/王手回避3/成り5/打ち歩詰3、B高速Q ONは2/2/3/4/2。**Bは4/5局面で深さ退行、1/5同点、改善0/5**。深さ中央値A3/B2。外側時間中央値A211.497ms/B200.113ms。**20/20呼出で200ms超過**（A10/10、B10/10）。毒銀はA`5e1e`→B`5e7e`、王手回避はA`5a4b`→B`5a4a`へ変化したが、最善手や棋力の証明なし。
+- artifact ID `12920049724`、ZIP SHA `c623be097879ad1681d621e80852fa5348ee288ef08a8b97b5760d15380c17ba`（GitHub digestと実ZIP一致）。内部 `observations.jsonl` SHA `5e7216658da68e60c7af4129aacfd8a3cf66d6b80fe2ce82d3a1d690e6172879`、`proofs.json` SHA `7c91dcc4a41db6f4527e68cca9b60d1fe0e6ecc279367fad5f80ae76028ba1e6`、`summary.json` SHA `ce3a6da2385b846bbac180a7f9f62e4a8f0c28ea5edfe617916af53ec865fd8b`。独立にZIP構成、内部SHA、5 SFEN/20 ABBA、G8 SHA記載、深さ/時間/超過統計・USI形式を再計算一致。合法性と盤面復元はrun側python-shogiで検査済み、別実装の合法性再検証は未実施。
+- fast requestをcommit `96d3825`でON→実run結果確認後commit `66b66fc`で**OFF**に戻した。[skip run #40928648989](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/40928648989) completed success、モデル取得・実測・artifact生成すべてskip。通常D3 requestもOFF、正式USI/G8/雲路main不変。
+- **判断**：D3通常Qと高速Qの人工戦術での見落とし回避は参考知見として保存するが、現行G8の総200msでは探索深さ低下が大きく、40局/240局の重い対局に進む積極的根拠なし。**D3候補は研究用既定OFFのまま、正式採用しない**。次の独立研究軸は**有界詰み/受けの合法証明と評価学習の質**。独立した合法局面・反例・評価ラベルの由来を設計し、まず軽量回帰、次に同200msの実戦条件を確認する。未決着勝敗や外部AIを教師にしない。
 
 
 ## 2026-10-30 03:01〜03:10 JST：固定G8の総200ms実測・高速Q比較準備
