@@ -114,13 +114,18 @@ def select_positions(rows, quotas=QUOTAS):
     return selected, shortages
 
 
+def repetition_snapshot(board):
+    """Ignore zero-count keys left by temporary push/pop during legal enumeration."""
+    return {key: count for key, count in board.transpositions.items() if count > 0}
+
+
 def measure_position(item, model):
     board = _board_from_prefix(item["prefix"])
     if board.sfen() != item["sfen"]:
         raise ValueError("D1 board/history reconstruction mismatch")
     if board.is_checkmate() or board.is_fourfold_repetition():
         raise ValueError("D1 selected terminal position")
-    before = (board.sfen(), tuple(board.move_stack), dict(board.transpositions))
+    before = (board.sfen(), tuple(board.move_stack), repetition_snapshot(board))
     observations = []
     for variant in ORDER:
         telemetry = {}
