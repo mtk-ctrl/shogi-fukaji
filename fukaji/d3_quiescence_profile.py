@@ -10,6 +10,7 @@ import argparse
 import cProfile
 import json
 import pstats
+import statistics
 import time
 
 import shogi
@@ -37,7 +38,7 @@ def category(filename, function):
     return "other"
 
 
-def profile_one(name, sfen, enabled):
+def profile_one(name, sfen, enabled, fast_tactical=False):
     board = shogi.Board(sfen)
     before = snapshot(board)
     profiler = cProfile.Profile()
@@ -49,7 +50,7 @@ def profile_one(name, sfen, enabled):
             complete_depth=True, avoid_repetition=False,
             fast_relative=False, root_alpha_beta=True,
             fast_move_list=False, deadline_from_call=True,
-            quiescence=enabled,
+            quiescence=enabled, quiescence_fast_tactical=fast_tactical,
         )
     finally:
         profiler.disable()
@@ -70,7 +71,8 @@ def profile_one(name, sfen, enabled):
             "cumulative_ms": round(cumulative_s * 1000, 4),
         })
     return {
-        "case": name, "quiescence": enabled, "move": move,
+        "case": name, "quiescence": enabled,
+        "fast_tactical": fast_tactical, "move": move,
         "depth": depth, "nodes": nodes,
         "wall_ms_instrumented": round(wall_ms, 4),
         "self_cpu_ms_by_category": {k: round(v, 4) for k, v in sorted(grouped.items())},
@@ -78,22 +80,28 @@ def profile_one(name, sfen, enabled):
     }
 
 
-def run_profile():
+def run_profile(compare_fast=False):
     scenarios = [(name, sfen) for name, sfen, *_ in RECAPTURE_VARIANTS]
     for name in ("check_evasion", "quiet_promotion"):
         scenarios.append((name, dict(CASES)[name]))
     rows = []
     for name, sfen in scenarios:
-        for enabled in (False, True):
-            rows.append(profile_one(name, sfen, enabled))
+        if compare_fast:
+            rows.append(profile_one(name, sfen, True, False))
+            rows.append(profile_one(name, sfen, True, True))
+        else:
+            for enabled in (False, True):
+                rows.append(profile_one(name, sfen, enabled))
     aggregate = {}
     for row in rows:
-        side = "Q_ON" if row["quiescence"] else "Q_OFF"
+        side = (("Q_ON_FAST" if row["fast_tactical"] else "Q_ON_BASE")
+                if compare_fast else ("Q_ON" if row["quiescence"] else "Q_OFF"))
         target = aggregate.setdefault(side, {})
         for group, ms in row["self_cpu_ms_by_category"].items():
             target[group] = round(target.get(group, 0.0) + ms, 4)
     return {
-        "experiment": "D3_Q_cost_cProfile_development_only",
+        "experiment": ("D3_Q_early_filter_cProfile" if compare_fast
+                       else "D3_Q_cost_cProfile_development_only"),
         "positions": len(scenarios), "searches": len(rows),
         "clock": "fixed_depth_1_unbounded_classical_no_G8",
         "interpretation": "instrumented exclusive CPU time; not wall-time speedup or playing strength",
@@ -101,11 +109,66 @@ def run_profile():
     }
 
 
+
+def compare_uninstrumented():
+    """Small same-runner ABBA timing diagnostic; NOT a 200ms or strength test."""
+    scenarios = [(name, sfen) for name, sfen, *_ in RECAPTURE_VARIANTS]
+    for name in ("check_evasion", "quiet_promotion"):
+        scenarios.append((name, dict(CASES)[name]))
+    rows = []
+    for name, sfen in scenarios:
+        board = shogi.Board(sfen)
+        before = snapshot(board)
+        observations = []
+        for _ in range(3):
+            for fast in (False, True, True, False):
+                start = time.perf_counter()
+                move, depth, nodes = select_move(
+                    board, movetime_ms=200, max_depth=1, model=None,
+                    complete_depth=True, avoid_repetition=False,
+                    fast_relative=False, root_alpha_beta=True,
+                    fast_move_list=False, deadline_from_call=True,
+                    quiescence=True, quiescence_fast_tactical=fast,
+                )
+                ms = (time.perf_counter() - start) * 1000
+                if snapshot(board) != before:
+                    raise AssertionError(name + ": timing changed board/history")
+                if move == "resign" or shogi.Move.from_usi(move) not in board.legal_moves:
+                    raise AssertionError(name + ": illegal timed move")
+                observations.append({"fast": fast, "move": move,
+                                     "depth": depth, "nodes": nodes, "ms": ms})
+        if len({(x["move"], x["depth"], x["nodes"]) for x in observations}) != 1:
+            raise AssertionError(name + ": candidate changed search decision/nodes")
+        base = [x["ms"] for x in observations if not x["fast"]]
+        fast = [x["ms"] for x in observations if x["fast"]]
+        rows.append({
+            "case": name, "move": observations[0]["move"],
+            "nodes": observations[0]["nodes"],
+            "baseline_median_ms": round(statistics.median(base), 4),
+            "candidate_median_ms": round(statistics.median(fast), 4),
+            "ratio_candidate_to_baseline": round(
+                statistics.median(fast) / statistics.median(base), 4),
+            "samples_per_variant": len(base),
+        })
+    return {
+        "experiment": "D3_early_filter_uninstrumented_ABBA",
+        "scope": "6_constructed_development_positions_fixed_depth1_classical_no_G8",
+        "runs": 72, "samples_per_variant_per_position": 6,
+        "timing": "single CI runner exploratory wall time; no equal-200ms or Elo claim",
+        "rows": rows,
+    }
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--json", action="store_true")
+    parser.add_argument("--compare-fast", action="store_true")
+    parser.add_argument("--compare-wall", action="store_true")
     args = parser.parse_args()
-    result = run_profile()
+    if args.compare_wall:
+        print(json.dumps(compare_uninstrumented(), sort_keys=True, indent=2))
+        return
+    result = run_profile(compare_fast=args.compare_fast)
     if args.json:
         print(json.dumps(result, sort_keys=True))
     else:
@@ -115,6 +178,7 @@ def main():
         for row in result["rows"]:
             print(json.dumps({
                 "case": row["case"], "Q": row["quiescence"],
+                "fast_tactical": row["fast_tactical"],
                 "move": row["move"], "nodes": row["nodes"],
                 "top_self_cpu_functions": row["top_self_cpu_functions"][:6],
             }, sort_keys=True))
