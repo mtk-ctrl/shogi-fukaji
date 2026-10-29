@@ -109,6 +109,77 @@ def frozen_proofs():
     return proofs
 
 
+
+# These constructed positions are development checks, not held-out puzzles.
+MATE_ONE_SFEN = "8k/9/7R1/7L1/9/9/9/9/8K b - 1"
+MATE_ONE_COUNTEREXAMPLE_SFEN = "8k/9/7R1/9/9/9/9/9/8K b - 1"
+
+
+def enumerate_mate_in_one(board):
+    """Independent legal-move oracle: checking move and zero legal replies.
+
+    The result is the complete set of mate-in-one moves, not a heuristic
+    preference or a proof of longer tactical value.
+    """
+    before = snapshot(board)
+    mates = []
+    for move in list(board.legal_moves):
+        board.push(move)
+        try:
+            if board.is_check() and not any(board.legal_moves):
+                mates.append(move.usi())
+        finally:
+            board.pop()
+    if snapshot(board) != before:
+        raise AssertionError("mate oracle changed board/history")
+    return tuple(sorted(mates))
+
+
+def mate_choice_diagnostic():
+    """Run the real research search against a proven one-ply oracle.
+
+    This intentionally uses classical evaluation and unbounded fixed depth 1,
+    NOT the frozen G8 model or a 200ms strength test. It checks whether the
+    existing root search already recognizes immediate mates with Q OFF/ON.
+    """
+    results = []
+    for name, sfen in (
+        ("guarded_mate", MATE_ONE_SFEN),
+        ("unguarded_counterexample", MATE_ONE_COUNTEREXAMPLE_SFEN),
+    ):
+        board = shogi.Board(sfen)
+        before = snapshot(board)
+        mates = enumerate_mate_in_one(board)
+        choices = []
+        for enabled in (False, True):
+            move, depth, nodes = select_move(
+                board, movetime_ms=200, max_depth=1, model=None,
+                complete_depth=True, avoid_repetition=False,
+                fast_relative=False, root_alpha_beta=True,
+                fast_move_list=False, deadline_from_call=True,
+                quiescence=enabled,
+            )
+            if snapshot(board) != before:
+                raise AssertionError("search changed board/history")
+            if move == "resign" or shogi.Move.from_usi(move) not in board.legal_moves:
+                raise AssertionError("search returned an illegal move")
+            choices.append({
+                "quiescence": enabled, "move": move, "depth": depth,
+                "nodes": nodes, "is_proven_mate_in_one": move in mates,
+            })
+        results.append({
+            "case": name, "sfen": sfen, "proven_mate_in_one_moves": list(mates),
+            "choices": choices, "model": "classical_no_G8",
+            "clock": "fixed_depth_1_unbounded_not_200ms",
+            "scope": "constructed_development_oracle_not_strength",
+        })
+    if "2c2b+" not in results[0]["proven_mate_in_one_moves"]:
+        raise AssertionError("guarded mate proof failed")
+    if "2c2b+" in results[1]["proven_mate_in_one_moves"]:
+        raise AssertionError("unguarded counterexample proof failed")
+    return results
+
+
 def validate_request(path):
     config = json.loads(Path(path).read_text(encoding="utf-8"))
     if config not in (EXPECTED, dict(EXPECTED, enabled=True)):
@@ -197,12 +268,16 @@ def run_probe(model_path, out_path):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--self-check", action="store_true")
+    parser.add_argument("--mate-choice-check", action="store_true")
     parser.add_argument("--check-request")
     parser.add_argument("--model")
     parser.add_argument("--out")
     args = parser.parse_args()
     if args.self_check:
         print(json.dumps(frozen_proofs(), indent=2))
+        return
+    if args.mate_choice_check:
+        print(json.dumps(mate_choice_diagnostic(), indent=2))
         return
     if args.check_request:
         print(json.dumps({"enabled": validate_request(args.check_request)}))

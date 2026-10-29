@@ -7,7 +7,9 @@ import unittest
 import shogi
 
 from fukaji.d3_tactical_probe import (
-    CASES, EXPECTED, ORDER, frozen_proofs, snapshot, validate_request, verify_case,
+    CASES, EXPECTED, ORDER, MATE_ONE_SFEN, MATE_ONE_COUNTEREXAMPLE_SFEN,
+    enumerate_mate_in_one, mate_choice_diagnostic,
+    frozen_proofs, snapshot, validate_request, verify_case,
 )
 
 
@@ -73,6 +75,38 @@ class D3TacticalProbeTests(unittest.TestCase):
         finally:
             unguarded.pop()
         self.assertEqual(snapshot(unguarded), unguarded_before)
+
+    def test_full_width_mate_in_one_oracle_and_counterexample(self):
+        guarded = shogi.Board(MATE_ONE_SFEN)
+        unguarded = shogi.Board(MATE_ONE_COUNTEREXAMPLE_SFEN)
+        guarded_before, unguarded_before = snapshot(guarded), snapshot(unguarded)
+        guarded_mates = enumerate_mate_in_one(guarded)
+        unguarded_mates = enumerate_mate_in_one(unguarded)
+        self.assertEqual(set(guarded_mates),
+                         {"2c1c", "2c1c+", "2c2a+", "2c2b+"})
+        self.assertEqual(unguarded_mates, ())
+        self.assertEqual(len(guarded_mates), len(set(guarded_mates)))
+        self.assertEqual(snapshot(guarded), guarded_before)
+        self.assertEqual(snapshot(unguarded), unguarded_before)
+
+    def test_actual_depth_one_search_choice_against_independent_oracle(self):
+        diagnostics = mate_choice_diagnostic()
+        self.assertEqual([x["case"] for x in diagnostics],
+                         ["guarded_mate", "unguarded_counterexample"])
+        self.assertEqual(len(diagnostics[0]["choices"]), 2)
+        self.assertEqual(len(diagnostics[1]["choices"]), 2)
+        for case in diagnostics:
+            self.assertEqual([x["quiescence"] for x in case["choices"]],
+                             [False, True])
+            self.assertEqual(case["model"], "classical_no_G8")
+            self.assertEqual(case["clock"], "fixed_depth_1_unbounded_not_200ms")
+            for choice in case["choices"]:
+                self.assertEqual(choice["depth"], 1)
+                self.assertGreater(choice["nodes"], 0)
+        # Both variants already recognize immediate checkmate at the normal
+        # negamax leaf. This test must not be cited as a D3 strength gain.
+        for choice in diagnostics[0]["choices"]:
+            self.assertTrue(choice["is_proven_mate_in_one"])
 
     def test_order_is_abba(self):
         self.assertEqual(ORDER, ("A", "B", "B", "A"))
