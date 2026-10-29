@@ -62,6 +62,11 @@ def select_positions(rows, quotas=QUOTAS):
     selected, shortages = [], {}
     for category in ("opening", "middlegame", "endgame", "tactical"):
         needed = quotas[category]
+        if type(needed) is not int or needed < 0 or needed > 12:
+            raise ValueError("invalid D1 category quota")
+        if needed == 0:
+            shortages[category] = 0
+            continue
         found = 0
         for row in rows:
             if row["pair"] in used_pairs:
