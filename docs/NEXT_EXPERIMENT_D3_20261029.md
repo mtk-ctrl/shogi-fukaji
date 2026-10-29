@@ -28,3 +28,11 @@ D1で深さ上限2→6だけの変更は深さ向上1/48。D2の単一走査は1
 - [D3 PR CI #40872844449](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/40872844449)：新規10件＋既存Engine6件成功。並行する[D1回帰 #40872844594](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/40872844594)・[D2回帰 #40872844515](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/40872844515)もverify成功、重い診断はskip。
 - **限界**：今回の戦術テストは小型人工局面であり、G8モデルを使った実計算200ms比較・独立な複数戦術問題の正答率・40局/240局対局・棋力改善は未実施。G8の重みやD2の高速化と混ぜない。
 - **次工程**：この研究候補を研究mainへ統合後、main回帰確認。G8固定・既存開発群と独立に証明した戦術局面を分け、A/Bの実総時間・正答率・違法手/中断率を先に測る。棋力に有望なら別seed先後交替40局。実測起動前に27repoの実runner5状態と同目的重複を確認する。
+
+
+## 2026-10-29 22:30 JST頃：D3第2工程（研究用G8戦術計測器）
+- [研究PR#104](https://github.com/mtk-ctrl/shogi-fukaji/pull/104)をsquash研究main `dbed787cf5f23fbda608fab1b8caa51623c9f435`へ統合。新規 `fukaji/d3_tactical_probe.py`、`tests/test_d3_tactical_probe.py`、既定OFFの `.github/fukaji-d3-tactical-request.json`、既存D3軽量CIの検査範囲を追加。正式USI/G8/雲路mainは不変更。
+- 5件の人工合法局面で、銀を取った飛車が直後に取り返される事実、直接捕獲、王手中の全合法応手、非捕獲成り、打ち歩詰禁止を独立の合法手列挙で確認。**正解手が一意である証明ではなく、未見試験でもない**。研究計測器は固定G8 SHA、総200ms、深さ上限6、A=静止探索OFF/B=ONのみをABBAで変え、指し手・完了深さ・節点・呼出全体時間・合法性・盤面履歴復元を記録する。D2高速化は双方OFF。
+- [PR CI #40882414047](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/40882414047) completed success。既存D3 10件、Engine 6件、新規D3計測器6件、5局面の独立事実の自己検査、request disabledの照合を実ログで確認。mainへ4ファイルを再取得し内容確認。
+- **未実施**：固定G8モデル実ファイルの再取得、200ms ABBA実測、独立した未見戦術正答率、40/240局比較、棋力向上。PR CIはモデルなしの軽量検査であり実測ではない。main push CIはGitHub接続のcommit workflow run取得がPRイベントのみを返し、combined statusも空のため実runを確認できない。空欄を成功扱いしない。
+- **次の工程**：main CIの確実な確認経路と27所有repoの5状態を実取得できる手段を確認し、別の明示requestで1runner G8実測。人工5局面は開発診断に限定し、正答率を主張する前に独立な有界証明付き局面を増やす。重い実測を起動できない間は研究用局面と検証基盤を拡充し、詰み防御・局面評価の別軸も検討する。安全性拒否されたROADMAP更新は迂回しない。
