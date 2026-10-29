@@ -1,5 +1,11 @@
 name: FUKAJI D1 depth cap 2 vs 6 (research only)
 on:
+  pull_request:
+    paths:
+      - 'fukaji/depth_limit_probe.py'
+      - 'fukaji/engine.py'
+      - 'tests/test_depth_limit_probe.py'
+      - '.github/workflows/d1-depth-probe.yml'
   workflow_dispatch:
   push:
     paths:
@@ -11,8 +17,20 @@ concurrency:
   group: fukaji-d1-depth
   cancel-in-progress: false
 jobs:
+  verify:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - run: python -m unittest discover -s tests -p 'test_depth_limit_probe.py' -v
+      - run: python -m unittest discover -s tests -p 'test_engine.py' -v
   depth-diagnostic:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
