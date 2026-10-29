@@ -268,12 +268,16 @@ def run_probe(model_path, out_path):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--self-check", action="store_true")
+    parser.add_argument("--mate-choice-check", action="store_true")
     parser.add_argument("--check-request")
     parser.add_argument("--model")
     parser.add_argument("--out")
     args = parser.parse_args()
     if args.self_check:
         print(json.dumps(frozen_proofs(), indent=2))
+        return
+    if args.mate_choice_check:
+        print(json.dumps(mate_choice_diagnostic(), indent=2))
         return
     if args.check_request:
         print(json.dumps({"enabled": validate_request(args.check_request)}))
