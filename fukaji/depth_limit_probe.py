@@ -135,7 +135,7 @@ def measure_position(item, model):
             model=model, fast_relative=True, root_alpha_beta=True,
             telemetry=telemetry)
         outer_ms = (time.perf_counter() - start) * 1000
-        if (board.sfen(), tuple(board.move_stack), dict(board.transpositions)) != before:
+        if (board.sfen(), tuple(board.move_stack), repetition_snapshot(board)) != before:
             raise AssertionError("D1 board or repetition history mutated")
         if word == "resign" or shogi.Move.from_usi(word) not in board.legal_moves:
             raise ValueError("D1 illegal nonterminal move")
