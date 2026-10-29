@@ -22,3 +22,5 @@
 ## 実行記録
 - PR [#114](https://github.com/mtk-ctrl/shogi-fukaji/pull/114)。初回軽量CI [#40929894050](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/40929894050) 5件失敗。原因はpython-shogiのpop後に残る反復履歴の0回キーを実効履歴と誤認したテスト比較。0回を除く正規化で修正。
 - 修正後の軽量CI [#40929998105](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/40929998105) completed success。5件成功、実CLI出力で1手詰み4手と3手詰みの強制手順を取得。3手詰み強制手順の固定回帰を追加する際、改行のエスケープを誤りbranch CI #40930110148が失敗。文字列の改行を修正して再実行した最終[branch CI #40930203363](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/40930203363)は5件成功・実CLI出力一致。PR#114をsquash統合し、[main push CI #40930313912](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/40930313912) completed success。mainのコード・テスト・workflow・README・D4正本5ファイルを読戻し。関連する既存のbranch push CIは古い失敗commitを参照したものがあり、最新の成功と混同しない。
+
+- main全体回帰[learning pipeline #40930313806](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/40930313806) completed success。既存native関連[run #40930313882](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/40930313882)・[run #40930313784](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/40930313784)はpreflight成功、重いcompare/aggregateはskip。別目的のrunnerを停止せず、D4の新しい重い実験は起動していない。
