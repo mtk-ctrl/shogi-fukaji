@@ -115,5 +115,12 @@ class ResponseContractTests(unittest.TestCase):
                     go_received_at=0.1, fallback_ready_at=0.11)
 
 
+    def test_stale_worker_stop_does_not_mark_current_generation(self):
+        s, g = self.begin()
+        self.assertFalse(s.mark_worker_stopped(generation=g - 1, at=0.01))
+        move = s.prepare(at=0.02)
+        self.assertFalse(s.mark_sent(move=move, at=0.03).worker_stopped)
+
+
 if __name__ == '__main__':
     unittest.main()
