@@ -128,6 +128,49 @@ class D3TacticalProbeTests(unittest.TestCase):
                          [True, False, False])
         # A legal recapture is a tactical risk, not proof of a unique best move.
 
+
+    def test_multiple_legal_recapture_oracles_and_history(self):
+        from fukaji.d3_tactical_probe import RECAPTURE_VARIANTS, recapture_legal_oracle
+        self.assertEqual(len(RECAPTURE_VARIANTS), 4)
+        self.assertEqual(len({row[1] for row in RECAPTURE_VARIANTS}), 4)
+        for name, sfen, capture, reply, prey in RECAPTURE_VARIANTS:
+            with self.subTest(case=name):
+                result = recapture_legal_oracle(name, sfen, capture, reply, prey)
+                self.assertEqual(result["capture"], capture)
+                self.assertEqual(result["legal_recapture"], reply)
+                self.assertEqual(result["scope"],
+                                 "legal_two_ply_recapture_only_not_optimal_move")
+
+    def test_multiple_tactical_choices_are_observed_not_assumed(self):
+        from fukaji.d3_tactical_probe import tactical_variation_diagnostic
+        observations = tactical_variation_diagnostic()
+        self.assertEqual(len(observations), 6)
+        self.assertEqual(len({x["sfen"] for x in observations}), 6)
+        self.assertEqual({x["case"] for x in observations},
+                         {"silver_file5", "pawn_file5", "bishop_diagonal",
+                          "silver_reversed", "check_evasion", "quiet_promotion"})
+        for case in observations:
+            self.assertEqual([x["variant"] for x in case["observations"]],
+                             ["A_depth1_no_q", "B_depth1_with_q",
+                              "control_depth2_no_q"])
+            self.assertEqual(case["model"], "classical_no_G8")
+            self.assertEqual(case["clock"], "fixed_depth_unbounded_not_200ms")
+            for item in case["observations"]:
+                self.assertGreater(item["nodes"], 0)
+                self.assertGreaterEqual(item["wall_ms"], 0)
+                self.assertIn(item["depth"], (0, 1, 2))
+            if case["case"] in ("check_evasion", "quiet_promotion"):
+                self.assertTrue(all(
+                    x["takes_recapturable_piece"] is None
+                    for x in case["observations"]))
+            else:
+                self.assertTrue(all(
+                    isinstance(x["takes_recapturable_piece"], bool)
+                    for x in case["observations"]))
+        # Machine-readable observations are for diagnosis, not proof of Elo.
+        print("D3_VARIATIONS_JSON=" + json.dumps(observations, sort_keys=True))
+
+
     def test_order_is_abba(self):
         self.assertEqual(ORDER, ("A", "B", "B", "A"))
 
