@@ -23,6 +23,24 @@ class D3QuiescenceTests(unittest.TestCase):
         self.assertEqual(tactical_moves(board, ordered_moves(board)), [])
         self.assertEqual(run_q(board), evaluate(board))
 
+    def test_independent_one_ply_recapture_oracle(self):
+        # Two kings and adjacent opposed rooks: White can capture Black's rook.
+        # A full-width one-ply legal-move oracle has a unique winning capture;
+        # no deeper reply can immediately recapture it.
+        board = shogi.Board("8k/9/4r4/4R4/9/9/9/9/8K w - 1")
+        capture = shogi.Move.from_usi("5c5d")
+        self.assertIn(capture, board.legal_moves)
+        before = (board.sfen(), tuple(board.move_stack))
+        quiet_score = evaluate(board)
+        board.push(capture)
+        try:
+            expected = -evaluate(board)
+        finally:
+            board.pop()
+        self.assertGreater(expected, quiet_score)
+        self.assertEqual(run_q(board, quiet_left=1), expected)
+        self.assertEqual((board.sfen(), tuple(board.move_stack)), before)
+
     def test_capture_is_selected_from_legal_moves(self):
         board = shogi.Board("4k4/9/9/4p4/4R4/9/9/9/4K4 b - 1")
         capture = shogi.Move.from_usi("5e5d")
