@@ -8,6 +8,7 @@ on:
       - 'fukaji/d3_tactical_probe.py'
       - 'fukaji/d3_quiescence_profile.py'
       - 'tests/test_d3_quiescence_profile.py'
+      - 'tests/test_d3_fast_tactical.py'
       - 'tests/test_d3_tactical_probe.py'
       - '.github/fukaji-d3-tactical-request.json'
       - '.github/workflows/d3-quiescence-ci.yml'
@@ -28,7 +29,9 @@ jobs:
       - run: python -m unittest discover -s tests -p 'test_engine.py' -v
       - run: python -m unittest discover -s tests -p 'test_d3_tactical_probe.py' -v
       - run: python -m unittest discover -s tests -p 'test_d3_quiescence_profile.py' -v
+      - run: python -m unittest discover -s tests -p 'test_d3_fast_tactical.py' -v
       - run: python -m fukaji.d3_quiescence_profile
+      - run: python -m fukaji.d3_quiescence_profile --compare-fast
       - run: python -m fukaji.d3_tactical_probe --self-check
       - run: python -m fukaji.d3_tactical_probe --mate-choice-check
       - run: python -m fukaji.d3_tactical_probe --poison-choice-check
