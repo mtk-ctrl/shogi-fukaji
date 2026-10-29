@@ -222,6 +222,114 @@ def poison_capture_choice_diagnostic():
     }
 
 
+
+# D3 development-only variants: a family of constructed recapture traps, plus
+# check evasion and quiet promotion. These are not independent held-out games.
+RECAPTURE_VARIANTS = (
+    ("silver_file5", "8k/9/4r4/4s4/4R4/9/9/9/8K b - 1",
+     "5e5d", "5c5d", shogi.SILVER),
+    ("pawn_file5", "8k/9/4r4/4p4/4R4/9/9/9/8K b - 1",
+     "5e5d", "5c5d", shogi.PAWN),
+    ("bishop_diagonal", "8k/6b2/9/4s4/4R4/9/9/9/8K b - 1",
+     "5e5d", "3b5d", shogi.SILVER),
+    ("silver_reversed", "k8/9/9/9/4r4/4S4/4R4/9/K8 w - 1",
+     "5e5f", "5g5f", shogi.SILVER),
+)
+
+
+def recapture_legal_oracle(name, sfen, capture_usi, recapture_usi, prey_type):
+    """Prove a concrete two-ply legal recapture, NOT a unique best move."""
+    board = shogi.Board(sfen)
+    before = snapshot(board)
+    first = shogi.Move.from_usi(capture_usi)
+    reply = shogi.Move.from_usi(recapture_usi)
+    if first not in board.legal_moves:
+        raise AssertionError(name + ": first move illegal")
+    target = board.piece_at(first.to_square)
+    if target is None or target.piece_type != prey_type:
+        raise AssertionError(name + ": unexpected first capture target")
+    board.push(first)
+    try:
+        if reply not in board.legal_moves:
+            raise AssertionError(name + ": recapture illegal")
+        recaptured = board.piece_at(reply.to_square)
+        if recaptured is None or recaptured.piece_type != shogi.ROOK:
+            raise AssertionError(name + ": recapture must take a rook")
+        board.push(reply)
+        try:
+            if board.is_check() and board.is_checkmate():
+                # This is only a legality oracle; no winner label is inferred.
+                pass
+        finally:
+            board.pop()
+    finally:
+        board.pop()
+    if snapshot(board) != before:
+        raise AssertionError(name + ": oracle changed board/history")
+    return {
+        "case": name, "sfen": sfen, "capture": capture_usi,
+        "legal_recapture": recapture_usi, "captured_piece": prey_type,
+        "recaptured_piece": shogi.ROOK,
+        "scope": "legal_two_ply_recapture_only_not_optimal_move",
+    }
+
+
+def tactical_variation_diagnostic():
+    """Observe the real engine on multiple constructed tactics.
+
+    A/B are fixed-depth classical evaluation, unbounded time; control is
+    depth two without Q. Neither score nor runtime is an equal-200ms test.
+    Check-evasion and promotion have only legal-fact oracles, no best-move
+    label. Each case restores the full effective board/repetition history.
+    """
+    scenarios = [
+        (name, sfen, capture, recapture_legal_oracle(
+            name, sfen, capture, reply, prey))
+        for name, sfen, capture, reply, prey in RECAPTURE_VARIANTS
+    ]
+    for name in ("check_evasion", "quiet_promotion"):
+        sfen = dict(CASES)[name]
+        scenarios.append((name, sfen, None, verify_case(name, shogi.Board(sfen))))
+    results = []
+    for name, sfen, dangerous_capture, oracle in scenarios:
+        board = shogi.Board(sfen)
+        before = snapshot(board)
+        observations = []
+        for label, depth_cap, enabled in (
+            ("A_depth1_no_q", 1, False),
+            ("B_depth1_with_q", 1, True),
+            ("control_depth2_no_q", 2, False),
+        ):
+            started = time.perf_counter()
+            move, depth, nodes = select_move(
+                board, movetime_ms=200, max_depth=depth_cap, model=None,
+                complete_depth=True, avoid_repetition=False,
+                fast_relative=False, root_alpha_beta=True,
+                fast_move_list=False, deadline_from_call=True,
+                quiescence=enabled,
+            )
+            wall_ms = (time.perf_counter() - started) * 1000
+            if snapshot(board) != before:
+                raise AssertionError(name + ": search changed board/history")
+            if move == "resign" or shogi.Move.from_usi(move) not in board.legal_moves:
+                raise AssertionError(name + ": illegal selected move")
+            observations.append({
+                "variant": label, "move": move, "depth": depth,
+                "nodes": nodes, "wall_ms": round(wall_ms, 3),
+                "takes_recapturable_piece": (
+                    move == dangerous_capture if dangerous_capture else None
+                ),
+            })
+        results.append({
+            "case": name, "sfen": sfen, "oracle": oracle,
+            "observations": observations, "model": "classical_no_G8",
+            "clock": "fixed_depth_unbounded_not_200ms",
+            "scope": "constructed_development_not_unseen_or_strength",
+        })
+    return results
+
+
+
 def validate_request(path):
     config = json.loads(Path(path).read_text(encoding="utf-8"))
     if config not in (EXPECTED, dict(EXPECTED, enabled=True)):
