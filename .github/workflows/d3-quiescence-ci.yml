@@ -27,4 +27,5 @@ jobs:
       - run: python -m unittest discover -s tests -p 'test_d3_tactical_probe.py' -v
       - run: python -m fukaji.d3_tactical_probe --self-check
       - run: python -m fukaji.d3_tactical_probe --mate-choice-check
+      - run: python -m fukaji.d3_tactical_probe --poison-choice-check
       - run: python -m fukaji.d3_tactical_probe --check-request .github/fukaji-d3-tactical-request.json
