@@ -1,5 +1,5 @@
 {
-    "enabled": true,
+    "enabled": false,
     "research_only": true,
     "model_adoption_allowed": false,
     "engine_integration_allowed": false,
