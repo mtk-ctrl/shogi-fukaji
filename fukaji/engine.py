@@ -94,18 +94,26 @@ def fast_legal_moves(board):
             yield move
 
 
-def ordered_moves(board, fast_move_list=False, fast_legal_guard=False):
+def ordered_moves(board, fast_move_list=False, fast_legal_guard=False, tactical_only=False):
     # Opt-in research: default path remains the original python-shogi logic.
-    source = fast_legal_moves(board) if fast_legal_guard else board.legal_moves
-    options=([m for m in source] if fast_move_list or fast_legal_guard
-             else list(source))
+    if tactical_only:
+        # Q-only: reject quiet pseudo-moves *before* costly legality checks.
+        # Captures/promotions still receive the original full legality guard.
+        # Never use this in check, where every legal evasion is required.
+        options = [m for m in board.generate_pseudo_legal_moves()
+                   if (m.promotion or board.piece_at(m.to_square) is not None)
+                   and not board.is_suicide_or_check_by_dropping_pawn(m)]
+    else:
+        source = fast_legal_moves(board) if fast_legal_guard else board.legal_moves
+        options=([m for m in source] if fast_move_list or fast_legal_guard
+                 else list(source))
     def order(m):
         p=board.piece_at(m.to_square)
         return (VALUES.get(p.piece_type,0) if p else 0) + (200 if m.promotion else 0)
     options.sort(key=order,reverse=True)
     return options
 
-def negamax(board, depth, alpha, beta, deadline, nodes, model=None, fast_relative=False, guard_checkmate=False, fast_move_list=False, fast_legal_guard=False, quiescence=False):
+def negamax(board, depth, alpha, beta, deadline, nodes, model=None, fast_relative=False, guard_checkmate=False, fast_move_list=False, fast_legal_guard=False, quiescence=False, quiescence_fast_tactical=False):
     nodes[0]+=1
     if (nodes[0]&127)==0 and time.monotonic()>=deadline:
         raise TimeoutError()
@@ -125,7 +133,10 @@ def negamax(board, depth, alpha, beta, deadline, nodes, model=None, fast_relativ
             return quiesce(
                 board, alpha, beta, deadline, nodes,
                 lambda position: evaluate(position, model, fast_relative),
-                lambda position: ordered_moves(position, fast_move_list, fast_legal_guard),
+                lambda position, tactical_only=False: ordered_moves(
+                    position, fast_move_list, fast_legal_guard,
+                    tactical_only=tactical_only),
+                fast_tactical=quiescence_fast_tactical,
             )
         return evaluate(board, model, fast_relative)
     legal=ordered_moves(board, fast_move_list=fast_move_list, fast_legal_guard=fast_legal_guard)
@@ -135,7 +146,7 @@ def negamax(board, depth, alpha, beta, deadline, nodes, model=None, fast_relativ
     for move in legal:
         board.push(move)
         try:
-            score=-negamax(board,depth-1,-beta,-alpha,deadline,nodes,model,fast_relative,guard_checkmate,fast_move_list,fast_legal_guard,quiescence)
+            score=-negamax(board,depth-1,-beta,-alpha,deadline,nodes,model,fast_relative,guard_checkmate,fast_move_list,fast_legal_guard,quiescence,quiescence_fast_tactical)
         finally:
             board.pop()
         if score>best:
@@ -145,7 +156,7 @@ def negamax(board, depth, alpha, beta, deadline, nodes, model=None, fast_relativ
             break
     return best
 
-def select_move(board, movetime_ms=200, max_depth=5, model=None, avoid_repetition=True, complete_depth=False, fast_relative=False, root_alpha_beta=False, guard_checkmate=False, fast_move_list=False, fast_legal_guard=False, telemetry=None, deadline_from_call=False, quiescence=False):
+def select_move(board, movetime_ms=200, max_depth=5, model=None, avoid_repetition=True, complete_depth=False, fast_relative=False, root_alpha_beta=False, guard_checkmate=False, fast_move_list=False, fast_legal_guard=False, telemetry=None, deadline_from_call=False, quiescence=False, quiescence_fast_tactical=False):
     # Optional research-only timing and whole-call budget; USI defaults unchanged.
     call_started = time.monotonic() if telemetry is not None or deadline_from_call else None
     moves=ordered_moves(board, fast_move_list=fast_move_list, fast_legal_guard=fast_legal_guard)
@@ -200,7 +211,7 @@ def select_move(board, movetime_ms=200, max_depth=5, model=None, avoid_repetitio
                 board.push(move)
                 try:
                     child_beta = -root_alpha if root_alpha_beta else INF
-                    score=-negamax(board,depth-1,-INF,child_beta,deadline,nodes,model,fast_relative,guard_checkmate,fast_move_list,fast_legal_guard,quiescence)
+                    score=-negamax(board,depth-1,-INF,child_beta,deadline,nodes,model,fast_relative,guard_checkmate,fast_move_list,fast_legal_guard,quiescence,quiescence_fast_tactical)
                 finally:
                     board.pop()
                 if score>scorebest:
