@@ -53,3 +53,12 @@ D5-1の最初の工程は、元240局の実在母数とD4/既往研究との親�
 
 - GitHub接続の正規 `fetch(url=https://api.github.com/repos/mtk-ctrl/shogi-fukaji/actions/runs?head_sha=...)` でmain push実run一覧を取得できることを再確認。従来のPR限定 `fetch_commit_workflow_runs` や空のcombined statusをmain CIの根拠にしない。PR#119/#120のD5 main CI・全体回帰は上記4runがいずれもcompleted success。
 - 2026-10-30 05時台に所有27repoを実取得し、各repoの最新最大100runの5状態（queued/in_progress/pending/waiting/requested）を確認。100件超の8repo（ChatGPT-Codex-、eigotango、kaisha01、kaisha99、nigatenote、shogi-ai、shogi-ai-old、shogi-fukaji）は5状態をREST statusフィルタで個別照会。**27repoの該当5状態は照会時点で全0件、同目的の実行中重複なし**。これは将来の空きrunner保証ではない。重いrunは起動しておらず、他runも停止していない。
+
+## D5第3工程：3開発親の評価時系列と実着手イベントを照合（2026-10-30）
+
+- **強化軸**：評価判断の正確さ。**実験**：D5-3・pair49/52/109の全実着手を同じ先手視点に正規化し、駒得・持駒・王手・捕獲・成り・玉周囲攻撃と照合。**実棋力検証**：この診断は棋力・最善手の証明ではない。独立した単一候補を得られた場合のみ固定G8同総200ms・先後交替40局→別seed240局で検証する。
+- [PR#121](https://github.com/mtk-ctrl/shogi-fukaji/pull/121) を研究main `5e26d032fa0f450a98f64d27253eaafb41b2adee` へsquash統合。branch [D5-3 CI#40952590864](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/40952590864) completed success、5単体テスト成功・実データ読取/出所SHA検査/合法再生/盤面・履歴復元/JSON生成成功。main push [D5-3 CI#40952733146](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/40952733146) completed successをREST実runで確認。期限付きartifact ID `12931248573`、GitHub報告digest `sha256:e7944afaf982a77c91ad22ed003a2f570c1a932389338966cee575fb270073b2`。ZIPの独立再取得SHA検査は未実施。
+- 元240局原本SHA `60eb9ab4dadc3776e43ac49cf27bd04137477c339850fdaa7db2265248a8d3bf` とG8内部モデルSHA `18b39f647caa458389a1900b875337adadac74ae37e27343e7f0094ed663c492` を固定。対象は開発親3組の詰み決着**5局・合計878手**（pair49=1局224手、pair52=2局179/161手、pair109=2局238/76手）。封印12親の評価は計算せず、未決着を勝敗教師化せず、新対局・学習なし。
+- **pair49**：60手目の先手視点G8 `+1101`、駒得合計 `+1440` にもかかわらず、最終勝者は後手。80手目 `+1479` から100手目 `-269` へ反転。**pair52**：片方の60手目は先手視点G8 `-2842`、駒得 `-3810`、先手玉周囲への攻撃4升だが最終勝者は先手。その同じ局は80手目 `+297` に反転。もう一方は20〜100手目で最終勝者と符号一致。**pair109**：片方の先手視点G8は20手目 `+162`、60手目 `+1694`、100手目 `+588`（駒得 `+200/+2240/+760`）なのに最終勝者は後手。もう一方は観測済み20/40/60手目で符号一致。
+- 5局の**評価値の絶対変化が大きい各上位8手、合計40手すべてが捕獲手**だった。これは大きな評価変動と駒交換の**同時発生**を示すが、捕獲の良し悪しや評価の過大/過小を証明しない。相手の将来の詰み勝敗を、過去局面の真の評価値とみなすこともできない。親3組に共通する単一の修正可能な評価誤りは特定できず、開発群だけを根拠に駒価値・玉危険係数を調整しない。
+- **判断と次の一手**：D5の事後勝敗符号を用いた原因帰属はここで縮小・停止する。封印12親は引き続き未評価。次は別軸として、既存の小型NNUE研究の実装・PR#62・学習群/保持群の分離・実推論コストを監査し、固定G8より独立の評価表現候補として有望かを判定する。学習や重い比較は必要な条件と明示requestが整ってから。正式USI/G8/既定値・雲路mainは変更しない。新たな重いrun・他run停止なし。
