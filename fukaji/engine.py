@@ -138,7 +138,9 @@ def negamax(board, depth, alpha, beta, deadline, nodes, model=None, fast_relativ
             break
     return best
 
-def select_move(board, movetime_ms=200, max_depth=5, model=None, avoid_repetition=True, complete_depth=False, fast_relative=False, root_alpha_beta=False, guard_checkmate=False, fast_move_list=False, fast_legal_guard=False):
+def select_move(board, movetime_ms=200, max_depth=5, model=None, avoid_repetition=True, complete_depth=False, fast_relative=False, root_alpha_beta=False, guard_checkmate=False, fast_move_list=False, fast_legal_guard=False, telemetry=None):
+    # Optional research-only timing; ordinary USI behavior and defaults stay unchanged.
+    call_started = time.monotonic() if telemetry is not None else None
     moves=ordered_moves(board, fast_move_list=fast_move_list, fast_legal_guard=fast_legal_guard)
     # At the root, prefer genuinely new legal positions over repeating an
     # earlier position. The old engine repeated 96/100 games to termination.
@@ -159,12 +161,18 @@ def select_move(board, movetime_ms=200, max_depth=5, model=None, avoid_repetitio
         least=min(counts)
         moves=[m for m,count in zip(moves,counts) if count==least]
 
+    prepared_at = time.monotonic() if telemetry is not None else None
     if not moves:
+        if telemetry is not None:
+            telemetry.update(root_preparation_ms=(prepared_at-call_started)*1000,
+                             internal_search_ms=0.0, total_call_ms=(prepared_at-call_started)*1000,
+                             completed_depth=0, nodes=0)
         return "resign",0,0
     # Diagnostic mode removes wall-clock cutoffs. Both engines must complete
     # the same search depth to isolate evaluation quality from inference cost.
     # This mode is for bounded-depth research, not timed USI competition.
     deadline=float("inf") if complete_depth else time.monotonic()+max(1,movetime_ms)/1000
+    search_started = time.monotonic() if telemetry is not None else None
     best=moves[0]
     nodes=[0]
     complete_depth=0
@@ -197,6 +205,12 @@ def select_move(board, movetime_ms=200, max_depth=5, model=None, avoid_repetitio
         best,current=current,best
         complete_depth=depth
         moves.sort(key=lambda m: 0 if m==best else 1)
+    if telemetry is not None:
+        returned_at = time.monotonic()
+        telemetry.update(root_preparation_ms=(prepared_at-call_started)*1000,
+                         internal_search_ms=(returned_at-search_started)*1000,
+                         total_call_ms=(returned_at-call_started)*1000,
+                         completed_depth=complete_depth, nodes=nodes[0])
     return best.usi(),complete_depth,nodes[0]
 
 def command_loop():
