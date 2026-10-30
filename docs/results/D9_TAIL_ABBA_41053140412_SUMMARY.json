@@ -1,0 +1,65 @@
+{
+  "run_sha": "3352ba65c2fbce01fc011f2909d077fcc24fb5a2",
+  "protocol": {
+    "enabled": true,
+    "research_only": true,
+    "training_allowed": false,
+    "model_adoption_allowed": false,
+    "model_sha256": "18b39f647caa458389a1900b875337adadac74ae37e27343e7f0094ed663c492",
+    "d8_source_run": 41048053976,
+    "d8_source_artifact": 12973279499,
+    "d8_zip_sha256": "f25b7be57645af7c8e6b00387b243009252a9b471c9606a207a654537e7d9c41",
+    "d8_games_sha256": "55d3873c609bab023c3f5507dc890c583178adc646e282dd1ecd5b385af523ef",
+    "tails": [
+      [
+        36,
+        225
+      ],
+      [
+        44,
+        171
+      ],
+      [
+        160,
+        225
+      ]
+    ],
+    "order": [
+      false,
+      true,
+      true,
+      false
+    ],
+    "movetime_ms": 200,
+    "max_depth": 3,
+    "mix_percent": 25,
+    "fast_move_list": true,
+    "fast_relative": true,
+    "root_alpha_beta": true,
+    "deadline_from_call": true,
+    "max_single_call_ms": 1000
+  },
+  "diagnostic_only": true,
+  "strength_proven": false,
+  "original_D8_not_independent": true,
+  "timing": {
+    "every_128_nodes": {
+      "calls": 6,
+      "mean_ms": 523.3286268333472,
+      "median_ms": 525.1570815000264,
+      "max_ms": 545.0978360000249,
+      "over_200ms": 6,
+      "over_300ms": 6,
+      "depth3_complete": 0
+    },
+    "each_node": {
+      "calls": 6,
+      "mean_ms": 203.13463066666296,
+      "median_ms": 202.75983799999153,
+      "max_ms": 205.650634000051,
+      "over_200ms": 6,
+      "over_300ms": 0,
+      "depth3_complete": 0
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "goal_id": "ab88e21e-083f-41b3-8b65-daf39872a2e1",
+  "repository": "mtk-ctrl/shogi-fukaji",
+  "goal_complete": false,
+  "stage": "d9_clock_arena_preparing",
+  "work_status": "active_in_work",
+  "waiting_run_id": null,
+  "completed_runs": [
+    41048053976,
+    41052045247,
+    41053140412
+  ],
+  "next_action": "verify PR/main CI and default-OFF skips; audit all repo runner availability; explicitly launch frozen D9 clock-only 40 then 240 comparison",
+  "timer": {
+    "id": "6adf4925c5288191af0f19a1dec5a0ad",
+    "future_schedule_verified": false
+  },
+  "last_callback": {
+    "id": "d1d79956-df58-8320-b3b6-35aff7334600",
+    "scheduled_for": "2026-10-30T20:39:22+09:00",
+    "started_at": "2026-10-30T20:43:49.888468+09:00",
+    "failed_at": "2026-10-30T21:08:54.203765+09:00",
+    "error_detail": "not exposed by available connection"
+  },
+  "formal_adoption": false
+}
