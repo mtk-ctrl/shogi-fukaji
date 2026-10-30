@@ -116,3 +116,13 @@ D6-1の二視点NNUE push/popと通常盤面push/popの差は固定3局面で約
 - 比較入口[PR#125](https://github.com/mtk-ctrl/shogi-fukaji/pull/125)→研究main `87754b7485f0208b154b4b0ef8e4cfd95018d4e3`。branch [CI41001347362](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/41001347362)全565テスト成功。main学習CI41001559726/native2系統のpreflightが全成功。既定OFFの[run41001559822](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/41001559822)も全565テスト成功、enabled:false、evaluate/aggregate skippedを実ログ・jobsで確認。
 - 明示起動直前に27所有repo×5状態=135応答を取得し、全応答成功・各状態0件を確認。20runner空き・同目的未完了runなし。別commit `e37b66f4f59e08e723eab03c3d05710c1b41fe2d` でrequestのenabledだけをtrueにし、[実run41001811820](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/41001811820)（2026-10-30 13:14:46 JST作成）を起動した。現在の対局/評価結果は未確定。
 - Addness AIメモリ4eba46a6-f6f6-4203-987a-21e16364c741への差分保存と読戻しは成功。Goal本文への短い追記はINVALID_ARGUMENTで拒否された。本文更新の成功・内部原因の特定とは報告せず、確定記録はこのGitHub文書とAIメモリへ保存する。
+
+
+### 実対局の開始と単発確認予定
+
+- run41001811820のpreflightは全565テスト・train665局だけの2候補学習・G8短い実対局smokeを成功。学習群全97137局面のlog lossは等間隔0.6718552345650984/隣接ペア0.6706133826875771。これは学習群内の値で、未見予測や棋力の改善とはしない。両候補は各2660更新/42560観測で固定済み。
+- input artifact12953408119、ZIP SHA `0c637b5fae5cf8349bf2def5486d7f80ebfd5d1f534cf7bcac8c199f45bf0227`、674896 bytes、2026-11-29期限。inputの独立ダウンロード監査と永続保存は結果取得時に行う。
+- 全20対局stepが2026-10-30 13:17:37〜13:17:45 JSTに実開始したことをjobs APIで確認。400局の完了・勝敗・予測損失の結果は未確定。
+- 同一Automation `6adf4925c5288191af0f19a1dec5a0ad` を **2026-10-30 13:30:46 JSTの単発予定**へ更新し、有効状態・schedule・prompt全文一致を読戻し確認。算定は最後の対局開始13:17:45＋同種G7最長job12分12秒＋同run集約19秒＋3モデルの新しい損失報告の追加処理を暫定30秒。G8の実所要時間は今回初めてであり、見込みである。next_run_timeはAPI応答でnullであり、実発火・自動再開はまだ検証していない。
+- 引継ぎ本文にrun/入力SHA/400評価専用/既存保持群不使用/独立監査/成果物保存/request OFF・skip確認と、結果から次の具体的研究をWORK内で実行する指示を保存。非同期待ちがない仕事を予約待ちに送らず、候補見送り・記録保存だけで終了しない。更新成功とタイマー連鎖のE2E成功を混同しない。
+- Addnessの起動/予約差分メモリ `92c60a78-9f5f-4d30-b42d-0d53fac0b988` 保存済み。Goal本文の追記拒否は継続しており、本文更新成功とはしない。
