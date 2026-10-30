@@ -1,6 +1,6 @@
 # D9：探索中の時計確認頻度と長い応答遅延の切り分け
 
-状態：研究用既定OFFの単独候補を[PR#128](https://github.com/mtk-ctrl/shogi-fukaji/pull/128)で研究mainへsquash統合（commit `a6ae4ad9acd6803222d9669a3f51de58b1d6d779`）。branch CI 580テスト成功。main CI `41051115442` の結果は別途確認。正式USI・既定値・G8・雲路mainは不変。
+状態：研究用既定OFFの単独候補を[PR#128](https://github.com/mtk-ctrl/shogi-fukaji/pull/128)で研究mainへsquash統合（commit `a6ae4ad9acd6803222d9669a3f51de58b1d6d779`）。branch CI 580テスト/main CI `41051115442` success。続いて[PR#129](https://github.com/mtk-ctrl/shogi-fukaji/pull/129)で単一runner ABBA診断を研究main `d8d56c6412c497b17eb6a9e69ea3536bc5077a4a` へ統合。branch CI 582テスト/main CI `41051789379` success。正式USI・既定値・G8・雲路mainは不変。
 
 ## 強化軸・検証方法
 - 強化軸：探索効率と時間配分。棋力は**同一G8・同じ200ms呼出期限・独立した先後交替対局**で検証し、要求200msと実応答時間を分ける。
@@ -17,3 +17,14 @@
 
 ## 制約・保存
 重いG8比較は、27所有repo×queued/in_progress/pending/waiting/requestedの5状態、同目的重複、main CI、空きrunner、固定SHA、request明示ON、監査条件を直前に正規取得できる場合だけ。ほかのrunner停止なし。学習・外部AI教師・未決着勝敗教師なし。研究mainへの既定OFF保存は正式採用ではなく、本人判断まで正式USI・G8・既定値を変更しない。原棋譜とモデルは期限付きartifactだけでなく継続利用可能な保存先を検証する。
+
+## D9第2工程・実G8の軽量ABBA（2026-10-30）
+
+[run41052045247](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/41052045247) は単一runnerでcompleted success。直前の27所有repo×5状態135応答は全成功・全0、同目的重複なし。固定G8 SHA一致、研究用の別3序盤（seed202640900〜902）、各OFF→ON→ON→OFFで計12呼出。上限3、呼出開始200ms、FastMoveList/fast_relative/root_alpha_betaを共通にし、時計確認だけ128節点ごと対毎節点で比較。全着手合法・盤面/履歴復元検査成功。
+
+- 128節点ごと：6回、平均153.122ms、中央値144.353ms、最大207.995ms、200ms超過2回、深さ3完了4回。
+- 毎節点：6回、平均150.699ms、中央値143.815ms、最大200.284ms、200ms超過2回、深さ3完了4回。
+- 3局面の各ABBAでは着手・完了深さが同じ。未完了の深さ3試行では節点数が変わることがあり、固定深さ回帰での節点一致とは区別する。
+- 原ZIP artifact12974474206、ZIP SHA256 `fcd2e406f4adde0c9752cd3ce65f40b7824490080ab2c55c9de216000bd26608`。Library `/将棋AI/深路/研究成果/D9_時計確認_ABBA12回_41052045247.zip` へ別保存。
+
+**解釈**：今回の3開発局面では毎節点確認が大きく遅くなる傾向はなく、最大遅延が約208→200msになった。ただし標本は6対6で300ms超過は両側0。D8の500〜874ms尾の改善を直接検証しておらず、実棋力改善・厳密200ms保証は未証明。次はD8の最悪3局面を**原因診断専用**に合法再生し、時計確認間隔の効果と1節点内部の長時間処理を分離する。D8原群を新規採否群に転用しない。
