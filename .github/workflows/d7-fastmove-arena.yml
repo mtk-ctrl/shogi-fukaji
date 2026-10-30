@@ -1,0 +1,238 @@
+name: FUKAJI G8 fast move list paired 40 then independent 240
+'on':
+  workflow_dispatch: null
+  push:
+    paths:
+    - .github/fukaji-d7-fastmove-arena-request.json
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-d7-g8-fastmove
+  cancel-in-progress: false
+jobs:
+  preflight:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    outputs:
+      enabled: ${{ steps.protocol.outputs.enabled }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - run: python -m pip install -r requirements.txt
+    - name: Run all tests and validate exact OFF/ON protocol
+      id: protocol
+      run: |-
+        python -m unittest discover -s tests -v
+        python -m fukaji.d7_fastmove_arena --mode check --request .github/fukaji-d7-fastmove-arena-request.json
+    - name: Verify frozen model and disjoint opening cohorts
+      if: steps.protocol.outputs.enabled == 'true'
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: python -m fukaji.d7_fastmove_arena --mode prepare --request .github/fukaji-d7-fastmove-arena-request.json --out build/d7/input
+    - name: Check actual G8 fixed-depth parity and both candidate seats
+      if: steps.protocol.outputs.enabled == 'true'
+      run: |-
+        python - <<'PYSMOKE'
+        import json
+        from pathlib import Path
+        import shogi
+        from fukaji.arena import opening
+        from fukaji.engine import select_move
+        from fukaji.relative_value import RelativeValue
+        from fukaji.direct_arena import replay_check
+        from fukaji.d7_fastmove_arena import board_state, play_game, verify_input, STAGES
+        verify_input('build/d7/input')
+        model = RelativeValue('build/d7/input/g8.npz', mix_percent=25)
+        parity = []
+        for stage in ('screen', 'final'):
+            head = opening(STAGES[stage][1], 6)
+            board = shogi.Board()
+            for word in head:
+                board.push_usi(word)
+            before = board_state(board)
+            results = [select_move(board, complete_depth=True, max_depth=2, model=model, fast_relative=True, root_alpha_beta=True, fast_move_list=flag) for flag in (False, True)]
+            if results[0] != results[1] or board_state(board) != before:
+                raise SystemExit('D7 fixed-depth move/depth/node/history parity failed')
+            parity.append({'stage': stage, 'result': results[0]})
+        for seat in (True, False):
+            head = opening(STAGES['screen'][1], 6)
+            row = play_game(head, seat, model, max_plies=12)
+            replay_check(head, row['moves'], row)
+            if len(head) + len(row['moves']) > 12:
+                raise SystemExit('D7 smoke move cap failed')
+        Path('build/d7/input/preflight_guard.json').write_text(json.dumps({'fixed_depth_parity': parity, 'both_arms_legal_play_smoke': True}, indent=2) + '\n')
+        print('D7 G8 fixed-depth parity and both-arm legal smoke passed')
+        PYSMOKE
+    - uses: actions/upload-artifact@v4
+      with:
+        name: fukaji-d7-input-${{ github.run_id }}
+        path: build/d7/input/
+        retention-days: 30
+        if-no-files-found: error
+      if: steps.protocol.outputs.enabled == 'true'
+  screen:
+    needs: preflight
+    if: needs.preflight.outputs.enabled == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        shard:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+        - 6
+        - 7
+        - 8
+        - 9
+        - 10
+        - 11
+        - 12
+        - 13
+        - 14
+        - 15
+        - 16
+        - 17
+        - 18
+        - 19
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - run: python -m pip install -r requirements.txt
+    - uses: actions/download-artifact@v4
+      with:
+        name: fukaji-d7-input-${{ github.run_id }}
+        path: build/d7/input
+    - name: Play paired G8 games with one FastMoveList difference
+      run: python -m fukaji.d7_fastmove_arena --mode play --request .github/fukaji-d7-fastmove-arena-request.json --input build/d7/input --stage screen --shard ${{ matrix.shard }} --out build/d7/part
+    - uses: actions/upload-artifact@v4
+      with:
+        name: fukaji-d7-screen-part-${{ matrix.shard }}-${{ github.run_id }}
+        path: build/d7/part/
+        retention-days: 30
+        if-no-files-found: warn
+      if: always()
+  screen_summary:
+    needs:
+    - preflight
+    - screen
+    if: needs.preflight.outputs.enabled == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - run: python -m pip install -r requirements.txt
+    - uses: actions/download-artifact@v4
+      with:
+        name: fukaji-d7-input-${{ github.run_id }}
+        path: build/d7/input
+    - uses: actions/download-artifact@v4
+      with:
+        pattern: fukaji-d7-screen-part-*
+        path: build/d7/parts
+        merge-multiple: false
+    - name: Verify every played move, paired seats, timing and results
+      id: aggregate
+      run: python -m fukaji.d7_fastmove_arena --mode aggregate --request .github/fukaji-d7-fastmove-arena-request.json --input build/d7/input --parts build/d7/parts --stage screen --out build/d7/summary
+    - uses: actions/upload-artifact@v4
+      with:
+        name: fukaji-d7-screen-summary-${{ github.run_id }}
+        path: build/d7/summary/
+        retention-days: 30
+        if-no-files-found: error
+    outputs:
+      proceed: ${{ steps.aggregate.outputs.proceed }}
+  final:
+    needs: screen_summary
+    if: needs.screen_summary.outputs.proceed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        shard:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+        - 6
+        - 7
+        - 8
+        - 9
+        - 10
+        - 11
+        - 12
+        - 13
+        - 14
+        - 15
+        - 16
+        - 17
+        - 18
+        - 19
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - run: python -m pip install -r requirements.txt
+    - uses: actions/download-artifact@v4
+      with:
+        name: fukaji-d7-input-${{ github.run_id }}
+        path: build/d7/input
+    - name: Play paired G8 games with one FastMoveList difference
+      run: python -m fukaji.d7_fastmove_arena --mode play --request .github/fukaji-d7-fastmove-arena-request.json --input build/d7/input --stage final --shard ${{ matrix.shard }} --out build/d7/part
+    - uses: actions/upload-artifact@v4
+      with:
+        name: fukaji-d7-final-part-${{ matrix.shard }}-${{ github.run_id }}
+        path: build/d7/part/
+        retention-days: 30
+        if-no-files-found: warn
+      if: always()
+  final_summary:
+    needs:
+    - screen_summary
+    - final
+    if: needs.screen_summary.outputs.proceed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - run: python -m pip install -r requirements.txt
+    - uses: actions/download-artifact@v4
+      with:
+        name: fukaji-d7-input-${{ github.run_id }}
+        path: build/d7/input
+    - uses: actions/download-artifact@v4
+      with:
+        pattern: fukaji-d7-final-part-*
+        path: build/d7/parts
+        merge-multiple: false
+    - name: Verify every played move, paired seats, timing and results
+      id: aggregate
+      run: python -m fukaji.d7_fastmove_arena --mode aggregate --request .github/fukaji-d7-fastmove-arena-request.json --input build/d7/input --parts build/d7/parts --stage final --out build/d7/summary
+    - uses: actions/upload-artifact@v4
+      with:
+        name: fukaji-d7-final-summary-${{ github.run_id }}
+        path: build/d7/summary/
+        retention-days: 30
+        if-no-files-found: error
