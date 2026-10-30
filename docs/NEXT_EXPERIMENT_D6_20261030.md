@@ -108,3 +108,11 @@ D6-1の二視点NNUE push/popと通常盤面push/popの差は固定3局面で約
 - 実行条件：main CI、既定OFFで重いjobのskip、全所有repoの5状態と同目的重複、20空きrunnerを確認した後に別commitでenabledだけをtrueにする。空きが20未満なら固定20jobを起動せず、空きを待つか計画変更を先に保存する。結果確認後にrequestをOFFへ戻し、skipと成果物の長期保存を確認する。
 - 所要見込みの根拠：同じ20runner×各20局・200ms/深さ2のG7自己対局run40610843978は、対局job約7分54秒〜12分12秒、集約19秒。G8での同条件時間は未確定なので、実開始後の20局中完了数をログで確認して補正する。未開始の時刻を実開始と扱わない。短いCI/準備はWORKで確認し、実対局が稼働して会話をまたぐ場合だけ同じ単発予約を実ETAへ置く。
 - 採否：隣接ペアが元NNUEを上回っても、それだけで棋力改善やG8代替としない。G8より誤差が大きい、件数不足、合法性/原本/比較条件違反なら探索接続・40/240局比較へ進めない。結果の差は対局単位の構造を踏まえ、分からない点は不明とする。
+
+
+### D6-4/5の検証と明示起動（実行中）
+
+- 隣接ペア候補[PR#124](https://github.com/mtk-ctrl/shogi-fukaji/pull/124)→研究main `86f3590e13a0b97ab260fc96c62200ea1c392b96`。branch [CI41000608735](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/41000608735)全562テスト成功、main [CI41000827042](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/41000827042)成功。
+- 比較入口[PR#125](https://github.com/mtk-ctrl/shogi-fukaji/pull/125)→研究main `87754b7485f0208b154b4b0ef8e4cfd95018d4e3`。branch [CI41001347362](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/41001347362)全565テスト成功。main学習CI41001559726/native2系統のpreflightが全成功。既定OFFの[run41001559822](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/41001559822)も全565テスト成功、enabled:false、evaluate/aggregate skippedを実ログ・jobsで確認。
+- 明示起動直前に27所有repo×5状態=135応答を取得し、全応答成功・各状態0件を確認。20runner空き・同目的未完了runなし。別commit `e37b66f4f59e08e723eab03c3d05710c1b41fe2d` でrequestのenabledだけをtrueにし、[実run41001811820](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/41001811820)（2026-10-30 13:14:46 JST作成）を起動した。現在の対局/評価結果は未確定。
+- Addness AIメモリ4eba46a6-f6f6-4203-987a-21e16364c741への差分保存と読戻しは成功。Goal本文への短い追記はINVALID_ARGUMENTで拒否された。本文更新の成功・内部原因の特定とは報告せず、確定記録はこのGitHub文書とAIメモリへ保存する。
