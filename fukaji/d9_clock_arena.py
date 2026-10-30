@@ -14,6 +14,7 @@ import math
 import os
 from pathlib import Path
 import time
+import statistics
 from zipfile import ZipFile
 
 import shogi
@@ -106,8 +107,7 @@ def play_game(head, candidate_black, model, max_plies=MAX_PLIES, start_sfen=None
         if not math.isfinite(elapsed) or not 0 <= elapsed <= 1000:
             raise ValueError("call exceeded frozen 1000ms fault ceiling")
         if word == "resign":
-            status = "no_move_unresolved"
-            break
+            raise ValueError("search returned no move before a verified terminal state")
         move = shogi.Move.from_usi(word)
         if move not in board.legal_moves:
             raise ValueError("illegal selected move")
@@ -139,13 +139,16 @@ def summarize(rows):
                      "depth_sum": 0, "depth2_incomplete": 0, "depth3_complete": 0, "over_200ms": 0,
                      "max_elapsed_ms": 0.0, "root_preparation_ms": 0.0,
                      "root_preparation_observations": 0} for side in ("baseline", "candidate")}
+    elapsed_samples = {side: [] for side in timing}
     for row in rows:
         key = ("candidate" if (row["winner"] == shogi.BLACK) == row["candidate_black"]
                else "baseline") if row["status"] == "checkmate" else "unresolved"
         wins[key] += 1
         pairs.setdefault(row["pair"], Counter())[key] += 1
         for turn in row["played"]:
-            t = timing["candidate" if turn["candidate"] else "baseline"]
+            side = "candidate" if turn["candidate"] else "baseline"
+            t = timing[side]
+            elapsed_samples[side].append(turn["elapsed_ms"])
             t["turns"] += 1
             t["elapsed_ms"] += turn["elapsed_ms"]
             t["nodes"] += turn["nodes"]
@@ -161,7 +164,15 @@ def summarize(rows):
     pair_counts = Counter("candidate" if p["candidate"] > p["baseline"] else
                           "baseline" if p["baseline"] > p["candidate"] else "equal"
                           for p in pairs.values())
-    for t in timing.values():
+    for side, t in timing.items():
+        samples = sorted(elapsed_samples[side])
+        # Nearest-rank percentiles: index ceil(p * n) - 1, without interpolation.
+        t["median_elapsed_ms"] = statistics.median(samples) if samples else None
+        for percentile in (95, 99):
+            t[f"p{percentile}_elapsed_ms"] = (
+                samples[math.ceil(percentile * len(samples) / 100) - 1] if samples else None)
+        for limit in (300, 500):
+            t[f"over_{limit}ms"] = sum(value > limit for value in samples)
         t["mean_elapsed_ms"] = t["elapsed_ms"] / t["turns"] if t["turns"] else None
         t["mean_root_preparation_ms"] = (t["root_preparation_ms"] / t["root_preparation_observations"]
                                            if t["root_preparation_observations"] else None)
@@ -176,6 +187,20 @@ def summarize(rows):
             "screen_obvious_regression": obvious_loss,
             "screen_proceed": a is not None and b is not None and b <= a * 1.05 and not obvious_loss,
             "strength_proven": False, "model_promoted": False}
+
+
+def verify_game_completion(head, row):
+    """Reject truncated or failed games before a screening result can pass."""
+    moves, played = row["moves"], row["played"]
+    if len(head) + len(moves) > MAX_PLIES or len(played) != len(moves):
+        raise ValueError("D9 move/telemetry count mismatch")
+    if row["status"] == "move_limit_unresolved" and len(head) + len(moves) != MAX_PLIES:
+        raise ValueError("D9 truncated game reported as move-limit termination")
+    if row["status"] == "no_move_unresolved":
+        raise ValueError("D9 missing search move is a fault, not an unresolved game")
+    if row["status"] == "checkmate" and type(row["winner"]) is not int:
+        raise ValueError("D9 checkmate winner must be an integer color")
+    replay_check(head, moves, row)
 
 
 def prepare(out):
@@ -233,7 +258,7 @@ def play_shard(input_dir, out, stage, shard):
             head = opening(STAGES[stage][1] + pair, 6)
             for seat, candidate_black in enumerate((True, False)):
                 row = play_game(head, candidate_black, model)
-                replay_check(head, row["moves"], row)
+                verify_game_completion(head, row)
                 row.update({"pair": pair, "game_id": 2 * pair + seat, "stage": stage,
                             "opening": head})
                 f.write(json.dumps(row) + "\n")
@@ -275,13 +300,15 @@ def aggregate(input_dir, parts, out, stage):
                     row.get("opening") != head or type(row.get("candidate_black")) is not bool or
                     row["candidate_black"] != (seat == 0)):
                 raise ValueError("D9 color-swapped opening mismatch")
-            replay_check(head, row["moves"], row)
-            if len(head) + len(row["moves"]) > MAX_PLIES or len(row["played"]) != len(row["moves"]):
-                raise ValueError("D9 move/telemetry count mismatch")
+            verify_game_completion(head, row)
             for i, turn in enumerate(row["played"]):
                 color = (len(head) + i) % 2
                 elapsed = turn["elapsed_ms"]
-                if (turn["move"] != row["moves"][i] or turn["turn"] != color or
+                if (type(turn["turn"]) is not int or
+                        type(turn["candidate"]) is not bool or
+                        type(turn.get("time_check_each_node")) is not bool or
+                        type(elapsed) not in (int, float) or
+                        turn["move"] != row["moves"][i] or turn["turn"] != color or
                         turn["candidate"] != ((color == shogi.BLACK) == row["candidate_black"]) or
                         not math.isfinite(elapsed) or not 0 <= elapsed <= 1000 or
                         type(turn["depth"]) is not int or not 0 <= turn["depth"] <= 3 or
@@ -342,4 +369,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
