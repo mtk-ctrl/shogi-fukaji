@@ -31,3 +31,11 @@ D6の新400局では隣接ペアNNUEもG8の予測損失に届かず、探索接
 ## 継続停止の監査
 
 前回の単発予定は13:30:46 JST、実発火13:32:42.200738（1分56秒遅れ）、結果確認runは13:38:54.862029に完了。400局結果・追加集計の後に研究方針だけを記録してWORKを終了し、少なくとも19:04確認まで自動継続が止まった。F01には既に継続条件があったため、単なるルール不足ではなく、部分工程完了を継続Goalの終了と扱った判断の失敗。今回の40→240の決定済み接続は実行グラフで保証するが、以後の無期限の自律研究や次のAI起動が全面的に保証されたとは説明しない。
+
+
+## 実装・検証・明示起動の記録
+
+- [PR#126](https://github.com/mtk-ctrl/shogi-fukaji/pull/126)を研究main `1391219a3157bdaa50e461d2cab6506725246c03` へ統合。branch [CI41039141005](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/41039141005)全571テスト成功、main学習CI41039497034/native2系統preflightも全成功。深路に共通のworkflow検査scriptsは存在せず、YAML/埋込Python/既定OFF/実ツリーとREADME在庫の整合を検査した。
+- 既定OFF [run41039496889](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/41039496889)は全571テスト成功、screen/screen_summary/final/final_summaryの全4段階skip。request/実装/計画のmain読戻し一致を確認。
+- 起動直前27所有repo×5状態=135応答が全成功・各0件、20空きrunner・同目的重複なしを確認。別commit `7eceac5cc768988cd332184ef91f64e3c5a8aa42` でenabledだけをtrueにし、[実run41039790343](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/41039790343)を2026-10-30 19:18:35 JSTに起動。
+- 実runのpreflightは571テスト、固定モデル/初期手順/コードSHA、実G8の固定深さ一致と両先後の短い合法対局を成功。20本の40局確認用jobが実対局に入ったことを確認。勝敗・時間基準・独立240局の結果はこの追記時点では未確定。
