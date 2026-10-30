@@ -1,0 +1,40 @@
+name: 'FUKAJI D9 research-only G8 clock-check ABBA probe'
+'on':
+  workflow_dispatch: null
+  push:
+    paths:
+      - .github/fukaji-d9-clock-probe-request.json
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-d9-clock-probe
+  cancel-in-progress: false
+jobs:
+  probe:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Check exact OFF/ON request and clock regressions
+        id: protocol
+        run: |-
+          python -m unittest tests.test_d9_clock_check tests.test_d9_clock_probe -v
+          python -m fukaji.d9_clock_probe --mode check --request .github/fukaji-d9-clock-probe-request.json
+      - name: Compare clock checks with fixed G8 on three development openings
+        if: steps.protocol.outputs.enabled == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python -m fukaji.d9_clock_probe --mode run --request .github/fukaji-d9-clock-probe-request.json --out build/d9/probe
+      - uses: actions/upload-artifact@v4
+        if: steps.protocol.outputs.enabled == 'true'
+        with:
+          name: fukaji-d9-clock-probe-${{ github.run_id }}
+          path: build/d9/probe/
+          retention-days: 30
+          if-no-files-found: error
