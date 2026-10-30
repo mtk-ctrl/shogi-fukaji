@@ -24,7 +24,7 @@ jobs:
       - name: Check exact OFF/ON request and clock regressions
         id: protocol
         run: |-
-          python -m unittest tests.test_d9_clock_check tests.test_d9_clock_probe -v
+          python -m unittest discover -s tests -p 'test_d9_clock*.py' -v
           python -m fukaji.d9_clock_probe --mode check --request .github/fukaji-d9-clock-probe-request.json
       - name: Compare clock checks with fixed G8 on three development openings
         if: steps.protocol.outputs.enabled == 'true'
