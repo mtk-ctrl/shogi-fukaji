@@ -110,7 +110,7 @@ D6-1の二視点NNUE push/popと通常盤面push/popの差は固定3局面で約
 - 採否：隣接ペアが元NNUEを上回っても、それだけで棋力改善やG8代替としない。G8より誤差が大きい、件数不足、合法性/原本/比較条件違反なら探索接続・40/240局比較へ進めない。結果の差は対局単位の構造を踏まえ、分からない点は不明とする。
 
 
-### D6-4/5の検証と明示起動（実行中）
+### D6-4/5の検証と明示起動（完了・下記に結果）
 
 - 隣接ペア候補[PR#124](https://github.com/mtk-ctrl/shogi-fukaji/pull/124)→研究main `86f3590e13a0b97ab260fc96c62200ea1c392b96`。branch [CI41000608735](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/41000608735)全562テスト成功、main [CI41000827042](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/41000827042)成功。
 - 比較入口[PR#125](https://github.com/mtk-ctrl/shogi-fukaji/pull/125)→研究main `87754b7485f0208b154b4b0ef8e4cfd95018d4e3`。branch [CI41001347362](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/41001347362)全565テスト成功。main学習CI41001559726/native2系統のpreflightが全成功。既定OFFの[run41001559822](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/41001559822)も全565テスト成功、enabled:false、evaluate/aggregate skippedを実ログ・jobsで確認。
@@ -126,3 +126,20 @@ D6-1の二視点NNUE push/popと通常盤面push/popの差は固定3局面で約
 - 同一Automation `6adf4925c5288191af0f19a1dec5a0ad` を **2026-10-30 13:30:46 JSTの単発予定**へ更新し、有効状態・schedule・prompt全文一致を読戻し確認。算定は最後の対局開始13:17:45＋同種G7最長job12分12秒＋同run集約19秒＋3モデルの新しい損失報告の追加処理を暫定30秒。G8の実所要時間は今回初めてであり、見込みである。next_run_timeはAPI応答でnullであり、実発火・自動再開はまだ検証していない。
 - 引継ぎ本文にrun/入力SHA/400評価専用/既存保持群不使用/独立監査/成果物保存/request OFF・skip確認と、結果から次の具体的研究をWORK内で実行する指示を保存。非同期待ちがない仕事を予約待ちに送らず、候補見送り・記録保存だけで終了しない。更新成功とタイマー連鎖のE2E成功を混同しない。
 - Addnessの起動/予約差分メモリ `92c60a78-9f5f-4d30-b42d-0d53fac0b988` 保存済み。Goal本文の追記拒否は継続しており、本文更新成功とはしない。
+
+
+## D6第5工程の結果監査・保存と次の独立診断（2026-10-30 13時台）
+
+**強化軸**：局面評価の予測品質と、同総200ms探索の完了深さ。**実験**：凍結2種類のNNUE局面抽出を新規400局で一度だけ比較し、続いて実棋譜telemetryから探索完了率を独立診断。**実棋力検証法**：同条件探索と独立先後交替対局が必要であり、今回の損失・探索深さだけでは実棋力向上を主張しない。
+
+- [run41001811820](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/41001811820) はpreflight・20対局job・aggregateの全22 jobが completed success。起動commit `e37b66f4f59e08e723eab03c3d05710c1b41fe2d`。20分割×20局の新規400局、うち詰み決着224局・240手上限による未決着176局。詰み224局の34,884局面だけで、同じG8自己対局の最終勝者に対するlog lossを算定した。未決着の勝敗教師化なし。
+- 凍結条件はtrain665局、各4epoch・seed20261028・16局面/局、元等間隔と隣接2手番×8組だけを変更。学習群全97,137局面の損失は等間隔0.6718552345650984／隣接ペア0.6706133826875771。**新400局での評価損失は等間隔0.6792503222069889／隣接ペア0.6753827567659746／既存G8 0.5916968917453006**。隣接ペアは元候補より0.00386756544低いが、G8より0.08368586502高い。統計的な差の確実性は未検証。NNUE探索接続・40/240局比較・正式採用へ進めない。NNUE一般の優劣は断定しない。
+- 入力artifact12953408119 ZIP SHA `0c637b5fae5cf8349bf2def5486d7f80ebfd5d1f534cf7bcac8c199f45bf0227`、集約artifact12954461389 ZIP SHA `ac056d9158890d600ee6c9e38ebd940b93b709a41741bcd4a7ae117ee678f060`、元G8 artifact12793956048 ZIP SHA `9b5c004446f4b93a529d52fa96243ccbd5ac434373fe1ff69191bee9c8e6306e`。20分割の全SHA・20×20局・400個のgame_id/親ID/序盤6手一意・分割と集約の全JSON行一致、元830詰み棋譜と新400局の親ID/棋譜非重複、224詰み棋譜と元ゲームの完全一致、未決着winner=null、3モデルのSHA/形状/有限値、旧保持群再評価false、新400局学習利用falseを別プロセスで確認した。**全手合法再生とlog lossの再計算は今回のローカル監査では未実施**（aggregate CIの検査成功を確認）。独立監査の範囲を超えて「完全独立再検証」と呼ばない。
+- GitHub Actions artifactの期限は2026-11-29。期限依存を避けるため、元G8 ZIP・入力ZIP・20分割ZIP・集約ZIP・監査スクリプト/結果/manifestをまとめた保存ZIP（SHA `e463929c331f6f81651b8c753ede6b9f6c1bddaa6394d31a09ff371eeb281b0d`）をChatGPT Library `/将棋AI_深路/研究成果/fukaji_D6_400game_evaluation_41001811820_preservation.zip` にアップロードし、一覧から再確認。GitHub Releasesへの別保存は未実施。
+- 研究requestを `enabled:false` に戻したcommit `4f19d89a387776ad90f22ab374cbc3ad44b7876e` を確認。[OFF確認run41003687090](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/41003687090) completed success、train/smoke/evaluate/aggregateは全skip。新しい重い処理は起動していない。他runner停止なし。
+
+### 結果から実施した別軸の読取診断：G8探索完了率
+
+新400局の実対局telemetry（評価専用棋譜から学習は行わない）を集計。双方同じ固定G8、200ms・最大深さ2で、合計74,724手のうち `depth<2` の手は48,465手、**64.8587%**。局単位再標本化5,000回・seed20261030の参考95%区間は63.30〜66.32%。1手あたり平均実時間173.118ms、探索節点545.13。詰み決着局の未完了率59.33%、未決着局69.36%（結果別の観測相関で、原因や勝率を意味しない）。`generation_arena.py` の `incomplete` は実コード上 `depth<2` を数えるため、この解釈は一致する。
+
+**次の研究判断**：局面抽出NNUEはG8より誤差が大きく、探索接続を見送る。一方で、G8は深さ2完了に至らない手が多数あり、次はモデルを変えずに既存開発用局面で合法手列挙・王手/詰み判定・評価/着手復元の費用を切り分ける。既知のD6-2 NNUE着手プロファイル拒否を別経路で再試行しない。新400局を調整用教師やモデル選択に転用しない。実装は独立の許可された安全な変更のみ、固定深さの着手・節点・合法性・盤面履歴一致を先に検証し、総200ms・独立実戦比較で正式採否を判断する。
