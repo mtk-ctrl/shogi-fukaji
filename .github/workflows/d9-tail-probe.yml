@@ -1,0 +1,40 @@
+name: 'FUKAJI D9 diagnostic-only frozen D8 latency tail ABBA'
+'on':
+  workflow_dispatch: null
+  push:
+    paths:
+      - .github/fukaji-d9-tail-probe-request.json
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-d9-tail-probe
+  cancel-in-progress: false
+jobs:
+  probe:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Validate frozen request and D9 tail regression
+        id: protocol
+        run: |-
+          python -m unittest discover -s tests -p 'test_d9_tail_probe.py' -v
+          python -m fukaji.d9_tail_probe --mode check --request .github/fukaji-d9-tail-probe-request.json
+      - name: Reconstruct three D8 worst positions and compare clock frequency
+        if: steps.protocol.outputs.enabled == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python -m fukaji.d9_tail_probe --mode run --request .github/fukaji-d9-tail-probe-request.json --out build/d9/tail
+      - uses: actions/upload-artifact@v4
+        if: steps.protocol.outputs.enabled == 'true'
+        with:
+          name: fukaji-d9-tail-probe-${{ github.run_id }}
+          path: build/d9/tail/
+          retention-days: 30
+          if-no-files-found: error
