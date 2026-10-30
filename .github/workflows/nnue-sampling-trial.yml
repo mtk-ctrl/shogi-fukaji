@@ -1,0 +1,130 @@
+name: FUKAJI sampling-only NNUE trial and fresh 400-game evaluation
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/fukaji-nnue-sampling-trial-request.json"
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-nnue-sampling-trial
+  cancel-in-progress: false
+jobs:
+  preflight:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    outputs:
+      enabled: ${{ steps.protocol.outputs.enabled }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Verify tests and frozen sampling-only protocol
+        id: protocol
+        run: |
+          python -m unittest discover -s tests -v
+          python -m fukaji.nnue_sampling_trial --mode check --request .github/fukaji-nnue-sampling-trial-request.json
+      - name: Train two fixed candidates from train parents only before new evaluation
+        if: steps.protocol.outputs.enabled == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python -m fukaji.nnue_sampling_trial --mode prepare \
+            --request .github/fukaji-nnue-sampling-trial-request.json \
+            --out build/nnue_sampling/input
+      - name: Verify actual legal G8 play before twenty runners
+        if: steps.protocol.outputs.enabled == 'true'
+        run: |
+          python - <<'PY'
+          from fukaji.arena import opening
+          from fukaji.generation_arena import play
+          from fukaji.direct_arena import replay_check
+          from fukaji.relative_value import RelativeValue
+          from fukaji.nnue_sampling_trial import FRESH_SEED, read_receipt
+          read_receipt('build/nnue_sampling/input')
+          model = RelativeValue('build/nnue_sampling/input/g8.npz', mix_percent=25)
+          head = opening(FRESH_SEED, 6)
+          row = play(head, True, model, model, max_plies=12)
+          replay_check(head, row['moves'], row)
+          if len(head) + len(row['moves']) > 12:
+              raise SystemExit('G8 short-game cap violated')
+          print('G8 legal-play smoke passed', row['status'])
+          PY
+      - name: Preserve fixed candidates before evaluation outcomes exist
+        if: steps.protocol.outputs.enabled == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-nnue-sampling-input-${{ github.run_id }}
+          path: build/nnue_sampling/input/
+          retention-days: 30
+          if-no-files-found: error
+  evaluate:
+    needs: preflight
+    if: needs.preflight.outputs.enabled == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: fukaji-nnue-sampling-input-${{ github.run_id }}
+          path: build/nnue_sampling/input
+      - name: Generate twenty new G8 games reserved for evaluation only
+        run: |
+          python -m fukaji.nnue_sampling_trial --mode play \
+            --request .github/fukaji-nnue-sampling-trial-request.json \
+            --input build/nnue_sampling/input --shard ${{ matrix.shard }} \
+            --out build/nnue_sampling/part
+      - name: Preserve all played moves, including unresolved games
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-nnue-sampling-part-${{ matrix.shard }}-${{ github.run_id }}
+          path: build/nnue_sampling/part/
+          retention-days: 30
+          if-no-files-found: warn
+  aggregate:
+    needs: [preflight, evaluate]
+    if: needs.preflight.outputs.enabled == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: fukaji-nnue-sampling-input-${{ github.run_id }}
+          path: build/nnue_sampling/input
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: fukaji-nnue-sampling-part-*
+          path: build/nnue_sampling/parts
+          merge-multiple: false
+      - name: Replay all 400 games and compare three fixed models once
+        run: |
+          python -m fukaji.nnue_sampling_trial --mode aggregate \
+            --request .github/fukaji-nnue-sampling-trial-request.json \
+            --input build/nnue_sampling/input --parts build/nnue_sampling/parts \
+            --out build/nnue_sampling/aggregate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-nnue-sampling-aggregate-${{ github.run_id }}
+          path: build/nnue_sampling/aggregate/
+          retention-days: 30
+          if-no-files-found: error
