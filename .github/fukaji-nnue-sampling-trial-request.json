@@ -1,0 +1,33 @@
+{
+  "enabled": false,
+  "research_only": true,
+  "model_adoption_allowed": false,
+  "engine_integration_allowed": false,
+  "old_holdout_evaluation_allowed": false,
+  "fresh_games_training_allowed": false,
+  "source_run": 40636602223,
+  "source_zip_sha256": "9b5c004446f4b93a529d52fa96243ccbd5ac434373fe1ff69191bee9c8e6306e",
+  "merged_games_sha256": "115079770f7677ba22d7fc8603a08eaa52bfd21af0374cf3e7862a553f8dddd2",
+  "g8_model_sha256": "18b39f647caa458389a1900b875337adadac74ae37e27343e7f0094ed663c492",
+  "train_games": 665,
+  "epochs": 4,
+  "learning_rate": 0.005,
+  "training_seed": 20261028,
+  "weight_decay": 0.0001,
+  "sample_positions_per_game": 16,
+  "samplers": [
+    "original",
+    "adjacent_pairs"
+  ],
+  "fresh_seed": 202610300,
+  "evaluation_games": 400,
+  "shards": 20,
+  "opening_plies": 6,
+  "max_plies": 240,
+  "movetime_ms": 200,
+  "depth": 2,
+  "mix_percent": 25,
+  "fast_relative": true,
+  "root_alpha_beta_both": true,
+  "fresh_teacher": "verified_checkmates_only"
+}
