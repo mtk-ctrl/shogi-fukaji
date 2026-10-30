@@ -1,0 +1,50 @@
+{
+  "source_zip_sha256": "9b5c004446f4b93a529d52fa96243ccbd5ac434373fe1ff69191bee9c8e6306e",
+  "source_games_sha256": "115079770f7677ba22d7fc8603a08eaa52bfd21af0374cf3e7862a553f8dddd2",
+  "train_games": 665,
+  "train_positions": 97137,
+  "all_positions_winner_to_move_labels": 48731,
+  "all_positions_winner_label_rate": 0.501672894983374,
+  "samplers": {
+    "original": {
+      "sampled_positions": 10640,
+      "winner_to_move_labels": 5920,
+      "loser_to_move_labels": 4720,
+      "games_with_last_winner_turn": 665,
+      "games_with_last_loser_turn": 0,
+      "games_with_single_label_only": 24,
+      "winner_label_rate": 0.556390977443609,
+      "winner_labels_per_game_histogram": {
+        "1": 30,
+        "6": 19,
+        "7": 91,
+        "8": 68,
+        "9": 265,
+        "10": 110,
+        "11": 36,
+        "15": 22,
+        "16": 24
+      }
+    },
+    "adjacent_pairs": {
+      "sampled_positions": 10640,
+      "winner_to_move_labels": 5320,
+      "loser_to_move_labels": 5320,
+      "games_with_last_winner_turn": 665,
+      "games_with_last_loser_turn": 665,
+      "games_with_single_label_only": 0,
+      "winner_label_rate": 0.5,
+      "winner_labels_per_game_histogram": {
+        "8": 665
+      }
+    }
+  },
+  "model_trained": false,
+  "strength_proven": false,
+  "holdout_outcomes_analyzed": false,
+  "limitations": [
+    "Metadata parity audit, not independent legal replay.",
+    "Observed sampling imbalance is not a causal explanation of NNUE loss.",
+    "Adjacent pairs are an unadopted candidate; frozen trainer is unchanged."
+  ]
+}
