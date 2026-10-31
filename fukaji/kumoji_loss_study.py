@@ -48,7 +48,10 @@ def has_mate_in_one(board):
 
 def last_defense_probe(row):
     """Reconstruct final FUKAJI root and test each legal move against 1-ply mate."""
-    all_moves = row["opening"] + row["moves"]
+    # The arena `moves` already includes its six opening plies; `played_moves` does not.
+    all_moves = row["moves"]
+    if all_moves[:len(row["opening"])] != row["opening"]:
+        raise ValueError("full moves do not begin with registered opening")
     if len(all_moves) < 2 or row["move_records"][-1]["engine"] != "B":
         raise ValueError("unexpected game finish")
     board = shogi.Board()
