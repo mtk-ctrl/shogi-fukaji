@@ -1,0 +1,273 @@
+{
+  "status": "verified_100_old_losses_tactical_development_diagnosis",
+  "source_run_id": 41177748192,
+  "all_games_sha256": "c0874b1b7cb96464385e76544a4fac69454ac3c9ebf681127bbca20c909e019f",
+  "games_replayed": 100,
+  "all_terminal_checkmates": 100,
+  "source_pairs": 50,
+  "fukaji_wins": 0,
+  "kumoji_wins": 100,
+  "fukaji_search_depth_histogram": {
+    "2": 1574,
+    "1": 478,
+    "3": 182
+  },
+  "kumoji_search_depth_histogram": {
+    "5": 470,
+    "4": 726,
+    "3": 741,
+    "2": 192,
+    "null": 145,
+    "6": 9,
+    "1": 1
+  },
+  "fukaji_under_depth_three": 2052,
+  "fukaji_time": {
+    "observed": 2234,
+    "median_ms": 211.457,
+    "max_ms": 614.814,
+    "over_200_ms": 2072
+  },
+  "kumoji_time": {
+    "observed": 2284,
+    "median_ms": 191.848,
+    "max_ms": 993.571,
+    "over_200_ms": 496
+  },
+  "fukaji_moves_while_checked": 330,
+  "kumoji_moves_while_checked": 32,
+  "checks_given_by_fukaji": 32,
+  "checks_given_by_kumoji": 430,
+  "short_games_up_to_50_plies": 51,
+  "last_defense_sample_rule": "game pair indices 0,5,10,...45; both colors",
+  "last_defense_probes": [
+    {
+      "game_id": 0,
+      "pair": 0,
+      "chosen": "6h5h",
+      "total_legal": 2,
+      "moves_allow_immediate_mate": 2,
+      "moves_avoid_immediate_mate": 0,
+      "example_legal_escape": null,
+      "depth_at_last_fukaji_move": 2,
+      "scope": "mate_in_one_only_not_longer_tactics_or_best_play"
+    },
+    {
+      "game_id": 1,
+      "pair": 0,
+      "chosen": "5a4b",
+      "total_legal": 65,
+      "moves_allow_immediate_mate": 59,
+      "moves_avoid_immediate_mate": 6,
+      "example_legal_escape": "6b7a",
+      "depth_at_last_fukaji_move": 1,
+      "scope": "mate_in_one_only_not_longer_tactics_or_best_play"
+    },
+    {
+      "game_id": 10,
+      "pair": 5,
+      "chosen": "7h8g",
+      "total_legal": 1,
+      "moves_allow_immediate_mate": 1,
+      "moves_avoid_immediate_mate": 0,
+      "example_legal_escape": null,
+      "depth_at_last_fukaji_move": 3,
+      "scope": "mate_in_one_only_not_longer_tactics_or_best_play"
+    },
+    {
+      "game_id": 11,
+      "pair": 5,
+      "chosen": "P*2e",
+      "total_legal": 81,
+      "moves_allow_immediate_mate": 71,
+      "moves_avoid_immediate_mate": 10,
+      "example_legal_escape": "6b7a",
+      "depth_at_last_fukaji_move": 1,
+      "scope": "mate_in_one_only_not_longer_tactics_or_best_play"
+    },
+    {
+      "game_id": 20,
+      "pair": 10,
+      "chosen": "5h6h",
+      "total_legal": 1,
+      "moves_allow_immediate_mate": 1,
+      "moves_avoid_immediate_mate": 0,
+      "example_legal_escape": null,
+      "depth_at_last_fukaji_move": 2,
+      "scope": "mate_in_one_only_not_longer_tactics_or_best_play"
+    },
+    {
+      "game_id": 21,
+      "pair": 10,
+      "chosen": "6d7d",
+      "total_legal": 4,
+      "moves_allow_immediate_mate": 4,
+      "moves_avoid_immediate_mate": 0,
+      "example_legal_escape": null,
+      "depth_at_last_fukaji_move": 2,
+      "scope": "mate_in_one_only_not_longer_tactics_or_best_play"
+    },
+    {
+      "game_id": 30,
+      "pair": 15,
+      "chosen": "5h5i",
+      "total_legal": 1,
+      "moves_allow_immediate_mate": 1,
+      "moves_avoid_immediate_mate": 0,
+      "example_legal_escape": null,
+      "depth_at_last_fukaji_move": 3,
+      "scope": "mate_in_one_only_not_longer_tactics_or_best_play"
+    },
+    {
+      "game_id": 31,
+      "pair": 15,
+      "chosen": "5c4d",
+      "total_legal": 11,
+      "moves_allow_immediate_mate": 11,
+      "moves_avoid_immediate_mate": 0,
+      "example_legal_escape": null,
+      "depth_at_last_fukaji_move": 2,
+      "scope": "mate_in_one_only_not_longer_tactics_or_best_play"
+    },
+    {
+      "game_id": 40,
+      "pair": 20,
+      "chosen": "5e5d",
+      "total_legal": 50,
+      "moves_allow_immediate_mate": 1,
+      "moves_avoid_immediate_mate": 49,
+      "example_legal_escape": "2f2e",
+      "depth_at_last_fukaji_move": 1,
+      "scope": "mate_in_one_only_not_longer_tactics_or_best_play"
+    },
+    {
+      "game_id": 41,
+      "pair": 20,
+      "chosen": "5c4b",
+      "total_legal": 75,
+      "moves_allow_immediate_mate": 1,
+      "moves_avoid_immediate_mate": 74,
+      "example_legal_escape": "9c9d",
+      "depth_at_last_fukaji_move": 1,
+      "scope": "mate_in_one_only_not_longer_tactics_or_best_play"
+    },
+    {
+      "game_id": 50,
+      "pair": 25,
+      "chosen": "5g4h",
+      "total_legal": 2,
+      "moves_allow_immediate_mate": 2,
+      "moves_avoid_immediate_mate": 0,
+      "example_legal_escape": null,
+      "depth_at_last_fukaji_move": 3,
+      "scope": "mate_in_one_only_not_longer_tactics_or_best_play"
+    },
+    {
+      "game_id": 51,
+      "pair": 25,
+      "chosen": "5a4b",
+      "total_legal": 2,
+      "moves_allow_immediate_mate": 2,
+      "moves_avoid_immediate_mate": 0,
+      "example_legal_escape": null,
+      "depth_at_last_fukaji_move": 2,
+      "scope": "mate_in_one_only_not_longer_tactics_or_best_play"
+    },
+    {
+      "game_id": 60,
+      "pair": 30,
+      "chosen": "4g3f",
+      "total_legal": 1,
+      "moves_allow_immediate_mate": 1,
+      "moves_avoid_immediate_mate": 0,
+      "example_legal_escape": null,
+      "depth_at_last_fukaji_move": 2,
+      "scope": "mate_in_one_only_not_longer_tactics_or_best_play"
+    },
+    {
+      "game_id": 61,
+      "pair": 30,
+      "chosen": "6b6a",
+      "total_legal": 1,
+      "moves_allow_immediate_mate": 1,
+      "moves_avoid_immediate_mate": 0,
+      "example_legal_escape": null,
+      "depth_at_last_fukaji_move": 2,
+      "scope": "mate_in_one_only_not_longer_tactics_or_best_play"
+    },
+    {
+      "game_id": 70,
+      "pair": 35,
+      "chosen": "5d6c",
+      "total_legal": 2,
+      "moves_allow_immediate_mate": 2,
+      "moves_avoid_immediate_mate": 0,
+      "example_legal_escape": null,
+      "depth_at_last_fukaji_move": 2,
+      "scope": "mate_in_one_only_not_longer_tactics_or_best_play"
+    },
+    {
+      "game_id": 71,
+      "pair": 35,
+      "chosen": "5b5a",
+      "total_legal": 1,
+      "moves_allow_immediate_mate": 1,
+      "moves_avoid_immediate_mate": 0,
+      "example_legal_escape": null,
+      "depth_at_last_fukaji_move": 3,
+      "scope": "mate_in_one_only_not_longer_tactics_or_best_play"
+    },
+    {
+      "game_id": 80,
+      "pair": 40,
+      "chosen": "6g6h",
+      "total_legal": 9,
+      "moves_allow_immediate_mate": 3,
+      "moves_avoid_immediate_mate": 6,
+      "example_legal_escape": "9e9d",
+      "depth_at_last_fukaji_move": 1,
+      "scope": "mate_in_one_only_not_longer_tactics_or_best_play"
+    },
+    {
+      "game_id": 81,
+      "pair": 40,
+      "chosen": "4a3a",
+      "total_legal": 1,
+      "moves_allow_immediate_mate": 1,
+      "moves_avoid_immediate_mate": 0,
+      "example_legal_escape": null,
+      "depth_at_last_fukaji_move": 3,
+      "scope": "mate_in_one_only_not_longer_tactics_or_best_play"
+    },
+    {
+      "game_id": 90,
+      "pair": 45,
+      "chosen": "3i4i",
+      "total_legal": 1,
+      "moves_allow_immediate_mate": 1,
+      "moves_avoid_immediate_mate": 0,
+      "example_legal_escape": null,
+      "depth_at_last_fukaji_move": 3,
+      "scope": "mate_in_one_only_not_longer_tactics_or_best_play"
+    },
+    {
+      "game_id": 91,
+      "pair": 45,
+      "chosen": "6b7a",
+      "total_legal": 1,
+      "moves_allow_immediate_mate": 1,
+      "moves_avoid_immediate_mate": 0,
+      "example_legal_escape": null,
+      "depth_at_last_fukaji_move": 2,
+      "scope": "mate_in_one_only_not_longer_tactics_or_best_play"
+    }
+  ],
+  "last_defense_has_immediate_mate_escape": 5,
+  "limitations": [
+    "Previously seen opponent games are development diagnosis; not independent strength test.",
+    "Opponent move / score / PV is never a FUKAJI training target.",
+    "No official FUKAJI model, default USI, or KUMOJI engine is altered.",
+    "A move avoiding immediate mate can still lose to longer tactics.",
+    "Wall times and compute resources differ between engines; no equal-compute strength claim."
+  ]
+}
