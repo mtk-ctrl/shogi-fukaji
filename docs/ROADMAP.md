@@ -101,3 +101,14 @@ UCTの厳密200ms保証・OSパイプ・子プロセス境界の追加研究は�
 - [雲路現行仕様](https://github.com/mtk-ctrl/shogi-ai/blob/807db500ee2739c1eb6a527b614eeea40a5993d6/docs/現行エンジン仕様.md) / [自作探索](https://github.com/mtk-ctrl/shogi-ai/blob/807db500ee2739c1eb6a527b614eeea40a5993d6/engine/strategy/iterative_search.h)
 
 旧2026-10-26ロードマップはGit履歴に保持する。初期の「未接続」「これからP0」という現在地は本改訂で置き換える。
+
+
+## D13確定結果
+
+
+## D13修正版200局の確定監査（2026-10-31 JST17:41以降）
+有効run [41184685991](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/41184685991)、request SHA `a0deb65bf499012c4a6ff0c629c982117462b372`。Actionsはsuccess。announce/preflight/prepare、20/20 games shard、aggregate、final_statusの全26 job成功。入力1、shard20、結果1の計22 artifactsを確認。`research/d13-kumoji-cross200/run-status.json`はverified_200_complete、summaryは全200局合法再生、両arm同一RandomSeed・同一雲路binary/settings・G8モデルSHA照合成功を記録。旧run41184358423はRandomSeed交絡のため採否から除外。
+
+確定結果：FastLegalGuard OFF 100局＝深路0勝/雲路100勝/未決着0、ON 100局＝深路0勝/雲路100勝/未決着0。50ペアすべてequal、符号検定は有効な不一致ペア0のためp値なし。深さ3完了OFF165/2162手、ON320/2271手、深さ2はOFF1566/ON1772、深さ1はOFF431/ON179。雲路知識ヒットOFF0/4060 probe、ON0/4278 probe。G8モデルSHA256 `18b39f647caa458389a1900b875337adadac74ae37e27343e7f0094ed663c492`、雲路binary SHA256 `2e4ad04ac7fee914573f8a369cf10724701891041cfa32aa59741a8390eab9ff`、知識SHA256 `082f2aaf58201e44f6fa786a6253a2584e9191cbaf55d13f49d56e57198dde2a`、全棋譜SHA256 `ab29882f059166427d369ea033773fee63360a6916244ad661d097a0b7c0ea58`。
+
+判断：D12の独立240局での高速化優位は保持するが、D13では雲路相手の棋力改善は実証されず、正式採用しない。雲路は2スレッド・長考/先読みを使い、深路と対称な計算資源ではない。次は同一G8/同一高速化設定で王手応手・末端取り返しの単独仮説を固定局面診断→別seed40局→有望時240局で検証する。対雲路0勝を手数延長だけで改善認定しない。AddnessはFORBIDDENのため再試行せず未保存。既定USI・正式G8は不変更。
