@@ -76,6 +76,13 @@ def verify_input(folder):
     return receipt, report
 
 
+def matched_seed(pair, seat):
+    """Same USI RandomSeed for baseline and candidate at identical pair+color."""
+    if type(pair) is not int or type(seat) is not int or not 0 <= pair < PAIRS or seat not in (0, 1):
+        raise ValueError("invalid matched game seed coordinate")
+    return NEW_SEED + pair * 16 + seat * 2
+
+
 def indices(shard):
     if type(shard) is not int or not 0 <= shard < SHARDS:
         raise ValueError("bad shard")
@@ -119,9 +126,10 @@ def play_shard(request_path, input_dir, shard, out):
                     for seat, black in enumerate((True, False)):
                         row = play_paired_game(
                             arena, engines[arm], kumoji, head, black, MAX_PLIES,
-                            NEW_SEED + pair * 16 + arm_index * 4 + seat * 2)
+                            matched_seed(pair, seat))
                         row.update({
                             "pair": pair, "arm": arm, "game_id": pair * 4 + arm_index * 2 + seat,
+                            "random_seed": matched_seed(pair, seat),
                             "study": "D13_frozen_G8_fastlegal_vs_same_kumoji",
                         })
                         if audit_game(row) != len(row["moves"]):
@@ -191,6 +199,7 @@ def aggregate(request_path, input_dir, parts, out):
             arm_index, seat = divmod(offset, 2)
             if (r["pair"] != pair or r["arm"] != ARMS[arm_index]
                 or r["a_black"] is not (seat == 0)
+                or r.get("random_seed") != matched_seed(pair, seat)
                 or r["opening"] != opening(NEW_SEED + pair, 6)
                 or r["study"] != "D13_frozen_G8_fastlegal_vs_same_kumoji"
                 or len(r["moves"]) > MAX_PLIES or len(r["played_moves"]) != len(r["move_records"])
@@ -240,6 +249,7 @@ def aggregate(request_path, input_dir, parts, out):
         "new_openings_disjoint_from_old": True, "pairs": PAIRS, "games": 200,
         "all_games_legally_replayed": True, "same_KUMOJI_binary_settings": True,
         "same_fukaji_model_and_settings_other_than_fast_legal": True,
+        "same_KUMOJI_RandomSeed_for_identical_pair_and_color": True,
         "arms": stats, "paired_comparison": dict(pair_compare),
         "paired_sign_p_two_sided": exact_sign_p(pair_compare["fastlegal"], pair_compare["baseline"]),
         "per_pair": per_pair,
