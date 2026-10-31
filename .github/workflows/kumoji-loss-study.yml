@@ -54,6 +54,8 @@ jobs:
       - run: python -m pip install -r requirements.txt
       - name: Verify bounded tactical diagnostic unit tests
         run: python -m unittest discover -s tests -p 'test_kumoji_loss_study.py' -v
+      - name: Verify legal defense-guard research regression tests
+        run: python -m unittest discover -s tests -p 'test_kumoji_defense_guard.py' -v
       - name: Download and verify exact archived 100 games
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -88,6 +90,53 @@ jobs:
         run: |
           python -m fukaji.kumoji_loss_study --games build/loss-study/input/all_games.jsonl \
             --summary build/loss-study/input/summary.json --out build/loss-study/result
+      - name: Fetch exact G8 model for frozen historical ABBA search
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python - <<'PY'
+          import hashlib, io, os
+          from pathlib import Path
+          from zipfile import ZipFile
+          from fukaji.g8_artifact_selection import artifact_bytes
+          from fukaji.kumoji_defense_benchmark import MODEL_SHA
+          original=artifact_bytes(
+              12793956048,"fukaji-generation8-research-40636602223",40636602223,
+              "9b5c004446f4b93a529d52fa96243ccbd5ac434373fe1ff69191bee9c8e6306e",
+              os.environ["GH_TOKEN"])
+          with ZipFile(io.BytesIO(original)) as z:
+              model=z.read("mover-relative-generation8-research.npz")
+          if hashlib.sha256(model).hexdigest()!=MODEL_SHA:
+              raise ValueError("G8 model drift")
+          Path("build/loss-study/input/g8.npz").write_bytes(model)
+          print("Verified frozen G8 model:",MODEL_SHA)
+          PY
+      - name: Compare original G8 search and mate-safety research guard on historical roots
+        timeout-minutes: 10
+        run: |
+          python -m fukaji.kumoji_defense_benchmark \
+            --games build/loss-study/input/all_games.jsonl \
+            --g8-model build/loss-study/input/g8.npz \
+            --out build/loss-study/result
+      - name: Archive candidate development benchmark with original model SHA
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs=require("fs");
+            const {owner,repo}=context.repo;
+            const path="research/kumoji-loss-study/defense-benchmark.json";
+            const content=fs.readFileSync("build/loss-study/result/defense_benchmark.json","utf8");
+            const report=JSON.parse(content);
+            if(report.same_runner_total_calls!==80||report.historical_sampled_games!==20)
+              throw Error("incomplete legal historical ABBA study");
+            let sha;
+            try {sha=(await github.rest.repos.getContent({owner,repo,path,ref:"main"})).data.sha;}
+            catch(e){if(e.status!==404) throw e;}
+            const args={owner,repo,path,branch:"main",
+              message:"research: archive G8 mate-guard development ABBA comparison",
+              content:Buffer.from(content).toString("base64")};
+            if(sha)args.sha=sha;
+            await github.rest.repos.createOrUpdateFileContents(args);
       - name: Save bounded audited findings permanently in the research source
         uses: actions/github-script@v7
         with:
