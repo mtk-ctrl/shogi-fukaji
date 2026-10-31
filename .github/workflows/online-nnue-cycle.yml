@@ -1,0 +1,107 @@
+name: D17 bounded NNUE self-learning research
+on:
+  workflow_dispatch:
+    inputs:
+      preflight_confirmed:
+        description: 'Active runs, available capacity, duplicate purpose and storage checked'
+        required: true
+        type: boolean
+        default: false
+      cycles:
+        description: 'Bounded research cycles (1..3); never formal promotion'
+        required: true
+        default: '1'
+      resume_run_id:
+        description: 'Prior successful D17 run ID; blank initializes from frozen train-only data'
+        required: false
+      resume_sha256:
+        description: 'Required state.tar.gz checksum when resuming'
+        required: false
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-d17-research-writer
+  cancel-in-progress: false
+jobs:
+  bounded-cycle:
+    if: inputs.preflight_confirmed && github.repository == 'mtk-ctrl/shogi-fukaji'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      CYCLES: ${{ inputs.cycles }}
+      RESUME_RUN: ${{ inputs.resume_run_id }}
+      RESUME_SHA: ${{ inputs.resume_sha256 }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - name: Validate bounded inputs and contracts
+        run: |
+          python - <<'PY'
+          import os,re
+          if os.environ['CYCLES'] not in ('1','2','3'): raise SystemExit('cycles outside 1..3')
+          run,sha=os.environ['RESUME_RUN'],os.environ['RESUME_SHA']
+          if run and (not run.isdigit() or not re.fullmatch('[0-9a-f]{64}',sha)):
+              raise SystemExit('resume requires run ID and checksum')
+          if not run and sha: raise SystemExit('checksum without run')
+          PY
+          python -m unittest discover -s tests -p test_online_learning.py -v
+          python scripts/check_fukaji_contracts.py
+      - name: Download pinned bootstrap source
+        if: inputs.resume_run_id == ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p build
+          gh api repos/mtk-ctrl/shogi-fukaji/actions/artifacts/12793956048/zip > build/bootstrap.zip
+          python -m fukaji.online_cycle init --source build/bootstrap.zip --root build/d17-state
+      - name: Obtain previous state
+        if: inputs.resume_run_id != ''
+        uses: actions/download-artifact@v4
+        with:
+          name: d17-state-${{ inputs.resume_run_id }}
+          run-id: ${{ inputs.resume_run_id }}
+          github-token: ${{ github.token }}
+          path: build/resume
+      - name: Verify and restore prior state
+        if: inputs.resume_run_id != ''
+        run: |
+          python - <<'PY'
+          import hashlib,os,tarfile
+          from pathlib import Path
+          p=Path('build/resume/state.tar.gz')
+          if hashlib.sha256(p.read_bytes()).hexdigest()!=os.environ['RESUME_SHA']:
+              raise SystemExit('state archive checksum mismatch')
+          with tarfile.open(p) as archive:
+              members=archive.getmembers()
+              if sum(m.size for m in members)>200_000_000: raise SystemExit('state exceeds reviewed size')
+              for m in members:
+                  parts=Path(m.name).parts
+                  if not parts or parts[0]!='d17-state' or '..' in parts or m.issym() or m.islnk():
+                      raise SystemExit('unsafe state archive')
+              archive.extractall('build',filter='data')
+          PY
+      - name: Generate, learn, reload, screen and provisionally update
+        run: |
+          python -m fukaji.online_cycle cycle --root build/d17-state --cycles "$CYCLES" --pairs 2 --movetime 50 --max-plies 256
+      - name: Preserve complete state, including failure evidence
+        if: always()
+        run: |
+          mkdir -p build/package
+          if test -d build/d17-state; then
+            tar --exclude=.lock -czf build/package/state.tar.gz -C build d17-state
+            sha256sum build/package/state.tar.gz > build/package/state.sha256
+          fi
+          git rev-parse HEAD > build/package/implementation-commit.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: d17-state-${{ github.run_id }}
+          path: build/package/
+          retention-days: 90
+          if-no-files-found: error

@@ -36,6 +36,7 @@ jobs:
           python-version: '3.11'
       - run: python -m pip install -r requirements.txt
       - run: python -m unittest discover -s tests -v
+      - run: python scripts/check_fukaji_contracts.py
       - name: Exercise real alpha-beta selfplay (bounded, no fabricated wins)
         run: |
           python -m fukaji.engine_selfplay --attempts 1 --movetime 1 --depth 1 --max-plies 12 --out build/engine-selfplay.jsonl

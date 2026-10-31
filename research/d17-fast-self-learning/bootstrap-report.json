@@ -1,0 +1,56 @@
+{
+  "training": {
+    "positions": 19971,
+    "optimizer_step": 1256,
+    "loss_history": [
+      {
+        "epoch": 0,
+        "loss": 0.6931079444801209
+      },
+      {
+        "epoch": 1,
+        "loss": 0.5509543691613357
+      },
+      {
+        "epoch": 2,
+        "loss": 0.5097902832305352
+      },
+      {
+        "epoch": 3,
+        "loss": 0.4990976653121265
+      },
+      {
+        "epoch": 4,
+        "loss": 0.4723842983196067
+      },
+      {
+        "epoch": 5,
+        "loss": 0.4572577791760522
+      },
+      {
+        "epoch": 6,
+        "loss": 0.444680080100559
+      },
+      {
+        "epoch": 7,
+        "loss": 0.43395086094139396
+      },
+      {
+        "epoch": 8,
+        "loss": 0.42504163150955443
+      }
+    ],
+    "max_gradient_norm": 2.8482015374215774,
+    "parameter_delta_l2": 22.149480639964438,
+    "strength_proven": false
+  },
+  "data": {
+    "games": 665,
+    "resolved": 665,
+    "unresolved_excluded": 0
+  },
+  "seconds": 891.038804097,
+  "model": "5cdfebea9829ca5809babd4e7efca75b0bc17684df6f38e85dd5982e84acd04f",
+  "holdouts_evaluated": false,
+  "strength_proven": false
+}

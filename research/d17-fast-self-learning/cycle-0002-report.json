@@ -1,0 +1,79 @@
+{
+  "generation": 2,
+  "parent": "c4f86bd3bd7802d4022427e834a2d84b2141e74e79f3b229be25c550e4ade9d0",
+  "train": {
+    "path": "cycle-0002/selfplay.jsonl",
+    "sha256": "52079d970db50dba5b5d57d18983c72c124d90f4681742b3ccb39d97b5b4cd39",
+    "games": 4
+  },
+  "new_games": 4,
+  "new_resolved": 4,
+  "formal_adoption": false,
+  "strength_proven": false,
+  "config": {
+    "pairs": 2,
+    "movetime_ms": 50,
+    "max_plies": 256,
+    "outcome_weight": 0.75,
+    "td_lambda": 0.8,
+    "epochs": 2,
+    "periodic_every": 3
+  },
+  "candidate": "25ccf25b322fb165a955a40a154a0867a64b17e36065a3b9f687257bd604eb20",
+  "training": {
+    "positions": 244,
+    "optimizer_step": 1264,
+    "loss_history": [
+      {
+        "epoch": 0,
+        "loss": 0.7491243081014665
+      },
+      {
+        "epoch": 1,
+        "loss": 0.7225829577836834
+      },
+      {
+        "epoch": 2,
+        "loss": 0.68082209102443
+      }
+    ],
+    "max_gradient_norm": 0.648195599652045,
+    "parameter_delta_l2": 0.6031696939858209,
+    "strength_proven": false
+  },
+  "samples": {
+    "games": 8,
+    "resolved": 8,
+    "unresolved_excluded": 0
+  },
+  "replay_games": 4,
+  "recent_games": 4,
+  "screen": {
+    "wins": 0,
+    "losses": 0,
+    "draws": 4,
+    "unresolved": 0,
+    "action": "provisional",
+    "strength_proven": false,
+    "score_resolved": 0.5,
+    "reason": "bounded research update; superiority unproven"
+  },
+  "periodic": null,
+  "evaluation": {
+    "path": "cycle-0002/monitor.jsonl",
+    "sha256": "83cb3b118a065b80b68cb59eb15e77d01217f216d4179e6a5089e807ab324011",
+    "games": 4
+  },
+  "decision": {
+    "wins": 0,
+    "losses": 0,
+    "draws": 4,
+    "unresolved": 0,
+    "action": "provisional",
+    "strength_proven": false,
+    "score_resolved": 0.5,
+    "reason": "bounded research update; superiority unproven"
+  },
+  "seconds": 56.44049032800001,
+  "research_latest": "25ccf25b322fb165a955a40a154a0867a64b17e36065a3b9f687257bd604eb20"
+}

@@ -1,0 +1,1114 @@
+test_bad_model_is_rejected (test_arena.ArenaTests.test_bad_model_is_rejected) ... ok
+test_complete_depth_arena_never_records_zero_depth (test_arena.ArenaTests.test_complete_depth_arena_never_records_zero_depth) ... ok
+test_paired_real_moves_no_fake_results (test_arena.ArenaTests.test_paired_real_moves_no_fake_results) ... ok
+test_zero_mix_matches_identical_baseline_with_paired_opening (test_arena.ArenaTests.test_zero_mix_matches_identical_baseline_with_paired_opening) ... ok
+test_checkmate_score_preserved (test_checkmate_guard.CheckmateGuardTests.test_checkmate_score_preserved) ... ok
+test_complete_depth_moves_and_nodes_match (test_checkmate_guard.CheckmateGuardTests.test_complete_depth_moves_and_nodes_match) ... ok
+test_default_flag_is_false (test_checkmate_guard.CheckmateGuardTests.test_default_flag_is_false) ... ok
+test_in_check_non_mate_is_identical (test_checkmate_guard.CheckmateGuardTests.test_in_check_non_mate_is_identical) ... ok
+test_non_check_short_circuits_mate_probe (test_checkmate_guard.CheckmateGuardTests.test_non_check_short_circuits_mate_probe) ... ok
+test_usi_option_is_exposed_and_opt_in (test_checkmate_guard.CheckmateGuardTests.test_usi_option_is_exposed_and_opt_in) ... ok
+test_aggregate_missing_shards_rejected (test_continue_unresolved.ContinuationTest.test_aggregate_missing_shards_rejected) ... ok
+test_baseline_turn_never_uses_candidate_bound (test_continue_unresolved.ContinuationTest.test_baseline_turn_never_uses_candidate_bound) ... ok
+test_continuation_limit (test_continue_unresolved.ContinuationTest.test_continuation_limit) ... ok
+test_frozen_request (test_continue_unresolved.ContinuationTest.test_frozen_request) ... ok
+test_illegal_search_move_fails_closed (test_continue_unresolved.ContinuationTest.test_illegal_search_move_fails_closed) ... ok
+test_no_move_does_not_fabricate_loss (test_continue_unresolved.ContinuationTest.test_no_move_does_not_fabricate_loss) ... ok
+test_one_actual_legal_continuation_and_roles (test_continue_unresolved.ContinuationTest.test_one_actual_legal_continuation_and_roles) ... ok
+test_default_off_and_frozen_request (test_d10_repetition_audit.D10RepetitionAuditTests.test_default_off_and_frozen_request) ... ok
+test_failed_comparison_identifies_game_and_played_ply (test_d10_repetition_audit.D10RepetitionAuditTests.test_failed_comparison_identifies_game_and_played_ply) ... ok
+test_fault_reports_measured_time_and_search_mode_without_relaxing_ceiling (test_d10_repetition_audit.D10RepetitionAuditTests.test_fault_reports_measured_time_and_search_mode_without_relaxing_ceiling) ... ok
+test_game_with_no_filtering_reports_absence_not_missing_data (test_d10_repetition_audit.D10RepetitionAuditTests.test_game_with_no_filtering_reports_absence_not_missing_data) ... ok
+test_immediate_mate_is_always_retained (test_d10_repetition_audit.D10RepetitionAuditTests.test_immediate_mate_is_always_retained) ... ok
+test_legal_history_excludes_revisited_child_and_restores_board (test_d10_repetition_audit.D10RepetitionAuditTests.test_legal_history_excludes_revisited_child_and_restores_board) ... ok
+test_mate_reply_audit_and_invalid_move_preserve_history (test_d10_repetition_audit.D10RepetitionAuditTests.test_mate_reply_audit_and_invalid_move_preserve_history) ... ok
+test_real_fixed_depth_comparison_preserves_history_and_differs_only_filter (test_d10_repetition_audit.D10RepetitionAuditTests.test_real_fixed_depth_comparison_preserves_history_and_differs_only_filter) ... ok
+test_timeout_or_incomplete_depth_cannot_be_reported_as_comparison (test_d10_repetition_audit.D10RepetitionAuditTests.test_timeout_or_incomplete_depth_cannot_be_reported_as_comparison) ... ok
+test_twenty_balanced_disjoint_lanes (test_d10_repetition_audit.D10RepetitionAuditTests.test_twenty_balanced_disjoint_lanes) ... ok
+test_leaf_check_evasion_matches_all_legal_static_reply_values (test_d14_check_leaf.D14CheckLeafTests.test_leaf_check_evasion_matches_all_legal_static_reply_values) ... ok
+test_legacy_interface_default_off_usi_default_on (test_d14_check_leaf.D14CheckLeafTests.test_legacy_interface_default_off_usi_default_on) ... ok
+test_quiet_leaf_is_baseline_and_root_history_is_unchanged (test_d14_check_leaf.D14CheckLeafTests.test_quiet_leaf_is_baseline_and_root_history_is_unchanged) ... ok
+test_timeout_never_mutates_repetition_or_board (test_d14_check_leaf.D14CheckLeafTests.test_timeout_never_mutates_repetition_or_board) ... ok
+test_default_deadline_mode_is_unchanged_and_legal (test_d2_deadline.D2DeadlineTests.test_default_deadline_mode_is_unchanged_and_legal) ... ok
+test_single_pass_legal_list_has_same_fixed_depth_one_result (test_d2_deadline.D2DeadlineTests.test_single_pass_legal_list_has_same_fixed_depth_one_result) ... ok
+test_whole_call_deadline_rejects_search_after_slow_root (test_d2_deadline.D2DeadlineTests.test_whole_call_deadline_rejects_search_after_slow_root) ... ok
+test_abba_differs_only_fast_move_list (test_d2_fastmove_probe.D2FastMoveTests.test_abba_differs_only_fast_move_list) ... ok
+test_actual_fixed_depth_one_preserves_history (test_d2_fastmove_probe.D2FastMoveTests.test_actual_fixed_depth_one_preserves_history) ... ok
+test_default_disabled_and_frozen_request (test_d2_fastmove_probe.D2FastMoveTests.test_default_disabled_and_frozen_request) ... ok
+test_in_check_and_hand_drop_legal_move_order_parity (test_d2_fastmove_probe.D2FastMoveTests.test_in_check_and_hand_drop_legal_move_order_parity) ... ok
+test_parity_detects_node_mismatch (test_d2_fastmove_probe.D2FastMoveTests.test_parity_detects_node_mismatch) ... ok
+test_all_tactical_legal_moves_and_stable_order_match (test_d3_fast_tactical.D3FastTacticalTests.test_all_tactical_legal_moves_and_stable_order_match) ... ok
+test_default_and_ordinary_search_unchanged (test_d3_fast_tactical.D3FastTacticalTests.test_default_and_ordinary_search_unchanged) ... ok
+test_fixed_depth_search_move_nodes_and_history_match (test_d3_fast_tactical.D3FastTacticalTests.test_fixed_depth_search_move_nodes_and_history_match) ... ok
+test_illegal_pawn_drop_mate_never_enters_tactical_list (test_d3_fast_tactical.D3FastTacticalTests.test_illegal_pawn_drop_mate_never_enters_tactical_list) ... ok
+test_capture_is_selected_from_legal_moves (test_d3_quiescence.D3QuiescenceTests.test_capture_is_selected_from_legal_moves) ... ok
+test_exception_restores_full_history (test_d3_quiescence.D3QuiescenceTests.test_exception_restores_full_history) ... ok
+test_in_check_never_stands_pat (test_d3_quiescence.D3QuiescenceTests.test_in_check_never_stands_pat) ... ok
+test_independent_one_ply_recapture_oracle (test_d3_quiescence.D3QuiescenceTests.test_independent_one_ply_recapture_oracle) ... ok
+test_non_capture_promotion_is_tactical (test_d3_quiescence.D3QuiescenceTests.test_non_capture_promotion_is_tactical) ... ok
+test_opt_in_and_legacy_path_return_legal_moves (test_d3_quiescence.D3QuiescenceTests.test_opt_in_and_legacy_path_return_legal_moves) ... ok
+test_pawn_drop_mate_is_not_a_tactical_move (test_d3_quiescence.D3QuiescenceTests.test_pawn_drop_mate_is_not_a_tactical_move) ... ok
+test_poison_capture_horizon_has_independent_reply (test_d3_quiescence.D3QuiescenceTests.test_poison_capture_horizon_has_independent_reply) ... ok
+test_quiet_startpos_is_unchanged (test_d3_quiescence.D3QuiescenceTests.test_quiet_startpos_is_unchanged) ... ok
+test_unresolved_check_chain_is_unknown_not_static (test_d3_quiescence.D3QuiescenceTests.test_unresolved_check_chain_is_unknown_not_static) ... ok
+test_function_categories_are_disjoint_and_named (test_d3_quiescence_profile.D3QuiescenceProfileTests.test_function_categories_are_disjoint_and_named) ... ok
+test_real_search_is_legal_and_restores_history (test_d3_quiescence_profile.D3QuiescenceProfileTests.test_real_search_is_legal_and_restores_history) ... ok
+test_actual_depth_one_search_choice_against_independent_oracle (test_d3_tactical_probe.D3TacticalProbeTests.test_actual_depth_one_search_choice_against_independent_oracle) ... ok
+test_actual_poison_recapture_choice_is_legal_and_restores_history (test_d3_tactical_probe.D3TacticalProbeTests.test_actual_poison_recapture_choice_is_legal_and_restores_history) ... ok
+test_fast_request_is_disabled_and_strict (test_d3_tactical_probe.D3TacticalProbeTests.test_fast_request_is_disabled_and_strict) ... ok
+test_five_frozen_cases_and_unique_sfen (test_d3_tactical_probe.D3TacticalProbeTests.test_five_frozen_cases_and_unique_sfen) ... ok
+test_full_width_mate_in_one_oracle_and_counterexample (test_d3_tactical_probe.D3TacticalProbeTests.test_full_width_mate_in_one_oracle_and_counterexample) ... ok
+test_independent_mate_in_one_and_defensive_counterexample (test_d3_tactical_probe.D3TacticalProbeTests.test_independent_mate_in_one_and_defensive_counterexample)
+Enumerate every legal first move, then every legal evasion. ... ok
+test_multiple_legal_recapture_oracles_and_history (test_d3_tactical_probe.D3TacticalProbeTests.test_multiple_legal_recapture_oracles_and_history) ... ok
+test_multiple_tactical_choices_are_observed_not_assumed (test_d3_tactical_probe.D3TacticalProbeTests.test_multiple_tactical_choices_are_observed_not_assumed) ... ok
+test_oracles_restore_history (test_d3_tactical_probe.D3TacticalProbeTests.test_oracles_restore_history) ... ok
+test_order_is_abba (test_d3_tactical_probe.D3TacticalProbeTests.test_order_is_abba) ... ok
+test_pawn_drop_mate_is_illegal (test_d3_tactical_probe.D3TacticalProbeTests.test_pawn_drop_mate_is_illegal) ... ok
+test_poison_capture_has_forced_legal_recapture (test_d3_tactical_probe.D3TacticalProbeTests.test_poison_capture_has_forced_legal_recapture) ... ok
+test_request_is_disabled_by_default_and_rejects_changes (test_d3_tactical_probe.D3TacticalProbeTests.test_request_is_disabled_by_default_and_rejects_changes) ... ok
+test_both_strict_request_files_trigger_push (test_d3_workflow_gate.D3WorkflowGateTests.test_both_strict_request_files_trigger_push) ... ok
+test_explicit_enabled_guard_and_single_runner (test_d3_workflow_gate.D3WorkflowGateTests.test_explicit_enabled_guard_and_single_runner) ... ok
+test_attacker_removed_falls_back_without_false_mate (test_d4_mate_assist.D4MateAssistTests.test_attacker_removed_falls_back_without_false_mate) ... ok
+test_early_exit_assist_selects_only_proven_mate (test_d4_mate_assist.D4MateAssistTests.test_early_exit_assist_selects_only_proven_mate) ... ok
+test_expired_deadline_is_unknown_and_restores_board (test_d4_mate_assist.D4MateAssistTests.test_expired_deadline_is_unknown_and_restores_board) ... ok
+test_first_proof_option_and_negative_counterexample (test_d4_mate_assist.D4MateAssistTests.test_first_proof_option_and_negative_counterexample) ... ok
+test_first_proven_mate_is_sound_without_full_root_scan (test_d4_mate_assist.D4MateAssistTests.test_first_proven_mate_is_sound_without_full_root_scan) ... ok
+test_incomplete_proof_never_claims_mate (test_d4_mate_assist.D4MateAssistTests.test_incomplete_proof_never_claims_mate) ... ok
+test_two_proven_three_ply_moves_are_selected (test_d4_mate_assist.D4MateAssistTests.test_two_proven_three_ply_moves_are_selected) ... ok
+test_budget_exhaustion_is_unknown_and_restores_board (test_d4_mate_oracle.D4MateOracleTests.test_budget_exhaustion_is_unknown_and_restores_board) ... ok
+test_every_reported_three_ply_line_covers_all_legal_defenses (test_d4_mate_oracle.D4MateOracleTests.test_every_reported_three_ply_line_covers_all_legal_defenses) ... ok
+test_four_exhaustively_proven_one_move_mates (test_d4_mate_oracle.D4MateOracleTests.test_four_exhaustively_proven_one_move_mates) ... ok
+test_remove_guard_removes_all_one_move_mates (test_d4_mate_oracle.D4MateOracleTests.test_remove_guard_removes_all_one_move_mates) ... ok
+test_start_position_has_no_checking_mate_in_three (test_d4_mate_oracle.D4MateOracleTests.test_start_position_has_no_checking_mate_in_three) ... ok
+test_legal_history_and_illegal_history (test_d4_realgame_probe.D4RealgameProbeTests.test_legal_history_and_illegal_history) ... ok
+test_parent_separation_and_fixed_stage_counts (test_d4_realgame_probe.D4RealgameProbeTests.test_parent_separation_and_fixed_stage_counts) ... ok
+test_proof_witness_and_restoration (test_d4_realgame_probe.D4RealgameProbeTests.test_proof_witness_and_restoration) ... ok
+test_request_is_disabled_by_default_and_exact (test_d4_realgame_probe.D4RealgameProbeTests.test_request_is_disabled_by_default_and_exact) ... ok
+test_counterexample_without_primary_attacker (test_d4_three_only_probe.ThreeOnlyDiscoveryTests.test_counterexample_without_primary_attacker) ... ok
+test_probe_has_bounded_search_and_restores_board (test_d4_three_only_probe.ThreeOnlyDiscoveryTests.test_probe_has_bounded_search_and_restores_board) ... ok
+test_sfen_builder_and_seed_reproducible (test_d4_three_only_probe.ThreeOnlyDiscoveryTests.test_sfen_builder_and_seed_reproducible) ... ok
+test_two_frozen_three_only_positions_are_fully_proven (test_d4_three_only_probe.ThreeOnlyDiscoveryTests.test_two_frozen_three_only_positions_are_fully_proven) ... ok
+test_auc_and_signs_follow_side_to_move_winner (test_d5_eval_diagnosis.D5EvaluationDiagnosisTests.test_auc_and_signs_follow_side_to_move_winner) ... ok
+test_auc_without_both_classes_is_unknown (test_d5_eval_diagnosis.D5EvaluationDiagnosisTests.test_auc_without_both_classes_is_unknown) ... ok
+test_error_cases_exclude_correct_predictions (test_d5_eval_diagnosis.D5EvaluationDiagnosisTests.test_error_cases_exclude_correct_predictions) ... ok
+test_feature_snapshot_is_read_only_and_mover_relative (test_d5_eval_diagnosis.D5EvaluationDiagnosisTests.test_feature_snapshot_is_read_only_and_mover_relative) ... ok
+test_split_excludes_all_d4_and_early_development_pairs (test_d5_eval_diagnosis.D5EvaluationDiagnosisTests.test_split_excludes_all_d4_and_early_development_pairs) ... ok
+test_unresolved_not_converted_to_outcome (test_d5_eval_diagnosis.D5EvaluationDiagnosisTests.test_unresolved_not_converted_to_outcome) ... ok
+test_black_perspective_and_history_restoration (test_d5_eval_timeline.D5TimelineTests.test_black_perspective_and_history_restoration) ... ok
+test_illegal_move_rejected (test_d5_eval_timeline.D5TimelineTests.test_illegal_move_rejected) ... ok
+test_missing_decisive_parent_is_not_silently_skipped (test_d5_eval_timeline.D5TimelineTests.test_missing_decisive_parent_is_not_silently_skipped) ... ok
+test_non_mate_not_claimed_as_decisive (test_d5_eval_timeline.D5TimelineTests.test_non_mate_not_claimed_as_decisive) ... ok
+test_targets_are_frozen_development_only (test_d5_eval_timeline.D5TimelineTests.test_targets_are_frozen_development_only) ... ok
+test_actual_play_arms_share_clock_and_only_toggle_fast_list (test_d7_fastmove_arena.D7ArenaTests.test_actual_play_arms_share_clock_and_only_toggle_fast_list) ... ok
+test_frozen_protocol_rejects_changed_conditions_and_boolean_numbers (test_d7_fastmove_arena.D7ArenaTests.test_frozen_protocol_rejects_changed_conditions_and_boolean_numbers) ... ok
+test_illegal_move_rejected_and_mate_winner_verified (test_d7_fastmove_arena.D7ArenaTests.test_illegal_move_rejected_and_mate_winner_verified) ... ok
+test_pair_distribution_has_no_missing_duplicate_or_uneven_lanes (test_d7_fastmove_arena.D7ArenaTests.test_pair_distribution_has_no_missing_duplicate_or_uneven_lanes) ... ok
+test_time_increase_and_obvious_screen_regression_block_followup (test_d7_fastmove_arena.D7ArenaTests.test_time_increase_and_obvious_screen_regression_block_followup) ... ok
+test_unresolved_not_draw_and_pair_signs_are_paired (test_d7_fastmove_arena.D7ArenaTests.test_unresolved_not_draw_and_pair_signs_are_paired) ... ok
+test_actual_play_arms_share_fast_list_and_only_change_depth_ceiling (test_d8_depth_extension_arena.D8ArenaTests.test_actual_play_arms_share_fast_list_and_only_change_depth_ceiling) ... ok
+test_frozen_protocol_rejects_changed_conditions_and_boolean_numbers (test_d8_depth_extension_arena.D8ArenaTests.test_frozen_protocol_rejects_changed_conditions_and_boolean_numbers) ... ok
+test_illegal_move_rejected_and_mate_winner_verified (test_d8_depth_extension_arena.D8ArenaTests.test_illegal_move_rejected_and_mate_winner_verified) ... ok
+test_pair_distribution_has_no_missing_duplicate_or_uneven_lanes (test_d8_depth_extension_arena.D8ArenaTests.test_pair_distribution_has_no_missing_duplicate_or_uneven_lanes) ... ok
+test_unresolved_not_draw_and_pair_signs_are_paired (test_d8_depth_extension_arena.D8ArenaTests.test_unresolved_not_draw_and_pair_signs_are_paired) ... ok
+test_using_spare_time_is_allowed_but_obvious_regression_blocks_followup (test_d8_depth_extension_arena.D8ArenaTests.test_using_spare_time_is_allowed_but_obvious_regression_blocks_followup) ... ok
+test_expired_deadline_checked_at_first_node_only_when_opted_in (test_d9_clock_check.D9ClockCheckTests.test_expired_deadline_checked_at_first_node_only_when_opted_in) ... ok
+test_fixed_depth_legal_move_nodes_and_history_match (test_d9_clock_check.D9ClockCheckTests.test_fixed_depth_legal_move_nodes_and_history_match) ... ok
+test_short_real_deadline_keeps_legal_move_and_undo (test_d9_clock_check.D9ClockCheckTests.test_short_real_deadline_keeps_legal_move_and_undo) ... ok
+test_abba_has_same_board_and_legal_moves_with_only_clock_option (test_d9_clock_probe.D9ClockProbeTests.test_abba_has_same_board_and_legal_moves_with_only_clock_option) ... ok
+test_disabled_default_and_exact_protocol (test_d9_clock_probe.D9ClockProbeTests.test_disabled_default_and_exact_protocol) ... ok
+test_exact_request_rejects_changed_source_and_flags (test_d9_tail_probe.D9TailProbeTests.test_exact_request_rejects_changed_source_and_flags) ... ok
+test_frozen_position_abba_only_changes_clock_and_restores (test_d9_tail_probe.D9TailProbeTests.test_frozen_position_abba_only_changes_clock_and_restores) ... ok
+test_label_balance_and_loss (test_dataset_diagnostics.DatasetDiagnosticTests.test_label_balance_and_loss) ... ok
+test_sha_mismatch_blocks_analysis (test_dataset_diagnostics.DatasetDiagnosticTests.test_sha_mismatch_blocks_analysis) ... ok
+test_turn_flip_cannot_reverse_piece_contributions (test_dataset_diagnostics.DatasetDiagnosticTests.test_turn_flip_cannot_reverse_piece_contributions) ... ok
+test_actual_engine_optional_timing_and_default_unchanged (test_depth_limit_probe.DepthLimitProbeTests.test_actual_engine_optional_timing_and_default_unchanged) ... ok
+test_fixed_abba_order_and_only_depth_cap_differs (test_depth_limit_probe.DepthLimitProbeTests.test_fixed_abba_order_and_only_depth_cap_differs) ... ok
+test_request_is_disabled_by_default_and_rejects_changes (test_depth_limit_probe.DepthLimitProbeTests.test_request_is_disabled_by_default_and_rejects_changes) ... ok
+test_select_does_not_fabricate_missing_categories (test_depth_limit_probe.DepthLimitProbeTests.test_select_does_not_fabricate_missing_categories) ... ok
+test_selection_one_parent_and_real_prefix (test_depth_limit_probe.DepthLimitProbeTests.test_selection_one_parent_and_real_prefix) ... ok
+test_timing_rejects_illegal_move (test_depth_limit_probe.DepthLimitProbeTests.test_timing_rejects_illegal_move) ... ok
+test_fail_closed (test_depth_probe.DepthProbeTests.test_fail_closed) ... ok
+test_fabricated_checkmate_rejected (test_direct_arena.DirectArenaTests.test_fabricated_checkmate_rejected) ... ok
+test_sha_verified_equal_depth_color_pairs_and_replay (test_direct_arena.DirectArenaTests.test_sha_verified_equal_depth_color_pairs_and_replay) ... {
+  "pairs": 1,
+  "games": 2,
+  "verified_candidate_wins": 0,
+  "verified_baseline_wins": 0,
+  "unresolved": 2,
+  "candidate_score_on_resolved": null,
+  "search_diagnostics": {
+    "candidate_nodes": 97,
+    "baseline_nodes": 97,
+    "candidate_turns": 4,
+    "baseline_turns": 4,
+    "candidate_depth_zero": 0,
+    "baseline_depth_zero": 0,
+    "candidate_depth_sum": 4,
+    "baseline_depth_sum": 4
+  },
+  "max_plies": 4,
+  "opening_plies": 2,
+  "model_sha256": "1905e2751675e5567d97fa3767dd2586bc14454cd6c703ef75052e9c81dad637",
+  "mix": 0,
+  "movetime_ms": null,
+  "search_mode": "complete_depth",
+  "depth": 1,
+  "seed": 99,
+  "model_type": "legacy",
+  "arena_sha256": "bcdc3bd0f72f105e2ab3c5274b6334842b50432f6e0787c62dc8048ac5d69456",
+  "caution": "No Elo claim from unresolved games or tiny arena."
+}
+{
+  "pairs": 1,
+  "games": 2,
+  "verified_candidate_wins": 0,
+  "verified_baseline_wins": 0,
+  "unresolved": 2,
+  "candidate_score_on_resolved": null,
+  "search_diagnostics": {
+    "candidate_nodes": 27,
+    "baseline_nodes": 43,
+    "candidate_turns": 2,
+    "baseline_turns": 2,
+    "candidate_depth_zero": 2,
+    "baseline_depth_zero": 2,
+    "candidate_depth_sum": 0,
+    "baseline_depth_sum": 0
+  },
+  "max_plies": 2,
+  "opening_plies": 2,
+  "model_sha256": "1905e2751675e5567d97fa3767dd2586bc14454cd6c703ef75052e9c81dad637",
+  "mix": 50,
+  "movetime_ms": 1,
+  "search_mode": "timed",
+  "depth": 1,
+  "seed": 20261026,
+  "model_type": "legacy",
+  "arena_sha256": "3540876238ea9aa9b2525d88ee8a0bdae4a2e0c45384a8d89d883dede8cb0026",
+  "caution": "No Elo claim from unresolved games or tiny arena."
+}
+{
+  "pairs": 1,
+  "games": 2,
+  "verified_candidate_wins": 0,
+  "verified_baseline_wins": 0,
+  "unresolved": 2,
+  "candidate_score_on_resolved": null,
+  "search_diagnostics": {
+    "candidate_nodes": 298,
+    "baseline_nodes": 298,
+    "candidate_turns": 12,
+    "baseline_turns": 12,
+    "candidate_depth_zero": 0,
+    "baseline_depth_zero": 0,
+    "candidate_depth_sum": 12,
+    "baseline_depth_sum": 12
+  },
+  "max_plies": 12,
+  "opening_plies": 4,
+  "model_sha256": "fac07ab82580ecbfc5348fb3721b5831171bad80cbb95121e987fbe0b3dcd17e",
+  "mix": 0,
+  "movetime_ms": 20,
+  "search_mode": "timed",
+  "depth": 1,
+  "seed": 129,
+  "model_type": "legacy",
+  "arena_sha256": "5779abdacadf52d227c81d669111e63987bd9fae057080a6042b03cadbc74a6c",
+  "caution": "No Elo claim from unresolved games or tiny arena."
+}
+D3_VARIATIONS_JSON=[{"case": "silver_file5", "clock": "fixed_depth_unbounded_not_200ms", "model": "classical_no_G8", "observations": [{"depth": 1, "move": "5e5d", "nodes": 16, "takes_recapturable_piece": true, "variant": "A_depth1_no_q", "wall_ms": 1.409}, {"depth": 1, "move": "5e7e", "nodes": 66, "takes_recapturable_piece": false, "variant": "B_depth1_with_q", "wall_ms": 55.558}, {"depth": 2, "move": "5e7e", "nodes": 125, "takes_recapturable_piece": false, "variant": "control_depth2_no_q", "wall_ms": 17.739}], "oracle": {"capture": "5e5d", "captured_piece": 4, "case": "silver_file5", "legal_recapture": "5c5d", "recaptured_piece": 7, "scope": "legal_two_ply_recapture_only_not_optimal_move", "sfen": "8k/9/4r4/4s4/4R4/9/9/9/8K b - 1"}, "scope": "constructed_development_not_unseen_or_strength", "sfen": "8k/9/4r4/4s4/4R4/9/9/9/8K b - 1"}, {"case": "pawn_file5", "clock": "fixed_depth_unbounded_not_200ms", "model": "classical_no_G8", "observations": [{"depth": 1, "move": "5e5d", "nodes": 16, "takes_recapturable_piece": true, "variant": "A_depth1_no_q", "wall_ms": 1.438}, {"depth": 1, "move": "5e6e", "nodes": 62, "takes_recapturable_piece": false, "variant": "B_depth1_with_q", "wall_ms": 48.139}, {"depth": 2, "move": "5e6e", "nodes": 114, "takes_recapturable_piece": false, "variant": "control_depth2_no_q", "wall_ms": 15.624}], "oracle": {"capture": "5e5d", "captured_piece": 1, "case": "pawn_file5", "legal_recapture": "5c5d", "recaptured_piece": 7, "scope": "legal_two_ply_recapture_only_not_optimal_move", "sfen": "8k/9/4r4/4p4/4R4/9/9/9/8K b - 1"}, "scope": "constructed_development_not_unseen_or_strength", "sfen": "8k/9/4r4/4p4/4R4/9/9/9/8K b - 1"}, {"case": "bishop_diagonal", "clock": "fixed_depth_unbounded_not_200ms", "model": "classical_no_G8", "observations": [{"depth": 1, "move": "5e5d", "nodes": 16, "takes_recapturable_piece": true, "variant": "A_depth1_no_q", "wall_ms": 1.395}, {"depth": 1, "move": "5e7e", "nodes": 46, "takes_recapturable_piece": false, "variant": "B_depth1_with_q", "wall_ms": 35.125}, {"depth": 2, "move": "5e7e", "nodes": 113, "takes_recapturable_piece": false, "variant": "control_depth2_no_q", "wall_ms": 15.176}], "oracle": {"capture": "5e5d", "captured_piece": 4, "case": "bishop_diagonal", "legal_recapture": "3b5d", "recaptured_piece": 7, "scope": "legal_two_ply_recapture_only_not_optimal_move", "sfen": "8k/6b2/9/4s4/4R4/9/9/9/8K b - 1"}, "scope": "constructed_development_not_unseen_or_strength", "sfen": "8k/6b2/9/4s4/4R4/9/9/9/8K b - 1"}, {"case": "silver_reversed", "clock": "fixed_depth_unbounded_not_200ms", "model": "classical_no_G8", "observations": [{"depth": 1, "move": "5e5f", "nodes": 16, "takes_recapturable_piece": true, "variant": "A_depth1_no_q", "wall_ms": 1.969}, {"depth": 1, "move": "5e5d", "nodes": 60, "takes_recapturable_piece": false, "variant": "B_depth1_with_q", "wall_ms": 47.797}, {"depth": 2, "move": "5e5d", "nodes": 132, "takes_recapturable_piece": false, "variant": "control_depth2_no_q", "wall_ms": 18.765}], "oracle": {"capture": "5e5f", "captured_piece": 4, "case": "silver_reversed", "legal_recapture": "5g5f", "recaptured_piece": 7, "scope": "legal_two_ply_recapture_only_not_optimal_move", "sfen": "k8/9/9/9/4r4/4S4/4R4/9/K8 w - 1"}, "scope": "constructed_development_not_unseen_or_strength", "sfen": "k8/9/9/9/4r4/4S4/4R4/9/K8 w - 1"}, {"case": "check_evasion", "clock": "fixed_depth_unbounded_not_200ms", "model": "classical_no_G8", "observations": [{"depth": 1, "move": "5a6a", "nodes": 4, "takes_recapturable_piece": null, "variant": "A_depth1_no_q", "wall_ms": 0.692}, {"depth": 1, "move": "5a6b", "nodes": 20, "takes_recapturable_piece": null, "variant": "B_depth1_with_q", "wall_ms": 10.209}, {"depth": 2, "move": "5a6a", "nodes": 40, "takes_recapturable_piece": null, "variant": "control_depth2_no_q", "wall_ms": 5.862}], "oracle": {"case": "check_evasion", "evidence": "all enumerated check evasions leave the white king unattacked", "oracle_scope": "legal fact only, not a unique best move", "sfen": "4k4/9/9/9/4R4/9/9/9/4K4 w - 1"}, "scope": "constructed_development_not_unseen_or_strength", "sfen": "4k4/9/9/9/4R4/9/9/9/4K4 w - 1"}, {"case": "quiet_promotion", "clock": "fixed_depth_unbounded_not_200ms", "model": "classical_no_G8", "observations": [{"depth": 1, "move": "5c5b+", "nodes": 5, "takes_recapturable_piece": null, "variant": "A_depth1_no_q", "wall_ms": 0.589}, {"depth": 1, "move": "5c5b+", "nodes": 5, "takes_recapturable_piece": null, "variant": "B_depth1_with_q", "wall_ms": 0.727}, {"depth": 2, "move": "5c5b+", "nodes": 17, "takes_recapturable_piece": null, "variant": "control_depth2_no_q", "wall_ms": 2.14}], "oracle": {"case": "quiet_promotion", "evidence": "legal noncapture promotion", "oracle_scope": "legal fact only, not a unique best move", "sfen": "8k/9/4P4/9/9/9/9/9/8K b - 1"}, "scope": "constructed_development_not_unseen_or_strength", "sfen": "8k/9/4P4/9/9/9/9/9/8K b - 1"}]
+{
+  "status": "research_only_no_promotion",
+  "games": 2,
+  "pairs": 1,
+  "relative_wins": 0,
+  "legacy_wins": 0,
+  "unresolved": 2,
+  "relative_model_sha256": "5c5801815325084f803bdbe1b2e4074cbe3d10605f112bffc295d16d4a214a5a",
+  "legacy_model_sha256": "1905e2751675e5567d97fa3767dd2586bc14454cd6c703ef75052e9c81dad637",
+  "arena_seed": 20270627,
+  "mix_percent": 25,
+  "depth": 1,
+  "search_mode": "complete_depth",
+  "movetime_ms": null,
+  "max_plies": 4,
+  "legal_replay_verified": true,
+  "all_pairs_alternate_color": true,
+  "stats": {
+    "relative_nodes": 102,
+    "legacy_nodes": 98,
+    "relative_turns": 4,
+    "legacy_turns": 4,
+    "relative_depth_zero": 0,
+    "legacy_depth_zero": 0,
+    "relative_depth_sum": 4,
+    "legacy_depth_sum": 4,
+    "relative_incomplete": 0,
+    "legacy_incomplete": 0
+  },
+  "games_sha256": "a8db1313f2d14c91ed6633ebc2be4a8462180ef9821de918685c374fa7e7f713",
+  "caution": "Unresolved games are not wins. No formal strength claim."
+}ok
+test_complete_depth_ignores_short_wall_clock_and_finishes (test_engine.EngineTests.test_complete_depth_ignores_short_wall_clock_and_finishes) ... ok
+test_root_move_remains_legal_after_cycle (test_engine.EngineTests.test_root_move_remains_legal_after_cycle) ... ok
+test_search_penalizes_visited_position (test_engine.EngineTests.test_search_penalizes_visited_position) ... ok
+test_search_returns_legal_move (test_engine.EngineTests.test_search_returns_legal_move) ... ok
+test_side_to_move_reversal (test_engine.EngineTests.test_side_to_move_reversal) ... ok
+test_usi_protocol (test_engine.EngineTests.test_usi_protocol) ... ok
+test_bounded_search_can_end_without_fabricating_winner (test_engine_selfplay.EngineSelfplayTests.test_bounded_search_can_end_without_fabricating_winner) ... ok
+test_real_search_accepts_model_without_inventing_a_win (test_engine_selfplay.EngineSelfplayTests.test_real_search_accepts_model_without_inventing_a_win) ... ok
+test_zero_game_manifest_is_auditable_not_trainable (test_engine_selfplay.EngineSelfplayTests.test_zero_game_manifest_is_auditable_not_trainable) ... ok
+test_rejects_invalid_mix_sweep (test_experiment_request.ExperimentRequestTests.test_rejects_invalid_mix_sweep) ... ok
+test_rejects_misleading_branch_variants (test_experiment_request.ExperimentRequestTests.test_rejects_misleading_branch_variants) ... ok
+test_request_controls_are_applied_and_reported (test_experiment_request.ExperimentRequestTests.test_request_controls_are_applied_and_reported) ... ok
+test_fixed_protocol_rejects_unsafe_changes (test_fast_arena.FastArenaTests.test_fixed_protocol_rejects_unsafe_changes) ... ok
+test_unresolved_is_not_a_win_and_colors_are_paired (test_fast_arena.FastArenaTests.test_unresolved_is_not_a_win_and_colors_are_paired) ... ok
+test_fail_closed_protocol (test_fast_diagnosis.FastDiagnosisTests.test_fail_closed_protocol) ... ok
+test_mate_probe_is_read_only (test_fast_diagnosis.FastDiagnosisTests.test_mate_probe_is_read_only) ... ok
+test_unresolved_stays_unresolved (test_fast_diagnosis.FastDiagnosisTests.test_unresolved_stays_unresolved) ... ok
+test_fixed_depth_and_default_off (test_fast_legal_guard.FastLegalGuardTests.test_fixed_depth_and_default_off) ... ok
+test_fourfold_repetition_state_preserved (test_fast_legal_guard.FastLegalGuardTests.test_fourfold_repetition_state_preserved) ... ok
+test_random_reachable_positions (test_fast_legal_guard.FastLegalGuardTests.test_random_reachable_positions) ... ok
+test_special_positions (test_fast_legal_guard.FastLegalGuardTests.test_special_positions) ... ok
+test_uchi_fuzume_pawn_drop_is_not_shortcut (test_fast_legal_guard.FastLegalGuardTests.test_uchi_fuzume_pawn_drop_is_not_shortcut) ... ok
+test_usi_formally_adopted_default_and_legacy_override (test_fast_legal_guard.FastLegalGuardTests.test_usi_formally_adopted_default_and_legacy_override) ... ok
+test_default_is_unchanged (test_fast_move_list.FastMoveListTests.test_default_is_unchanged) ... ok
+test_fixed_depth_search_equivalence (test_fast_move_list.FastMoveListTests.test_fixed_depth_search_equivalence) ... ok
+test_legal_order_is_identical (test_fast_move_list.FastMoveListTests.test_legal_order_is_identical) ... ok
+test_usi_opt_in (test_fast_move_list.FastMoveListTests.test_usi_opt_in) ... ok
+test_default_and_no_model_unchanged (test_fast_relative.FusedRelativeTests.test_default_and_no_model_unchanged) ... ok
+test_exact_score_and_depth_one_move_parity (test_fast_relative.FusedRelativeTests.test_exact_score_and_depth_one_move_parity) ... ok
+test_complete_depth_request_routes_equal_depth_and_sha (test_fixed_arena.FixedArenaTests.test_complete_depth_request_routes_equal_depth_and_sha) ... ok
+test_mismatched_model_is_rejected_before_arena (test_fixed_arena.FixedArenaTests.test_mismatched_model_is_rejected_before_arena) ... ok
+test_same_model_and_openings_across_all_arms (test_fixed_arena.FixedArenaTests.test_same_model_and_openings_across_all_arms) ... ok
+test_unsafe_game_budget_is_rejected (test_fixed_arena.FixedArenaTests.test_unsafe_game_budget_is_rejected) ... ok
+test_frozen_request (test_g7_checkmate_guard_diagnosis.MateGuardDiagnosisTests.test_frozen_request) ... ok
+test_reject_extra_keys (test_g7_checkmate_guard_diagnosis.MateGuardDiagnosisTests.test_reject_extra_keys) ... ok
+test_reject_training_and_tampering (test_g7_checkmate_guard_diagnosis.MateGuardDiagnosisTests.test_reject_training_and_tampering) ... ok
+test_fixed_request (test_g7_depth_diagnosis.G7DepthDiagnosisTests.test_fixed_request) ... ok
+test_reject_extra_keys (test_g7_depth_diagnosis.G7DepthDiagnosisTests.test_reject_extra_keys) ... ok
+test_reject_training_or_model_tamper (test_g7_depth_diagnosis.G7DepthDiagnosisTests.test_reject_training_or_model_tamper) ... ok
+test_exact_usi_settings (test_g7_fast_equal_kumoji.G7EqualKumojiTests.test_exact_usi_settings) ... ok
+test_fixed_conditions_and_no_adoption (test_g7_fast_equal_kumoji.G7EqualKumojiTests.test_fixed_conditions_and_no_adoption) ... ok
+test_missing_shards_rejected (test_g7_fast_equal_kumoji.G7EqualKumojiTests.test_missing_shards_rejected) ... ok
+test_reject_any_drift (test_g7_fast_equal_kumoji.G7EqualKumojiTests.test_reject_any_drift) ... ok
+test_workflow_bounded_and_separate (test_g7_fast_equal_kumoji.G7EqualKumojiTests.test_workflow_bounded_and_separate) ... ok
+test_aggregate_uses_guard_telemetry_and_all_twenty_saved_shards (test_g7_fast_legal_guard_arena.G7FastLegalGuardArenaTests.test_aggregate_uses_guard_telemetry_and_all_twenty_saved_shards) ... ok
+test_exact_frozen_request (test_g7_fast_legal_guard_arena.G7FastLegalGuardArenaTests.test_exact_frozen_request) ... ok
+test_missing_shards_rejected (test_g7_fast_legal_guard_arena.G7FastLegalGuardArenaTests.test_missing_shards_rejected) ... ok
+test_recovery_workflow_never_starts_games (test_g7_fast_legal_guard_arena.G7FastLegalGuardArenaTests.test_recovery_workflow_never_starts_games) ... ok
+test_reject_any_protocol_tampering (test_g7_fast_legal_guard_arena.G7FastLegalGuardArenaTests.test_reject_any_protocol_tampering) ... ok
+test_reject_invalid_shard_and_model_sha (test_g7_fast_legal_guard_arena.G7FastLegalGuardArenaTests.test_reject_invalid_shard_and_model_sha) ... ok
+test_workflow_is_bounded_and_separate (test_g7_fast_legal_guard_arena.G7FastLegalGuardArenaTests.test_workflow_is_bounded_and_separate) ... ok
+test_exact_request (test_g7_fast_legal_guard_diagnosis.GuardDiagnosisTests.test_exact_request) ... ok
+test_reject_tampering (test_g7_fast_legal_guard_diagnosis.GuardDiagnosisTests.test_reject_tampering) ... ok
+test_both_variants_preserve_fixed_depth_and_board (test_g7_fast_list_hotspot_profile.G7FastListProfileTests.test_both_variants_preserve_fixed_depth_and_board) ... ok
+test_frozen_read_only_protocol (test_g7_fast_list_hotspot_profile.G7FastListProfileTests.test_frozen_read_only_protocol) ... ok
+test_exact_frozen_request (test_g7_fast_move_list_arena.G7FastMoveListArenaTests.test_exact_frozen_request) ... ok
+test_missing_shards_rejected (test_g7_fast_move_list_arena.G7FastMoveListArenaTests.test_missing_shards_rejected) ... ok
+test_reject_any_protocol_tampering (test_g7_fast_move_list_arena.G7FastMoveListArenaTests.test_reject_any_protocol_tampering) ... ok
+test_reject_invalid_shard_and_model_sha (test_g7_fast_move_list_arena.G7FastMoveListArenaTests.test_reject_invalid_shard_and_model_sha) ... ok
+test_workflow_is_bounded_and_separate (test_g7_fast_move_list_arena.G7FastMoveListArenaTests.test_workflow_is_bounded_and_separate) ... ok
+test_exact_two_modes (test_g7_fast_move_list_diagnosis.FastMoveListDiagnosisTests.test_exact_two_modes) ... ok
+test_frozen_request (test_g7_fast_move_list_diagnosis.FastMoveListDiagnosisTests.test_frozen_request) ... ok
+test_reject_extra_keys (test_g7_fast_move_list_diagnosis.FastMoveListDiagnosisTests.test_reject_extra_keys) ... ok
+test_reject_training_and_tampering (test_g7_fast_move_list_diagnosis.FastMoveListDiagnosisTests.test_reject_training_and_tampering) ... ok
+test_exact_frozen_request (test_g7_fast_move_list_replication.G7FastMoveListReplicationTests.test_exact_frozen_request) ... ok
+test_missing_shards_rejected (test_g7_fast_move_list_replication.G7FastMoveListReplicationTests.test_missing_shards_rejected) ... ok
+test_reject_any_protocol_tampering (test_g7_fast_move_list_replication.G7FastMoveListReplicationTests.test_reject_any_protocol_tampering) ... ok
+test_reject_invalid_shard_and_model_sha (test_g7_fast_move_list_replication.G7FastMoveListReplicationTests.test_reject_invalid_shard_and_model_sha) ... ok
+test_workflow_is_bounded_and_separate (test_g7_fast_move_list_replication.G7FastMoveListReplicationTests.test_workflow_is_bounded_and_separate) ... ok
+test_frozen_request (test_g7_search_hotspots.G7HotspotProtocolTests.test_frozen_request) ... ok
+test_profile_is_bounded_and_read_only (test_g7_search_hotspots.G7HotspotProtocolTests.test_profile_is_bounded_and_read_only) ... ok
+test_reject_extra_key (test_g7_search_hotspots.G7HotspotProtocolTests.test_reject_extra_key) ... ok
+test_reject_training_and_unapproved_depth (test_g7_search_hotspots.G7HotspotProtocolTests.test_reject_training_and_unapproved_depth) ... ok
+test_request_is_exact_and_initially_disabled (test_g8_artifact_selection.G8ArtifactSelectionProtocolTests.test_request_is_exact_and_initially_disabled) ... ok
+test_signed_redirect_host_restriction (test_g8_artifact_selection.G8ArtifactSelectionProtocolTests.test_signed_redirect_host_restriction) ... ok
+test_opponent_branch_undo_and_legality (test_g8_followup.FollowupTests.test_opponent_branch_undo_and_legality) ... ok
+test_request_disabled_by_default_and_exact_protocol (test_g8_followup.FollowupTests.test_request_disabled_by_default_and_exact_protocol) ... ok
+test_selects_exact_forty_with_frozen_identity (test_g8_followup.FollowupTests.test_selects_exact_forty_with_frozen_identity) ... ok
+test_source_tampering_and_holdout_rejected (test_g8_followup.FollowupTests.test_source_tampering_and_holdout_rejected) ... ok
+test_deterministic_unique_balanced_sixty (test_g8_longthink.G8LongThinkTests.test_deterministic_unique_balanced_sixty) ... ok
+test_diagnostic_does_not_prove_training (test_g8_longthink.G8LongThinkTests.test_diagnostic_does_not_prove_training) ... ok
+test_insufficient_side_and_duplicate_state_rejected (test_g8_longthink.G8LongThinkTests.test_insufficient_side_and_duplicate_state_rejected) ... ok
+test_legal_history_and_position_reconstruction (test_g8_longthink.G8LongThinkTests.test_legal_history_and_position_reconstruction) ... ok
+test_request_strict_and_disabled_default (test_g8_longthink.G8LongThinkTests.test_request_strict_and_disabled_default) ... ok
+test_20_shards_exact_120_pairs_and_swapped_240_games (test_g8_paired_arena.G8PairedTests.test_20_shards_exact_120_pairs_and_swapped_240_games) ... ok
+test_disabled_and_enabled_request (test_g8_paired_arena.G8PairedTests.test_disabled_and_enabled_request) ... ok
+test_no_unapproved_240_game_changes (test_g8_paired_arena.G8PairedTests.test_no_unapproved_240_game_changes) ... ok
+test_wilson_decisive_only (test_g8_paired_arena.G8PairedTests.test_wilson_decisive_only) ... ok
+test_existing_group_never_becomes_new_group (test_generation3_train.Generation3TrainTest.test_existing_group_never_becomes_new_group) ... ok
+test_existing_test_groups_are_never_reassigned (test_generation3_train.Generation3TrainTest.test_existing_test_groups_are_never_reassigned) ... ok
+test_frozen_request_rejects_promotion (test_generation3_train.Generation3TrainTest.test_frozen_request_rejects_promotion) ... ok
+test_insufficient_independent_groups_rejected (test_generation3_train.Generation3TrainTest.test_insufficient_independent_groups_rejected) ... ok
+test_frozen_protocol (test_generation4_arena.Generation4ArenaTest.test_frozen_protocol) ... ok
+test_invalid_model_hash_rejected_before_play (test_generation4_arena.Generation4ArenaTest.test_invalid_model_hash_rejected_before_play) ... ok
+test_invalid_shard_rejected_before_model_read (test_generation4_arena.Generation4ArenaTest.test_invalid_shard_rejected_before_model_read) ... ok
+test_missing_shards_rejected (test_generation4_arena.Generation4ArenaTest.test_missing_shards_rejected) ... ok
+test_invalid_shard_and_model_rejected_before_play (test_generation4_selfplay.Generation4SelfplayTest.test_invalid_shard_and_model_rejected_before_play) ... ok
+test_missing_aggregate_shards_rejected (test_generation4_selfplay.Generation4SelfplayTest.test_missing_aggregate_shards_rejected) ... ok
+test_request_frozen_and_no_adoption (test_generation4_selfplay.Generation4SelfplayTest.test_request_frozen_and_no_adoption) ... ok
+test_unique_parent_ids (test_generation4_selfplay.Generation4SelfplayTest.test_unique_parent_ids) ... ok
+test_all_old_heldouts_frozen_and_new_groups_disjoint (test_generation4_train.Generation4TrainTest.test_all_old_heldouts_frozen_and_new_groups_disjoint) ... ok
+test_missing_parent_rejected (test_generation4_train.Generation4TrainTest.test_missing_parent_rejected) ... ok
+test_new_parent_collision_rejected (test_generation4_train.Generation4TrainTest.test_new_parent_collision_rejected) ... ok
+test_reassigned_old_test_rejected (test_generation4_train.Generation4TrainTest.test_reassigned_old_test_rejected) ... ok
+test_rejects_promotion_or_test_tuning (test_generation4_train.Generation4TrainTest.test_rejects_promotion_or_test_tuning) ... ok
+test_both_sides_same_root_bound_and_different_models (test_generation4_vs3_arena.Generation4Vs3ArenaTest.test_both_sides_same_root_bound_and_different_models) ... ok
+test_incomplete_aggregate_rejected (test_generation4_vs3_arena.Generation4Vs3ArenaTest.test_incomplete_aggregate_rejected) ... ok
+test_no_move_is_unresolved (test_generation4_vs3_arena.Generation4Vs3ArenaTest.test_no_move_is_unresolved) ... ok
+test_research_request_frozen (test_generation4_vs3_arena.Generation4Vs3ArenaTest.test_research_request_frozen) ... ok
+test_frozen_request (test_generation5_arena.Generation5ArenaTest.test_frozen_request) ... ok
+test_missing_shards (test_generation5_arena.Generation5ArenaTest.test_missing_shards) ... ok
+test_rejects_invalid_shard (test_generation5_arena.Generation5ArenaTest.test_rejects_invalid_shard) ... ok
+test_rejects_missing_or_wrong_model (test_generation5_arena.Generation5ArenaTest.test_rejects_missing_or_wrong_model) ... ok
+test_invalid_shard_and_model_rejected_before_play (test_generation5_selfplay.Generation5SelfplayTest.test_invalid_shard_and_model_rejected_before_play) ... ok
+test_missing_aggregate_shards_rejected (test_generation5_selfplay.Generation5SelfplayTest.test_missing_aggregate_shards_rejected) ... ok
+test_request_frozen_and_no_adoption (test_generation5_selfplay.Generation5SelfplayTest.test_request_frozen_and_no_adoption) ... ok
+test_unique_parent_ids (test_generation5_selfplay.Generation5SelfplayTest.test_unique_parent_ids) ... ok
+test_parent_disjoint_and_old_splits_unchanged (test_generation5_train.Generation5TrainTest.test_parent_disjoint_and_old_splits_unchanged) ... ok
+test_rejects_missing_parent (test_generation5_train.Generation5TrainTest.test_rejects_missing_parent) ... ok
+test_rejects_reassignment_and_overlap (test_generation5_train.Generation5TrainTest.test_rejects_reassignment_and_overlap) ... ok
+test_request_rejects_promotion_or_test_tuning (test_generation5_train.Generation5TrainTest.test_request_rejects_promotion_or_test_tuning) ... ok
+test_frozen_request (test_generation6_arena.Generation6ArenaTest.test_frozen_request) ... ok
+test_missing_shards (test_generation6_arena.Generation6ArenaTest.test_missing_shards) ... ok
+test_rejects_invalid_shard (test_generation6_arena.Generation6ArenaTest.test_rejects_invalid_shard) ... ok
+test_rejects_missing_or_wrong_model (test_generation6_arena.Generation6ArenaTest.test_rejects_missing_or_wrong_model) ... ok
+test_workflow_uses_correct_frozen_model_sources (test_generation6_arena.Generation6ArenaTest.test_workflow_uses_correct_frozen_model_sources) ... ok
+test_invalid_shard_and_model_rejected_before_play (test_generation6_selfplay.Generation6SelfplayTest.test_invalid_shard_and_model_rejected_before_play) ... ok
+test_missing_aggregate_shards_rejected (test_generation6_selfplay.Generation6SelfplayTest.test_missing_aggregate_shards_rejected) ... ok
+test_request_frozen_and_no_adoption (test_generation6_selfplay.Generation6SelfplayTest.test_request_frozen_and_no_adoption) ... ok
+test_unique_parent_ids (test_generation6_selfplay.Generation6SelfplayTest.test_unique_parent_ids) ... ok
+test_parent_disjoint_and_old_splits_unchanged (test_generation6_train.Generation6TrainTest.test_parent_disjoint_and_old_splits_unchanged) ... ok
+test_rejects_missing_parent (test_generation6_train.Generation6TrainTest.test_rejects_missing_parent) ... ok
+test_rejects_reassignment_and_overlap (test_generation6_train.Generation6TrainTest.test_rejects_reassignment_and_overlap) ... ok
+test_request_rejects_promotion_or_test_tuning (test_generation6_train.Generation6TrainTest.test_request_rejects_promotion_or_test_tuning) ... ok
+test_frozen_request (test_generation7_arena.Generation7ArenaTest.test_frozen_request) ... ok
+test_missing_shards (test_generation7_arena.Generation7ArenaTest.test_missing_shards) ... ok
+test_rejects_invalid_shard (test_generation7_arena.Generation7ArenaTest.test_rejects_invalid_shard) ... ok
+test_rejects_missing_or_wrong_model (test_generation7_arena.Generation7ArenaTest.test_rejects_missing_or_wrong_model) ... ok
+test_workflow_uses_correct_frozen_model_sources (test_generation7_arena.Generation7ArenaTest.test_workflow_uses_correct_frozen_model_sources) ... ok
+test_distinct_training_seed_from_prior_g6 (test_generation7_selfplay.Generation7SelfplayProtocolTests.test_distinct_training_seed_from_prior_g6) ... ok
+test_frozen_request_and_disabled_rejection (test_generation7_selfplay.Generation7SelfplayProtocolTests.test_frozen_request_and_disabled_rejection) ... ok
+test_twenty_equal_disjoint_shards_and_parent_ids (test_generation7_selfplay.Generation7SelfplayProtocolTests.test_twenty_equal_disjoint_shards_and_parent_ids) ... ok
+test_parent_disjoint_and_old_splits_unchanged (test_generation7_train.Generation6TrainTest.test_parent_disjoint_and_old_splits_unchanged) ... ok
+test_rejects_missing_parent (test_generation7_train.Generation6TrainTest.test_rejects_missing_parent) ... ok
+test_rejects_reassignment_and_overlap (test_generation7_train.Generation6TrainTest.test_rejects_reassignment_and_overlap) ... ok
+test_request_rejects_promotion_or_test_tuning (test_generation7_train.Generation6TrainTest.test_request_rejects_promotion_or_test_tuning) ... ok
+test_early_unresolved_fails_closed (test_generation8_full_replay.FullG7ReplayTests.test_early_unresolved_fails_closed) ... ok
+test_every_game_is_replayed (test_generation8_full_replay.FullG7ReplayTests.test_every_game_is_replayed) ... ok
+test_missing_game_fails_closed (test_generation8_full_replay.FullG7ReplayTests.test_missing_game_fails_closed) ... ok
+test_duplicate_board_fails_closed (test_generation8_selection.G8SelectionTests.test_duplicate_board_fails_closed) ... ok
+test_frozen_split_and_100_train_only (test_generation8_selection.G8SelectionTests.test_frozen_split_and_100_train_only) ... ok
+test_overlap_fails_closed (test_generation8_selection.G8SelectionTests.test_overlap_fails_closed) ... ok
+test_position_selection_range (test_generation8_selection.G8SelectionTests.test_position_selection_range) ... ok
+test_disabled_by_default_and_no_adoption (test_generation8_train.Generation8TrainTests.test_disabled_by_default_and_no_adoption) ... ok
+test_exact_parent_splits_and_holdout_isolation (test_generation8_train.Generation8TrainTests.test_exact_parent_splits_and_holdout_isolation) ... ok
+test_reject_unapproved_training_settings (test_generation8_train.Generation8TrainTests.test_reject_unapproved_training_settings) ... ok
+test_both_sides_same_root_bound_and_different_models (test_generation_arena.GenerationArenaTest.test_both_sides_same_root_bound_and_different_models) ... ok
+test_incomplete_aggregate_rejected (test_generation_arena.GenerationArenaTest.test_incomplete_aggregate_rejected) ... ok
+test_no_move_is_unresolved (test_generation_arena.GenerationArenaTest.test_no_move_is_unresolved) ... ok
+test_research_request_frozen (test_generation_arena.GenerationArenaTest.test_research_request_frozen) ... ok
+test_frozen_sources (test_generation_input.GenerationInputTest.test_frozen_sources) ... ok
+test_hash_function (test_generation_input.GenerationInputTest.test_hash_function) ... ok
+test_unknown_run_rejected (test_generation_input.GenerationInputTest.test_unknown_run_rejected) ... ok
+test_wrong_hash_rejected_before_replay (test_generation_input.GenerationInputTest.test_wrong_hash_rejected_before_replay) ... ok
+test_invalid_shard_and_model_rejected_before_play (test_generation_selfplay.GenerationSelfplayTest.test_invalid_shard_and_model_rejected_before_play) ... ok
+test_missing_aggregate_shards_rejected (test_generation_selfplay.GenerationSelfplayTest.test_missing_aggregate_shards_rejected) ... ok
+test_request_frozen_and_no_adoption (test_generation_selfplay.GenerationSelfplayTest.test_request_frozen_and_no_adoption) ... ok
+test_unique_parent_ids (test_generation_selfplay.GenerationSelfplayTest.test_unique_parent_ids) ... ok
+test_empty_train_rejected (test_generation_train.GenerationTrainTest.test_empty_train_rejected) ... ok
+test_parent_is_not_mutated (test_generation_train.GenerationTrainTest.test_parent_is_not_mutated) ... ok
+test_score_counts (test_generation_train.GenerationTrainTest.test_score_counts) ... ok
+test_no_false_mate_or_unresolved_win (test_kumoji_compare.FrozenKumojiTests.test_no_false_mate_or_unresolved_win) ... ok
+test_request_rejects_drift (test_kumoji_compare.FrozenKumojiTests.test_request_rejects_drift) ... ok
+test_disjoint_openings_and_even_shard_assignment (test_kumoji_cross200.KumojiCross200Tests.test_disjoint_openings_and_even_shard_assignment) ... ok
+test_frozen_one_difference_protocol (test_kumoji_cross200.KumojiCross200Tests.test_frozen_one_difference_protocol) ... ok
+test_opponent_random_seed_is_identical_within_matched_color (test_kumoji_cross200.KumojiCross200Tests.test_opponent_random_seed_is_identical_within_matched_color) ... ok
+test_sign_p_uses_non_tied_paired_openings_only (test_kumoji_cross200.KumojiCross200Tests.test_sign_p_uses_non_tied_paired_openings_only) ... ok
+test_legal_complete_mate_in_one_proof (test_kumoji_defense_guard.GuardTests.test_legal_complete_mate_in_one_proof) ... ok
+test_proven_unsafe_choice_is_replaced_by_legally_checked_alternative (test_kumoji_defense_guard.GuardTests.test_proven_unsafe_choice_is_replaced_by_legally_checked_alternative) ... ok
+test_safe_chosen_move_is_retained (test_kumoji_defense_guard.GuardTests.test_safe_chosen_move_is_retained) ... ok
+test_split_budget_rejected (test_kumoji_defense_guard.GuardTests.test_split_budget_rejected) ... ok
+test_unknown_is_not_falsely_safe_and_does_not_change_move (test_kumoji_defense_guard.GuardTests.test_unknown_is_not_falsely_safe_and_does_not_change_move) ... ok
+test_both_colors_replay_legal_without_mutating_input (test_kumoji_fast_legal_arena.FastLegalArenaTests.test_both_colors_replay_legal_without_mutating_input) ... ok
+test_immutable_one_factor_protocol_and_independent_cohorts (test_kumoji_fast_legal_arena.FastLegalArenaTests.test_immutable_one_factor_protocol_and_independent_cohorts) ... ok
+test_fast_source_has_exact_standard_moves_and_no_state_change (test_kumoji_legal_fast_probe.FastLegalResearchTests.test_fast_source_has_exact_standard_moves_and_no_state_change) ... ok
+test_source_hash_is_required (test_kumoji_legal_fast_probe.FastLegalResearchTests.test_source_hash_is_required) ... ok
+test_corrupt_source_never_bypasses_hash_guard (test_kumoji_loss_study.KumojiLossStudyTests.test_corrupt_source_never_bypasses_hash_guard) ... ok
+test_exact_mate_in_one_probe_keeps_position_and_history (test_kumoji_loss_study.KumojiLossStudyTests.test_exact_mate_in_one_probe_keeps_position_and_history) ... ok
+test_negative_mate_proof_no_false_positive (test_kumoji_loss_study.KumojiLossStudyTests.test_negative_mate_proof_no_false_positive) ... ok
+test_sampled_pairs_were_fixed_before_examining_tactics (test_kumoji_loss_study.KumojiLossStudyTests.test_sampled_pairs_were_fixed_before_examining_tactics) ... ok
+test_rejects_nonresearch_and_invalid_timing (test_kumoji_match.KumojiMatchTests.test_rejects_nonresearch_and_invalid_timing) ... ok
+test_replay_legal_unresolved_and_illegal_rejected (test_kumoji_match.KumojiMatchTests.test_replay_legal_unresolved_and_illegal_rejected) ... ok
+test_fixed_protocol_rejects_unsafe_changes (test_kumoji_paired.PairedKumojiTests.test_fixed_protocol_rejects_unsafe_changes) ... ok
+test_paired_openings_and_unresolved_not_wins (test_kumoji_paired.PairedKumojiTests.test_paired_openings_and_unresolved_not_wins) ... ok
+test_original_games_are_sha_locked (test_kumoji_search_speed_probe.SpeedProbeTests.test_original_games_are_sha_locked) ... ok
+test_pinned_model_identity (test_kumoji_search_speed_probe.SpeedProbeTests.test_pinned_model_identity) ... ok
+test_features (test_learning.LearningTests.test_features) ... ok
+test_fit_toy_data (test_learning.LearningTests.test_fit_toy_data) ... ok
+test_illegal_move (test_learning.LearningTests.test_illegal_move) ... ok
+test_labels_follow_actual_side_to_move (test_learning.LearningTests.test_labels_follow_actual_side_to_move) ... ok
+test_adaptive_reserve_avoids_starting_an_unsafe_iteration (test_mcts_research.MctsResearchTests.test_adaptive_reserve_avoids_starting_an_unsafe_iteration) ... ok
+test_checked_king_only_chooses_legal_evasion (test_mcts_research.MctsResearchTests.test_checked_king_only_chooses_legal_evasion) ... ok
+test_checkmated_side_resigns_without_mutating_board (test_mcts_research.MctsResearchTests.test_checkmated_side_resigns_without_mutating_board) ... ok
+test_child_value_is_negated_from_parent_viewpoint (test_mcts_research.MctsResearchTests.test_child_value_is_negated_from_parent_viewpoint) ... ok
+test_cleanup_aware_guard_stops_before_expensive_next_iteration (test_mcts_research.MctsResearchTests.test_cleanup_aware_guard_stops_before_expensive_next_iteration) ... ok
+test_cleanup_guard_fixed_iteration_legality_and_repetition (test_mcts_research.MctsResearchTests.test_cleanup_guard_fixed_iteration_legality_and_repetition) ... ok
+test_cleanup_guard_rejects_nonboolean (test_mcts_research.MctsResearchTests.test_cleanup_guard_rejects_nonboolean) ... ok
+test_cleanup_guard_returns_legal_move_after_root_exhausts_budget (test_mcts_research.MctsResearchTests.test_cleanup_guard_returns_legal_move_after_root_exhausts_budget) ... ok
+test_cleanup_guard_tracks_new_nodes_after_expansion (test_mcts_research.MctsResearchTests.test_cleanup_guard_tracks_new_nodes_after_expansion) ... ok
+test_cleanup_reserve_grows_with_generated_nodes (test_mcts_research.MctsResearchTests.test_cleanup_reserve_grows_with_generated_nodes) ... ok
+test_deterministic_for_fixed_iterations (test_mcts_research.MctsResearchTests.test_deterministic_for_fixed_iterations) ... ok
+test_linear_root_choice_exact_ties_and_no_index_prepass (test_mcts_research.MctsResearchTests.test_linear_root_choice_exact_ties_and_no_index_prepass) ... ok
+test_linear_root_choice_matches_default_on_legal_positions (test_mcts_research.MctsResearchTests.test_linear_root_choice_matches_default_on_legal_positions) ... ok
+test_linear_root_choice_rejects_non_boolean_flag (test_mcts_research.MctsResearchTests.test_linear_root_choice_rejects_non_boolean_flag) ... ok
+test_no_expansion_records_zero_subphase_times (test_mcts_research.MctsResearchTests.test_no_expansion_records_zero_subphase_times) ... ok
+test_opt_in_phase_trace_is_complete_and_board_is_restored (test_mcts_research.MctsResearchTests.test_opt_in_phase_trace_is_complete_and_board_is_restored) ... ok
+test_opt_in_return_clock_trace_preserves_fixed_iteration_move (test_mcts_research.MctsResearchTests.test_opt_in_return_clock_trace_preserves_fixed_iteration_move) ... ok
+test_rejects_invalid_research_parameters (test_mcts_research.MctsResearchTests.test_rejects_invalid_research_parameters) ... ok
+test_restores_nonempty_history_and_hands (test_mcts_research.MctsResearchTests.test_restores_nonempty_history_and_hands) ... ok
+test_return_clock_trace_handles_no_legal_move (test_mcts_research.MctsResearchTests.test_return_clock_trace_handles_no_legal_move) ... ok
+test_return_clock_trace_rejects_invalid_sink (test_mcts_research.MctsResearchTests.test_return_clock_trace_rejects_invalid_sink) ... ok
+test_returns_legal_move_without_mutating_start_position (test_mcts_research.MctsResearchTests.test_returns_legal_move_without_mutating_start_position) ... ok
+test_single_pass_avoids_generator_length_prepass (test_mcts_research.MctsResearchTests.test_single_pass_avoids_generator_length_prepass) ... ok
+test_single_pass_preserves_moves_order_and_undo (test_mcts_research.MctsResearchTests.test_single_pass_preserves_moves_order_and_undo) ... ok
+test_single_pass_rejects_non_boolean_flag (test_mcts_research.MctsResearchTests.test_single_pass_rejects_non_boolean_flag) ... ok
+test_subphase_trace_preserves_fixed_iteration_move (test_mcts_research.MctsResearchTests.test_subphase_trace_preserves_fixed_iteration_move) ... ok
+test_evaluation_exception_restores_python_and_native_state (test_native_eval_snapshot.NativeEvalSnapshotTests.test_evaluation_exception_restores_python_and_native_state) ... ok
+test_fixed_depth_equivalence_and_exception_rollback (test_native_eval_snapshot.NativeEvalSnapshotTests.test_fixed_depth_equivalence_and_exception_rollback) ... ok
+test_snapshot_piece_hand_and_turn_after_reversible_moves (test_native_eval_snapshot.NativeEvalSnapshotTests.test_snapshot_piece_hand_and_turn_after_reversible_moves) ... ok
+test_snapshot_rejects_short_buffer_and_unknown_handle (test_native_eval_snapshot.NativeEvalSnapshotTests.test_snapshot_rejects_short_buffer_and_unknown_handle) ... ok
+test_context_restored_and_strict_request (test_native_g7_bridge.NativeG7BridgeTests.test_context_restored_and_strict_request) ... /opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/unittest/case.py:589: ResourceWarning: unclosed file <_io.TextIOWrapper name=5 encoding='UTF-8'>
+  if method() is not None:
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/unittest/case.py:589: ResourceWarning: unclosed file <_io.TextIOWrapper name=7 encoding='UTF-8'>
+  if method() is not None:
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_fixed_legal_order_and_search (test_native_g7_bridge.NativeG7BridgeTests.test_fixed_legal_order_and_search) ... ok
+test_timed_native_search_returns_legal_move (test_native_g7_bridge.NativeG7BridgeTests.test_timed_native_search_returns_legal_move) ... ok
+test_all_20_shards_required_and_exact_80_positions (test_native_g7_inprocess.AggregateTests.test_all_20_shards_required_and_exact_80_positions) ... ok
+test_fixed_depth_same_search_and_restore (test_native_g7_inprocess.InProcessRulesTests.test_fixed_depth_same_search_and_restore) ... ok
+test_native_legal_set_and_order (test_native_g7_inprocess.InProcessRulesTests.test_native_legal_set_and_order) ... ok
+test_native_pseudo_order_reachable_positions (test_native_g7_inprocess.InProcessRulesTests.test_native_pseudo_order_reachable_positions) ... ok
+test_reject_invalid_ffi_and_request (test_native_g7_inprocess.InProcessRulesTests.test_reject_invalid_ffi_and_request) ... ok
+test_cached_move_parsing_preserves_order_and_undo (test_native_g7_stateful.StatefulG7Tests.test_cached_move_parsing_preserves_order_and_undo) ... ok
+test_fixed_depth_search_equivalence_and_cleanup (test_native_g7_stateful.StatefulG7Tests.test_fixed_depth_search_equivalence_and_cleanup) ... ok
+test_invalid_native_move_preserves_state (test_native_g7_stateful.StatefulG7Tests.test_invalid_native_move_preserves_state) ... ok
+test_native_scored_stable_order_and_fixed_depth (test_native_g7_stateful.StatefulG7Tests.test_native_scored_stable_order_and_fixed_depth) ... ok
+test_packed_scored_order_and_fixed_depth_rollback (test_native_g7_stateful.StatefulG7Tests.test_packed_scored_order_and_fixed_depth_rollback) ... ok
+test_random_and_special_positions_push_pop (test_native_g7_stateful.StatefulG7Tests.test_random_and_special_positions_push_pop) ... ok
+test_timeout_restores_native_and_python (test_native_g7_stateful.StatefulG7Tests.test_timeout_restores_native_and_python) ... ok
+test_all_20_shards_and_320_rows_required (test_native_g7_stateful_diagnosis.StatefulRequestTests.test_all_20_shards_and_320_rows_required) ... ok
+test_explicit_disabled_and_fixed_request (test_native_g7_stateful_diagnosis.StatefulRequestTests.test_explicit_disabled_and_fixed_request) ... ok
+test_check_for_both_kings (test_native_rules_probe.NativeRulesProbeTests.test_check_for_both_kings) ... ok
+test_forbidden_pawn_drop_mate (test_native_rules_probe.NativeRulesProbeTests.test_forbidden_pawn_drop_mate) ... ok
+test_fourfold_state_against_python_shogi (test_native_rules_probe.NativeRulesProbeTests.test_fourfold_state_against_python_shogi) ... ok
+test_invalid_sfen_is_rejected (test_native_rules_probe.NativeRulesProbeTests.test_invalid_sfen_is_rejected) ... ok
+test_legal_set_with_native_self_check_and_explicit_pawn_mate_fallback (test_native_rules_probe.NativeRulesProbeTests.test_legal_set_with_native_self_check_and_explicit_pawn_mate_fallback) ... ok
+test_native_benchmark_smoke (test_native_rules_probe.NativeRulesProbeTests.test_native_benchmark_smoke) ... ok
+test_native_bounded_core_timing_protocol (test_native_rules_probe.NativeRulesProbeTests.test_native_bounded_core_timing_protocol) ... ok
+test_native_continuous_check_repetition_and_undo (test_native_rules_probe.NativeRulesProbeTests.test_native_continuous_check_repetition_and_undo) ... ok
+test_native_legal_set_in_later_reachable_positions (test_native_rules_probe.NativeRulesProbeTests.test_native_legal_set_in_later_reachable_positions) ... ok
+test_native_pawn_drop_mate_and_nonmate (test_native_rules_probe.NativeRulesProbeTests.test_native_pawn_drop_mate_and_nonmate) ... ok
+test_native_pseudo_legal_generation_and_self_check_filter (test_native_rules_probe.NativeRulesProbeTests.test_native_pseudo_legal_generation_and_self_check_filter) ... ok
+test_native_stateful_legal_sets_every_ply_and_undo (test_native_rules_probe.NativeRulesProbeTests.test_native_stateful_legal_sets_every_ply_and_undo) ... ok
+test_native_stateful_move_and_undo (test_native_rules_probe.NativeRulesProbeTests.test_native_stateful_move_and_undo) ... ok
+test_native_stateful_repetition_and_undo (test_native_rules_probe.NativeRulesProbeTests.test_native_stateful_repetition_and_undo) ... ok
+test_512_move_boundary_and_failed_push_rollback (test_native_state_ffi.NativeStateFFITests.test_512_move_boundary_and_failed_push_rollback) ... ok
+test_continuous_check_and_ordinary_repetition (test_native_state_ffi.NativeStateFFITests.test_continuous_check_and_ordinary_repetition) ... ok
+test_failed_legal_buffer_does_not_publish_cache (test_native_state_ffi.NativeStateFFITests.test_failed_legal_buffer_does_not_publish_cache) ... ok
+test_handle_capacity_and_no_reuse (test_native_state_ffi.NativeStateFFITests.test_handle_capacity_and_no_reuse) ... ok
+test_packed_capacity_failure_does_not_publish_cache (test_native_state_ffi.NativeStateFFITests.test_packed_capacity_failure_does_not_publish_cache) ... ok
+test_random_reachable_push_pop_and_order (test_native_state_ffi.NativeStateFFITests.test_random_reachable_push_pop_and_order) ... ok
+test_rejected_inputs_and_transactional_state (test_native_state_ffi.NativeStateFFITests.test_rejected_inputs_and_transactional_state) ... ok
+test_scored_buffer_failure_does_not_publish_cache (test_native_state_ffi.NativeStateFFITests.test_scored_buffer_failure_does_not_publish_cache) ... ok
+test_special_positions_and_pawn_drop_mate (test_native_state_ffi.NativeStateFFITests.test_special_positions_and_pawn_drop_mate) ... ok
+test_validated_cache_parent_sibling_and_stale_child (test_native_state_ffi.NativeStateFFITests.test_validated_cache_parent_sibling_and_stale_child) ... ok
+test_exact_optimizer_sample_and_holdouts_untouched (test_nnue_bounded_training.BoundedNnueTrainingTests.test_exact_optimizer_sample_and_holdouts_untouched) ... ok
+test_iterator_preserves_verified_games_and_rejects_illegal_tail (test_nnue_bounded_training.BoundedNnueTrainingTests.test_iterator_preserves_verified_games_and_rejects_illegal_tail) ... ok
+test_same_weights_and_optimizer_stats_as_full_training_rows (test_nnue_bounded_training.BoundedNnueTrainingTests.test_same_weights_and_optimizer_stats_as_full_training_rows) ... ok
+test_streamed_loss_uses_every_position_and_matches_list (test_nnue_bounded_training.BoundedNnueTrainingTests.test_streamed_loss_uses_every_position_and_matches_list) ... ok
+test_fixed_positions_and_bounded_measurement (test_nnue_cost_probe.NNUECostGateTests.test_fixed_positions_and_bounded_measurement) ... 
+{
+  "status": "research_only_no_promotion",
+  "games": 2,
+  "pairs": 1,
+  "relative_wins": 0,
+  "legacy_wins": 0,
+  "unresolved": 2,
+  "relative_model_sha256": "5c5801815325084f803bdbe1b2e4074cbe3d10605f112bffc295d16d4a214a5a",
+  "legacy_model_sha256": "1905e2751675e5567d97fa3767dd2586bc14454cd6c703ef75052e9c81dad637",
+  "arena_seed": 20270627,
+  "mix_percent": 25,
+  "depth": 2,
+  "search_mode": "timed",
+  "movetime_ms": 1,
+  "max_plies": 4,
+  "legal_replay_verified": true,
+  "all_pairs_alternate_color": true,
+  "stats": {
+    "relative_nodes": 50,
+    "legacy_nodes": 54,
+    "relative_turns": 4,
+    "legacy_turns": 4,
+    "relative_depth_zero": 4,
+    "legacy_depth_zero": 4,
+    "relative_depth_sum": 0,
+    "legacy_depth_sum": 0,
+    "relative_incomplete": 4,
+    "legacy_incomplete": 4
+  },
+  "games_sha256": "036ff6191b3b73e10b271a7b592e561b42ee6b6ca3e3cc75501eb4691b366044",
+  "caution": "Unresolved games are not wins. No formal strength claim."
+}
+{
+  "status": "fixed_model_arena_measured",
+  "source_run_id": 40349702347,
+  "model_sha256": "68e89f8b2074e2627d62bee3a2b694e281432ef909eb7a5505f07bbffd917cbf",
+  "arena_seed": 20270127,
+  "arena_pairs": 2,
+  "arena_mixes": [
+    0,
+    25
+  ],
+  "arena_movetimes_ms": [
+    20
+  ],
+  "arena_max_plies": 160,
+  "depth": 1,
+  "opening_plies": 6,
+  "arena_search_mode": "complete_depth",
+  "wall_clock_cutoff_enabled": false,
+  "arms": {
+    "complete_depth1_mix0": {
+      "games": 4
+    },
+    "complete_depth1_mix25": {
+      "games": 4
+    }
+  },
+  "note": "Exploratory, not an independent proof of strength."
+}
+{
+  "status": "fixed_model_arena_measured",
+  "source_run_id": 40349702347,
+  "model_sha256": "68e89f8b2074e2627d62bee3a2b694e281432ef909eb7a5505f07bbffd917cbf",
+  "arena_seed": 20270127,
+  "arena_pairs": 2,
+  "arena_mixes": [
+    0,
+    25
+  ],
+  "arena_movetimes_ms": [
+    2,
+    20
+  ],
+  "arena_max_plies": 160,
+  "depth": 1,
+  "opening_plies": 6,
+  "arena_search_mode": "timed",
+  "wall_clock_cutoff_enabled": true,
+  "arms": {
+    "2ms_mix0": {
+      "games": 4
+    },
+    "2ms_mix25": {
+      "games": 4
+    },
+    "20ms_mix0": {
+      "games": 4
+    },
+    "20ms_mix25": {
+      "games": 4
+    }
+  },
+  "note": "Exploratory, not an independent proof of strength."
+}
+{
+  "status": "research_only_no_adoption",
+  "games": 256,
+  "pairs": 128,
+  "seed": 20275027,
+  "guard_wins": 0,
+  "baseline_wins": 0,
+  "unresolved": 256,
+  "pair_comparison": {
+    "equal": 128
+  },
+  "model_sha256": "417d18e7b64494c9febdf6d217afbe4e4979e68d04528f16db8b45c0bcde2a0e",
+  "model_run": 40434466661,
+  "movetime_ms": 200,
+  "depth": 4,
+  "mix_percent": 25,
+  "max_plies": 240,
+  "fast_relative": true,
+  "root_alpha_beta_both": true,
+  "fast_move_list_both": true,
+  "fast_legal_guard_candidate": true,
+  "fast_legal_guard_baseline": false,
+  "all_pairs_color_swapped": true,
+  "legal_replay_verified": true,
+  "stats": {
+    "guard_nodes": 0,
+    "guard_turns": 0,
+    "guard_depth_sum": 0,
+    "guard_incomplete": 0,
+    "guard_elapsed_ms": 0,
+    "baseline_nodes": 0,
+    "baseline_turns": 0,
+    "baseline_depth_sum": 0,
+    "baseline_incomplete": 0,
+    "baseline_elapsed_ms": 0
+  },
+  "games_sha256": "62d1b2d5777262b268b9f8500a5ccaa733ddfef3b86629c29c5094a19bcfba12",
+  "caution": "Unresolved games are not wins or draws. No automatic adoption."
+}
+{
+  "python_guard": {
+    "total_nodes": 9600,
+    "median_nodes": 120.0,
+    "median_elapsed_ms": 201.0,
+    "depth_distribution": {
+      "2": 80
+    },
+    "total_calls": 0,
+    "native_ms": 0,
+    "sfen_ms": 0,
+    "ipc_ms": 0
+  },
+  "native_ipc": {
+    "total_nodes": 9600,
+    "median_nodes": 120.0,
+    "median_elapsed_ms": 201.0,
+    "depth_distribution": {
+      "2": 80
+    },
+    "total_calls": 0,
+    "native_ms": 0,
+    "sfen_ms": 0,
+    "ipc_ms": 0
+  },
+  "native_inprocess": {
+    "total_nodes": 9600,
+    "median_nodes": 120.0,
+    "median_elapsed_ms": 201.0,
+    "depth_distribution": {
+      "2": 80
+    },
+    "total_calls": 0,
+    "native_ms": 0,
+    "sfen_ms": 0,
+    "ipc_ms": 0
+  },
+  "native_ordered": {
+    "total_nodes": 9600,
+    "median_nodes": 120.0,
+    "median_elapsed_ms": 201.0,
+    "depth_distribution": {
+      "2": 80
+    },
+    "total_calls": 0,
+    "native_ms": 0,
+    "sfen_ms": 0,
+    "ipc_ms": 0
+  }
+}
+{
+  "python_guard": {
+    "total_nodes": 8000,
+    "median_nodes": 100.0,
+    "median_elapsed_ms": 201.0,
+    "depth_distribution": {
+      "2": 80
+    },
+    "totals_ms": {
+      "sfen_ms": 0,
+      "abi_ms": 0,
+      "state_legal_ms": 0,
+      "state_scored_ms": 0,
+      "state_packed_ms": 0,
+      "packed_decode_ms": 0,
+      "python_push_ms": 0,
+      "python_pop_ms": 0,
+      "eval_snapshot_ms": 0,
+      "eval_arithmetic_ms": 0,
+      "state_push_ms": 0,
+      "state_pop_ms": 0,
+      "move_construct_ms": 0,
+      "order_sort_ms": 0,
+      "state_open_ms": 0,
+      "validate_ms": 0,
+      "apply_ms": 0,
+      "history_ms": 0
+    },
+    "cache_counts": {
+      "cache_hits": 0,
+      "fallback_pushes": 0,
+      "legal_generations": 0,
+      "parse_cache_hits": 0,
+      "parse_cache_misses": 0,
+      "eval_snapshot_calls": 0
+    }
+  },
+  "native_ordered": {
+    "total_nodes": 8000,
+    "median_nodes": 100.0,
+    "median_elapsed_ms": 201.0,
+    "depth_distribution": {
+      "2": 80
+    },
+    "totals_ms": {
+      "sfen_ms": 0,
+      "abi_ms": 0,
+      "state_legal_ms": 0,
+      "state_scored_ms": 0,
+      "state_packed_ms": 0,
+      "packed_decode_ms": 0,
+      "python_push_ms": 0,
+      "python_pop_ms": 0,
+      "eval_snapshot_ms": 0,
+      "eval_arithmetic_ms": 0,
+      "state_push_ms": 0,
+      "state_pop_ms": 0,
+      "move_construct_ms": 0,
+      "order_sort_ms": 0,
+      "state_open_ms": 0,
+      "validate_ms": 0,
+      "apply_ms": 0,
+      "history_ms": 0
+    },
+    "cache_counts": {
+      "cache_hits": 0,
+      "fallback_pushes": 0,
+      "legal_generations": 0,
+      "parse_cache_hits": 0,
+      "parse_cache_misses": 0,
+      "eval_snapshot_calls": 0
+    }
+  },
+  "native_stateful_scored": {
+    "total_nodes": 8000,
+    "median_nodes": 100.0,
+    "median_elapsed_ms": 201.0,
+    "depth_distribution": {
+      "2": 80
+    },
+    "totals_ms": {
+      "sfen_ms": 0,
+      "abi_ms": 0,
+      "state_legal_ms": 0,
+      "state_scored_ms": 0,
+      "state_packed_ms": 0,
+      "packed_decode_ms": 0,
+      "python_push_ms": 0,
+      "python_pop_ms": 0,
+      "eval_snapshot_ms": 0,
+      "eval_arithmetic_ms": 0,
+      "state_push_ms": 0,
+      "state_pop_ms": 0,
+      "move_construct_ms": 0,
+      "order_sort_ms": 0,
+      "state_open_ms": 0,
+      "validate_ms": 0,
+      "apply_ms": 0,
+      "history_ms": 0
+    },
+    "cache_counts": {
+      "cache_hits": 0,
+      "fallback_pushes": 0,
+      "legal_generations": 0,
+      "parse_cache_hits": 0,
+      "parse_cache_misses": 0,
+      "eval_snapshot_calls": 0
+    }
+  },
+  "native_stateful_snapshot": {
+    "total_nodes": 8000,
+    "median_nodes": 100.0,
+    "median_elapsed_ms": 201.0,
+    "depth_distribution": {
+      "2": 80
+    },
+    "totals_ms": {
+      "sfen_ms": 0,
+      "abi_ms": 0,
+      "state_legal_ms": 0,
+      "state_scored_ms": 0,
+      "state_packed_ms": 0,
+      "packed_decode_ms": 0,
+      "python_push_ms": 0,
+      "python_pop_ms": 0,
+      "eval_snapshot_ms": 0,
+      "eval_arithmetic_ms": 0,
+      "state_push_ms": 0,
+      "state_pop_ms": 0,
+      "move_construct_ms": 0,
+      "order_sort_ms": 0,
+      "state_open_ms": 0,
+      "validate_ms": 0,
+      "apply_ms": 0,
+      "history_ms": 0
+    },
+    "cache_counts": {
+      "cache_hits": 0,
+      "fallback_pushes": 0,
+      "legal_generations": 0,
+      "parse_cache_hits": 0,
+      "parse_cache_misses": 0,
+      "eval_snapshot_calls": 0
+    }
+  }
+}
+D6_NNUE_COST {"batches_per_measurement": 3, "cases": [{"board_pushpop_ms": 0.007922, "board_restored": true, "cached_over_classical_eval_ratio": 0.164, "classical_eval_ms": 0.031645, "nnue_cached_eval_ms": 0.005184, "nnue_full_eval_ms": 0.053183, "nnue_pushpop_ms": 0.056876, "nnue_pushpop_over_board_ratio": 7.18, "sample_ply": 0}, {"board_pushpop_ms": 0.006887, "board_restored": true, "cached_over_classical_eval_ratio": 0.128, "classical_eval_ms": 0.034479, "nnue_cached_eval_ms": 0.00441, "nnue_full_eval_ms": 0.052603, "nnue_pushpop_ms": 0.060963, "nnue_pushpop_over_board_ratio": 8.852, "sample_ply": 20}, {"board_pushpop_ms": 0.006682, "board_restored": true, "cached_over_classical_eval_ratio": 0.145, "classical_eval_ms": 0.030137, "nnue_cached_eval_ms": 0.004372, "nnue_full_eval_ms": 0.059031, "nnue_pushpop_ms": 0.051347, "nnue_pushpop_over_board_ratio": 7.684, "sample_ply": 60}], "engine_modified": false, "new_games": 0, "position_count": 3, "repeats_per_batch": 12, "scope": "D6_synthetic_nnue_cost_only_not_trained_not_strength", "sealed_d5_parents_accessed": false, "synthetic_untrained_weights": true, "training": false, "warning": "Microbenchmarks on a shared CI runner are approximate. No trained NNUE, fixed G8 model, 200ms search or game comparison."}ok
+test_rejects_unbounded_work (test_nnue_cost_probe.NNUECostGateTests.test_rejects_unbounded_work) ... ok
+test_capture_hands_and_reversible_history (test_nnue_research.NNUEFoundationTests.test_capture_hands_and_reversible_history) ... ok
+test_checked_king_evasion_preserves_full_recalculation (test_nnue_research.NNUEFoundationTests.test_checked_king_evasion_preserves_full_recalculation) ... ok
+test_checkmate_has_no_incremental_legal_move (test_nnue_research.NNUEFoundationTests.test_checkmate_has_no_incremental_legal_move) ... ok
+test_external_same_depth_position_replacement_is_rejected (test_nnue_research.NNUEFoundationTests.test_external_same_depth_position_replacement_is_rejected) ... ok
+test_feature_layout_matches_existing_mover_relative_vector (test_nnue_research.NNUEFoundationTests.test_feature_layout_matches_existing_mover_relative_vector) ... ok
+test_fourfold_repetition_preserves_history_and_accumulators (test_nnue_research.NNUEFoundationTests.test_fourfold_repetition_preserves_history_and_accumulators) ... ok
+test_illegal_pawn_drop_mate_is_rejected (test_nnue_research.NNUEFoundationTests.test_illegal_pawn_drop_mate_is_rejected) ... ok
+test_initial_two_perspectives_and_logit (test_nnue_research.NNUEFoundationTests.test_initial_two_perspectives_and_logit) ... ok
+test_legal_drop_and_undo (test_nnue_research.NNUEFoundationTests.test_legal_drop_and_undo) ... ok
+test_long_legal_history_reversible (test_nnue_research.NNUEFoundationTests.test_long_legal_history_reversible) ... ok
+test_promotion_and_undo (test_nnue_research.NNUEFoundationTests.test_promotion_and_undo) ... ok
+test_reject_illegal_and_external_board_modification (test_nnue_research.NNUEFoundationTests.test_reject_illegal_and_external_board_modification) ... ok
+test_reject_shape_and_nonfinite_weights (test_nnue_research.NNUEFoundationTests.test_reject_shape_and_nonfinite_weights) ... ok
+test_241_plies_avoid_single_parity_alias (test_nnue_sampling.PairedSamplingTests.test_241_plies_avoid_single_parity_alias) ... ok
+test_holdouts_unchanged_and_training_data_not_mutated (test_nnue_sampling.PairedSamplingTests.test_holdouts_unchanged_and_training_data_not_mutated) ... ok
+test_invalid_parameters_rejected (test_nnue_sampling.PairedSamplingTests.test_invalid_parameters_rejected) ... ok
+test_long_game_invariants_across_parities_and_caps (test_nnue_sampling.PairedSamplingTests.test_long_game_invariants_across_parities_and_caps) ... ok
+test_short_game_keeps_every_position (test_nnue_sampling.PairedSamplingTests.test_short_game_keeps_every_position) ... ok
+test_disabled_entry_only_checks_protocol_without_preparing (test_nnue_sampling_trial.SamplingTrialTests.test_disabled_entry_only_checks_protocol_without_preparing) ... ok
+test_exact_request_and_no_numeric_boolean_substitution (test_nnue_sampling_trial.SamplingTrialTests.test_exact_request_and_no_numeric_boolean_substitution) ... ok
+test_old_holdouts_filtered_before_replay_or_outcome_access (test_nnue_sampling_trial.SamplingTrialTests.test_old_holdouts_filtered_before_replay_or_outcome_access) ... ok
+test_explicit_request_default_off_and_no_promotion (test_nnue_train_research.NnueTrainResearchTests.test_explicit_request_default_off_and_no_promotion) ... ok
+test_frozen_parent_groups_and_split_counts (test_nnue_train_research.NnueTrainResearchTests.test_frozen_parent_groups_and_split_counts) ... ok
+test_holdout_is_not_passed_to_optimizer (test_nnue_train_research.NnueTrainResearchTests.test_holdout_is_not_passed_to_optimizer) ... ok
+test_reject_invalid_train_labels (test_nnue_train_research.NnueTrainResearchTests.test_reject_invalid_train_labels) ... ok
+test_train_only_deterministic_and_finite (test_nnue_train_research.NnueTrainResearchTests.test_train_only_deterministic_and_finite) ... ok
+test_collapse_and_insufficient_evidence_differ (test_online_learning.OnlineCycleTests.test_collapse_and_insufficient_evidence_differ) ... ok
+test_cycle_rollback_preserves_formal_anchor_and_evaluation_is_not_replay (test_online_learning.OnlineCycleTests.test_cycle_rollback_preserves_formal_anchor_and_evaluation_is_not_replay) ... ok
+test_immutable_games_hash_and_lock (test_online_learning.OnlineCycleTests.test_immutable_games_hash_and_lock) ... ok
+test_holdout_and_bad_results_are_rejected (test_online_learning.OnlineLearningTests.test_holdout_and_bad_results_are_rejected) ... ok
+test_loss_can_correct_a_previous_win_prediction (test_online_learning.OnlineLearningTests.test_loss_can_correct_a_previous_win_prediction) ... ok
+test_model_optimizer_roundtrip_and_corruption (test_online_learning.OnlineLearningTests.test_model_optimizer_roundtrip_and_corruption) ... ok
+test_snapshot_provenance_immutable (test_online_learning.OnlineLearningTests.test_snapshot_provenance_immutable) ... ok
+test_sparse_gradient_matches_finite_difference (test_online_learning.OnlineLearningTests.test_sparse_gradient_matches_finite_difference) ... ok
+test_td_terminal_anchor_and_player_sign (test_online_learning.OnlineLearningTests.test_td_terminal_anchor_and_player_sign) ... ok
+test_unresolved_is_not_a_draw_or_training_label (test_online_learning.OnlineLearningTests.test_unresolved_is_not_a_draw_or_training_label) ... ok
+test_fixed_depth_incremental_matches_full_and_ordering (test_online_learning.OnlineSearchTests.test_fixed_depth_incremental_matches_full_and_ordering) ... ok
+test_incremental_all_move_types_and_exact_undo (test_online_learning.OnlineSearchTests.test_incremental_all_move_types_and_exact_undo) ... ok
+test_lazy_leaf_preserves_exact_search_and_mate (test_online_learning.OnlineSearchTests.test_lazy_leaf_preserves_exact_search_and_mate) ... ok
+test_repetition_draw_and_continuous_check_loss (test_online_learning.OnlineSearchTests.test_repetition_draw_and_continuous_check_loss) ... ok
+test_timeout_before_depth_one_keeps_evaluated_best (test_online_learning.OnlineSearchTests.test_timeout_before_depth_one_keeps_evaluated_best) ... ok
+test_timeout_restores_history_and_returns_legal_move (test_online_learning.OnlineSearchTests.test_timeout_restores_history_and_returns_legal_move) ... ok
+test_frozen_protocol (test_parent_arena.ParentArenaTest.test_frozen_protocol) ... ok
+test_invalid_model_hash_rejected_before_play (test_parent_arena.ParentArenaTest.test_invalid_model_hash_rejected_before_play) ... ok
+test_invalid_shard_rejected_before_model_read (test_parent_arena.ParentArenaTest.test_invalid_shard_rejected_before_model_read) ... ok
+test_missing_shards_rejected (test_parent_arena.ParentArenaTest.test_missing_shards_rejected) ... ok
+test_empty_branch_source_is_safe (test_real_learning_improvement.RealLearningImprovementTests.test_empty_branch_source_is_safe) ... ok
+test_invalid_parent_rejected_before_fork (test_real_learning_improvement.RealLearningImprovementTests.test_invalid_parent_rejected_before_fork) ... ok
+test_parent_groups_never_cross_splits (test_real_learning_improvement.RealLearningImprovementTests.test_parent_groups_never_cross_splits) ... ok
+test_repetition_avoidance_selects_fresh_legal_king_move (test_real_learning_improvement.RealLearningImprovementTests.test_repetition_avoidance_selects_fresh_legal_king_move) ... ok
+test_invalid_model_fails_closed_before_readyok (test_relative_usi.RelativeUSITests.test_invalid_model_fails_closed_before_readyok) ... ok
+test_relative_model_loaded_and_legal_bestmove (test_relative_usi.RelativeUSITests.test_relative_model_loaded_and_legal_bestmove) ... ok
+test_sparse_relative_inference_matches_dense (test_relative_value.RelativeValueTests.test_sparse_relative_inference_matches_dense) ... ok
+test_turn_normalization_changes_piece_encoding_not_just_bias (test_relative_value.RelativeValueTests.test_turn_normalization_changes_piece_encoding_not_just_bias) ... ok
+test_unknown_model_schema_rejected (test_relative_value.RelativeValueTests.test_unknown_model_schema_rejected) ... ok
+test_independent_32_game_protocol_is_frozen (test_root_alpha_arena.RootAlphaArenaTests.test_independent_32_game_protocol_is_frozen) ... ok
+test_protocol_frozen (test_root_alpha_arena.RootAlphaArenaTests.test_protocol_frozen) ... ok
+test_third_independent_32_game_protocol_is_frozen (test_root_alpha_arena.RootAlphaArenaTests.test_third_independent_32_game_protocol_is_frozen) ... ok
+test_unresolved_is_not_a_win (test_root_alpha_arena.RootAlphaArenaTests.test_unresolved_is_not_a_win) ... ok
+test_default_is_explicitly_off (test_root_alpha_beta.RootAlphaBetaTests.test_default_is_explicitly_off) ... ok
+test_opt_in_preserves_fixed_depth_best_move_and_board (test_root_alpha_beta.RootAlphaBetaTests.test_opt_in_preserves_fixed_depth_best_move_and_board) ... ok
+test_timed_candidate_returns_legal_move (test_root_alpha_beta.RootAlphaBetaTests.test_timed_candidate_returns_legal_move) ... ok
+test_frozen_protocol (test_root_alpha_probe.RootAlphaProbeTests.test_frozen_protocol) ... ok
+test_unknown_field_rejected (test_root_alpha_probe.RootAlphaProbeTests.test_unknown_field_rejected) ... ok
+test_no_reuse_of_same_parent (test_search_method_probe.SearchMethodProbeTests.test_no_reuse_of_same_parent) ... ok
+test_rejects_illegal_history (test_search_method_probe.SearchMethodProbeTests.test_rejects_illegal_history) ... ok
+test_request_disabled_by_default_and_rejects_drift (test_search_method_probe.SearchMethodProbeTests.test_request_disabled_by_default_and_rejects_drift) ... ok
+test_selection_restores_actual_history (test_search_method_probe.SearchMethodProbeTests.test_selection_restores_actual_history) ... ok
+test_both_colors_and_independent_positions (test_search_profile.SearchProfileTests.test_both_colors_and_independent_positions) ... ok
+test_fixed_profile_rejects_unsafe_changes (test_search_profile.SearchProfileTests.test_fixed_profile_rejects_unsafe_changes) ... ok
+test_rejects_missing_color_or_opening_mismatch (test_search_profile.SearchProfileTests.test_rejects_missing_color_or_opening_mismatch) ... ok
+test_capture_produces_hand_and_legal_history (test_tactical_positions.TacticalPositionTests.test_capture_produces_hand_and_legal_history) ... ok
+test_checkmate_and_check_are_distinct (test_tactical_positions.TacticalPositionTests.test_checkmate_and_check_are_distinct) ... ok
+test_no_fabricated_tactical_samples (test_tactical_positions.TacticalPositionTests.test_no_fabricated_tactical_samples) ... ok
+test_position_key_excludes_move_number_only (test_tactical_positions.TacticalPositionTests.test_position_key_excludes_move_number_only) ... ok
+test_reject_illegal_source (test_tactical_positions.TacticalPositionTests.test_reject_illegal_source) ... ok
+test_reject_invalid_budgets (test_tactical_positions.TacticalPositionTests.test_reject_invalid_budgets) ... ok
+test_actual_capture_prefix_preserves_hands (test_tactical_search_probe.TacticalSearchProbeTests.test_actual_capture_prefix_preserves_hands) ... ok
+test_check_position_requires_legal_response_and_history_unchanged (test_tactical_search_probe.TacticalSearchProbeTests.test_check_position_requires_legal_response_and_history_unchanged) ... ok
+test_default_disabled_and_only_boolean_enable_allowed (test_tactical_search_probe.TacticalSearchProbeTests.test_default_disabled_and_only_boolean_enable_allowed) ... ok
+test_illegal_move_is_rejected (test_tactical_search_probe.TacticalSearchProbeTests.test_illegal_move_is_rejected) ... ok
+test_mismatched_tactical_category_rejected (test_tactical_search_probe.TacticalSearchProbeTests.test_mismatched_tactical_category_rejected) ... ok
+test_terminal_mate_requires_resign_and_is_not_move_comparison (test_tactical_search_probe.TacticalSearchProbeTests.test_terminal_mate_requires_resign_and_is_not_move_comparison) ... ok
+test_disabled_and_explicit_enabled (test_uct_cleanup_reserve_abba.CleanupReserveABBAProtocolTest.test_disabled_and_explicit_enabled) ... ok
+test_fixed_conditions_and_reserve_identity_are_required (test_uct_cleanup_reserve_abba.CleanupReserveABBAProtocolTest.test_fixed_conditions_and_reserve_identity_are_required) ... ok
+test_mixed_parent_timing_is_counted_without_strength_claim (test_uct_cleanup_reserve_abba.CleanupReserveABBAProtocolTest.test_mixed_parent_timing_is_counted_without_strength_claim) ... ok
+test_reject_short_and_unresolved (test_uct_cleanup_reserve_abba.CleanupReserveABBAProtocolTest.test_reject_short_and_unresolved) ... ok
+test_reject_unapproved_and_missing (test_uct_cleanup_reserve_abba.CleanupReserveABBAProtocolTest.test_reject_unapproved_and_missing) ... ok
+test_summary_and_pairwise_identity (test_uct_cleanup_reserve_abba.CleanupReserveABBAProtocolTest.test_summary_and_pairwise_identity) ... ok
+test_zero_iterations_allowed_only_with_legal_move (test_uct_cleanup_reserve_abba.CleanupReserveABBAProtocolTest.test_zero_iterations_allowed_only_with_legal_move) ... ok
+test_root_preparation_is_excluded_from_internal_elapsed_today (test_uct_clock_boundary.UctClockBoundaryTests.test_root_preparation_is_excluded_from_internal_elapsed_today) ... ok
+test_abba_order_and_counts (test_uct_generalization_audit.GeneralizationProtocol.test_abba_order_and_counts) ... ok
+test_disjoint_12_parent_split (test_uct_generalization_audit.GeneralizationProtocol.test_disjoint_12_parent_split) ... ok
+test_missing_legality_and_teacher_labels_rejected (test_uct_generalization_audit.GeneralizationProtocol.test_missing_legality_and_teacher_labels_rejected) ... ok
+test_overlap_or_wrong_phase_rejected (test_uct_generalization_audit.GeneralizationProtocol.test_overlap_or_wrong_phase_rejected) ... ok
+test_wrong_model_and_elapsed_rejected (test_uct_generalization_audit.GeneralizationProtocol.test_wrong_model_and_elapsed_rejected) ... ok
+test_wrong_source_and_duplicate_sfen_rejected (test_uct_generalization_audit.GeneralizationProtocol.test_wrong_source_and_duplicate_sfen_rejected) ... ok
+test_zero_iteration_with_legal_move_is_allowed (test_uct_generalization_audit.GeneralizationProtocol.test_zero_iteration_with_legal_move_is_allowed) ... ok
+test_four_runs_are_paired_and_sha_checked (test_uct_guard_ab_audit.GuardAbbaAuditTests.test_four_runs_are_paired_and_sha_checked) ... ok
+test_rejects_changed_position_and_corrupt_raw (test_uct_guard_ab_audit.GuardAbbaAuditTests.test_rejects_changed_position_and_corrupt_raw) ... ok
+test_rejects_wrong_frozen_source_sha (test_uct_guard_ab_audit.GuardAbbaAuditTests.test_rejects_wrong_frozen_source_sha) ... ok
+test_request_is_default_off_and_strict (test_uct_guard_ab_audit.GuardAbbaAuditTests.test_request_is_default_off_and_strict) ... ok
+test_return_cleanup_can_exceed_budget_after_internal_clock_stops (test_uct_hard_deadline_boundary.UctHardDeadlineBoundaryTests.test_return_cleanup_can_exceed_budget_after_internal_clock_stops) ... ok
+test_frozen_holdout_result_document_provenance (test_uct_holdout_cleanup_abba.HoldoutReserveProtocolTests.test_frozen_holdout_result_document_provenance) ... ok
+test_legality_receipt_only_after_actual_replay (test_uct_holdout_cleanup_abba.HoldoutReserveProtocolTests.test_legality_receipt_only_after_actual_replay) ... ok
+test_reject_manifest_overlap_before_any_search (test_uct_holdout_cleanup_abba.HoldoutReserveProtocolTests.test_reject_manifest_overlap_before_any_search) ... ok
+test_request_default_off_and_exact_enabled (test_uct_holdout_cleanup_abba.HoldoutReserveProtocolTests.test_request_default_off_and_exact_enabled) ... ok
+test_synthetic_48_rows_holdout_only (test_uct_holdout_cleanup_abba.HoldoutReserveProtocolTests.test_synthetic_48_rows_holdout_only) ... ok
+test_workflow_preflight_references_existing_entrypoints (test_uct_holdout_cleanup_abba.HoldoutReserveProtocolTests.test_workflow_preflight_references_existing_entrypoints) ... ok
+test_disjoint_frozen_source (test_uct_holdout_manifest.TestUCTHoldoutManifest.test_disjoint_frozen_source) ... ok
+test_checkmate_has_no_legal_fallback (test_uct_legal_snapshot.UctLegalSnapshotTests.test_checkmate_has_no_legal_fallback) ... ok
+test_fourfold_repetition_requires_history_in_key (test_uct_legal_snapshot.UctLegalSnapshotTests.test_fourfold_repetition_requires_history_in_key) ... ok
+test_hands_and_history (test_uct_legal_snapshot.UctLegalSnapshotTests.test_hands_and_history) ... ok
+test_in_check_only_evasions (test_uct_legal_snapshot.UctLegalSnapshotTests.test_in_check_only_evasions) ... ok
+test_initial_position (test_uct_legal_snapshot.UctLegalSnapshotTests.test_initial_position) ... ok
+test_pawn_drop_mate_is_not_a_fallback (test_uct_legal_snapshot.UctLegalSnapshotTests.test_pawn_drop_mate_is_not_a_fallback) ... ok
+test_real_snapshot_ready_after_deadline_is_not_timely (test_uct_legal_snapshot.UctLegalSnapshotTests.test_real_snapshot_ready_after_deadline_is_not_timely) ... ok
+test_reject_stale_generation_even_if_move_is_legal (test_uct_legal_snapshot.UctLegalSnapshotTests.test_reject_stale_generation_even_if_move_is_legal) ... ok
+test_abrupt_exit_returns_legal_fallback (test_uct_live_supervisor_probe.LiveSupervisorTests.test_abrupt_exit_returns_legal_fallback) ... ok
+test_checkmate_no_legal_move_returns_resign (test_uct_live_supervisor_probe.LiveSupervisorTests.test_checkmate_no_legal_move_returns_resign) ... ok
+test_closed_private_sink_never_claims_sent (test_uct_live_supervisor_probe.LiveSupervisorTests.test_closed_private_sink_never_claims_sent) ... ok
+test_delayed_candidate_does_not_block_fallback (test_uct_live_supervisor_probe.LiveSupervisorTests.test_delayed_candidate_does_not_block_fallback) ... ok
+test_early_stop_and_lingering_worker_are_separate (test_uct_live_supervisor_probe.LiveSupervisorTests.test_early_stop_and_lingering_worker_are_separate) ... ok
+test_failed_send_prevents_next_go_in_same_supervisor (test_uct_live_supervisor_probe.LiveSupervisorTests.test_failed_send_prevents_next_go_in_same_supervisor) ... ok
+test_flush_lag_is_observed_not_assumed_zero (test_uct_live_supervisor_probe.LiveSupervisorTests.test_flush_lag_is_observed_not_assumed_zero) ... ok
+test_fragmented_line_waits_for_completion (test_uct_live_supervisor_probe.LiveSupervisorTests.test_fragmented_line_waits_for_completion) ... ok
+test_invalid_parameters_do_not_spawn (test_uct_live_supervisor_probe.LiveSupervisorTests.test_invalid_parameters_do_not_spawn) ... ok
+test_invalid_session_rejected_before_child_spawn (test_uct_live_supervisor_probe.LiveSupervisorTests.test_invalid_session_rejected_before_child_spawn) ... ok
+test_live_candidate_before_child_reap (test_uct_live_supervisor_probe.LiveSupervisorTests.test_live_candidate_before_child_reap) ... ok
+test_old_generation_old_position_and_corruption_rejected (test_uct_live_supervisor_probe.LiveSupervisorTests.test_old_generation_old_position_and_corruption_rejected) ... ok
+test_one_supervisor_across_two_go_commands (test_uct_live_supervisor_probe.LiveSupervisorTests.test_one_supervisor_across_two_go_commands) ... ok
+test_sequential_go_without_child_residue (test_uct_live_supervisor_probe.LiveSupervisorTests.test_sequential_go_without_child_residue) ... ok
+test_silent_zero_iteration_fallback (test_uct_live_supervisor_probe.LiveSupervisorTests.test_silent_zero_iteration_fallback) ... ok
+test_synthetic_old_worker_ledger_survives_new_go (test_uct_live_supervisor_probe.LiveSupervisorTests.test_synthetic_old_worker_ledger_survives_new_go) ... ok
+test_fixed_positions_node_count_and_release (test_uct_node_cleanup_scaling.UctNodeCleanupScalingProbe.test_fixed_positions_node_count_and_release) ... 
+sampling trial enabled: False
+UCT_NODE_CLEANUP_SCALING {"fixed_iterations": 12, "median_gap_off_ms": 0.0568, "median_gap_on_ms": 0.038, "median_release_on_ms": 0.0754, "observations": [{"caller_minus_internal_ms": 0.0609, "explicit_release_ms": 0.001, "iterations": 12, "longest_iteration_ms": 0.9424, "move": "8g8f", "node_count": 391, "retain_root": false, "root_children": 30}, {"caller_minus_internal_ms": 0.0681, "explicit_release_ms": 0.087, "iterations": 12, "longest_iteration_ms": 0.7428, "move": "8g8f", "node_count": 391, "retain_root": true, "root_children": 30}, {"caller_minus_internal_ms": 0.0079, "explicit_release_ms": 0.0638, "iterations": 12, "longest_iteration_ms": 0.8554, "move": "8g8f", "node_count": 391, "retain_root": true, "root_children": 30}, {"caller_minus_internal_ms": 0.0527, "explicit_release_ms": 0.0003, "iterations": 12, "longest_iteration_ms": 0.6506, "move": "8g8f", "node_count": 391, "retain_root": false, "root_children": 30}], "position": "initial"}
+UCT_NODE_CLEANUP_SCALING {"fixed_iterations": 48, "median_gap_off_ms": 0.3696, "median_gap_on_ms": 0.012, "median_release_on_ms": 0.4869, "observations": [{"caller_minus_internal_ms": 0.3821, "explicit_release_ms": 0.0004, "iterations": 48, "longest_iteration_ms": 1.1663, "move": "9g9f", "node_count": 1436, "retain_root": false, "root_children": 30}, {"caller_minus_internal_ms": 0.0108, "explicit_release_ms": 0.4545, "iterations": 48, "longest_iteration_ms": 0.958, "move": "9g9f", "node_count": 1436, "retain_root": true, "root_children": 30}, {"caller_minus_internal_ms": 0.0131, "explicit_release_ms": 0.5194, "iterations": 48, "longest_iteration_ms": 0.8668, "move": "9g9f", "node_count": 1436, "retain_root": true, "root_children": 30}, {"caller_minus_internal_ms": 0.3571, "explicit_release_ms": 0.0008, "iterations": 48, "longest_iteration_ms": 0.9121, "move": "9g9f", "node_count": 1436, "retain_root": false, "root_children": 30}], "position": "initial"}
+UCT_NODE_CLEANUP_SCALING {"fixed_iterations": 96, "median_gap_off_ms": 0.7728, "median_gap_on_ms": 0.0092, "median_release_on_ms": 0.494, "observations": [{"caller_minus_internal_ms": 0.9552, "explicit_release_ms": 0.0003, "iterations": 96, "longest_iteration_ms": 22.3625, "move": "4g4f", "node_count": 2787, "retain_root": false, "root_children": 30}, {"caller_minus_internal_ms": 0.0093, "explicit_release_ms": 0.5177, "iterations": 96, "longest_iteration_ms": 0.7828, "move": "4g4f", "node_count": 2787, "retain_root": true, "root_children": 30}, {"caller_minus_internal_ms": 0.0091, "explicit_release_ms": 0.4702, "iterations": 96, "longest_iteration_ms": 0.9355, "move": "4g4f", "node_count": 2787, "retain_root": true, "root_children": 30}, {"caller_minus_internal_ms": 0.5904, "explicit_release_ms": 0.0006, "iterations": 96, "longest_iteration_ms": 0.9433, "move": "4g4f", "node_count": 2787, "retain_root": false, "root_children": 30}], "position": "initial"}
+UCT_NODE_CLEANUP_SCALING {"fixed_iterations": 12, "median_gap_off_ms": 0.018, "median_gap_on_ms": 0.0049, "median_release_on_ms": 0.0124, "observations": [{"caller_minus_internal_ms": 0.0178, "explicit_release_ms": 0.0003, "iterations": 12, "longest_iteration_ms": 0.6965, "move": "5a6a", "node_count": 178, "retain_root": false, "root_children": 4}, {"caller_minus_internal_ms": 0.0045, "explicit_release_ms": 0.0117, "iterations": 12, "longest_iteration_ms": 0.6218, "move": "5a6a", "node_count": 178, "retain_root": true, "root_children": 4}, {"caller_minus_internal_ms": 0.0052, "explicit_release_ms": 0.0132, "iterations": 12, "longest_iteration_ms": 0.6258, "move": "5a6a", "node_count": 178, "retain_root": true, "root_children": 4}, {"caller_minus_internal_ms": 0.0181, "explicit_release_ms": 0.0002, "iterations": 12, "longest_iteration_ms": 0.6378, "move": "5a6a", "node_count": 178, "retain_root": false, "root_children": 4}], "position": "in_check"}
+UCT_NODE_CLEANUP_SCALING {"fixed_iterations": 48, "median_gap_off_ms": 0.0328, "median_gap_on_ms": 0.0066, "median_release_on_ms": 0.0282, "observations": [{"caller_minus_internal_ms": 0.0331, "explicit_release_ms": 0.0002, "iterations": 48, "longest_iteration_ms": 0.7188, "move": "5a4b", "node_count": 329, "retain_root": false, "root_children": 4}, {"caller_minus_internal_ms": 0.0066, "explicit_release_ms": 0.0278, "iterations": 48, "longest_iteration_ms": 0.6794, "move": "5a4b", "node_count": 329, "retain_root": true, "root_children": 4}, {"caller_minus_internal_ms": 0.0065, "explicit_release_ms": 0.0287, "iterations": 48, "longest_iteration_ms": 0.6611, "move": "5a4b", "node_count": 329, "retain_root": true, "root_children": 4}, {"caller_minus_internal_ms": 0.0326, "explicit_release_ms": 0.0004, "iterations": 48, "longest_iteration_ms": 0.6047, "move": "5a4b", "node_count": 329, "retain_root": false, "root_children": 4}], "position": "in_check"}
+UCT_NODE_CLEANUP_SCALING {"fixed_iterations": 96, "median_gap_off_ms": 0.0953, "median_gap_on_ms": 0.0069, "median_release_on_ms": 0.0637, "observations": [{"caller_minus_internal_ms": 0.086, "explicit_release_ms": 0.0006, "iterations": 96, "longest_iteration_ms": 0.7126, "move": "5a4b", "node_count": 588, "retain_root": false, "root_children": 4}, {"caller_minus_internal_ms": 0.007, "explicit_release_ms": 0.0617, "iterations": 96, "longest_iteration_ms": 0.631, "move": "5a4b", "node_count": 588, "retain_root": true, "root_children": 4}, {"caller_minus_internal_ms": 0.0069, "explicit_release_ms": 0.0657, "iterations": 96, "longest_iteration_ms": 0.7294, "move": "5a4b", "node_count": 588, "retain_root": true, "root_children": 4}, {"caller_minus_internal_ms": 0.1046, "explicit_release_ms": 0.0003, "iterations": 96, "longest_iteration_ms": 0.742, "move": "5a4b", "node_count": 588, "retain_root": false, "root_children": 4}], "position": "in_check"}
+UCT_NODE_CLEANUP_SCALING {"fixed_iterations": 12, "median_gap_off_ms": 0.1272, "median_gap_on_ms": 0.0076, "median_release_on_ms": 0.101, "observations": [{"caller_minus_internal_ms": 0.1183, "explicit_release_ms": 0.0002, "iterations": 12, "longest_iteration_ms": 1.2709, "move": "5i4i", "node_count": 980, "retain_root": false, "root_children": 76}, {"caller_minus_internal_ms": 0.0072, "explicit_release_ms": 0.1007, "iterations": 12, "longest_iteration_ms": 1.4538, "move": "5i4i", "node_count": 980, "retain_root": true, "root_children": 76}, {"caller_minus_internal_ms": 0.008, "explicit_release_ms": 0.1013, "iterations": 12, "longest_iteration_ms": 1.3115, "move": "5i4i", "node_count": 980, "retain_root": true, "root_children": 76}, {"caller_minus_internal_ms": 0.1361, "explicit_release_ms": 0.0004, "iterations": 12, "longest_iteration_ms": 1.6286, "move": "5i4i", "node_count": 980, "retain_root": false, "root_children": 76}], "position": "hands"}
+UCT_NODE_CLEANUP_SCALING {"fixed_iterations": 48, "median_gap_off_ms": 0.7728, "median_gap_on_ms": 0.0118, "median_release_on_ms": 0.9494, "observations": [{"caller_minus_internal_ms": 0.589, "explicit_release_ms": 0.0005, "iterations": 48, "longest_iteration_ms": 2.2853, "move": "5i6h", "node_count": 3611, "retain_root": false, "root_children": 76}, {"caller_minus_internal_ms": 0.0113, "explicit_release_ms": 0.952, "iterations": 48, "longest_iteration_ms": 3.0557, "move": "5i6h", "node_count": 3611, "retain_root": true, "root_children": 76}, {"caller_minus_internal_ms": 0.0124, "explicit_release_ms": 0.9468, "iterations": 48, "longest_iteration_ms": 1.5097, "move": "5i6h", "node_count": 3611, "retain_root": true, "root_children": 76}, {"caller_minus_internal_ms": 0.9566, "explicit_release_ms": 0.0005, "iterations": 48, "longest_iteration_ms": 1.4652, "move": "5i6h", "node_count": 3611, "retain_root": false, "root_children": 76}], "position": "hands"}
+UCT_NODE_CLEANUP_SCALING {"fixed_iterations": 96, "median_gap_off_ms": 1.5227, "median_gap_on_ms": 0.036, "median_release_on_ms": 1.1312, "observations": [{"caller_minus_internal_ms": 1.3162, "explicit_release_ms": 0.0006, "iterations": 96, "longest_iteration_ms": 12.2598, "move": "P*8b", "node_count": 5835, "retain_root": false, "root_children": 76}, {"caller_minus_internal_ms": 0.0125, "explicit_release_ms": 1.0148, "iterations": 96, "longest_iteration_ms": 2.073, "move": "P*8b", "node_count": 5835, "retain_root": true, "root_children": 76}, {"caller_minus_internal_ms": 0.0594, "explicit_release_ms": 1.2476, "iterations": 96, "longest_iteration_ms": 4.4153, "move": "P*8b", "node_count": 5835, "retain_root": true, "root_children": 76}, {"caller_minus_internal_ms": 1.7292, "explicit_release_ms": 0.0005, "iterations": 96, "longest_iteration_ms": 7.3879, "move": "P*8b", "node_count": 5835, "retain_root": false, "root_children": 76}], "position": "hands"}
+ok
+test_actual_flush_lag_not_a_deadline_guarantee (test_uct_os_overlap_probe.OsOverlapTests.test_actual_flush_lag_not_a_deadline_guarantee) ... ok
+test_invalid_arguments_do_not_spawn (test_uct_os_overlap_probe.OsOverlapTests.test_invalid_arguments_do_not_spawn) ... ok
+test_old_os_child_message_is_rejected_by_generation (test_uct_os_overlap_probe.OsOverlapTests.test_old_os_child_message_is_rejected_by_generation) ... ok
+test_two_real_children_overlap_and_are_reaped (test_uct_os_overlap_probe.OsOverlapTests.test_two_real_children_overlap_and_are_reaped) ... ok
+test_fixed_sfen_has_legal_moves (test_uct_parent7_g8_trace.Parent7G8Protocol.test_fixed_sfen_has_legal_moves) ... ok
+test_request_defaults_off_and_rejects_mutation (test_uct_parent7_g8_trace.Parent7G8Protocol.test_request_defaults_off_and_rejects_mutation) ... ok
+test_summary_rejects_trace_without_phase_and_wrong_seed (test_uct_parent7_g8_trace.Parent7G8Protocol.test_summary_rejects_trace_without_phase_and_wrong_seed) ... ok
+test_summary_requires_frozen_order_and_phase (test_uct_parent7_g8_trace.Parent7G8Protocol.test_summary_requires_frozen_order_and_phase) ... ok
+test_parent7_200ms_clock_boundary_four_light_calls (test_uct_parent7_light_trace.UctParent7LightTrace.test_parent7_200ms_clock_boundary_four_light_calls) ... UCT_PARENT7_CLOCK {"external_minus_internal_ms": 0.96, "external_ms": 183.231, "generated_nodes": 8164, "internal_deadline_overrun_ms": 0.0, "iterations": 128, "last_iteration_end_remaining_ms": 17.786641000043346, "last_iteration_start_remaining_ms": 35.397982999938904, "longest_iteration_ms": 17.611, "move": "7e8e", "pass": "off_a", "reserve": false, "restore_verify_ms": 0.045, "return_clock_ms": 0.0, "root_choice_ms": 0.01, "root_setup_ms": 1.485, "search_loop_ms": 180.731}
+UCT_PARENT7_CLOCK {"external_minus_internal_ms": 2.572, "external_ms": 194.495, "generated_nodes": 8950, "internal_deadline_overrun_ms": 0.0, "iterations": 146, "last_iteration_end_remaining_ms": 8.13703800008625, "last_iteration_start_remaining_ms": 11.407771000108369, "longest_iteration_ms": 3.271, "move": "7e8e", "pass": "on_a", "reserve": true, "restore_verify_ms": 0.047, "return_clock_ms": 0.0, "root_choice_ms": 0.011, "root_setup_ms": 1.093, "search_loop_ms": 190.772}
+UCT_PARENT7_CLOCK {"external_minus_internal_ms": 2.835, "external_ms": 195.765, "generated_nodes": 8400, "internal_deadline_overrun_ms": 0.0, "iterations": 135, "last_iteration_end_remaining_ms": 7.124698000097851, "last_iteration_start_remaining_ms": 8.083708000071965, "longest_iteration_ms": 3.317, "move": "7e8e", "pass": "on_b", "reserve": true, "restore_verify_ms": 0.045, "return_clock_ms": 0.0, "root_choice_ms": 0.009, "root_setup_ms": 0.881, "search_loop_ms": 191.995}
+UCT_PARENT7_CLOCK {"external_minus_internal_ms": 2.79, "external_ms": 196.894, "generated_nodes": 8263, "internal_deadline_overrun_ms": 0.0, "iterations": 132, "last_iteration_end_remaining_ms": 5.950153000071623, "last_iteration_start_remaining_ms": 6.924217000118915, "longest_iteration_ms": 4.066, "move": "7e8e", "pass": "off_b", "reserve": false, "restore_verify_ms": 0.044, "return_clock_ms": 0.0, "root_choice_ms": 0.009, "root_setup_ms": 0.869, "search_loop_ms": 193.182}
+ok
+test_parent7_fixed_24_iterations_detailed_phase_trace (test_uct_parent7_light_trace.UctParent7LightTrace.test_parent7_fixed_24_iterations_detailed_phase_trace) ... UCT_PARENT7_PHASE {"backup_ms": 0.002, "expansion_ms": 2.598, "generated_nodes": 2416, "iterations": 24, "leaf_ms": 0.048, "legal_moves_ms": 2.328, "longest_iteration_ms": 2.668, "selection_ms": 0.01, "slowest_iteration": 5, "undo_ms": 0.011}
+ok
+test_disabled_and_enabled_only_with_exact_frozen_protocol (test_uct_phase_probe.UctPhaseProbeTests.test_disabled_and_enabled_only_with_exact_frozen_protocol) ... ok
+test_percentile_interpolation (test_uct_phase_probe.UctPhaseProbeTests.test_percentile_interpolation) ... ok
+test_phase_totals_and_unexpected_long_iteration (test_uct_phase_probe.UctPhaseProbeTests.test_phase_totals_and_unexpected_long_iteration) ... ok
+test_workflow_is_default_off_and_main_only (test_uct_phase_probe.UctPhaseProbeTests.test_workflow_is_default_off_and_main_only) ... ok
+test_child_abnormal_exit_not_success (test_uct_pipe_probe.PipeProbeTests.test_child_abnormal_exit_not_success) ... ok
+test_duplicate_not_double_accepted (test_uct_pipe_probe.PipeProbeTests.test_duplicate_not_double_accepted) ... ok
+test_fragmented_line_reassembled (test_uct_pipe_probe.PipeProbeTests.test_fragmented_line_reassembled) ... ok
+test_invalid_json_rejected (test_uct_pipe_probe.PipeProbeTests.test_invalid_json_rejected) ... ok
+test_normal_message_received_and_child_reaped (test_uct_pipe_probe.PipeProbeTests.test_normal_message_received_and_child_reaped) ... ok
+test_old_position_key_rejected (test_uct_pipe_probe.PipeProbeTests.test_old_position_key_rejected) ... ok
+test_parent_observed_deadline_rejects_delayed_message (test_uct_pipe_probe.PipeProbeTests.test_parent_observed_deadline_rejects_delayed_message) ... ok
+test_partial_line_never_accepted (test_uct_pipe_probe.PipeProbeTests.test_partial_line_never_accepted) ... ok
+test_stale_generation_rejected (test_uct_pipe_probe.PipeProbeTests.test_stale_generation_rejected) ... ok
+test_stop_before_delayed_message_rejects (test_uct_pipe_probe.PipeProbeTests.test_stop_before_delayed_message_rejects) ... ok
+test_stop_threshold_checked_after_pipe_wait (test_uct_pipe_probe.PipeProbeTests.test_stop_threshold_checked_after_pipe_wait) ... ok
+test_untrusted_command_and_input_rejected (test_uct_pipe_probe.PipeProbeTests.test_untrusted_command_and_input_rejected) ... ok
+test_abrupt_child_exit_still_fallback_and_reap (test_uct_pipe_supervisor_bridge.BridgeProbeTests.test_abrupt_child_exit_still_fallback_and_reap) ... ok
+test_broken_private_sink_is_not_confirmed (test_uct_pipe_supervisor_bridge.BridgeProbeTests.test_broken_private_sink_is_not_confirmed) ... ok
+test_deadline_rejects_late_pipe_message (test_uct_pipe_supervisor_bridge.BridgeProbeTests.test_deadline_rejects_late_pipe_message) ... ok
+test_duplicate_does_not_create_second_bestmove (test_uct_pipe_supervisor_bridge.BridgeProbeTests.test_duplicate_does_not_create_second_bestmove) ... ok
+test_fragmented_line_uses_complete_receipt (test_uct_pipe_supervisor_bridge.BridgeProbeTests.test_fragmented_line_uses_complete_receipt) ... ok
+test_invalid_fixture_rejected (test_uct_pipe_supervisor_bridge.BridgeProbeTests.test_invalid_fixture_rejected) ... ok
+test_malformed_and_truncated_use_fallback (test_uct_pipe_supervisor_bridge.BridgeProbeTests.test_malformed_and_truncated_use_fallback) ... ok
+test_normal_candidate_beats_distinct_fallback (test_uct_pipe_supervisor_bridge.BridgeProbeTests.test_normal_candidate_beats_distinct_fallback) ... ok
+test_old_position_key_uses_fallback (test_uct_pipe_supervisor_bridge.BridgeProbeTests.test_old_position_key_uses_fallback) ... ok
+test_send_flush_and_private_sink_read_are_distinct (test_uct_pipe_supervisor_bridge.BridgeProbeTests.test_send_flush_and_private_sink_read_are_distinct) ... ok
+test_stale_generation_uses_fallback (test_uct_pipe_supervisor_bridge.BridgeProbeTests.test_stale_generation_uses_fallback) ... ok
+test_stop_rejects_delayed_pipe_message (test_uct_pipe_supervisor_bridge.BridgeProbeTests.test_stop_rejects_delayed_pipe_message) ... ok
+test_injected_pause_after_loop_is_counted_in_internal_clock (test_uct_residual_overrun_trace.UctResidualOverrunTraceTests.test_injected_pause_after_loop_is_counted_in_internal_clock) ... ok
+test_real_fixed_position_trace_preserves_move_and_history (test_uct_residual_overrun_trace.UctResidualOverrunTraceTests.test_real_fixed_position_trace_preserves_move_and_history) ... ok
+test_unexpected_long_iteration_can_cross_deadline (test_uct_residual_overrun_trace.UctResidualOverrunTraceTests.test_unexpected_long_iteration_can_cross_deadline) ... ok
+test_zero_iterations_are_explicitly_traced (test_uct_residual_overrun_trace.UctResidualOverrunTraceTests.test_zero_iterations_are_explicitly_traced) ... ok
+test_cleanup_is_separate (test_uct_response_contract.ResponseContractTests.test_cleanup_is_separate) ... ok
+test_early_update_and_late_update (test_uct_response_contract.ResponseContractTests.test_early_update_and_late_update) ... ok
+test_fallback_ready_after_deadline_is_not_success (test_uct_response_contract.ResponseContractTests.test_fallback_ready_after_deadline_is_not_success) ... ok
+test_new_go_must_follow_prior_send (test_uct_response_contract.ResponseContractTests.test_new_go_must_follow_prior_send) ... ok
+test_no_reentrant_go_before_send (test_uct_response_contract.ResponseContractTests.test_no_reentrant_go_before_send) ... ok
+test_no_update_after_preparation (test_uct_response_contract.ResponseContractTests.test_no_update_after_preparation) ... ok
+test_nonmonotonic_clock_and_invalid_snapshot (test_uct_response_contract.ResponseContractTests.test_nonmonotonic_clock_and_invalid_snapshot) ... ok
+test_offer_at_exact_deadline_is_rejected (test_uct_response_contract.ResponseContractTests.test_offer_at_exact_deadline_is_rejected) ... ok
+test_old_worker_after_new_position (test_uct_response_contract.ResponseContractTests.test_old_worker_after_new_position) ... ok
+test_prepared_not_sent_and_no_duplicate (test_uct_response_contract.ResponseContractTests.test_prepared_not_sent_and_no_duplicate) ... ok
+test_stale_position_and_illegal_offer (test_uct_response_contract.ResponseContractTests.test_stale_position_and_illegal_offer) ... ok
+test_stale_worker_stop_does_not_mark_current_generation (test_uct_response_contract.ResponseContractTests.test_stale_worker_stop_does_not_mark_current_generation) ... ok
+test_terminal_only_resign (test_uct_response_contract.ResponseContractTests.test_terminal_only_resign) ... ok
+test_zero_iterations_legal_fallback (test_uct_response_contract.ResponseContractTests.test_zero_iterations_legal_fallback) ... ok
+test_fixed_positions_phase_and_tree_lifetime (test_uct_return_cleanup_probe.UctReturnCleanupProbe.test_fixed_positions_phase_and_tree_lifetime) ... UCT_RETURN_CLEANUP_PROBE {"gap_median_with_retention_ms": 0.0066, "gap_median_without_retention_ms": 0.0459, "observations": [{"caller_elapsed_ms": 8.8724, "caller_minus_internal_ms": 0.0511, "explicit_release_ms": 0.0007, "internal_elapsed_ms": 8.8213, "iterations": 12, "move": "8g8f", "restore_verify_ms": 0.0368, "retain_root": false, "return_clock_ms": 0.0003, "root_choice_ms": 0.0062, "root_legal_moves": 30, "root_setup_ms": 0.8142, "search_loop_ms": 7.964}, {"caller_elapsed_ms": 7.7038, "caller_minus_internal_ms": 0.0071, "explicit_release_ms": 0.0328, "internal_elapsed_ms": 7.6966, "iterations": 12, "move": "8g8f", "restore_verify_ms": 0.0366, "retain_root": true, "return_clock_ms": 0.0002, "root_choice_ms": 0.0059, "root_legal_moves": 30, "root_setup_ms": 0.5509, "search_loop_ms": 7.1031}, {"caller_elapsed_ms": 8.0495, "caller_minus_internal_ms": 0.0061, "explicit_release_ms": 0.04, "internal_elapsed_ms": 8.0433, "iterations": 12, "move": "8g8f", "restore_verify_ms": 0.0371, "retain_root": true, "return_clock_ms": 0.0002, "root_choice_ms": 0.0061, "root_legal_moves": 30, "root_setup_ms": 0.8519, "search_loop_ms": 7.148}, {"caller_elapsed_ms": 7.3592, "caller_minus_internal_ms": 0.0407, "explicit_release_ms": 0.0002, "internal_elapsed_ms": 7.3185, "iterations": 12, "move": "8g8f", "restore_verify_ms": 0.0353, "retain_root": false, "return_clock_ms": 0.0002, "root_choice_ms": 0.0062, "root_legal_moves": 30, "root_setup_ms": 0.5491, "search_loop_ms": 6.7278}], "position": "initial", "release_median_retained_ms": 0.0364}
+UCT_RETURN_CLEANUP_PROBE {"gap_median_with_retention_ms": 0.006, "gap_median_without_retention_ms": 0.0503, "observations": [{"caller_elapsed_ms": 4.4719, "caller_minus_internal_ms": 0.0199, "explicit_release_ms": 0.0002, "internal_elapsed_ms": 4.4521, "iterations": 12, "move": "5a6a", "restore_verify_ms": 0.0261, "retain_root": false, "return_clock_ms": 0.0002, "root_choice_ms": 0.0025, "root_legal_moves": 4, "root_setup_ms": 0.1934, "search_loop_ms": 4.2299}, {"caller_elapsed_ms": 4.7605, "caller_minus_internal_ms": 0.0055, "explicit_release_ms": 0.0153, "internal_elapsed_ms": 4.755, "iterations": 12, "move": "5a6a", "restore_verify_ms": 0.0274, "retain_root": true, "return_clock_ms": 0.0002, "root_choice_ms": 0.0021, "root_legal_moves": 4, "root_setup_ms": 0.1864, "search_loop_ms": 4.5389}, {"caller_elapsed_ms": 4.5456, "caller_minus_internal_ms": 0.0065, "explicit_release_ms": 0.017, "internal_elapsed_ms": 4.5392, "iterations": 12, "move": "5a6a", "restore_verify_ms": 0.0312, "retain_root": true, "return_clock_ms": 0.0004, "root_choice_ms": 0.0026, "root_legal_moves": 4, "root_setup_ms": 0.1736, "search_loop_ms": 4.3316}, {"caller_elapsed_ms": 4.9395, "caller_minus_internal_ms": 0.0807, "explicit_release_ms": 0.0002, "internal_elapsed_ms": 4.8588, "iterations": 12, "move": "5a6a", "restore_verify_ms": 0.027, "retain_root": false, "return_clock_ms": 0.0002, "root_choice_ms": 0.0022, "root_legal_moves": 4, "root_setup_ms": 0.1828, "search_loop_ms": 4.6467}], "position": "in_check", "release_median_retained_ms": 0.0162}
+UCT_RETURN_CLEANUP_PROBE {"gap_median_with_retention_ms": 0.0103, "gap_median_without_retention_ms": 0.2844, "observations": [{"caller_elapsed_ms": 17.8478, "caller_minus_internal_ms": 0.4771, "explicit_release_ms": 0.0004, "internal_elapsed_ms": 17.3707, "iterations": 12, "move": "5i4i", "restore_verify_ms": 0.035, "retain_root": false, "return_clock_ms": 0.0004, "root_choice_ms": 0.0137, "root_legal_moves": 76, "root_setup_ms": 1.134, "search_loop_ms": 16.1878}, {"caller_elapsed_ms": 42.4197, "caller_minus_internal_ms": 0.0102, "explicit_release_ms": 0.1288, "internal_elapsed_ms": 42.4095, "iterations": 12, "move": "5i4i", "restore_verify_ms": 0.0326, "retain_root": true, "return_clock_ms": 0.0002, "root_choice_ms": 0.013, "root_legal_moves": 76, "root_setup_ms": 1.745, "search_loop_ms": 40.6187}, {"caller_elapsed_ms": 16.0556, "caller_minus_internal_ms": 0.0104, "explicit_release_ms": 0.0956, "internal_elapsed_ms": 16.0452, "iterations": 12, "move": "5i4i", "restore_verify_ms": 0.0321, "retain_root": true, "return_clock_ms": 0.0004, "root_choice_ms": 0.0113, "root_legal_moves": 76, "root_setup_ms": 1.0943, "search_loop_ms": 14.9072}, {"caller_elapsed_ms": 15.6296, "caller_minus_internal_ms": 0.0917, "explicit_release_ms": 0.0004, "internal_elapsed_ms": 15.5379, "iterations": 12, "move": "5i4i", "restore_verify_ms": 0.0313, "retain_root": false, "return_clock_ms": 0.0002, "root_choice_ms": 0.0113, "root_legal_moves": 76, "root_setup_ms": 1.1872, "search_loop_ms": 14.308}], "position": "hands", "release_median_retained_ms": 0.1122}
+ok
+test_disabled_and_explicit_enabled (test_uct_single_pass_abba.SinglePassABBAProtocolTest.test_disabled_and_explicit_enabled) ... ok
+test_reject_short_and_unresolved (test_uct_single_pass_abba.SinglePassABBAProtocolTest.test_reject_short_and_unresolved) ... ok
+test_reject_unapproved_and_missing (test_uct_single_pass_abba.SinglePassABBAProtocolTest.test_reject_unapproved_and_missing) ... ok
+test_summary_and_pairwise_identity (test_uct_single_pass_abba.SinglePassABBAProtocolTest.test_summary_and_pairwise_identity) ... ok
+test_candidate_before_stop_and_after_stop (test_uct_synthetic_ipc.SyntheticIpcTests.test_candidate_before_stop_and_after_stop) ... ok
+test_deadline_cannot_be_anticipated (test_uct_synthetic_ipc.SyntheticIpcTests.test_deadline_cannot_be_anticipated) ... ok
+test_invalid_clock_and_move_confirmation (test_uct_synthetic_ipc.SyntheticIpcTests.test_invalid_clock_and_move_confirmation) ... ok
+test_late_deadline_and_late_candidate (test_uct_synthetic_ipc.SyntheticIpcTests.test_late_deadline_and_late_candidate) ... ok
+test_no_go_without_position (test_uct_synthetic_ipc.SyntheticIpcTests.test_no_go_without_position) ... ok
+test_no_legal_moves_uses_resign_only (test_uct_synthetic_ipc.SyntheticIpcTests.test_no_legal_moves_uses_resign_only) ... ok
+test_no_resource_cleanup_without_stop (test_uct_synthetic_ipc.SyntheticIpcTests.test_no_resource_cleanup_without_stop) ... ok
+test_old_worker_cannot_update_new_go (test_uct_synthetic_ipc.SyntheticIpcTests.test_old_worker_cannot_update_new_go) ... ok
+test_reentrant_position_and_go_rejected_until_send (test_uct_synthetic_ipc.SyntheticIpcTests.test_reentrant_position_and_go_rejected_until_send) ... ok
+test_send_failure_not_acknowledged (test_uct_synthetic_ipc.SyntheticIpcTests.test_send_failure_not_acknowledged) ... ok
+test_stale_worker_cleanup_does_not_stop_new_worker (test_uct_synthetic_ipc.SyntheticIpcTests.test_stale_worker_cleanup_does_not_stop_new_worker) ... ok
+test_stop_send_race_only_one_bestmove (test_uct_synthetic_ipc.SyntheticIpcTests.test_stop_send_race_only_one_bestmove) ... ok
+test_worker_cleanup_not_equivalent_to_send (test_uct_synthetic_ipc.SyntheticIpcTests.test_worker_cleanup_not_equivalent_to_send) ... ok
+test_zero_iteration_stop_returns_legal_fallback (test_uct_synthetic_ipc.SyntheticIpcTests.test_zero_iteration_stop_returns_legal_fallback) ... ok
+test_disabled_and_explicit_enabled (test_uct_total_clock_abba.TotalClockABBAProtocolTest.test_disabled_and_explicit_enabled) ... ok
+test_mixed_parent_timing_is_counted_without_strength_claim (test_uct_total_clock_abba.TotalClockABBAProtocolTest.test_mixed_parent_timing_is_counted_without_strength_claim) ... ok
+test_reject_short_and_unresolved (test_uct_total_clock_abba.TotalClockABBAProtocolTest.test_reject_short_and_unresolved) ... ok
+test_reject_unapproved_and_missing (test_uct_total_clock_abba.TotalClockABBAProtocolTest.test_reject_unapproved_and_missing) ... ok
+test_summary_and_pairwise_identity (test_uct_total_clock_abba.TotalClockABBAProtocolTest.test_summary_and_pairwise_identity) ... ok
+test_zero_iterations_allowed_only_with_legal_move (test_uct_total_clock_abba.TotalClockABBAProtocolTest.test_zero_iterations_allowed_only_with_legal_move) ... ok
+test_checkmate_and_invalid_option (test_uct_total_clock_budget.UctTotalClockBudgetTests.test_checkmate_and_invalid_option) ... ok
+test_fixed_iteration_move_and_board_preserved (test_uct_total_clock_budget.UctTotalClockBudgetTests.test_fixed_iteration_move_and_board_preserved) ... ok
+test_opt_in_includes_synthetic_root_preparation (test_uct_total_clock_budget.UctTotalClockBudgetTests.test_opt_in_includes_synthetic_root_preparation) ... ok
+test_root_preparation_can_exhaust_budget_without_iteration (test_uct_total_clock_budget.UctTotalClockBudgetTests.test_root_preparation_can_exhaust_budget_without_iteration) ... ok
+test_reject_bad_model (test_value_integration.ValueIntegrationTests.test_reject_bad_model) ... ok
+test_sparse_inference_matches_original_dense_dot (test_value_integration.ValueIntegrationTests.test_sparse_inference_matches_original_dense_dot) ... ok
+test_turn_perspective_and_nonzero_inference (test_value_integration.ValueIntegrationTests.test_turn_perspective_and_nonzero_inference) ... ok
+test_zero_model_does_not_change_classical_at_zero_mix (test_value_integration.ValueIntegrationTests.test_zero_model_does_not_change_classical_at_zero_mix) ... ok
+
+----------------------------------------------------------------------
+Ran 633 tests in 66.774s
+
+OK
