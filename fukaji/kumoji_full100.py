@@ -17,7 +17,7 @@ from .kumoji_paired import play_paired_game, summarize_pairs
 from .relative_value import RelativeValue
 
 G8_SHA = "18b39f647caa458389a1900b875337adadac74ae37e27343e7f0094ed663c492"
-KUMOJI_COMMIT = "2e3dd55cc6b1685dab7f38f66e9049da28941cea"
+KUMOJI_COMMIT = "76ee74d04a800285e24dd81ef01711e990cfa181"
 OLD_KNOWLEDGE_SHA = "6da204cd1e65600ccdbb9f3dbe463627687d6cf7eb8347da6a103239129dac4c"
 PAIRS, SHARDS, MAX_PLIES = 50, 20, 300
 SEED = 202610315
