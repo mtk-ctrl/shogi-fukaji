@@ -19,3 +19,6 @@ announce、preflight、prepareの実GitHub Actions jobはすべて成功。200�
 3. 雲路相手の勝利数だけでなく、50組のfastlegal ON/OFF直接優劣、深路の探索深度、雲路の知識ヒット、各局の最終手数・終局理由。両者0勝でも負けた手数の単純増減を棋力改善とは認定しない。
 4. 研究データを雲路の教師手として転用しない。正式版採用の判断は本人に報告し、無断採用しない。
 5. 強化を止めず、雲路への改善が不十分なら深路の王手への応手・3手以降の取り合いを別研究として進める。時間超過の問題は別の単一要因研究に分ける。
+
+## 記録の接続制限（2026-10-31）
+GitHubの研究記録は保存・読戻し済み。深路Addness Goal `ab88e21e-083f-41b3-8b65-daf39872a2e1` への新しいD12確定結果・D13進行状況の差分保存は、正規Addnessコネクタで `FORBIDDEN: Blocked by a security check before reaching Addness. Nothing was saved.` の拒否となり未保存。権限制約を別経路や書換えで回避せず、実験・GitHub上の正本は独立に維持する。
