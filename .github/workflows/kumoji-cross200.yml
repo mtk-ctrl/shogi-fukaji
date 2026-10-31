@@ -13,7 +13,7 @@ permissions:
 
 concurrency:
   group: fukaji-kumoji-cross200
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   announce:
@@ -223,8 +223,15 @@ jobs:
               request_commit:context.sha,at:new Date().toISOString(),formal_adoption:false};
             const path="research/d13-kumoji-cross200/run-status.json";
             let sha;
-            try {sha=(await github.rest.repos.getContent({owner,repo,path,ref:"main"})).data.sha;}
-            catch(e){if(e.status!==404)throw e;}
+            try {
+              const previous=(await github.rest.repos.getContent({owner,repo,path,ref:"main"})).data;
+              sha=previous.sha;
+              const current=JSON.parse(Buffer.from(previous.content,"base64").toString("utf8"));
+              if(current.run_id!==context.runId) {
+                core.info("Superseded run cannot overwrite newer run status");
+                return;
+              }
+            } catch(e){if(e.status!==404)throw e;}
             const payload={owner,repo,path,branch:"main",
               message:"research(D13): persist terminal status and actual run ID "+context.runId,
               content:Buffer.from(JSON.stringify(data,null,2)+"\n").toString("base64")};
