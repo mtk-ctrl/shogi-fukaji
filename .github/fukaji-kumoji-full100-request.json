@@ -19,5 +19,6 @@
   "root_alpha_beta": true,
   "kumoji_adaptive_long_think": true,
   "kumoji_search_threads": 2,
-  "kumoji_ponder": true
+  "kumoji_ponder": true,
+  "launch_revision": "20261031-auditable-rerun-2"
 }
