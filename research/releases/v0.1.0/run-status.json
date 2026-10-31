@@ -2,7 +2,15 @@
   "schema": "fukaji-release-validation-v1",
   "run_id": 41194293778,
   "revision": "da183356437bf3316de0cec86b53448ac743847f",
-  "status": "started",
+  "status": "verified",
   "url": "https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/41194293778",
-  "updated_at": "2026-10-31T10:49:22.062Z"
+  "stages": {
+    "full_suite": "success",
+    "G8_USI": "success"
+  },
+  "official_version": "FUKAJI v0.1.0",
+  "USI_default_FastLegalGuard": true,
+  "G8_source_sha256": "18b39f647caa458389a1900b875337adadac74ae37e27343e7f0094ed663c492",
+  "other_USI_defaults_unchanged": true,
+  "updated_at": "2026-10-31T10:50:59.943Z"
 }
