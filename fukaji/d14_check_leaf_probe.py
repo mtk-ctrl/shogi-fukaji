@@ -32,6 +32,7 @@ def roots(games_path):
     if len(rows) != 100 or {r["game_id"] for r in rows} != set(range(100)):
         raise ValueError("D14 requires exact 100 games")
     found = []
+    seen_positions = set()
     for row in sorted(rows, key=lambda g: g["game_id"]):
         if row["winner"] != "B" or row["reason"] != "checkmate":
             raise ValueError("D14 old failure source outcome changed")
@@ -39,8 +40,11 @@ def roots(games_path):
         for ply, word in enumerate(row["moves"]):
             if (ply >= 6 and (board.turn == shogi.BLACK) == row["a_black"]
                 and board.is_check() and any(board.legal_moves)):
-                found.append({"game_id":row["game_id"],"ply":ply,
-                              "before":list(row["moves"][:ply]),"sfen":board.sfen()})
+                key=" ".join(board.sfen().split()[:3])
+                if key not in seen_positions:
+                    seen_positions.add(key)
+                    found.append({"game_id":row["game_id"],"ply":ply,
+                                  "before":list(row["moves"][:ply]),"sfen":board.sfen()})
                 break
             move = shogi.Move.from_usi(word)
             if move not in board.legal_moves:
@@ -50,8 +54,8 @@ def roots(games_path):
             break
     if len(found) != SELECT_COUNT:
         raise ValueError(f"D14 has only {len(found)} actual checked roots")
-    if len({x["sfen"].split(" ")[:3][0] for x in found}) == 0:
-        raise ValueError("no source positions")
+    if len(seen_positions) != SELECT_COUNT:
+        raise ValueError("D14 root positions are not distinct")
     return found
 
 
