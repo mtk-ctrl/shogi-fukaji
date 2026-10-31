@@ -35,7 +35,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: mtk-ctrl/shogi-ai
-          ref: 2e3dd55cc6b1685dab7f38f66e9049da28941cea
+          ref: 76ee74d04a800285e24dd81ef01711e990cfa181
           path: kumoji-src
           persist-credentials: false
       - uses: actions/setup-python@v5
@@ -57,6 +57,7 @@ jobs:
           test -n "$model"
           cp "$model" build/input/g8.npz
           echo "18b39f647caa458389a1900b875337adadac74ae37e27343e7f0094ed663c492  build/input/g8.npz" | sha256sum -c -
+          python kumoji-src/tests/test_full_archive_candidate.py
           python kumoji-src/research/long-study/export_observations.py --cache build/source-cache --output build/observations.jsonl --download
           echo "0ed369e563f1575d013c736eef1de1966ab76a8144a952b09fb4cec2ce0544cc  build/observations.jsonl" | sha256sum -c -
       - name: Extend previous vetted knowledge from all 1,079 research observations
@@ -111,7 +112,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: mtk-ctrl/shogi-ai
-          ref: 2e3dd55cc6b1685dab7f38f66e9049da28941cea
+          ref: 76ee74d04a800285e24dd81ef01711e990cfa181
           path: kumoji-src
           persist-credentials: false
       - uses: actions/setup-python@v5
@@ -148,7 +149,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: mtk-ctrl/shogi-ai
-          ref: 2e3dd55cc6b1685dab7f38f66e9049da28941cea
+          ref: 76ee74d04a800285e24dd81ef01711e990cfa181
           path: kumoji-src
           persist-credentials: false
       - uses: actions/setup-python@v5
