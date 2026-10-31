@@ -14,6 +14,7 @@ import shogi
 from .value_model import LinearValue
 from .relative_value import RelativeValue
 from .quiescence import quiesce
+from .d14_check_leaf import score_checked_leaf
 
 VALUES = {1:100,2:300,3:320,4:480,5:760,6:900,7:600,8:0,9:500,10:520,11:620,12:850,13:1100,14:650}
 INF=10**9
@@ -113,7 +114,7 @@ def ordered_moves(board, fast_move_list=False, fast_legal_guard=False, tactical_
     options.sort(key=order,reverse=True)
     return options
 
-def negamax(board, depth, alpha, beta, deadline, nodes, model=None, fast_relative=False, guard_checkmate=False, fast_move_list=False, fast_legal_guard=False, quiescence=False, quiescence_fast_tactical=False, time_check_each_node=False):
+def negamax(board, depth, alpha, beta, deadline, nodes, model=None, fast_relative=False, guard_checkmate=False, fast_move_list=False, fast_legal_guard=False, quiescence=False, quiescence_fast_tactical=False, time_check_each_node=False, leaf_check_evasion=False):
     nodes[0]+=1
     # Research-only: reduce missed deadlines within long recursive branches.
     # Default keeps the original 128-node sampling and its timing overhead.
@@ -131,6 +132,11 @@ def negamax(board, depth, alpha, beta, deadline, nodes, model=None, fast_relativ
     if board.transpositions[board.zobrist_hash()] >= 2:
         return -1000
     if depth<=0:
+        if leaf_check_evasion and not quiescence and board.is_check():
+            return score_checked_leaf(
+                board, alpha, beta, deadline, nodes,
+                lambda position: evaluate(position, model, fast_relative),
+                lambda position: ordered_moves(position, fast_move_list, fast_legal_guard))
         if quiescence:
             return quiesce(
                 board, alpha, beta, deadline, nodes,
@@ -148,7 +154,7 @@ def negamax(board, depth, alpha, beta, deadline, nodes, model=None, fast_relativ
     for move in legal:
         board.push(move)
         try:
-            score=-negamax(board,depth-1,-beta,-alpha,deadline,nodes,model,fast_relative,guard_checkmate,fast_move_list,fast_legal_guard,quiescence,quiescence_fast_tactical,time_check_each_node)
+            score=-negamax(board,depth-1,-beta,-alpha,deadline,nodes,model,fast_relative,guard_checkmate,fast_move_list,fast_legal_guard,quiescence,quiescence_fast_tactical,time_check_each_node,leaf_check_evasion)
         finally:
             board.pop()
         if score>best:
@@ -158,7 +164,7 @@ def negamax(board, depth, alpha, beta, deadline, nodes, model=None, fast_relativ
             break
     return best
 
-def select_move(board, movetime_ms=200, max_depth=5, model=None, avoid_repetition=True, complete_depth=False, fast_relative=False, root_alpha_beta=False, guard_checkmate=False, fast_move_list=False, fast_legal_guard=False, telemetry=None, deadline_from_call=False, quiescence=False, quiescence_fast_tactical=False, time_check_each_node=False):
+def select_move(board, movetime_ms=200, max_depth=5, model=None, avoid_repetition=True, complete_depth=False, fast_relative=False, root_alpha_beta=False, guard_checkmate=False, fast_move_list=False, fast_legal_guard=False, telemetry=None, deadline_from_call=False, quiescence=False, quiescence_fast_tactical=False, time_check_each_node=False, leaf_check_evasion=False):
     # Optional research-only timing and whole-call budget; USI defaults unchanged.
     call_started = time.monotonic() if telemetry is not None or deadline_from_call else None
     moves=ordered_moves(board, fast_move_list=fast_move_list, fast_legal_guard=fast_legal_guard)
@@ -213,7 +219,7 @@ def select_move(board, movetime_ms=200, max_depth=5, model=None, avoid_repetitio
                 board.push(move)
                 try:
                     child_beta = -root_alpha if root_alpha_beta else INF
-                    score=-negamax(board,depth-1,-INF,child_beta,deadline,nodes,model,fast_relative,guard_checkmate,fast_move_list,fast_legal_guard,quiescence,quiescence_fast_tactical,time_check_each_node)
+                    score=-negamax(board,depth-1,-INF,child_beta,deadline,nodes,model,fast_relative,guard_checkmate,fast_move_list,fast_legal_guard,quiescence,quiescence_fast_tactical,time_check_each_node,leaf_check_evasion)
                 finally:
                     board.pop()
                 if score>scorebest:
