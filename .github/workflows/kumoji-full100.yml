@@ -1,0 +1,180 @@
+name: FUKAJI G8 versus KUMOJI whole-archive 100 paired games
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/fukaji-kumoji-full100-request.json"
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-kumoji-full100-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  preflight:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Validate frozen pairing request and Python
+        run: |
+          python -m fukaji.kumoji_full100 --mode check --request .github/fukaji-kumoji-full100-request.json
+          python -m compileall -q fukaji
+          python -m unittest discover -s tests -q
+  prepare:
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: mtk-ctrl/shogi-ai
+          ref: 2e3dd55cc6b1685dab7f38f66e9049da28941cea
+          path: kumoji-src
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Fetch verified G8 learned evaluator from original FUKAJI run
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-generation8-research-40636602223
+          run-id: 40636602223
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/model-source
+      - name: Verify pinned G8 SHA and record full-archive evidence
+        run: |
+          set -euo pipefail
+          mkdir -p build/input
+          model=$(find build/model-source -name mover-relative-generation8-research.npz -type f -print -quit)
+          test -n "$model"
+          cp "$model" build/input/g8.npz
+          echo "18b39f647caa458389a1900b875337adadac74ae37e27343e7f0094ed663c492  build/input/g8.npz" | sha256sum -c -
+          python kumoji-src/research/long-study/export_observations.py --cache build/source-cache --output build/observations.jsonl --download
+          echo "0ed369e563f1575d013c736eef1de1966ab76a8144a952b09fb4cec2ce0544cc  build/observations.jsonl" | sha256sum -c -
+      - name: Extend previous vetted knowledge from all 1,079 research observations
+        run: |
+          python kumoji-src/research/long-study/full-match-20261031/build_full_candidate.py \
+            --corpus build/observations.jsonl \
+            --existing kumoji-src/research/long-study/knowledge-match-20261026/candidate.tsv \
+            --output build/input/full-knowledge.tsv \
+            --report build/input/full-report.json
+      - name: Build frozen official KUMOJI engine with separate full-archive research data
+        run: |
+          (cd kumoji-src && python3 scripts/build.py --output "$GITHUB_WORKSPACE/build/input/kumoji")
+          chmod +x build/input/kumoji
+          python - <<'PY'
+          import hashlib,json,os
+          from pathlib import Path
+          from fukaji.kumoji_full100 import config,G8_SHA
+          root=Path('build/input')
+          sha=lambda path:hashlib.sha256(path.read_bytes()).hexdigest()
+          report=json.loads((root/'full-report.json').read_text())
+          assert report['source_observations']==1079
+          assert report['playable_positions']>390
+          assert report['candidate_sha256']==sha(root/'full-knowledge.tsv')
+          assert sha(root/'g8.npz')==G8_SHA
+          receipt={'request':config(),'model_sha256':G8_SHA,
+                   'knowledge_sha256':sha(root/'full-knowledge.tsv'),
+                   'binary_sha256':sha(root/'kumoji'),
+                   'code_commit':os.environ['GITHUB_SHA'],
+                   'kumoji_commit':config()['kumoji_commit'],
+                   'full_research_observations':report['source_observations'],
+                   'full_research_positions':report['playable_positions']}
+          (root/'receipt.json').write_text(json.dumps(receipt,indent=2)+'\n')
+          print(json.dumps(receipt,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-kumoji-full100-input-${{ github.run_id }}
+          path: build/input/
+          retention-days: 30
+          if-no-files-found: error
+  paired:
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    strategy:
+      fail-fast: false
+      max-parallel: 10
+      matrix:
+        shard: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: mtk-ctrl/shogi-ai
+          ref: 2e3dd55cc6b1685dab7f38f66e9049da28941cea
+          path: kumoji-src
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: fukaji-kumoji-full100-input-${{ github.run_id }}
+          path: build/input
+      - name: Play paired first/second games with complete replay-verified records
+        env:
+          PYTHONPATH: ${{ github.workspace }}/kumoji-src:${{ github.workspace }}
+        run: |
+          chmod +x build/input/kumoji
+          python -m fukaji.kumoji_full100 --mode play \
+            --request .github/fukaji-kumoji-full100-request.json \
+            --input build/input --shard ${{ matrix.shard }} \
+            --out build/part
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fukaji-kumoji-full100-part-${{ matrix.shard }}-${{ github.run_id }}
+          path: build/part/
+          retention-days: 30
+          if-no-files-found: warn
+  aggregate:
+    needs: [prepare,paired]
+    if: needs.paired.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: mtk-ctrl/shogi-ai
+          ref: 2e3dd55cc6b1685dab7f38f66e9049da28941cea
+          path: kumoji-src
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: fukaji-kumoji-full100-input-${{ github.run_id }}
+          path: build/input
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: fukaji-kumoji-full100-part-*-${{ github.run_id }}
+          path: build/parts
+          merge-multiple: false
+      - name: Independent recheck of all 100 movesets, paired seats, and research use
+        env:
+          PYTHONPATH: ${{ github.workspace }}/kumoji-src:${{ github.workspace }}
+        run: |
+          python -m fukaji.kumoji_full100 --mode aggregate \
+            --request .github/fukaji-kumoji-full100-request.json \
+            --input build/input --parts build/parts --out build/aggregate
+          cat build/aggregate/summary.json >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-kumoji-full100-aggregate-${{ github.run_id }}
+          path: build/aggregate/
+          retention-days: 90
+          if-no-files-found: error
