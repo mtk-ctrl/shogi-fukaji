@@ -1,0 +1,15 @@
+{
+  "enabled": true,
+  "research_only": true,
+  "formal_adoption": false,
+  "version": "FUKAJI v0.1.0",
+  "one_factor": "leaf_check_evasion",
+  "historical_kumoji_loss_run": 41177748192,
+  "source_games_sha256": "c0874b1b7cb96464385e76544a4fac69454ac3c9ebf681127bbca20c909e019f",
+  "G8_model_sha256": "18b39f647caa458389a1900b875337adadac74ae37e27343e7f0094ed663c492",
+  "checked_roots": 12,
+  "ABBA_calls": 48,
+  "movetime_ms": 200,
+  "run_seed_policy": "deterministic first 12 distinct checked FUKAJI positions",
+  "official_USI_flag_exposed": false
+}
