@@ -1,4 +1,4 @@
-"""Independent FUKAJI v0 USI search engine.
+"""Independent FUKAJI v0.1.0 USI search engine.
 
 This deliberately small engine is a bootstrapping search baseline, NOT a port
 of KUMOJI search or an NNUE-enabled model. It uses python-shogi's legal rules,
@@ -245,14 +245,16 @@ def command_loop():
     root_alpha_beta = False
     guard_checkmate = False
     fast_move_list = False
-    fast_legal_guard = False
+    # Formally adopted on 2026-10-31 after G8 paired 240-game validation.
+    # Core research select_move retains its explicit baseline default (OFF).
+    fast_legal_guard = True
     for raw in sys.stdin:
         tokens=raw.strip().split()
         if not tokens:
             continue
         cmd=tokens[0]
         if cmd=="usi":
-            print("id name FUKAJI v0 bootstrap")
+            print("id name FUKAJI v0.1.0")
             print("id author mtk-ctrl")
             print("option name SearchDepth type spin default 4 min 1 max 6")
             print("option name ValueModelFile type string default <empty>")
@@ -262,7 +264,7 @@ def command_loop():
             print("option name RootAlphaBeta type check default false")
             print("option name GuardCheckmate type check default false")
             print("option name FastMoveList type check default false")
-            print("option name FastLegalGuard type check default false")
+            print("option name FastLegalGuard type check default true")
             print("usiok",flush=True)
         elif cmd=="isready":
             if model_path:
