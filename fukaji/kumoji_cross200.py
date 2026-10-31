@@ -36,6 +36,7 @@ def digest(path):
 def config():
     return {
         "enabled": True, "research_only": True, "formal_adoption": False,
+        "protocol_revision": "identical_randomseed_fix_20261031",
         "training_allowed": False, "kumoji_source_run": OLD_RUN,
         "kumoji_input_artifact_id": OLD_INPUT_ARTIFACT,
         "source_artifact_name": "fukaji-kumoji-full100-input-41177748192",
