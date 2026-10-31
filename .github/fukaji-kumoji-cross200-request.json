@@ -29,5 +29,6 @@
   "kumoji_research_candidate": "unchanged_prior_460_positions",
   "kumoji_adaptive_long_think": true,
   "kumoji_search_threads": 2,
-  "kumoji_ponder": true
+  "kumoji_ponder": true,
+  "protocol_revision": "identical_randomseed_fix_20261031"
 }
