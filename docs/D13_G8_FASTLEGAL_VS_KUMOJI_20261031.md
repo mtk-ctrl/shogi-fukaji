@@ -22,3 +22,7 @@ announce、preflight、prepareの実GitHub Actions jobはすべて成功。200�
 
 ## 記録の接続制限（2026-10-31）
 GitHubの研究記録は保存・読戻し済み。深路Addness Goal `ab88e21e-083f-41b3-8b65-daf39872a2e1` への新しいD12確定結果・D13進行状況の差分保存は、正規Addnessコネクタで `FORBIDDEN: Blocked by a security check before reaching Addness. Nothing was saved.` の拒否となり未保存。権限制約を別経路や書換えで回避せず、実験・GitHub上の正本は独立に維持する。
+
+## 重要：初回比較のシード交絡と再実験（2026-10-31）
+
+コード監査で、初回run `41184358423` は同じ序盤・同じ先後でも、雲路に送るUSI `RandomSeed` が候補ON/OFFで異なる実装を発見（`NEW_SEED + pair*16 + arm_index*4 + seat*2`）。雲路のrunner `configure_game()` は確かに `setoption name RandomSeed value ...` を送信するため、同一相手条件という比較の厳密性が欠ける。**初回runの勝敗は単一要因の候補採否に使わない**。雲路・深路の速度版どちらにも必要な同じ乱数値を渡すよう `matched_seed(pair,seat)` を実装（`NEW_SEED + pair*16 + seat*2`）、ゲーム単位にも実seedを記録し集計で検査する。追加の回帰テストでこの不変条件を維持。さらにrun実態の上書き回避と同じ目的の旧run自動取消しのため、Actions concurrency を新run優先に修正。リクエストに厳格 `protocol_revision=identical_randomseed_fix_20261031` を追加して再起動要求commit `a0deb65bf499012c4a6ff0c629c982117462b372` を保存。**修正後の新run IDと200局の成績は、実状態が確認できるまで未確認。** 初回runの一部ジョブをcancelledと確認済み。
