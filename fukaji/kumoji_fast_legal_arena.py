@@ -42,8 +42,8 @@ def expected_request(enabled=False):
             "model_adoption_allowed": False, "training_allowed": False,
             "source_run": SOURCE_RUN, "source_artifact_id": SOURCE_ID,
             "source_zip_sha256": SOURCE_ZIP_SHA, "model_sha256": G8_SHA,
-            "screen_pairs": 20, "screen_seed": 202630300,
-            "final_pairs": 120, "final_seed": 202631300,
+            "screen_pairs": 20, "screen_seed": 202635100,
+            "final_pairs": 120, "final_seed": 202635300,
             "shards": SHARDS, "opening_plies": 6, "max_plies": MAX_PLIES,
             "movetime_ms": 200, "baseline_max_depth": 3, "candidate_max_depth": 3,
             "deadline_from_call": True,
@@ -59,7 +59,7 @@ def validate_request(cfg):
     for enabled in (False, True):
         if json.dumps(cfg, sort_keys=True) == json.dumps(expected_request(enabled), sort_keys=True):
             return enabled
-    raise ValueError("D8 differs from preregistered frozen protocol")
+    raise ValueError("D12 fast-legal research differs from preregistered one-factor protocol")
 
 
 def pair_indices(stage, shard):
