@@ -11,6 +11,34 @@ concurrency:
   group: fukaji-kumoji-full100-${{ github.ref }}
   cancel-in-progress: false
 jobs:
+  announce:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Persist real Actions run ID before processing
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const {owner,repo}=context.repo;
+            const path="research/kumoji-full100/run-status.json";
+            const receipt={
+              schema:"kumoji-full100-run-status-v1",state:"started",
+              run_id:context.runId,run_attempt:process.env.GITHUB_RUN_ATTEMPT,
+              run_url:"https://github.com/"+owner+"/"+repo+"/actions/runs/"+context.runId,
+              request_commit:context.sha,request_ref:context.ref,
+              initiated_at:new Date().toISOString(),games_requested:100
+            };
+            let previous;
+            try {previous=(await github.rest.repos.getContent({owner,repo,path,ref:"main"})).data.sha;}
+            catch(e) {if(e.status!==404) throw e;}
+            const args={owner,repo,path,branch:"main",
+              message:"ci(full100): persist actual research match run ID "+context.runId,
+              content:Buffer.from(JSON.stringify(receipt,null,2)+"\n").toString("base64")};
+            if(previous)args.sha=previous;
+            await github.rest.repos.createOrUpdateFileContents(args);
+            core.info("Research run receipt saved: "+receipt.run_url);
   preflight:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -179,3 +207,49 @@ jobs:
           path: build/aggregate/
           retention-days: 90
           if-no-files-found: error
+
+
+  publish_status:
+    needs: [announce, preflight, prepare, paired, aggregate]
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      ANNOUNCE_RESULT: ${{ needs.announce.result }}
+      PREFLIGHT_RESULT: ${{ needs.preflight.result }}
+      PREPARE_RESULT: ${{ needs.prepare.result }}
+      PAIRED_RESULT: ${{ needs.paired.result }}
+      AGGREGATE_RESULT: ${{ needs.aggregate.result }}
+    steps:
+      - name: Persist full cross-engine match outcome and run ID
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const {owner,repo}=context.repo;
+            const path="research/kumoji-full100/run-status.json";
+            const states={
+              announce:process.env.ANNOUNCE_RESULT,
+              preflight:process.env.PREFLIGHT_RESULT,
+              prepare:process.env.PREPARE_RESULT,
+              paired:process.env.PAIRED_RESULT,
+              aggregate:process.env.AGGREGATE_RESULT
+            };
+            const complete=states.aggregate==="success" && states.paired==="success";
+            const receipt={schema:"kumoji-full100-run-status-v1",
+              state:complete?"aggregate_artifact_created":"workflow_incomplete_or_failed",
+              run_id:context.runId,run_attempt:process.env.GITHUB_RUN_ATTEMPT,
+              run_url:"https://github.com/"+owner+"/"+repo+"/actions/runs/"+context.runId,
+              request_commit:context.sha,request_ref:context.ref,
+              updated_at:new Date().toISOString(),games_requested:100,
+              jobs:states,
+              note:complete?"Check aggregate artifact to verify 100 game outcomes and legal replay; this receipt alone is not the chess result.":"Inspect the named stage and job logs; do not claim 100 games completed."};
+            let previous;
+            try {previous=(await github.rest.repos.getContent({owner,repo,path,ref:"main"})).data.sha;}
+            catch(e) {if(e.status!==404) throw e;}
+            const args={owner,repo,path,branch:"main",
+              message:"ci(full100): record terminal 100-game workflow state "+context.runId,
+              content:Buffer.from(JSON.stringify(receipt,null,2)+"\n").toString("base64")};
+            if(previous)args.sha=previous;
+            await github.rest.repos.createOrUpdateFileContents(args);
+            core.info("Terminal match receipt saved: "+JSON.stringify(states));
