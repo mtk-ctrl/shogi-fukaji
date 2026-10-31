@@ -1,0 +1,132 @@
+name: FUKAJI v0.1.0 formal FastLegalGuard release audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/fukaji-v010-release-request.json"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: fukaji-v010-release
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Persist actual release validation run ID
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const {owner,repo}=context.repo;
+            const path="research/releases/v0.1.0/run-status.json";
+            const data={schema:"fukaji-release-validation-v1",
+              run_id:context.runId,revision:context.sha,status:"started",
+              url:"https://github.com/"+owner+"/"+repo+"/actions/runs/"+context.runId,
+              updated_at:new Date().toISOString()};
+            let sha;
+            try{sha=(await github.rest.repos.getContent({owner,repo,path,ref:"main"})).data.sha;}
+            catch(e){if(e.status!==404)throw e;}
+            const args={owner,repo,path,branch:"main",
+              message:"ci(release): record real FUKAJI v0.1.0 validation run",
+              content:Buffer.from(JSON.stringify(data,null,2)+"\n").toString("base64")};
+            if(sha)args.sha=sha;
+            await github.rest.repos.createOrUpdateFileContents(args);
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -r requirements.txt
+      - name: Execute full regression suite and verify official default
+        id: regression
+        run: |
+          python -m compileall -q fukaji
+          python -m unittest discover -s tests -v
+          python - <<'PY'
+          import subprocess,sys
+          p=subprocess.run([sys.executable,"-m","fukaji.engine"],
+            input="usi\nquit\n",text=True,capture_output=True,timeout=15)
+          assert p.returncode==0,p.stderr
+          assert "id name FUKAJI v0.1.0" in p.stdout
+          assert "option name FastLegalGuard type check default true" in p.stdout
+          assert "option name SearchDepth type spin default 4" in p.stdout
+          assert "option name ValueModelType type combo default legacy" in p.stdout
+          print("Official USI v0.1.0 FastLegalGuard ON and unchanged other defaults")
+          PY
+      - name: Download authenticated frozen G8 model for real runtime smoke
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-generation8-research-40636602223
+          run-id: 40636602223
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/g8-original
+      - name: Run actual FUKAJI USI with the exact D12 G8 profile
+        id: actual_g8
+        run: |
+          python - <<'PY'
+          import hashlib, subprocess,sys
+          from pathlib import Path
+          import shogi
+          model=next(Path("build/g8-original").rglob("mover-relative-generation8-research.npz"),None)
+          if model is None: raise ValueError("missing authentic G8 model")
+          sha=hashlib.sha256(model.read_bytes()).hexdigest()
+          expected="18b39f647caa458389a1900b875337adadac74ae37e27343e7f0094ed663c492"
+          if sha!=expected: raise ValueError("G8 SHA drift")
+          setup=("usi\nsetoption name ValueModelType value relative\n"
+            f"setoption name ValueModelFile value {model.resolve()}\n"
+            "setoption name ValueModelMix value 25\n"
+            "setoption name SearchDepth value 3\n"
+            "setoption name FastRelativeEval value true\n"
+            "setoption name RootAlphaBeta value true\n"
+            "setoption name FastMoveList value true\n")
+          for option in ("", "setoption name FastLegalGuard value false\n"):
+              cmd=setup+option+"isready\nposition startpos\ngo movetime 200\nquit\n"
+              p=subprocess.run([sys.executable,"-m","fukaji.engine"],
+                  input=cmd,text=True,capture_output=True,timeout=25)
+              if p.returncode!=0: raise RuntimeError(p.stderr)
+              if f"value_model sha256 {expected}" not in p.stdout:
+                  raise ValueError("USI used wrong or no G8")
+              if "FastLegalGuard type check default true" not in p.stdout:
+                  raise ValueError("formal option default is not ON")
+              words=[line.split()[1] for line in p.stdout.splitlines() if line.startswith("bestmove ")]
+              if len(words)!=1 or shogi.Move.from_usi(words[0]) not in shogi.Board().legal_moves:
+                  raise ValueError("USI did not return exactly one legal opening move")
+              print("FUKAJI G8 USI smoke", option or "official ON",
+                    words[0],"verified model",sha)
+          PY
+      - name: Save verified release receipt and failure status on main
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          CHECK_TESTS: ${{ steps.regression.outcome }}
+          CHECK_G8: ${{ steps.actual_g8.outcome }}
+        with:
+          script: |
+            const {owner,repo}=context.repo;
+            const passed=process.env.CHECK_TESTS==="success"&&process.env.CHECK_G8==="success";
+            const path="research/releases/v0.1.0/run-status.json";
+            const data={schema:"fukaji-release-validation-v1",
+              run_id:context.runId,revision:context.sha,
+              status:passed?"verified":"failed_or_incomplete",
+              url:"https://github.com/"+owner+"/"+repo+"/actions/runs/"+context.runId,
+              stages:{full_suite:process.env.CHECK_TESTS,G8_USI:process.env.CHECK_G8},
+              official_version:"FUKAJI v0.1.0",
+              USI_default_FastLegalGuard:true,
+              G8_source_sha256:"18b39f647caa458389a1900b875337adadac74ae37e27343e7f0094ed663c492",
+              other_USI_defaults_unchanged:true,
+              updated_at:new Date().toISOString()};
+            let sha;
+            try{sha=(await github.rest.repos.getContent({owner,repo,path,ref:"main"})).data.sha;}
+            catch(e){if(e.status!==404)throw e;}
+            const args={owner,repo,path,branch:"main",
+              message:"ci(release): preserve FUKAJI v0.1.0 validation status",
+              content:Buffer.from(JSON.stringify(data,null,2)+"\n").toString("base64")};
+            if(sha)args.sha=sha;
+            await github.rest.repos.createOrUpdateFileContents(args);
+            if(!passed)core.setFailed("release verification did not pass both stages");
