@@ -1,0 +1,9 @@
+{
+  "enabled": true,
+  "official_version": "FUKAJI v0.1.0",
+  "official_USI_fast_legal_guard_default": true,
+  "other_USI_defaults_unchanged": true,
+  "G8_runtime_compatibility_SHA256": "18b39f647caa458389a1900b875337adadac74ae37e27343e7f0094ed663c492",
+  "decision": "2026-10-31 explicit user formal adoption",
+  "verify_only": true
+}
