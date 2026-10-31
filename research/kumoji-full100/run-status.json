@@ -1,11 +1,19 @@
 {
   "schema": "kumoji-full100-run-status-v1",
-  "state": "started",
+  "state": "aggregate_artifact_created",
   "run_id": 41177748192,
   "run_attempt": "1",
   "run_url": "https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/41177748192",
   "request_commit": "e055516b4647941ab0eec474cd8e9bb58383ff16",
   "request_ref": "refs/heads/main",
-  "initiated_at": "2026-10-31T06:43:19.806Z",
-  "games_requested": 100
+  "updated_at": "2026-10-31T06:49:26.281Z",
+  "games_requested": 100,
+  "jobs": {
+    "announce": "success",
+    "preflight": "success",
+    "prepare": "success",
+    "paired": "success",
+    "aggregate": "success"
+  },
+  "note": "Check aggregate artifact to verify 100 game outcomes and legal replay; this receipt alone is not the chess result."
 }
