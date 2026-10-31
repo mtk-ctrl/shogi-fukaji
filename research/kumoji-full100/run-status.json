@@ -1,0 +1,11 @@
+{
+  "schema": "kumoji-full100-run-status-v1",
+  "state": "started",
+  "run_id": 41177748192,
+  "run_attempt": "1",
+  "run_url": "https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/41177748192",
+  "request_commit": "e055516b4647941ab0eec474cd8e9bb58383ff16",
+  "request_ref": "refs/heads/main",
+  "initiated_at": "2026-10-31T06:43:19.806Z",
+  "games_requested": 100
+}
