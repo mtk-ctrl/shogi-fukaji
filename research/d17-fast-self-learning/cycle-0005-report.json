@@ -1,0 +1,88 @@
+{
+  "generation": 5,
+  "parent": "70dabab23df81c0e954ec24792558690cb0f47f07a9ff8573ca31b0fa14ec9b5",
+  "train": {
+    "path": "cycle-0005/selfplay.jsonl",
+    "sha256": "5760ff2bf19be13de325703a8add4ed6147bf568c93d778a286dbc122a863bc9",
+    "games": 4
+  },
+  "new_games": 4,
+  "new_resolved": 4,
+  "formal_adoption": false,
+  "strength_proven": false,
+  "config": {
+    "pairs": 2,
+    "movetime_ms": 50,
+    "max_plies": 256,
+    "outcome_weight": 0.75,
+    "td_lambda": 0.8,
+    "epochs": 2,
+    "periodic_every": 1
+  },
+  "candidate": "08fe3724944c5f6433c4553711b4c7a30546c3b47d9e4d1cc4b9d6737faa753d",
+  "training": {
+    "positions": 223,
+    "optimizer_step": 1264,
+    "loss_history": [
+      {
+        "epoch": 0,
+        "loss": 0.41709927272368974
+      },
+      {
+        "epoch": 1,
+        "loss": 0.3990502464397071
+      },
+      {
+        "epoch": 2,
+        "loss": 0.3745415520774944
+      }
+    ],
+    "max_gradient_norm": 0.41465537045164336,
+    "parameter_delta_l2": 0.6128220404903317,
+    "strength_proven": false
+  },
+  "samples": {
+    "games": 8,
+    "resolved": 8,
+    "unresolved_excluded": 0
+  },
+  "replay_games": 4,
+  "recent_games": 4,
+  "screen": {
+    "wins": 1,
+    "losses": 1,
+    "draws": 1,
+    "unresolved": 1,
+    "action": "provisional",
+    "strength_proven": false,
+    "score_resolved": 0.5,
+    "reason": "bounded research update; superiority unproven"
+  },
+  "periodic": {
+    "wins": 4,
+    "losses": 0,
+    "draws": 1,
+    "unresolved": 3,
+    "action": "provisional",
+    "strength_proven": false,
+    "score_resolved": 0.9,
+    "reason": "bounded research update; superiority unproven"
+  },
+  "evaluation": {
+    "path": "cycle-0005/monitor.jsonl",
+    "sha256": "9b563ed3f3aa5c7a68a83d4571d870b63b661b3a8219e95ec336d981fddc63a8",
+    "games": 12
+  },
+  "decision": {
+    "wins": 4,
+    "losses": 0,
+    "draws": 1,
+    "unresolved": 3,
+    "action": "provisional",
+    "strength_proven": false,
+    "score_resolved": 0.9,
+    "reason": "bounded research update; superiority unproven"
+  },
+  "seconds": 139.95365152199997,
+  "research_latest": "08fe3724944c5f6433c4553711b4c7a30546c3b47d9e4d1cc4b9d6737faa753d"
+}

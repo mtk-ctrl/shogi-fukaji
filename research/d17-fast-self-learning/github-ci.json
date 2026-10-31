@@ -1,0 +1,23 @@
+{
+  "commit": "69e8102d40d3d8133e2e8b967ce235e5eb02b9e8",
+  "runs": [
+    {
+      "id": 41247956112,
+      "name": "FUKAJI learning pipeline",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 41247956109,
+      "name": "FUKAJI stateful C++ G7 80 positions / 20 runners (research only)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 41247956107,
+      "name": "FUKAJI native in-process G7 80 positions 20 runners / four modes (research only)",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "archive": "verified-research-state.tar.gz",
+  "bytes": 5258294,
+  "sha256": "d100b8a69d86d19ac0e16976160e4af5edc3f482addb0cbf4b3d98d564d95eb3",
+  "git_blob_sha1": "07850465de5b6a3fa772d5c009841c7d207a80eb",
+  "models_reloaded": 7,
+  "train_games_including_bootstrap": 685,
+  "monitor_games": 52,
+  "all_batch_checksums_verified": true,
+  "evaluation_parent_separation_verified": true,
+  "state_reload_equal": true,
+  "formal_adoption": false,
+  "strength_proven": false,
+  "research_latest": "08fe3724944c5f6433c4553711b4c7a30546c3b47d9e4d1cc4b9d6737faa753d",
+  "implementation_commit": "69e8102d40d3d8133e2e8b967ce235e5eb02b9e8"
+}

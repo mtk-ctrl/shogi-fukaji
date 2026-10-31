@@ -1,0 +1,60 @@
+{
+  "mc_model": "4dcb09f94f43b65c208c1768704a43af60354227639be0832d820861af24be19",
+  "td_model": "08fe3724944c5f6433c4553711b4c7a30546c3b47d9e4d1cc4b9d6737faa753d",
+  "same_parent": "70dabab23df81c0e954ec24792558690cb0f47f07a9ff8573ca31b0fa14ec9b5",
+  "same_game_hashes": [
+    "1f5fde97ecc4ce7a53c2cf80e7bd45f960479cbb87485cbe6866e2e5906dd6f5",
+    "4746f63b7de01dcbfa11499c6ea1ca303b96b8a7152a335a4e7fe470ffe74440",
+    "d0bb5dbce2587ccf16938cf6408d309e7d5fd1f6d2f0a995a051e0d17130565b",
+    "7afb54fb7f0bfdd349f1de8044a1858d2728f9fd443207a23d8c3ab712dcc83b",
+    "0d842534ff4530a9bb46814ab63b2f85a053c39960896642b3b5e4d81e8a6983",
+    "b37ca4a28e5716cab92f757f07a0790a342cc30d652eb076a793e1983080aef5",
+    "75e42d0f529500e483fe63e280b85c4941088cded2ed040debe2aea7db57df5d",
+    "1e124b85b4c7a4924538f661c1cdf54ff29a72f478dda72bc60a9af227c7ad94"
+  ],
+  "same_sample_seed": 2026603101,
+  "positions": 223,
+  "mc_training": {
+    "positions": 223,
+    "optimizer_step": 1264,
+    "loss_history": [
+      {
+        "epoch": 0,
+        "loss": 0.4024086853848445
+      },
+      {
+        "epoch": 1,
+        "loss": 0.37830126980495027
+      },
+      {
+        "epoch": 2,
+        "loss": 0.3433512187324832
+      }
+    ],
+    "max_gradient_norm": 0.5072753408240043,
+    "parameter_delta_l2": 0.6294213702988954,
+    "strength_proven": false
+  },
+  "pairs": 4,
+  "movetime_ms": 50,
+  "seed": 2026610101,
+  "mc_score": {
+    "wins": 0,
+    "losses": 2,
+    "draws": 2,
+    "unresolved": 4,
+    "action": "provisional",
+    "strength_proven": false,
+    "score_resolved": 0.25,
+    "reason": "bounded research update; superiority unproven"
+  },
+  "evaluation": {
+    "path": "target-comparison-0005/monitor.jsonl",
+    "sha256": "baee267e254073f1f59c62acc85dbf911b53ff2dcf068fdc7c0bc21da9587c4e",
+    "games": 8
+  },
+  "seconds": 107.44068641299998,
+  "strength_proven": false,
+  "formal_adoption": false,
+  "research_pointer_changed": false
+}
