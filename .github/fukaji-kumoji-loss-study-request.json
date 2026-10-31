@@ -6,5 +6,5 @@
   "all_games_sha256": "c0874b1b7cb96464385e76544a4fac69454ac3c9ebf681127bbca20c909e019f",
   "engine_changes": false,
   "training_labels": false,
-  "retry_revision": "20261031-guard-throughput-v2"
+  "retry_revision": "20261031-legal-throughput-v3"
 }
