@@ -1,9 +1,16 @@
 {
   "schema": "fastlegal-v1",
-  "state": "started",
+  "state": "complete_40_and_240",
   "run_id": 41180684619,
   "run_url": "https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/41180684619",
   "commit": "a4f5b9c0f9fb8e180b89a87cea5fe94da44f7ae9",
-  "updated_at": "2026-10-31T07:27:45.616Z",
+  "stages": {
+    "preflight": "success",
+    "screen": "success",
+    "screen_summary": "success",
+    "final": "success",
+    "final_summary": "success"
+  },
+  "updated_at": "2026-10-31T07:42:35.478Z",
   "formal_adoption": false
 }
