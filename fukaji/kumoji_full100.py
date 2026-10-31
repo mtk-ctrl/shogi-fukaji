@@ -29,6 +29,7 @@ def config():
     return dict(research_only=True,formal_adoption=False,
        fukaji_model_kind="G8_frozen_studied_depth3",fukaji_g8_sha256=G8_SHA,
        kumoji_commit=KUMOJI_COMMIT,prior_adopted_knowledge_sha256=OLD_KNOWLEDGE_SHA,
+       launch_revision="20261031-auditable-rerun-2",
        games=100,pairs=PAIRS,shards=SHARDS,opening_plies=6,max_plies=MAX_PLIES,
        seed=SEED,movetime_ms=200,depth_fukaji=3,
        g8_mix_percent=25,fast_relative=True,fast_move_list=True,root_alpha_beta=True,
