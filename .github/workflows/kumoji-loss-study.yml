@@ -72,7 +72,7 @@ jobs:
                     "source_artifact_id":13034155311,
                     "source_zip_sha256":"a4bb82455e818873771b8290f1c5c52770a1bf628c99ebd94b7ea8231565ad9c",
                     "all_games_sha256":GAMES_SHA,"engine_changes":False,"training_labels":False,
-                    "retry_revision":"20261031-guard-throughput-v2"}
+                    "retry_revision":"20261031-legal-throughput-v3"}
           if req != expected: raise ValueError("unapproved immutable source request")
           raw=artifact_bytes(13034155311,"fukaji-kumoji-full100-aggregate-41177748192",
                              41177748192, expected["source_zip_sha256"], __import__("os").environ["GH_TOKEN"])
@@ -162,6 +162,35 @@ jobs:
             catch(e) {if(e.status!==404) throw e;}
             const args={owner,repo,path,branch:"main",
               message:"research: archive exact G8 no-check guarded throughput diagnostic",
+              content:Buffer.from(content).toString("base64")};
+            if(sha)args.sha=sha;
+            await github.rest.repos.createOrUpdateFileContents(args);
+      - name: Validate frozen legal-generator safety checks
+        run: python -m unittest discover -s tests -p 'test_kumoji_legal_fast_probe.py' -v
+      - name: Replay legal generator equivalence across past 100 mate losses
+        timeout-minutes: 10
+        run: |
+          python -m fukaji.kumoji_legal_fast_probe \
+            --games build/loss-study/input/all_games.jsonl \
+            --g8-model build/loss-study/input/g8.npz \
+            --out build/loss-study/result
+      - name: Persist one-factor G8 legal-generator comparison
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs=require("fs");
+            const {owner,repo}=context.repo;
+            const path="research/kumoji-loss-study/legal-fast-probe.json";
+            const content=fs.readFileSync("build/loss-study/result/legal_fast_probe.json","utf8");
+            const report=JSON.parse(content);
+            if(report.roots!==40||report.search_calls!==160
+              ||report.board_move_sets_independently_compared<100)
+              throw Error("legal generator probe incomplete or unsupported");
+            let sha;
+            try {sha=(await github.rest.repos.getContent({owner,repo,path,ref:"main"})).data.sha;}
+            catch(e){if(e.status!==404) throw e;}
+            const args={owner,repo,path,branch:"main",
+              message:"research: store verified G8 faster legal generator throughput",
               content:Buffer.from(content).toString("base64")};
             if(sha)args.sha=sha;
             await github.rest.repos.createOrUpdateFileContents(args);
