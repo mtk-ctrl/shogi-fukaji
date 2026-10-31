@@ -173,7 +173,7 @@ def aggregate(req, folder, parts, out):
       paired_comparison=summarize_pairs(rows,PAIRS),
       fukaji_plays=len(fmoves),kumoji_plays=len(kmoves),
       kumoji_research_direct_moves=len(direct),
-      kumoji_research_direct_games=len({m["ply"] for m in direct}),
+      kumoji_research_direct_games=sum(any(m["engine"]=="B" and m["search"].get("decision_source")=="research" for m in row["move_records"]) for row in rows),
       kumoji_research_ids=dict(Counter(m["search"].get("research_id") for m in direct)),
       kumoji_knowledge_probes=sum_search(kmoves,"knowledge_probes"),
       kumoji_knowledge_hits=sum_search(kmoves,"knowledge_hits"),
