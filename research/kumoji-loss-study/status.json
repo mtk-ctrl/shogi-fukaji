@@ -1,12 +1,11 @@
 {
   "schema": "fukaji-kumoji-loss-study-v1",
-  "state": "verified_report_saved",
-  "study_job": "success",
-  "run_id": 41179977162,
-  "run_url": "https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/41179977162",
+  "state": "started",
+  "run_id": 41180123377,
+  "run_url": "https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/41180123377",
   "base_comparison_run": 41177748192,
-  "request_commit": "049b7d9521ffc585387d762dc7832c78dc6eea9c",
-  "updated_at": "2026-10-31T07:17:40.826Z",
+  "request_commit": "31365a2d3b8f3c1eedb4ec44be2b3144d5943b10",
+  "updated_at": "2026-10-31T07:19:13.117Z",
   "research_only": true,
   "model_promoted": false
 }
