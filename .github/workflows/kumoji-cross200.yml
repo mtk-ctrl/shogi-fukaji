@@ -1,0 +1,232 @@
+name: D13 FUKAJI G8 FastLegalGuard ON/OFF versus pinned KUMOJI 200 new games
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/fukaji-kumoji-cross200-request.json
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: fukaji-kumoji-cross200
+  cancel-in-progress: false
+
+jobs:
+  announce:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Save genuine run ID before expensive process
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const {owner,repo}=context.repo;
+            const path="research/d13-kumoji-cross200/run-status.json";
+            let sha;
+            try {sha=(await github.rest.repos.getContent({owner,repo,path,ref:"main"})).data.sha;}
+            catch(e){if(e.status!==404)throw e;}
+            const data={schema:"D13-fukaji-cross200-v1",status:"started",
+              run_id:context.runId,url:"https://github.com/"+owner+"/"+repo+"/actions/runs/"+context.runId,
+              request_commit:context.sha,at:new Date().toISOString(),formal_adoption:false};
+            const payload={owner,repo,path,branch:"main",message:"research(D13): record run ID "+context.runId,
+              content:Buffer.from(JSON.stringify(data,null,2)+"\n").toString("base64")};
+            if(sha)payload.sha=sha;
+            await github.rest.repos.createOrUpdateFileContents(payload);
+
+  preflight:
+    needs: announce
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -r requirements.txt
+      - name: Strict new-opening and fixed G8/engine-option protocol checks
+        run: |
+          python -m compileall -q fukaji
+          python -m unittest discover -s tests -p 'test_kumoji_cross200.py' -v
+          python -m fukaji.kumoji_cross200 --mode check --request .github/fukaji-kumoji-cross200-request.json
+
+  prepare:
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: mtk-ctrl/shogi-ai
+          ref: 76ee74d04a800285e24dd81ef01711e990cfa181
+          path: kumoji-src
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -r requirements.txt
+      - name: Reuse original full-research source and authentic matched KUMOJI binary
+        uses: actions/download-artifact@v4
+        with:
+          name: fukaji-kumoji-full100-input-41177748192
+          run-id: 41177748192
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/input
+      - name: Independently verify G8, KUMOJI and archived knowledge provenance
+        env:
+          PYTHONPATH: ${{ github.workspace }}/kumoji-src:${{ github.workspace }}
+        run: |
+          chmod +x build/input/kumoji
+          python -m fukaji.kumoji_cross200 --mode prepare \
+            --request .github/fukaji-kumoji-cross200-request.json \
+            --input build/input
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-kumoji-cross200-input-${{ github.run_id }}
+          path: build/input/
+          retention-days: 90
+          if-no-files-found: error
+
+  games:
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    strategy:
+      fail-fast: false
+      max-parallel: 10
+      matrix:
+        shard: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: mtk-ctrl/shogi-ai
+          ref: 76ee74d04a800285e24dd81ef01711e990cfa181
+          path: kumoji-src
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: fukaji-kumoji-cross200-input-${{ github.run_id }}
+          path: build/input
+      - name: Play identical openings and colors with FastLegalGuard OFF versus ON
+        env:
+          PYTHONPATH: ${{ github.workspace }}/kumoji-src:${{ github.workspace }}
+        run: |
+          chmod +x build/input/kumoji
+          python -m fukaji.kumoji_cross200 --mode play \
+            --request .github/fukaji-kumoji-cross200-request.json \
+            --input build/input --shard ${{ matrix.shard }} \
+            --out build/part
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fukaji-kumoji-cross200-shard-${{ matrix.shard }}-${{ github.run_id }}
+          path: build/part/
+          retention-days: 90
+          if-no-files-found: warn
+
+  aggregate:
+    needs: [prepare, games]
+    if: needs.games.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: mtk-ctrl/shogi-ai
+          ref: 76ee74d04a800285e24dd81ef01711e990cfa181
+          path: kumoji-src
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: fukaji-kumoji-cross200-input-${{ github.run_id }}
+          path: build/input
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: fukaji-kumoji-cross200-shard-*-${{ github.run_id }}
+          path: build/parts
+          merge-multiple: false
+      - name: Check all 200 legal games, source/model SHA and A/B color pairing
+        env:
+          PYTHONPATH: ${{ github.workspace }}/kumoji-src:${{ github.workspace }}
+        run: |
+          chmod +x build/input/kumoji
+          python -m fukaji.kumoji_cross200 --mode aggregate \
+            --request .github/fukaji-kumoji-cross200-request.json \
+            --input build/input --parts build/parts --out build/results
+      - name: Preserve complete verified comparison summary on main
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs=require("fs");
+            const {owner,repo}=context.repo;
+            const path="research/d13-kumoji-cross200/summary.json";
+            const content=fs.readFileSync("build/results/summary.json","utf8");
+            const result=JSON.parse(content);
+            if(result.games!==200 || result.pairs!==50 || result.all_games_legally_replayed!==true
+               || result.g8_model_sha256!=="18b39f647caa458389a1900b875337adadac74ae37e27343e7f0094ed663c492")
+              throw Error("unverified result");
+            let sha;
+            try {sha=(await github.rest.repos.getContent({owner,repo,path,ref:"main"})).data.sha;}
+            catch(e){if(e.status!==404)throw e;}
+            const payload={owner,repo,path,branch:"main",
+              message:"research(D13): preserve source-verified 200 KUMOJI match outcomes",
+              content:Buffer.from(content).toString("base64")};
+            if(sha)payload.sha=sha;
+            await github.rest.repos.createOrUpdateFileContents(payload);
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-kumoji-cross200-result-${{ github.run_id }}
+          path: build/results/
+          retention-days: 90
+          if-no-files-found: error
+
+  final_status:
+    needs: [announce, preflight, prepare, games, aggregate]
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      PRE: ${{ needs.preflight.result }}
+      PREPARE: ${{ needs.prepare.result }}
+      GAMES: ${{ needs.games.result }}
+      AGG: ${{ needs.aggregate.result }}
+    steps:
+      - name: Persist exact actual run results and failures
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const {owner,repo}=context.repo;
+            const stages={preflight:process.env.PRE,prepare:process.env.PREPARE,
+              games:process.env.GAMES,aggregate:process.env.AGG};
+            const status=Object.values(stages).every(x=>x==="success")?"verified_200_complete":"incomplete_or_failed";
+            const data={schema:"D13-fukaji-cross200-v1",status,stages,run_id:context.runId,
+              url:"https://github.com/"+owner+"/"+repo+"/actions/runs/"+context.runId,
+              request_commit:context.sha,at:new Date().toISOString(),formal_adoption:false};
+            const path="research/d13-kumoji-cross200/run-status.json";
+            let sha;
+            try {sha=(await github.rest.repos.getContent({owner,repo,path,ref:"main"})).data.sha;}
+            catch(e){if(e.status!==404)throw e;}
+            const payload={owner,repo,path,branch:"main",
+              message:"research(D13): persist terminal status and actual run ID "+context.runId,
+              content:Buffer.from(JSON.stringify(data,null,2)+"\n").toString("base64")};
+            if(sha)payload.sha=sha;
+            await github.rest.repos.createOrUpdateFileContents(payload);
