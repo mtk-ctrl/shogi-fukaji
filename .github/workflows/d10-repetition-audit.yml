@@ -1,0 +1,97 @@
+name: FUKAJI D10 root repetition diagnostic on frozen D8 games
+'on':
+  workflow_dispatch:
+  push:
+    paths: ['.github/fukaji-d10-repetition-request.json']
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-d10-repetition-audit
+  cancel-in-progress: false
+jobs:
+  prepare:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      enabled: ${{ steps.protocol.outputs.enabled }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Verify diagnostics and exact OFF/ON request
+        id: protocol
+        run: |
+          python -m unittest discover -s tests -p 'test_d10_repetition_audit.py' -v
+          python -m fukaji.d10_repetition_audit --mode check
+      - name: Freeze verified original D8 games and G8 model
+        if: steps.protocol.outputs.enabled == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python -m fukaji.d10_repetition_audit --mode prepare --out build/d10/input
+      - uses: actions/upload-artifact@v4
+        if: steps.protocol.outputs.enabled == 'true'
+        with:
+          name: fukaji-d10-input-${{ github.run_id }}
+          path: build/d10/input/
+          retention-days: 30
+          if-no-files-found: error
+  audit:
+    needs: prepare
+    if: needs.prepare.outputs.enabled == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: fukaji-d10-input-${{ github.run_id }}
+          path: build/d10/input
+      - name: Replay twelve games and compare first affected positions
+        run: python -m fukaji.d10_repetition_audit --mode audit --input build/d10/input --shard ${{ matrix.shard }} --out build/d10/part
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-d10-part-${{ matrix.shard }}-${{ github.run_id }}
+          path: build/d10/part/
+          retention-days: 30
+          if-no-files-found: error
+  summary:
+    needs: [prepare, audit]
+    if: needs.prepare.outputs.enabled == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: fukaji-d10-input-${{ github.run_id }}
+          path: build/d10/input
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: fukaji-d10-part-*
+          path: build/d10/parts
+          merge-multiple: false
+      - name: Check all shards and summarize effects without a strength claim
+        run: python -m fukaji.d10_repetition_audit --mode aggregate --input build/d10/input --parts build/d10/parts --out build/d10/summary
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-d10-summary-${{ github.run_id }}
+          path: build/d10/summary/
+          retention-days: 30
+          if-no-files-found: error

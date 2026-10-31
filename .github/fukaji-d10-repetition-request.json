@@ -1,0 +1,28 @@
+{
+  "enabled": false,
+  "research_only": true,
+  "training_allowed": false,
+  "model_adoption_allowed": false,
+  "d8_run": 41048053976,
+  "d8_artifact": 12973279499,
+  "d8_zip_sha256": "f25b7be57645af7c8e6b00387b243009252a9b471c9606a207a654537e7d9c41",
+  "d8_games_sha256": "55d3873c609bab023c3f5507dc890c583178adc646e282dd1ecd5b385af523ef",
+  "model_sha256": "18b39f647caa458389a1900b875337adadac74ae37e27343e7f0094ed663c492",
+  "games": 240,
+  "shards": 20,
+  "first_affected_position_per_game": 1,
+  "order": [
+    true,
+    false,
+    false,
+    true
+  ],
+  "max_depth": 2,
+  "complete_depth": true,
+  "mix_percent": 25,
+  "fast_relative": true,
+  "root_alpha_beta": true,
+  "fast_move_list": true,
+  "time_check_each_node": false,
+  "max_single_call_ms": 5000
+}
