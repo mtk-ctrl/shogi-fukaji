@@ -1,15 +1,9 @@
 {
   "schema": "D13-fukaji-cross200-v1",
-  "status": "incomplete_or_failed",
-  "stages": {
-    "preflight": "success",
-    "prepare": "success",
-    "games": "cancelled",
-    "aggregate": "cancelled"
-  },
-  "run_id": 41184358423,
-  "url": "https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/41184358423",
-  "request_commit": "844f86d391e89a4c1739c769b8ac1afd757c77eb",
-  "at": "2026-10-31T08:27:52.915Z",
+  "status": "started",
+  "run_id": 41184685991,
+  "url": "https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/41184685991",
+  "request_commit": "a0deb65bf499012c4a6ff0c629c982117462b372",
+  "at": "2026-10-31T08:28:00.879Z",
   "formal_adoption": false
 }
