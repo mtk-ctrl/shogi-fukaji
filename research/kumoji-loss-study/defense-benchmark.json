@@ -7,19 +7,19 @@
   "order": "baseline_guard_guard_baseline",
   "baseline": {
     "calls": 40,
-    "moves_allow_immediate_mate": 34,
-    "median_wall_ms": 201.496,
-    "mean_wall_ms": 178.769,
-    "over_200_ms": 26,
-    "depth_three_completed": 16
+    "moves_allow_immediate_mate": 36,
+    "median_wall_ms": 212.639,
+    "mean_wall_ms": 230.803,
+    "over_200_ms": 34,
+    "depth_three_completed": 10
   },
   "guard": {
     "calls": 40,
-    "moves_allow_immediate_mate": 34,
-    "median_wall_ms": 184.825,
-    "mean_wall_ms": 158.871,
-    "over_200_ms": 12,
-    "depth_three_completed": 14
+    "moves_allow_immediate_mate": 38,
+    "median_wall_ms": 202.125,
+    "mean_wall_ms": 208.584,
+    "over_200_ms": 28,
+    "depth_three_completed": 6
   },
   "by_game": {
     "0": {
@@ -32,14 +32,14 @@
         true
       ],
       "guard_status": [
-        "confirmed_immediate_mate_no_safe_alt_yet",
-        "confirmed_immediate_mate_no_safe_alt_yet"
+        "unknown_time_expired",
+        "unknown_time_expired"
       ]
     },
     "1": {
       "baseline_unsafe": [
-        false,
-        false
+        true,
+        true
       ],
       "guard_unsafe": [
         true,
@@ -88,8 +88,8 @@
         true
       ],
       "guard_status": [
-        "confirmed_immediate_mate_no_safe_alt_yet",
-        "confirmed_immediate_mate_no_safe_alt_yet"
+        "unknown_time_expired",
+        "unknown_time_expired"
       ]
     },
     "21": {
@@ -144,8 +144,8 @@
         false
       ],
       "guard_status": [
-        "verified_no_immediate_mate",
-        "verified_no_immediate_mate"
+        "confirmed_avoidable_immediate_mate",
+        "confirmed_avoidable_immediate_mate"
       ]
     },
     "41": {
@@ -154,12 +154,12 @@
         true
       ],
       "guard_unsafe": [
-        false,
-        false
+        true,
+        true
       ],
       "guard_status": [
-        "confirmed_avoidable_immediate_mate",
-        "confirmed_avoidable_immediate_mate"
+        "unknown_time_expired_after_danger",
+        "unknown_time_expired_after_danger"
       ]
     },
     "50": {
@@ -172,8 +172,8 @@
         true
       ],
       "guard_status": [
-        "confirmed_immediate_mate_no_safe_alt_yet",
-        "confirmed_immediate_mate_no_safe_alt_yet"
+        "unknown_time_expired",
+        "unknown_time_expired"
       ]
     },
     "51": {
@@ -186,8 +186,8 @@
         true
       ],
       "guard_status": [
-        "confirmed_immediate_mate_no_safe_alt_yet",
-        "confirmed_immediate_mate_no_safe_alt_yet"
+        "unknown_time_expired",
+        "unknown_time_expired"
       ]
     },
     "60": {
@@ -214,8 +214,8 @@
         true
       ],
       "guard_status": [
-        "confirmed_immediate_mate_no_safe_alt_yet",
-        "confirmed_immediate_mate_no_safe_alt_yet"
+        "unknown_time_expired",
+        "unknown_time_expired"
       ]
     },
     "70": {
@@ -228,8 +228,8 @@
         true
       ],
       "guard_status": [
-        "confirmed_immediate_mate_no_safe_alt_yet",
-        "confirmed_immediate_mate_no_safe_alt_yet"
+        "unknown_time_expired_after_danger",
+        "unknown_time_expired_after_danger"
       ]
     },
     "71": {
@@ -252,12 +252,12 @@
         false
       ],
       "guard_unsafe": [
-        false,
-        false
+        true,
+        true
       ],
       "guard_status": [
-        "verified_no_immediate_mate",
-        "verified_no_immediate_mate"
+        "unknown_time_expired_after_danger",
+        "unknown_time_expired_after_danger"
       ]
     },
     "81": {
@@ -298,8 +298,8 @@
         true
       ],
       "guard_status": [
-        "confirmed_immediate_mate_no_safe_alt_yet",
-        "confirmed_immediate_mate_no_safe_alt_yet"
+        "unknown_time_expired",
+        "unknown_time_expired"
       ]
     }
   },
@@ -311,8 +311,8 @@
       "move": "6h5h",
       "source_historical_move": "6h5h",
       "depth": 2,
-      "nodes": 768,
-      "elapsed_ms": 309.172,
+      "nodes": 640,
+      "elapsed_ms": 392.194,
       "allows_immediate_mate": true,
       "guard_status": "baseline"
     },
@@ -324,9 +324,9 @@
       "source_historical_move": "6h5h",
       "depth": 2,
       "nodes": 640,
-      "elapsed_ms": 200.579,
+      "elapsed_ms": 396.835,
       "allows_immediate_mate": true,
-      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+      "guard_status": "unknown_time_expired"
     },
     {
       "game_id": 0,
@@ -336,9 +336,9 @@
       "source_historical_move": "6h5h",
       "depth": 2,
       "nodes": 640,
-      "elapsed_ms": 200.421,
+      "elapsed_ms": 393.556,
       "allows_immediate_mate": true,
-      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+      "guard_status": "unknown_time_expired"
     },
     {
       "game_id": 0,
@@ -347,178 +347,178 @@
       "move": "6h5h",
       "source_historical_move": "6h5h",
       "depth": 2,
+      "nodes": 640,
+      "elapsed_ms": 394.386,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 1,
+      "trial": 0,
+      "arm": "baseline",
+      "move": "5a4b",
+      "source_historical_move": "5a4b",
+      "depth": 1,
+      "nodes": 1106,
+      "elapsed_ms": 201.34,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 1,
+      "trial": 1,
+      "arm": "guard",
+      "move": "5a4b",
+      "source_historical_move": "5a4b",
+      "depth": 1,
+      "nodes": 1002,
+      "elapsed_ms": 204.255,
+      "allows_immediate_mate": true,
+      "guard_status": "unknown_time_expired_after_danger"
+    },
+    {
+      "game_id": 1,
+      "trial": 2,
+      "arm": "guard",
+      "move": "5a4b",
+      "source_historical_move": "5a4b",
+      "depth": 1,
+      "nodes": 956,
+      "elapsed_ms": 204.769,
+      "allows_immediate_mate": true,
+      "guard_status": "unknown_time_expired_after_danger"
+    },
+    {
+      "game_id": 1,
+      "trial": 3,
+      "arm": "baseline",
+      "move": "5a4b",
+      "source_historical_move": "5a4b",
+      "depth": 1,
+      "nodes": 1100,
+      "elapsed_ms": 201.613,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 10,
+      "trial": 0,
+      "arm": "baseline",
+      "move": "7h8g",
+      "source_historical_move": "7h8g",
+      "depth": 3,
+      "nodes": 274,
+      "elapsed_ms": 98.12,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 10,
+      "trial": 1,
+      "arm": "guard",
+      "move": "7h8g",
+      "source_historical_move": "7h8g",
+      "depth": 3,
+      "nodes": 274,
+      "elapsed_ms": 110.561,
+      "allows_immediate_mate": true,
+      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+    },
+    {
+      "game_id": 10,
+      "trial": 2,
+      "arm": "guard",
+      "move": "7h8g",
+      "source_historical_move": "7h8g",
+      "depth": 3,
+      "nodes": 274,
+      "elapsed_ms": 108.997,
+      "allows_immediate_mate": true,
+      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+    },
+    {
+      "game_id": 10,
+      "trial": 3,
+      "arm": "baseline",
+      "move": "7h8g",
+      "source_historical_move": "7h8g",
+      "depth": 3,
+      "nodes": 274,
+      "elapsed_ms": 99.139,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 11,
+      "trial": 0,
+      "arm": "baseline",
+      "move": "P*2e",
+      "source_historical_move": "P*2e",
+      "depth": 1,
+      "nodes": 896,
+      "elapsed_ms": 206.083,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 11,
+      "trial": 1,
+      "arm": "guard",
+      "move": "P*2e",
+      "source_historical_move": "P*2e",
+      "depth": 1,
       "nodes": 768,
-      "elapsed_ms": 293.324,
+      "elapsed_ms": 200.996,
+      "allows_immediate_mate": true,
+      "guard_status": "unknown_time_expired_after_danger"
+    },
+    {
+      "game_id": 11,
+      "trial": 2,
+      "arm": "guard",
+      "move": "P*2e",
+      "source_historical_move": "P*2e",
+      "depth": 1,
+      "nodes": 768,
+      "elapsed_ms": 202.262,
+      "allows_immediate_mate": true,
+      "guard_status": "unknown_time_expired_after_danger"
+    },
+    {
+      "game_id": 11,
+      "trial": 3,
+      "arm": "baseline",
+      "move": "P*2e",
+      "source_historical_move": "P*2e",
+      "depth": 1,
+      "nodes": 1024,
+      "elapsed_ms": 213.185,
       "allows_immediate_mate": true,
       "guard_status": "baseline"
     },
     {
-      "game_id": 1,
+      "game_id": 20,
       "trial": 0,
       "arm": "baseline",
-      "move": "5b4b",
-      "source_historical_move": "5a4b",
+      "move": "5h6h",
+      "source_historical_move": "5h6h",
       "depth": 2,
-      "nodes": 1920,
-      "elapsed_ms": 238.86,
-      "allows_immediate_mate": false,
+      "nodes": 512,
+      "elapsed_ms": 204.421,
+      "allows_immediate_mate": true,
       "guard_status": "baseline"
     },
     {
-      "game_id": 1,
+      "game_id": 20,
       "trial": 1,
       "arm": "guard",
-      "move": "5a4b",
-      "source_historical_move": "5a4b",
-      "depth": 1,
-      "nodes": 1642,
-      "elapsed_ms": 200.682,
-      "allows_immediate_mate": true,
-      "guard_status": "unknown_time_expired_after_danger"
-    },
-    {
-      "game_id": 1,
-      "trial": 2,
-      "arm": "guard",
-      "move": "5a4b",
-      "source_historical_move": "5a4b",
-      "depth": 1,
-      "nodes": 1644,
-      "elapsed_ms": 200.679,
-      "allows_immediate_mate": true,
-      "guard_status": "unknown_time_expired_after_danger"
-    },
-    {
-      "game_id": 1,
-      "trial": 3,
-      "arm": "baseline",
-      "move": "5b4b",
-      "source_historical_move": "5a4b",
+      "move": "5h6h",
+      "source_historical_move": "5h6h",
       "depth": 2,
-      "nodes": 1920,
-      "elapsed_ms": 238.709,
-      "allows_immediate_mate": false,
-      "guard_status": "baseline"
-    },
-    {
-      "game_id": 10,
-      "trial": 0,
-      "arm": "baseline",
-      "move": "7h8g",
-      "source_historical_move": "7h8g",
-      "depth": 3,
-      "nodes": 274,
-      "elapsed_ms": 53.561,
+      "nodes": 512,
+      "elapsed_ms": 206.077,
       "allows_immediate_mate": true,
-      "guard_status": "baseline"
-    },
-    {
-      "game_id": 10,
-      "trial": 1,
-      "arm": "guard",
-      "move": "7h8g",
-      "source_historical_move": "7h8g",
-      "depth": 3,
-      "nodes": 274,
-      "elapsed_ms": 51.984,
-      "allows_immediate_mate": true,
-      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
-    },
-    {
-      "game_id": 10,
-      "trial": 2,
-      "arm": "guard",
-      "move": "7h8g",
-      "source_historical_move": "7h8g",
-      "depth": 3,
-      "nodes": 274,
-      "elapsed_ms": 51.773,
-      "allows_immediate_mate": true,
-      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
-    },
-    {
-      "game_id": 10,
-      "trial": 3,
-      "arm": "baseline",
-      "move": "7h8g",
-      "source_historical_move": "7h8g",
-      "depth": 3,
-      "nodes": 274,
-      "elapsed_ms": 48.147,
-      "allows_immediate_mate": true,
-      "guard_status": "baseline"
-    },
-    {
-      "game_id": 11,
-      "trial": 0,
-      "arm": "baseline",
-      "move": "P*2e",
-      "source_historical_move": "P*2e",
-      "depth": 1,
-      "nodes": 1146,
-      "elapsed_ms": 202.703,
-      "allows_immediate_mate": true,
-      "guard_status": "baseline"
-    },
-    {
-      "game_id": 11,
-      "trial": 1,
-      "arm": "guard",
-      "move": "P*2e",
-      "source_historical_move": "P*2e",
-      "depth": 1,
-      "nodes": 1115,
-      "elapsed_ms": 201.035,
-      "allows_immediate_mate": true,
-      "guard_status": "unknown_time_expired_after_danger"
-    },
-    {
-      "game_id": 11,
-      "trial": 2,
-      "arm": "guard",
-      "move": "P*2e",
-      "source_historical_move": "P*2e",
-      "depth": 1,
-      "nodes": 1117,
-      "elapsed_ms": 201.718,
-      "allows_immediate_mate": true,
-      "guard_status": "unknown_time_expired_after_danger"
-    },
-    {
-      "game_id": 11,
-      "trial": 3,
-      "arm": "baseline",
-      "move": "P*2e",
-      "source_historical_move": "P*2e",
-      "depth": 1,
-      "nodes": 1144,
-      "elapsed_ms": 200.491,
-      "allows_immediate_mate": true,
-      "guard_status": "baseline"
-    },
-    {
-      "game_id": 20,
-      "trial": 0,
-      "arm": "baseline",
-      "move": "5h6h",
-      "source_historical_move": "5h6h",
-      "depth": 3,
-      "nodes": 586,
-      "elapsed_ms": 118.317,
-      "allows_immediate_mate": true,
-      "guard_status": "baseline"
-    },
-    {
-      "game_id": 20,
-      "trial": 1,
-      "arm": "guard",
-      "move": "5h6h",
-      "source_historical_move": "5h6h",
-      "depth": 3,
-      "nodes": 586,
-      "elapsed_ms": 125.068,
-      "allows_immediate_mate": true,
-      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+      "guard_status": "unknown_time_expired"
     },
     {
       "game_id": 20,
@@ -526,11 +526,11 @@
       "arm": "guard",
       "move": "5h6h",
       "source_historical_move": "5h6h",
-      "depth": 3,
-      "nodes": 586,
-      "elapsed_ms": 125.312,
+      "depth": 2,
+      "nodes": 512,
+      "elapsed_ms": 205.077,
       "allows_immediate_mate": true,
-      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+      "guard_status": "unknown_time_expired"
     },
     {
       "game_id": 20,
@@ -538,9 +538,9 @@
       "arm": "baseline",
       "move": "5h6h",
       "source_historical_move": "5h6h",
-      "depth": 3,
-      "nodes": 586,
-      "elapsed_ms": 119.211,
+      "depth": 2,
+      "nodes": 512,
+      "elapsed_ms": 207.612,
       "allows_immediate_mate": true,
       "guard_status": "baseline"
     },
@@ -551,8 +551,8 @@
       "move": "6d7d",
       "source_historical_move": "6d7d",
       "depth": 2,
-      "nodes": 1152,
-      "elapsed_ms": 221.907,
+      "nodes": 896,
+      "elapsed_ms": 201.581,
       "allows_immediate_mate": true,
       "guard_status": "baseline"
     },
@@ -563,8 +563,8 @@
       "move": "6d7d",
       "source_historical_move": "6d7d",
       "depth": 2,
-      "nodes": 1152,
-      "elapsed_ms": 224.109,
+      "nodes": 896,
+      "elapsed_ms": 201.46,
       "allows_immediate_mate": true,
       "guard_status": "unknown_time_expired"
     },
@@ -575,8 +575,8 @@
       "move": "6d7d",
       "source_historical_move": "6d7d",
       "depth": 2,
-      "nodes": 1152,
-      "elapsed_ms": 224.073,
+      "nodes": 896,
+      "elapsed_ms": 201.008,
       "allows_immediate_mate": true,
       "guard_status": "unknown_time_expired"
     },
@@ -587,8 +587,8 @@
       "move": "6d7d",
       "source_historical_move": "6d7d",
       "depth": 2,
-      "nodes": 1152,
-      "elapsed_ms": 221.513,
+      "nodes": 1024,
+      "elapsed_ms": 208.704,
       "allows_immediate_mate": true,
       "guard_status": "baseline"
     },
@@ -600,7 +600,7 @@
       "source_historical_move": "5h5i",
       "depth": 3,
       "nodes": 242,
-      "elapsed_ms": 34.243,
+      "elapsed_ms": 71.705,
       "allows_immediate_mate": true,
       "guard_status": "baseline"
     },
@@ -612,7 +612,7 @@
       "source_historical_move": "5h5i",
       "depth": 3,
       "nodes": 242,
-      "elapsed_ms": 38.3,
+      "elapsed_ms": 81.063,
       "allows_immediate_mate": true,
       "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
     },
@@ -624,7 +624,7 @@
       "source_historical_move": "5h5i",
       "depth": 3,
       "nodes": 242,
-      "elapsed_ms": 38.166,
+      "elapsed_ms": 81.674,
       "allows_immediate_mate": true,
       "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
     },
@@ -636,7 +636,7 @@
       "source_historical_move": "5h5i",
       "depth": 3,
       "nodes": 242,
-      "elapsed_ms": 33.991,
+      "elapsed_ms": 72.296,
       "allows_immediate_mate": true,
       "guard_status": "baseline"
     },
@@ -647,8 +647,8 @@
       "move": "5c4d",
       "source_historical_move": "5c4d",
       "depth": 2,
-      "nodes": 640,
-      "elapsed_ms": 201.411,
+      "nodes": 512,
+      "elapsed_ms": 297.213,
       "allows_immediate_mate": true,
       "guard_status": "baseline"
     },
@@ -659,8 +659,8 @@
       "move": "5c4d",
       "source_historical_move": "5c4d",
       "depth": 2,
-      "nodes": 591,
-      "elapsed_ms": 201.482,
+      "nodes": 384,
+      "elapsed_ms": 201.055,
       "allows_immediate_mate": true,
       "guard_status": "unknown_time_expired_after_danger"
     },
@@ -671,8 +671,8 @@
       "move": "5c4d",
       "source_historical_move": "5c4d",
       "depth": 2,
-      "nodes": 591,
-      "elapsed_ms": 200.572,
+      "nodes": 384,
+      "elapsed_ms": 202.055,
       "allows_immediate_mate": true,
       "guard_status": "unknown_time_expired_after_danger"
     },
@@ -683,8 +683,8 @@
       "move": "5c4d",
       "source_historical_move": "5c4d",
       "depth": 2,
-      "nodes": 640,
-      "elapsed_ms": 200.415,
+      "nodes": 512,
+      "elapsed_ms": 299.081,
       "allows_immediate_mate": true,
       "guard_status": "baseline"
     },
@@ -695,8 +695,8 @@
       "move": "9h9e",
       "source_historical_move": "5e5d",
       "depth": 2,
-      "nodes": 896,
-      "elapsed_ms": 201.131,
+      "nodes": 512,
+      "elapsed_ms": 262.135,
       "allows_immediate_mate": false,
       "guard_status": "baseline"
     },
@@ -706,11 +706,11 @@
       "arm": "guard",
       "move": "9h9e",
       "source_historical_move": "5e5d",
-      "depth": 2,
-      "nodes": 640,
-      "elapsed_ms": 178.135,
+      "depth": 1,
+      "nodes": 363,
+      "elapsed_ms": 188.539,
       "allows_immediate_mate": false,
-      "guard_status": "verified_no_immediate_mate"
+      "guard_status": "confirmed_avoidable_immediate_mate"
     },
     {
       "game_id": 40,
@@ -718,11 +718,11 @@
       "arm": "guard",
       "move": "9h9e",
       "source_historical_move": "5e5d",
-      "depth": 2,
-      "nodes": 640,
-      "elapsed_ms": 178.859,
+      "depth": 1,
+      "nodes": 365,
+      "elapsed_ms": 190.346,
       "allows_immediate_mate": false,
-      "guard_status": "verified_no_immediate_mate"
+      "guard_status": "confirmed_avoidable_immediate_mate"
     },
     {
       "game_id": 40,
@@ -731,8 +731,8 @@
       "move": "9h9e",
       "source_historical_move": "5e5d",
       "depth": 2,
-      "nodes": 896,
-      "elapsed_ms": 201.456,
+      "nodes": 512,
+      "elapsed_ms": 267.516,
       "allows_immediate_mate": false,
       "guard_status": "baseline"
     },
@@ -743,8 +743,8 @@
       "move": "5c4b",
       "source_historical_move": "5c4b",
       "depth": 1,
-      "nodes": 2043,
-      "elapsed_ms": 205.3,
+      "nodes": 1408,
+      "elapsed_ms": 208.55,
       "allows_immediate_mate": true,
       "guard_status": "baseline"
     },
@@ -752,25 +752,25 @@
       "game_id": 41,
       "trial": 1,
       "arm": "guard",
-      "move": "P*3d",
+      "move": "5c4b",
       "source_historical_move": "5c4b",
       "depth": 1,
-      "nodes": 2023,
-      "elapsed_ms": 190.703,
-      "allows_immediate_mate": false,
-      "guard_status": "confirmed_avoidable_immediate_mate"
+      "nodes": 1152,
+      "elapsed_ms": 213.199,
+      "allows_immediate_mate": true,
+      "guard_status": "unknown_time_expired_after_danger"
     },
     {
       "game_id": 41,
       "trial": 2,
       "arm": "guard",
-      "move": "P*3d",
+      "move": "5c4b",
       "source_historical_move": "5c4b",
       "depth": 1,
-      "nodes": 2023,
-      "elapsed_ms": 190.888,
-      "allows_immediate_mate": false,
-      "guard_status": "confirmed_avoidable_immediate_mate"
+      "nodes": 1152,
+      "elapsed_ms": 212.772,
+      "allows_immediate_mate": true,
+      "guard_status": "unknown_time_expired_after_danger"
     },
     {
       "game_id": 41,
@@ -779,8 +779,8 @@
       "move": "5c4b",
       "source_historical_move": "5c4b",
       "depth": 1,
-      "nodes": 2045,
-      "elapsed_ms": 201.536,
+      "nodes": 1408,
+      "elapsed_ms": 206.006,
       "allows_immediate_mate": true,
       "guard_status": "baseline"
     },
@@ -790,9 +790,9 @@
       "arm": "baseline",
       "move": "5g4h",
       "source_historical_move": "5g4h",
-      "depth": 3,
-      "nodes": 967,
-      "elapsed_ms": 158.635,
+      "depth": 2,
+      "nodes": 686,
+      "elapsed_ms": 210.731,
       "allows_immediate_mate": true,
       "guard_status": "baseline"
     },
@@ -802,11 +802,11 @@
       "arm": "guard",
       "move": "5g4h",
       "source_historical_move": "5g4h",
-      "depth": 3,
-      "nodes": 967,
-      "elapsed_ms": 175.773,
+      "depth": 2,
+      "nodes": 640,
+      "elapsed_ms": 202.196,
       "allows_immediate_mate": true,
-      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+      "guard_status": "unknown_time_expired"
     },
     {
       "game_id": 50,
@@ -814,11 +814,11 @@
       "arm": "guard",
       "move": "5g4h",
       "source_historical_move": "5g4h",
-      "depth": 3,
-      "nodes": 967,
-      "elapsed_ms": 176.619,
+      "depth": 2,
+      "nodes": 640,
+      "elapsed_ms": 200.976,
       "allows_immediate_mate": true,
-      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+      "guard_status": "unknown_time_expired"
     },
     {
       "game_id": 50,
@@ -826,9 +826,9 @@
       "arm": "baseline",
       "move": "5g4h",
       "source_historical_move": "5g4h",
-      "depth": 3,
-      "nodes": 967,
-      "elapsed_ms": 161.493,
+      "depth": 2,
+      "nodes": 686,
+      "elapsed_ms": 213.75,
       "allows_immediate_mate": true,
       "guard_status": "baseline"
     },
@@ -838,9 +838,9 @@
       "arm": "baseline",
       "move": "5a4b",
       "source_historical_move": "5a4b",
-      "depth": 3,
-      "nodes": 886,
-      "elapsed_ms": 202.54,
+      "depth": 2,
+      "nodes": 640,
+      "elapsed_ms": 265.227,
       "allows_immediate_mate": true,
       "guard_status": "baseline"
     },
@@ -851,10 +851,10 @@
       "move": "5a4b",
       "source_historical_move": "5a4b",
       "depth": 2,
-      "nodes": 768,
-      "elapsed_ms": 184.071,
+      "nodes": 512,
+      "elapsed_ms": 203.403,
       "allows_immediate_mate": true,
-      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+      "guard_status": "unknown_time_expired"
     },
     {
       "game_id": 51,
@@ -863,10 +863,10 @@
       "move": "5a4b",
       "source_historical_move": "5a4b",
       "depth": 2,
-      "nodes": 768,
-      "elapsed_ms": 182.591,
+      "nodes": 512,
+      "elapsed_ms": 202.971,
       "allows_immediate_mate": true,
-      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+      "guard_status": "unknown_time_expired"
     },
     {
       "game_id": 51,
@@ -874,9 +874,9 @@
       "arm": "baseline",
       "move": "5a4b",
       "source_historical_move": "5a4b",
-      "depth": 3,
-      "nodes": 886,
-      "elapsed_ms": 200.822,
+      "depth": 2,
+      "nodes": 640,
+      "elapsed_ms": 269.016,
       "allows_immediate_mate": true,
       "guard_status": "baseline"
     },
@@ -887,8 +887,8 @@
       "move": "4g3f",
       "source_historical_move": "4g3f",
       "depth": 2,
-      "nodes": 640,
-      "elapsed_ms": 208.824,
+      "nodes": 512,
+      "elapsed_ms": 271.441,
       "allows_immediate_mate": true,
       "guard_status": "baseline"
     },
@@ -899,8 +899,8 @@
       "move": "4g3f",
       "source_historical_move": "4g3f",
       "depth": 2,
-      "nodes": 640,
-      "elapsed_ms": 210.429,
+      "nodes": 512,
+      "elapsed_ms": 273.998,
       "allows_immediate_mate": true,
       "guard_status": "unknown_time_expired"
     },
@@ -911,8 +911,8 @@
       "move": "4g3f",
       "source_historical_move": "4g3f",
       "depth": 2,
-      "nodes": 640,
-      "elapsed_ms": 210.47,
+      "nodes": 512,
+      "elapsed_ms": 273.291,
       "allows_immediate_mate": true,
       "guard_status": "unknown_time_expired"
     },
@@ -923,8 +923,8 @@
       "move": "4g3f",
       "source_historical_move": "4g3f",
       "depth": 2,
-      "nodes": 640,
-      "elapsed_ms": 208.495,
+      "nodes": 512,
+      "elapsed_ms": 269.186,
       "allows_immediate_mate": true,
       "guard_status": "baseline"
     },
@@ -935,8 +935,8 @@
       "move": "6b6a",
       "source_historical_move": "6b6a",
       "depth": 2,
-      "nodes": 640,
-      "elapsed_ms": 301.182,
+      "nodes": 512,
+      "elapsed_ms": 373.778,
       "allows_immediate_mate": true,
       "guard_status": "baseline"
     },
@@ -948,9 +948,9 @@
       "source_historical_move": "6b6a",
       "depth": 2,
       "nodes": 512,
-      "elapsed_ms": 185.578,
+      "elapsed_ms": 385.025,
       "allows_immediate_mate": true,
-      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+      "guard_status": "unknown_time_expired"
     },
     {
       "game_id": 61,
@@ -960,9 +960,9 @@
       "source_historical_move": "6b6a",
       "depth": 2,
       "nodes": 512,
-      "elapsed_ms": 185.922,
+      "elapsed_ms": 384.535,
       "allows_immediate_mate": true,
-      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+      "guard_status": "unknown_time_expired"
     },
     {
       "game_id": 61,
@@ -971,8 +971,8 @@
       "move": "6b6a",
       "source_historical_move": "6b6a",
       "depth": 2,
-      "nodes": 640,
-      "elapsed_ms": 303.511,
+      "nodes": 512,
+      "elapsed_ms": 370.503,
       "allows_immediate_mate": true,
       "guard_status": "baseline"
     },
@@ -983,8 +983,8 @@
       "move": "5d6c",
       "source_historical_move": "5d6c",
       "depth": 2,
-      "nodes": 768,
-      "elapsed_ms": 256.075,
+      "nodes": 640,
+      "elapsed_ms": 370.009,
       "allows_immediate_mate": true,
       "guard_status": "baseline"
     },
@@ -995,10 +995,10 @@
       "move": "5d6c",
       "source_historical_move": "5d6c",
       "depth": 2,
-      "nodes": 640,
-      "elapsed_ms": 188.141,
+      "nodes": 512,
+      "elapsed_ms": 209.254,
       "allows_immediate_mate": true,
-      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+      "guard_status": "unknown_time_expired_after_danger"
     },
     {
       "game_id": 70,
@@ -1007,10 +1007,10 @@
       "move": "5d6c",
       "source_historical_move": "5d6c",
       "depth": 2,
-      "nodes": 640,
-      "elapsed_ms": 188.029,
+      "nodes": 512,
+      "elapsed_ms": 207.206,
       "allows_immediate_mate": true,
-      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+      "guard_status": "unknown_time_expired_after_danger"
     },
     {
       "game_id": 70,
@@ -1019,8 +1019,8 @@
       "move": "5d6c",
       "source_historical_move": "5d6c",
       "depth": 2,
-      "nodes": 768,
-      "elapsed_ms": 258.463,
+      "nodes": 640,
+      "elapsed_ms": 367.827,
       "allows_immediate_mate": true,
       "guard_status": "baseline"
     },
@@ -1032,7 +1032,7 @@
       "source_historical_move": "5b5a",
       "depth": 3,
       "nodes": 168,
-      "elapsed_ms": 28.398,
+      "elapsed_ms": 58.124,
       "allows_immediate_mate": true,
       "guard_status": "baseline"
     },
@@ -1044,7 +1044,7 @@
       "source_historical_move": "5b5a",
       "depth": 3,
       "nodes": 168,
-      "elapsed_ms": 34.31,
+      "elapsed_ms": 65.828,
       "allows_immediate_mate": true,
       "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
     },
@@ -1056,7 +1056,7 @@
       "source_historical_move": "5b5a",
       "depth": 3,
       "nodes": 168,
-      "elapsed_ms": 33.708,
+      "elapsed_ms": 65.649,
       "allows_immediate_mate": true,
       "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
     },
@@ -1068,7 +1068,7 @@
       "source_historical_move": "5b5a",
       "depth": 3,
       "nodes": 168,
-      "elapsed_ms": 28.773,
+      "elapsed_ms": 57.532,
       "allows_immediate_mate": true,
       "guard_status": "baseline"
     },
@@ -1079,8 +1079,8 @@
       "move": "6g7f",
       "source_historical_move": "6g6h",
       "depth": 2,
-      "nodes": 2382,
-      "elapsed_ms": 201.621,
+      "nodes": 1649,
+      "elapsed_ms": 208.245,
       "allows_immediate_mate": false,
       "guard_status": "baseline"
     },
@@ -1088,25 +1088,25 @@
       "game_id": 80,
       "trial": 1,
       "arm": "guard",
-      "move": "6g7f",
+      "move": "6g6h",
       "source_historical_move": "6g6h",
-      "depth": 2,
-      "nodes": 2176,
-      "elapsed_ms": 179.455,
-      "allows_immediate_mate": false,
-      "guard_status": "verified_no_immediate_mate"
+      "depth": 1,
+      "nodes": 1280,
+      "elapsed_ms": 200.673,
+      "allows_immediate_mate": true,
+      "guard_status": "unknown_time_expired_after_danger"
     },
     {
       "game_id": 80,
       "trial": 2,
       "arm": "guard",
-      "move": "6g7f",
+      "move": "6g6h",
       "source_historical_move": "6g6h",
-      "depth": 2,
-      "nodes": 2176,
-      "elapsed_ms": 179.141,
-      "allows_immediate_mate": false,
-      "guard_status": "verified_no_immediate_mate"
+      "depth": 1,
+      "nodes": 1280,
+      "elapsed_ms": 200.673,
+      "allows_immediate_mate": true,
+      "guard_status": "unknown_time_expired_after_danger"
     },
     {
       "game_id": 80,
@@ -1115,8 +1115,8 @@
       "move": "6g7f",
       "source_historical_move": "6g6h",
       "depth": 2,
-      "nodes": 2382,
-      "elapsed_ms": 203.15,
+      "nodes": 1649,
+      "elapsed_ms": 208.85,
       "allows_immediate_mate": false,
       "guard_status": "baseline"
     },
@@ -1128,7 +1128,7 @@
       "source_historical_move": "4a3a",
       "depth": 3,
       "nodes": 445,
-      "elapsed_ms": 104.033,
+      "elapsed_ms": 222.088,
       "allows_immediate_mate": true,
       "guard_status": "baseline"
     },
@@ -1138,9 +1138,9 @@
       "arm": "guard",
       "move": "4a3a",
       "source_historical_move": "4a3a",
-      "depth": 3,
-      "nodes": 445,
-      "elapsed_ms": 111.373,
+      "depth": 2,
+      "nodes": 384,
+      "elapsed_ms": 190.363,
       "allows_immediate_mate": true,
       "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
     },
@@ -1150,9 +1150,9 @@
       "arm": "guard",
       "move": "4a3a",
       "source_historical_move": "4a3a",
-      "depth": 3,
-      "nodes": 445,
-      "elapsed_ms": 111.302,
+      "depth": 2,
+      "nodes": 384,
+      "elapsed_ms": 191.136,
       "allows_immediate_mate": true,
       "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
     },
@@ -1164,7 +1164,7 @@
       "source_historical_move": "4a3a",
       "depth": 3,
       "nodes": 445,
-      "elapsed_ms": 104.655,
+      "elapsed_ms": 226.698,
       "allows_immediate_mate": true,
       "guard_status": "baseline"
     },
@@ -1176,7 +1176,7 @@
       "source_historical_move": "3i4i",
       "depth": 3,
       "nodes": 305,
-      "elapsed_ms": 99.395,
+      "elapsed_ms": 212.092,
       "allows_immediate_mate": true,
       "guard_status": "baseline"
     },
@@ -1186,9 +1186,9 @@
       "arm": "guard",
       "move": "3i4i",
       "source_historical_move": "3i4i",
-      "depth": 3,
-      "nodes": 305,
-      "elapsed_ms": 104.121,
+      "depth": 2,
+      "nodes": 256,
+      "elapsed_ms": 179.132,
       "allows_immediate_mate": true,
       "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
     },
@@ -1198,9 +1198,9 @@
       "arm": "guard",
       "move": "3i4i",
       "source_historical_move": "3i4i",
-      "depth": 3,
-      "nodes": 305,
-      "elapsed_ms": 103.915,
+      "depth": 2,
+      "nodes": 256,
+      "elapsed_ms": 177.575,
       "allows_immediate_mate": true,
       "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
     },
@@ -1212,7 +1212,7 @@
       "source_historical_move": "3i4i",
       "depth": 3,
       "nodes": 305,
-      "elapsed_ms": 98.855,
+      "elapsed_ms": 211.317,
       "allows_immediate_mate": true,
       "guard_status": "baseline"
     },
@@ -1223,8 +1223,8 @@
       "move": "6b7a",
       "source_historical_move": "6b7a",
       "depth": 2,
-      "nodes": 768,
-      "elapsed_ms": 238.894,
+      "nodes": 512,
+      "elapsed_ms": 260.159,
       "allows_immediate_mate": true,
       "guard_status": "baseline"
     },
@@ -1235,10 +1235,10 @@
       "move": "6b7a",
       "source_historical_move": "6b7a",
       "depth": 2,
-      "nodes": 640,
-      "elapsed_ms": 192.924,
+      "nodes": 512,
+      "elapsed_ms": 263.49,
       "allows_immediate_mate": true,
-      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+      "guard_status": "unknown_time_expired"
     },
     {
       "game_id": 91,
@@ -1247,10 +1247,10 @@
       "move": "6b7a",
       "source_historical_move": "6b7a",
       "depth": 2,
-      "nodes": 640,
-      "elapsed_ms": 192.421,
+      "nodes": 512,
+      "elapsed_ms": 259.42,
       "allows_immediate_mate": true,
-      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+      "guard_status": "unknown_time_expired"
     },
     {
       "game_id": 91,
@@ -1259,8 +1259,8 @@
       "move": "6b7a",
       "source_historical_move": "6b7a",
       "depth": 2,
-      "nodes": 768,
-      "elapsed_ms": 237.543,
+      "nodes": 512,
+      "elapsed_ms": 272.662,
       "allows_immediate_mate": true,
       "guard_status": "baseline"
     }
