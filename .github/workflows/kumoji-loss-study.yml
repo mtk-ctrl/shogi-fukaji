@@ -69,7 +69,8 @@ jobs:
           expected={"research_only":True,"source_run":41177748192,
                     "source_artifact_id":13034155311,
                     "source_zip_sha256":"a4bb82455e818873771b8290f1c5c52770a1bf628c99ebd94b7ea8231565ad9c",
-                    "all_games_sha256":GAMES_SHA,"engine_changes":False,"training_labels":False}
+                    "all_games_sha256":GAMES_SHA,"engine_changes":False,"training_labels":False,
+                    "retry_revision":"20261031-opening-prefix-fix"}
           if req != expected: raise ValueError("unapproved immutable source request")
           raw=artifact_bytes(13034155311,"fukaji-kumoji-full100-aggregate-41177748192",
                              41177748192, expected["source_zip_sha256"], __import__("os").environ["GH_TOKEN"])
