@@ -72,7 +72,7 @@ jobs:
                     "source_artifact_id":13034155311,
                     "source_zip_sha256":"a4bb82455e818873771b8290f1c5c52770a1bf628c99ebd94b7ea8231565ad9c",
                     "all_games_sha256":GAMES_SHA,"engine_changes":False,"training_labels":False,
-                    "retry_revision":"20261031-guard-benchmark-v1"}
+                    "retry_revision":"20261031-guard-throughput-v2"}
           if req != expected: raise ValueError("unapproved immutable source request")
           raw=artifact_bytes(13034155311,"fukaji-kumoji-full100-aggregate-41177748192",
                              41177748192, expected["source_zip_sha256"], __import__("os").environ["GH_TOKEN"])
@@ -134,6 +134,34 @@ jobs:
             catch(e){if(e.status!==404) throw e;}
             const args={owner,repo,path,branch:"main",
               message:"research: archive G8 mate-guard development ABBA comparison",
+              content:Buffer.from(content).toString("base64")};
+            if(sha)args.sha=sha;
+            await github.rest.repos.createOrUpdateFileContents(args);
+      - name: Regression-test noncheck tactical speed experiment
+        run: python -m unittest discover -s tests -p 'test_kumoji_search_speed_probe.py' -v
+      - name: Compare frozen G8 checkmate-search shortcut on 40 historical roots
+        timeout-minutes: 10
+        run: |
+          python -m fukaji.kumoji_search_speed_probe \
+            --games build/loss-study/input/all_games.jsonl \
+            --g8-model build/loss-study/input/g8.npz \
+            --out build/loss-study/result
+      - name: Save speed-throughput evidence for G8 without promoting default option
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs=require("fs");
+            const {owner,repo}=context.repo;
+            const path="research/kumoji-loss-study/noncheck-guard-probe.json";
+            const content=fs.readFileSync("build/loss-study/result/noncheck_guard_probe.json","utf8");
+            const report=JSON.parse(content);
+            if(report.search_calls!==160||report.historical_roots!==40)
+              throw Error("incomplete one-factor speed probe");
+            let sha;
+            try {sha=(await github.rest.repos.getContent({owner,repo,path,ref:"main"})).data.sha;}
+            catch(e) {if(e.status!==404) throw e;}
+            const args={owner,repo,path,branch:"main",
+              message:"research: archive exact G8 no-check guarded throughput diagnostic",
               content:Buffer.from(content).toString("base64")};
             if(sha)args.sha=sha;
             await github.rest.repos.createOrUpdateFileContents(args);
