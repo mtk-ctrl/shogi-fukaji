@@ -1,0 +1,625 @@
+{
+  "status": "D14_development_check_leaf_ABBA_completed_not_formal_strength",
+  "source_100_games_sha256": "c0874b1b7cb96464385e76544a4fac69454ac3c9ebf681127bbca20c909e019f",
+  "G8_model_sha256": "18b39f647caa458389a1900b875337adadac74ae37e27343e7f0094ed663c492",
+  "historical_checked_roots": 12,
+  "source_game_ply": [
+    [
+      0,
+      62
+    ],
+    [
+      2,
+      32
+    ],
+    [
+      3,
+      7
+    ],
+    [
+      4,
+      14
+    ],
+    [
+      5,
+      31
+    ],
+    [
+      6,
+      56
+    ],
+    [
+      7,
+      43
+    ],
+    [
+      8,
+      38
+    ],
+    [
+      9,
+      59
+    ],
+    [
+      10,
+      18
+    ],
+    [
+      12,
+      54
+    ],
+    [
+      13,
+      21
+    ]
+  ],
+  "total_abba_calls": 48,
+  "order": "OFF-ON-ON-OFF",
+  "one_factor": "leaf_check_evasion",
+  "same_frozen_G8_and_200ms": true,
+  "totals": {
+    "baseline": {
+      "calls": 24,
+      "allows_immediate_mate": 0,
+      "median_elapsed_ms": 131.726,
+      "mean_elapsed_ms": 146.981,
+      "over_200ms": 8,
+      "completed_depth3": 16,
+      "depth_histogram": {
+        "2": 8,
+        "3": 16
+      },
+      "nodes_sum": 14748
+    },
+    "checked_horizon_one_reply": {
+      "calls": 24,
+      "allows_immediate_mate": 0,
+      "median_elapsed_ms": 133.661,
+      "mean_elapsed_ms": 156.181,
+      "over_200ms": 8,
+      "completed_depth3": 16,
+      "depth_histogram": {
+        "2": 8,
+        "3": 16
+      },
+      "nodes_sum": 13971
+    }
+  },
+  "calls": [
+    {
+      "game_id": 0,
+      "ply": 62,
+      "research_candidate": false,
+      "trial": 0,
+      "move": "6i6h",
+      "completed_depth": 2,
+      "nodes": 768,
+      "elapsed_ms": 241.93,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 0,
+      "ply": 62,
+      "research_candidate": true,
+      "trial": 1,
+      "move": "6i5h",
+      "completed_depth": 2,
+      "nodes": 640,
+      "elapsed_ms": 244.798,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 0,
+      "ply": 62,
+      "research_candidate": true,
+      "trial": 2,
+      "move": "6i5h",
+      "completed_depth": 2,
+      "nodes": 640,
+      "elapsed_ms": 243.434,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 0,
+      "ply": 62,
+      "research_candidate": false,
+      "trial": 3,
+      "move": "6i6h",
+      "completed_depth": 2,
+      "nodes": 768,
+      "elapsed_ms": 242.12,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 2,
+      "ply": 32,
+      "research_candidate": false,
+      "trial": 0,
+      "move": "4h3i",
+      "completed_depth": 3,
+      "nodes": 552,
+      "elapsed_ms": 156.085,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 2,
+      "ply": 32,
+      "research_candidate": true,
+      "trial": 1,
+      "move": "4h3i",
+      "completed_depth": 3,
+      "nodes": 559,
+      "elapsed_ms": 166.323,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 2,
+      "ply": 32,
+      "research_candidate": true,
+      "trial": 2,
+      "move": "4h3i",
+      "completed_depth": 3,
+      "nodes": 559,
+      "elapsed_ms": 166.836,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 2,
+      "ply": 32,
+      "research_candidate": false,
+      "trial": 3,
+      "move": "4h3i",
+      "completed_depth": 3,
+      "nodes": 552,
+      "elapsed_ms": 157.015,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 3,
+      "ply": 7,
+      "research_candidate": false,
+      "trial": 0,
+      "move": "3a4b",
+      "completed_depth": 3,
+      "nodes": 1274,
+      "elapsed_ms": 189.616,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 3,
+      "ply": 7,
+      "research_candidate": true,
+      "trial": 1,
+      "move": "3a4b",
+      "completed_depth": 2,
+      "nodes": 1155,
+      "elapsed_ms": 200.987,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 3,
+      "ply": 7,
+      "research_candidate": true,
+      "trial": 2,
+      "move": "3a4b",
+      "completed_depth": 2,
+      "nodes": 1248,
+      "elapsed_ms": 213.713,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 3,
+      "ply": 7,
+      "research_candidate": false,
+      "trial": 3,
+      "move": "3a4b",
+      "completed_depth": 3,
+      "nodes": 1274,
+      "elapsed_ms": 191.23,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 4,
+      "ply": 14,
+      "research_candidate": false,
+      "trial": 0,
+      "move": "7h6i",
+      "completed_depth": 3,
+      "nodes": 480,
+      "elapsed_ms": 86.731,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 4,
+      "ply": 14,
+      "research_candidate": true,
+      "trial": 1,
+      "move": "8i7g",
+      "completed_depth": 3,
+      "nodes": 520,
+      "elapsed_ms": 98.262,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 4,
+      "ply": 14,
+      "research_candidate": true,
+      "trial": 2,
+      "move": "8i7g",
+      "completed_depth": 3,
+      "nodes": 520,
+      "elapsed_ms": 97.027,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 4,
+      "ply": 14,
+      "research_candidate": false,
+      "trial": 3,
+      "move": "7h6i",
+      "completed_depth": 3,
+      "nodes": 480,
+      "elapsed_ms": 87.136,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 5,
+      "ply": 31,
+      "research_candidate": false,
+      "trial": 0,
+      "move": "6b5a",
+      "completed_depth": 2,
+      "nodes": 878,
+      "elapsed_ms": 222.202,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 5,
+      "ply": 31,
+      "research_candidate": true,
+      "trial": 1,
+      "move": "6d5c",
+      "completed_depth": 3,
+      "nodes": 422,
+      "elapsed_ms": 135.738,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 5,
+      "ply": 31,
+      "research_candidate": true,
+      "trial": 2,
+      "move": "6d5c",
+      "completed_depth": 3,
+      "nodes": 422,
+      "elapsed_ms": 135.37,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 5,
+      "ply": 31,
+      "research_candidate": false,
+      "trial": 3,
+      "move": "6b5a",
+      "completed_depth": 2,
+      "nodes": 878,
+      "elapsed_ms": 222.264,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 6,
+      "ply": 56,
+      "research_candidate": false,
+      "trial": 0,
+      "move": "7h7g",
+      "completed_depth": 3,
+      "nodes": 465,
+      "elapsed_ms": 105.606,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 6,
+      "ply": 56,
+      "research_candidate": true,
+      "trial": 1,
+      "move": "7h7g",
+      "completed_depth": 3,
+      "nodes": 483,
+      "elapsed_ms": 121.146,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 6,
+      "ply": 56,
+      "research_candidate": true,
+      "trial": 2,
+      "move": "7h7g",
+      "completed_depth": 3,
+      "nodes": 483,
+      "elapsed_ms": 121.425,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 6,
+      "ply": 56,
+      "research_candidate": false,
+      "trial": 3,
+      "move": "7h7g",
+      "completed_depth": 3,
+      "nodes": 465,
+      "elapsed_ms": 107.368,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 7,
+      "ply": 43,
+      "research_candidate": false,
+      "trial": 0,
+      "move": "7b6c",
+      "completed_depth": 2,
+      "nodes": 652,
+      "elapsed_ms": 202.921,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 7,
+      "ply": 43,
+      "research_candidate": true,
+      "trial": 1,
+      "move": "7b6c",
+      "completed_depth": 2,
+      "nodes": 640,
+      "elapsed_ms": 221.089,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 7,
+      "ply": 43,
+      "research_candidate": true,
+      "trial": 2,
+      "move": "7b6c",
+      "completed_depth": 2,
+      "nodes": 640,
+      "elapsed_ms": 222.676,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 7,
+      "ply": 43,
+      "research_candidate": false,
+      "trial": 3,
+      "move": "7b6c",
+      "completed_depth": 2,
+      "nodes": 640,
+      "elapsed_ms": 200.434,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 8,
+      "ply": 38,
+      "research_candidate": false,
+      "trial": 0,
+      "move": "4h5g",
+      "completed_depth": 3,
+      "nodes": 512,
+      "elapsed_ms": 92.052,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 8,
+      "ply": 38,
+      "research_candidate": true,
+      "trial": 1,
+      "move": "4h5g",
+      "completed_depth": 3,
+      "nodes": 564,
+      "elapsed_ms": 127.419,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 8,
+      "ply": 38,
+      "research_candidate": true,
+      "trial": 2,
+      "move": "4h5g",
+      "completed_depth": 3,
+      "nodes": 564,
+      "elapsed_ms": 127.522,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 8,
+      "ply": 38,
+      "research_candidate": false,
+      "trial": 3,
+      "move": "4h5g",
+      "completed_depth": 3,
+      "nodes": 512,
+      "elapsed_ms": 91.118,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 9,
+      "ply": 59,
+      "research_candidate": false,
+      "trial": 0,
+      "move": "B*5a",
+      "completed_depth": 3,
+      "nodes": 281,
+      "elapsed_ms": 68.264,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 9,
+      "ply": 59,
+      "research_candidate": true,
+      "trial": 1,
+      "move": "B*5a",
+      "completed_depth": 3,
+      "nodes": 287,
+      "elapsed_ms": 74.123,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 9,
+      "ply": 59,
+      "research_candidate": true,
+      "trial": 2,
+      "move": "B*5a",
+      "completed_depth": 3,
+      "nodes": 287,
+      "elapsed_ms": 73.963,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 9,
+      "ply": 59,
+      "research_candidate": false,
+      "trial": 3,
+      "move": "B*5a",
+      "completed_depth": 3,
+      "nodes": 281,
+      "elapsed_ms": 69.067,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 10,
+      "ply": 18,
+      "research_candidate": false,
+      "trial": 0,
+      "move": "6h6i",
+      "completed_depth": 3,
+      "nodes": 354,
+      "elapsed_ms": 104.269,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 10,
+      "ply": 18,
+      "research_candidate": true,
+      "trial": 1,
+      "move": "6h6i",
+      "completed_depth": 3,
+      "nodes": 357,
+      "elapsed_ms": 108.581,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 10,
+      "ply": 18,
+      "research_candidate": true,
+      "trial": 2,
+      "move": "6h6i",
+      "completed_depth": 3,
+      "nodes": 357,
+      "elapsed_ms": 108.47,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 10,
+      "ply": 18,
+      "research_candidate": false,
+      "trial": 3,
+      "move": "6h6i",
+      "completed_depth": 3,
+      "nodes": 354,
+      "elapsed_ms": 103.995,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 12,
+      "ply": 54,
+      "research_candidate": false,
+      "trial": 0,
+      "move": "P*4f",
+      "completed_depth": 2,
+      "nodes": 896,
+      "elapsed_ms": 225.349,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 12,
+      "ply": 54,
+      "research_candidate": true,
+      "trial": 1,
+      "move": "P*4f",
+      "completed_depth": 2,
+      "nodes": 896,
+      "elapsed_ms": 237.077,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 12,
+      "ply": 54,
+      "research_candidate": true,
+      "trial": 2,
+      "move": "P*4f",
+      "completed_depth": 2,
+      "nodes": 896,
+      "elapsed_ms": 239.049,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 12,
+      "ply": 54,
+      "research_candidate": false,
+      "trial": 3,
+      "move": "P*4f",
+      "completed_depth": 2,
+      "nodes": 896,
+      "elapsed_ms": 226.775,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 13,
+      "ply": 21,
+      "research_candidate": false,
+      "trial": 0,
+      "move": "6b5b",
+      "completed_depth": 3,
+      "nodes": 268,
+      "elapsed_ms": 66.73,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 13,
+      "ply": 21,
+      "research_candidate": true,
+      "trial": 1,
+      "move": "6b5b",
+      "completed_depth": 3,
+      "nodes": 416,
+      "elapsed_ms": 131.36,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 13,
+      "ply": 21,
+      "research_candidate": true,
+      "trial": 2,
+      "move": "6b5b",
+      "completed_depth": 3,
+      "nodes": 416,
+      "elapsed_ms": 131.953,
+      "allows_opponent_mate_in_one": false
+    },
+    {
+      "game_id": 13,
+      "ply": 21,
+      "research_candidate": false,
+      "trial": 3,
+      "move": "6b5b",
+      "completed_depth": 3,
+      "nodes": 268,
+      "elapsed_ms": 67.26,
+      "allows_opponent_mate_in_one": false
+    }
+  ],
+  "limitations": [
+    "Prior KUMOJI games are development only and not independent strength testing.",
+    "Allows-mate metric checks an exact next-move mate only, not longer tactics.",
+    "200ms is requested, actual outer wall time is measured and can exceed deadline.",
+    "The one-evasion extension is not formally adopted, not in official USI options.",
+    "No model training or external teacher move copy."
+  ]
+}
