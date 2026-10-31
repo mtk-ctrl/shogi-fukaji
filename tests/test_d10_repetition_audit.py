@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 
 import shogi
 
@@ -88,6 +89,22 @@ class D10RepetitionAuditTests(unittest.TestCase):
         part = root_partition(board)
         with self.assertRaisesRegex(ValueError, "incomplete depth"):
             compare_position(board, None, part, select=lambda *a, **k: (part["kept"][0], 1, 3))
+
+    def test_fault_reports_measured_time_and_search_mode_without_relaxing_ceiling(self):
+        board = cycled_board()
+        part = root_partition(board)
+        before = board_state(board)
+        with patch("fukaji.d10_repetition_audit.time.perf_counter", side_effect=[0.0, 5.001]):
+            with self.assertRaisesRegex(ValueError, "avoid_repetition=True depth=2 elapsed_ms=5001.0 nodes=3"):
+                compare_position(board, None, part, select=lambda *a, **k: (part["kept"][0], 2, 3))
+        self.assertEqual(board_state(board), before)
+
+    def test_failed_comparison_identifies_game_and_played_ply(self):
+        game = {"game_id": 75, "opening": ["5i6h", "5a6b", "6h5i", "6b5a"],
+                "moves": ["7g7f"], "status": "move_limit_unresolved", "winner": None}
+        with patch("fukaji.d10_repetition_audit.compare_position", side_effect=ValueError("measured fault")):
+            with self.assertRaisesRegex(ValueError, "game_id=75 played_ply=1.*measured fault"):
+                inspect_game(game, None)
 
 
 if __name__ == "__main__":

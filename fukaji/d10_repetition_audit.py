@@ -118,7 +118,10 @@ def compare_position(board, model, partition, select=None):
         if board_state(board) != before:
             raise ValueError("D10 search changed board/history")
         if not math.isfinite(elapsed) or not 0 <= elapsed <= 5000 or depth != 2:
-            raise ValueError("D10 incomplete depth or fault time ceiling")
+            raise ValueError(
+                f"D10 incomplete depth or fault time ceiling: avoid_repetition={avoid} "
+                f"depth={depth} elapsed_ms={elapsed!r} nodes={nodes} "
+                f"root_preparation_ms={telemetry.get('root_preparation_ms')!r}")
         if word == "resign" or shogi.Move.from_usi(word) not in board.legal_moves:
             raise ValueError("D10 illegal search move")
         if avoid and word not in partition["kept"]:
@@ -154,8 +157,13 @@ def inspect_game(game, model):
             part = root_partition(board)
             inspected += 1
             if part["removed"]:
-                chosen = {"game_id": game["game_id"], "played_ply": ply,
-                          **compare_position(board, model, part)}
+                try:
+                    comparison = compare_position(board, model, part)
+                except ValueError as exc:
+                    raise ValueError(
+                        f"D10 game_id={game['game_id']} played_ply={ply} "
+                        f"legal={len(part['counts'])} kept={len(part['kept'])}: {exc}") from exc
+                chosen = {"game_id": game["game_id"], "played_ply": ply, **comparison}
         move = shogi.Move.from_usi(word)
         if move not in board.legal_moves:
             raise ValueError("illegal D8 played move")
