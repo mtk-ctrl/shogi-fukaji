@@ -1,0 +1,33 @@
+{
+  "checks": [
+    {
+      "method": "MC",
+      "model": "4dcb09f94f43b65c208c1768704a43af60354227639be0832d820861af24be19",
+      "positions": 223,
+      "max_parameter_delta": 0.0,
+      "optimizer_step": 1264,
+      "bitwise_equal": true
+    },
+    {
+      "method": "TD",
+      "model": "08fe3724944c5f6433c4553711b4c7a30546c3b47d9e4d1cc4b9d6737faa753d",
+      "positions": 223,
+      "max_parameter_delta": 0.0,
+      "optimizer_step": 1264,
+      "bitwise_equal": true
+    }
+  ],
+  "same_parent": "70dabab23df81c0e954ec24792558690cb0f47f07a9ff8573ca31b0fa14ec9b5",
+  "game_hashes": [
+    "1f5fde97ecc4ce7a53c2cf80e7bd45f960479cbb87485cbe6866e2e5906dd6f5",
+    "4746f63b7de01dcbfa11499c6ea1ca303b96b8a7152a335a4e7fe470ffe74440",
+    "d0bb5dbce2587ccf16938cf6408d309e7d5fd1f6d2f0a995a051e0d17130565b",
+    "7afb54fb7f0bfdd349f1de8044a1858d2728f9fd443207a23d8c3ab712dcc83b",
+    "0d842534ff4530a9bb46814ab63b2f85a053c39960896642b3b5e4d81e8a6983",
+    "b37ca4a28e5716cab92f757f07a0790a342cc30d652eb076a793e1983080aef5",
+    "75e42d0f529500e483fe63e280b85c4941088cded2ed040debe2aea7db57df5d",
+    "1e124b85b4c7a4924538f661c1cdf54ff29a72f478dda72bc60a9af227c7ad94"
+  ],
+  "sample_seed": 2026603101,
+  "protected_parents_preserved": true
+}

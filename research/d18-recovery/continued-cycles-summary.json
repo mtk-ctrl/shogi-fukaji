@@ -1,0 +1,112 @@
+[
+  {
+    "cycle": 6,
+    "raw_results": {
+      "checkmate": 4
+    },
+    "unique_resolved": 3,
+    "positions": 176,
+    "loss": [
+      0.8630759499289773,
+      0.7747991735284979,
+      0.6602327173406427
+    ],
+    "screen": {
+      "wins": 2,
+      "losses": 1,
+      "draws": 1,
+      "unresolved": 0,
+      "action": "provisional",
+      "strength_proven": false,
+      "score_resolved": 0.625,
+      "reason": "bounded research update; superiority unproven"
+    },
+    "periodic": {
+      "wins": 5,
+      "losses": 1,
+      "draws": 1,
+      "unresolved": 1,
+      "action": "provisional",
+      "strength_proven": false,
+      "score_resolved": 0.7857142857142857,
+      "reason": "bounded research update; superiority unproven"
+    },
+    "seconds": 127.29982156999995,
+    "candidate": "fdbc90d8812bab8744688c3a1cb941ab154d885ea8cee47a2e403e7795f9e530",
+    "optimizer_step": 1268
+  },
+  {
+    "cycle": 7,
+    "raw_results": {
+      "checkmate": 3,
+      "repetition_draw": 1
+    },
+    "unique_resolved": 4,
+    "positions": 241,
+    "loss": [
+      0.5808143457436463,
+      0.5654130991069113,
+      0.5422349352064963
+    ],
+    "screen": {
+      "wins": 1,
+      "losses": 1,
+      "draws": 1,
+      "unresolved": 1,
+      "action": "provisional",
+      "strength_proven": false,
+      "score_resolved": 0.5,
+      "reason": "bounded research update; superiority unproven"
+    },
+    "periodic": {
+      "wins": 1,
+      "losses": 3,
+      "draws": 4,
+      "unresolved": 0,
+      "action": "provisional",
+      "strength_proven": false,
+      "score_resolved": 0.375,
+      "reason": "bounded research update; superiority unproven"
+    },
+    "seconds": 157.91552338200017,
+    "candidate": "71b54c9c6c39649c47be3b4600d21d6fe7da52b47a83a6b097c2c157e61fb171",
+    "optimizer_step": 1272
+  },
+  {
+    "cycle": 8,
+    "raw_results": {
+      "checkmate": 3,
+      "move_limit_unresolved": 1
+    },
+    "unique_resolved": 3,
+    "positions": 164,
+    "loss": [
+      0.3244832201701839,
+      0.3182975024711795,
+      0.30268603999440263
+    ],
+    "screen": {
+      "wins": 3,
+      "losses": 1,
+      "draws": 0,
+      "unresolved": 0,
+      "action": "provisional",
+      "strength_proven": false,
+      "score_resolved": 0.75,
+      "reason": "bounded research update; superiority unproven"
+    },
+    "periodic": {
+      "wins": 4,
+      "losses": 1,
+      "draws": 3,
+      "unresolved": 0,
+      "action": "provisional",
+      "strength_proven": false,
+      "score_resolved": 0.6875,
+      "reason": "bounded research update; superiority unproven"
+    },
+    "seconds": 147.48280672700002,
+    "candidate": "e63f6f7e69919655822ce2060616d7ed612dbb08238865d0043ecd78271e9c26",
+    "optimizer_step": 1276
+  }
+]

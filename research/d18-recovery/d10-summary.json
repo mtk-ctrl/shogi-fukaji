@@ -1,0 +1,64 @@
+{
+  "protocol": {
+    "enabled": true,
+    "research_only": true,
+    "training_allowed": false,
+    "model_adoption_allowed": false,
+    "d8_run": 41048053976,
+    "d8_artifact": 12973279499,
+    "d8_zip_sha256": "f25b7be57645af7c8e6b00387b243009252a9b471c9606a207a654537e7d9c41",
+    "d8_games_sha256": "55d3873c609bab023c3f5507dc890c583178adc646e282dd1ecd5b385af523ef",
+    "model_sha256": "18b39f647caa458389a1900b875337adadac74ae37e27343e7f0094ed663c492",
+    "games": 240,
+    "shards": 20,
+    "first_affected_position_per_game": 1,
+    "order": [
+      true,
+      false,
+      false,
+      true
+    ],
+    "max_depth": 2,
+    "complete_depth": true,
+    "mix_percent": 25,
+    "fast_relative": true,
+    "root_alpha_beta": true,
+    "fast_move_list": true,
+    "time_check_each_node": false,
+    "max_single_call_ms": 5000
+  },
+  "code_commit": "e107b2fe4b50b5cbb10b81780c2a70b7ee017c75",
+  "observations_sha256": "d8a0aad57f314d4439426df1c458ea027efd3acb3a9b3993c466541a10c62094",
+  "games_replayed": 240,
+  "played_moves_replayed": 42758,
+  "prefix_positions_examined": 38258,
+  "games_with_filtering": 182,
+  "selected_in_check": 6,
+  "changed_choices": 10,
+  "unfiltered_selected_excluded_move": 10,
+  "filtered_only_allows_mate_in_one": 0,
+  "unfiltered_only_allows_mate_in_one": 0,
+  "timing": {
+    "filtered": {
+      "calls": 364,
+      "mean_ms": 235.71871363186796,
+      "median_ms": 32.708529000004205,
+      "max_ms": 2884.8607480000082
+    },
+    "unfiltered": {
+      "calls": 364,
+      "mean_ms": 803.777794637363,
+      "median_ms": 573.9267080000019,
+      "max_ms": 3803.939208999999
+    }
+  },
+  "strength_proven": false,
+  "training_performed": false,
+  "limitations": [
+    "D8 cohort is reused for diagnosis, not an independent strength test.",
+    "Only the first affected position in each game is compared; later positions are not screened.",
+    "Fixed depth 2 isolates root filtering, not equal-time playing strength.",
+    "Mate audit checks one opponent move only; absence is not proof of safety.",
+    "Search-internal repetition scores remain unchanged in both arms."
+  ]
+}

@@ -13,7 +13,7 @@ import tarfile
 import tempfile
 
 from .online_learning import digest, load_snapshot, atomic_json
-from .online_cycle import read_games
+from .online_cycle import read_games, lock
 
 
 def verify(root):
@@ -94,6 +94,11 @@ def restore(archive, destination, expected_sha):
 
 
 def pack(root, archive):
+    with lock(root):
+        return _pack(root, archive)
+
+
+def _pack(root, archive):
     root, archive = Path(root), Path(archive)
     result = verify(root)
     if archive.exists():
@@ -117,6 +122,10 @@ def main():
     p.add_argument('--archive')
     p.add_argument('--sha256')
     a = p.parse_args()
+    if a.mode in ('pack', 'restore') and not a.archive:
+        p.error('pack/restore require --archive')
+    if a.mode == 'restore' and not a.sha256:
+        p.error('restore requires --sha256')
     if a.mode == 'verify': result = verify(a.root)
     elif a.mode == 'pack': result = pack(a.root, a.archive)
     else: result = restore(a.archive, a.root, a.sha256)

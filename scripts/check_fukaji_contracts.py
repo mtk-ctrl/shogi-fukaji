@@ -17,4 +17,9 @@ workflow = (root/'.github/workflows/online-nnue-cycle.yml').read_text()
 assert 'workflow_dispatch:' in workflow and 'schedule:' not in workflow
 assert 'contents: read' in workflow and 'cancel-in-progress: false' in workflow
 assert 'online-nnue-cycle.yml' in (root/'.github/workflows/README.md').read_text()
-print('Formal contract, router links and bounded workflow: OK')
+receipt = json.loads((root/'research/d17-fast-self-learning/latest-state.json').read_text())
+archive = (root/'research/d17-fast-self-learning'/receipt['archive']).resolve()
+assert archive.is_relative_to((root/'research').resolve()), 'archive outside research'
+assert hashlib.sha256(archive.read_bytes()).hexdigest() == receipt['sha256'], 'saved state missing/corrupt'
+assert 'latest-state.json' in workflow and 'fresh_bootstrap:' in workflow
+print('Formal contract, router links, durable state and bounded workflow: OK')

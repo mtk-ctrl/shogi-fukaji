@@ -1,0 +1,91 @@
+{
+  "fixed_anchor": "5cdfebea9829ca5809babd4e7efca75b0bc17684df6f38e85dd5982e84acd04f",
+  "rows": [
+    {
+      "cycle": 6,
+      "by_opponent": {
+        "08fe3724944c5f6433c4553711b4c7a30546c3b47d9e4d1cc4b9d6737faa753d": {
+          "win": 4,
+          "draw": 1,
+          "loss": 1
+        },
+        "5cdfebea9829ca5809babd4e7efca75b0bc17684df6f38e85dd5982e84acd04f": {
+          "win": 1,
+          "unresolved": 1,
+          "draw": 1,
+          "loss": 1
+        },
+        "70dabab23df81c0e954ec24792558690cb0f47f07a9ff8573ca31b0fa14ec9b5": {
+          "win": 2
+        }
+      },
+      "search": {
+        "moves": 1849,
+        "median_ms": 52.93700800007173,
+        "max_ms": 86.45626900010939,
+        "depths": {
+          "2": 444,
+          "1": 995,
+          "0": 410
+        }
+      }
+    },
+    {
+      "cycle": 7,
+      "by_opponent": {
+        "fdbc90d8812bab8744688c3a1cb941ab154d885ea8cee47a2e403e7795f9e530": {
+          "unresolved": 1,
+          "win": 2,
+          "draw": 2,
+          "loss": 1
+        },
+        "5cdfebea9829ca5809babd4e7efca75b0bc17684df6f38e85dd5982e84acd04f": {
+          "loss": 2,
+          "draw": 2
+        },
+        "08fe3724944c5f6433c4553711b4c7a30546c3b47d9e4d1cc4b9d6737faa753d": {
+          "draw": 1,
+          "loss": 1
+        }
+      },
+      "search": {
+        "moves": 2081,
+        "median_ms": 53.60829799997191,
+        "max_ms": 244.94774599997982,
+        "depths": {
+          "2": 459,
+          "1": 1029,
+          "0": 593
+        }
+      }
+    },
+    {
+      "cycle": 8,
+      "by_opponent": {
+        "71b54c9c6c39649c47be3b4600d21d6fe7da52b47a83a6b097c2c157e61fb171": {
+          "win": 4,
+          "loss": 1,
+          "draw": 1
+        },
+        "5cdfebea9829ca5809babd4e7efca75b0bc17684df6f38e85dd5982e84acd04f": {
+          "win": 2,
+          "draw": 2
+        },
+        "fdbc90d8812bab8744688c3a1cb941ab154d885ea8cee47a2e403e7795f9e530": {
+          "loss": 1,
+          "win": 1
+        }
+      },
+      "search": {
+        "moves": 1959,
+        "median_ms": 53.6388259999967,
+        "max_ms": 138.33591799993883,
+        "depths": {
+          "2": 502,
+          "1": 1014,
+          "0": 443
+        }
+      }
+    }
+  ]
+}

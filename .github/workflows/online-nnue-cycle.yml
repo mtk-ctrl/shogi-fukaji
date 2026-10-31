@@ -12,11 +12,15 @@ on:
         required: true
         default: '1'
       resume_run_id:
-        description: 'Prior successful D17 run ID; blank initializes from frozen train-only data'
+        description: 'Prior D17 run ID; blank restores durable repository state by default'
         required: false
       resume_sha256:
         description: 'Required state.tar.gz checksum when resuming'
         required: false
+      fresh_bootstrap:
+        description: 'Explicitly initialize a NEW research lineage instead of the saved latest state'
+        type: boolean
+        default: false
 permissions:
   contents: read
   actions: read
@@ -34,6 +38,7 @@ jobs:
       CYCLES: ${{ inputs.cycles }}
       RESUME_RUN: ${{ inputs.resume_run_id }}
       RESUME_SHA: ${{ inputs.resume_sha256 }}
+      FRESH_BOOTSTRAP: ${{ inputs.fresh_bootstrap }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -49,17 +54,29 @@ jobs:
           if run and (not run.isdigit() or not re.fullmatch('[0-9a-f]{64}',sha)):
               raise SystemExit('resume requires run ID and checksum')
           if not run and sha: raise SystemExit('checksum without run')
+          if run and os.environ['FRESH_BOOTSTRAP']=='true': raise SystemExit('choose resume or fresh bootstrap')
           PY
-          python -m unittest discover -s tests -p test_online_learning.py -v
+          python -m unittest discover -s tests -p 'test_online*.py' -v
           python scripts/check_fukaji_contracts.py
       - name: Download pinned bootstrap source
-        if: inputs.resume_run_id == ''
+        if: inputs.resume_run_id == '' && inputs.fresh_bootstrap
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p build
           gh api repos/mtk-ctrl/shogi-fukaji/actions/artifacts/12793956048/zip > build/bootstrap.zip
           python -m fukaji.online_cycle init --source build/bootstrap.zip --root build/d17-state
+      - name: Restore durable repository state by default
+        if: inputs.resume_run_id == '' && !inputs.fresh_bootstrap
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from fukaji.online_state import restore
+          folder=Path('research/d17-fast-self-learning')
+          receipt=json.loads((folder/'latest-state.json').read_text())
+          print(restore(folder/receipt['archive'], 'build/d17-state', receipt['sha256']))
+          PY
       - name: Obtain previous state
         if: inputs.resume_run_id != ''
         uses: actions/download-artifact@v4
@@ -72,20 +89,13 @@ jobs:
         if: inputs.resume_run_id != ''
         run: |
           python - <<'PY'
-          import hashlib,os,tarfile
+          import os
           from pathlib import Path
-          p=Path('build/resume/state.tar.gz')
-          if hashlib.sha256(p.read_bytes()).hexdigest()!=os.environ['RESUME_SHA']:
-              raise SystemExit('state archive checksum mismatch')
-          with tarfile.open(p) as archive:
-              members=archive.getmembers()
-              if sum(m.size for m in members)>200_000_000: raise SystemExit('state exceeds reviewed size')
-              for m in members:
-                  parts=Path(m.name).parts
-                  if not parts or parts[0]!='d17-state' or '..' in parts or m.issym() or m.islnk():
-                      raise SystemExit('unsafe state archive')
-              archive.extractall('build',filter='data')
+          from fukaji.online_state import restore
+          print(restore(Path('build/resume/state.tar.gz'), 'build/d17-state', os.environ['RESUME_SHA']))
           PY
+      - name: Verify restored state before learning
+        run: python -m fukaji.online_state verify --root build/d17-state
       - name: Generate, learn, reload, screen and provisionally update
         run: |
           python -m fukaji.online_cycle cycle --root build/d17-state --cycles "$CYCLES" --pairs 2 --movetime 50 --max-plies 256
