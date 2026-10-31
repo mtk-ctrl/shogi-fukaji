@@ -1,0 +1,9 @@
+{
+  "research_only": true,
+  "source_run": 41177748192,
+  "source_artifact_id": 13034155311,
+  "source_zip_sha256": "a4bb82455e818873771b8290f1c5c52770a1bf628c99ebd94b7ea8231565ad9c",
+  "all_games_sha256": "c0874b1b7cb96464385e76544a4fac69454ac3c9ebf681127bbca20c909e019f",
+  "engine_changes": false,
+  "training_labels": false
+}
