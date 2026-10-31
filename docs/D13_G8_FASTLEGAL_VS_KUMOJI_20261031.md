@@ -26,3 +26,11 @@ GitHubの研究記録は保存・読戻し済み。深路Addness Goal `ab88e21e-
 ## 重要：初回比較のシード交絡と再実験（2026-10-31）
 
 コード監査で、初回run `41184358423` は同じ序盤・同じ先後でも、雲路に送るUSI `RandomSeed` が候補ON/OFFで異なる実装を発見（`NEW_SEED + pair*16 + arm_index*4 + seat*2`）。雲路のrunner `configure_game()` は確かに `setoption name RandomSeed value ...` を送信するため、同一相手条件という比較の厳密性が欠ける。**初回runの勝敗は単一要因の候補採否に使わない**。雲路・深路の速度版どちらにも必要な同じ乱数値を渡すよう `matched_seed(pair,seat)` を実装（`NEW_SEED + pair*16 + seat*2`）、ゲーム単位にも実seedを記録し集計で検査する。追加の回帰テストでこの不変条件を維持。さらにrun実態の上書き回避と同じ目的の旧run自動取消しのため、Actions concurrency を新run優先に修正。リクエストに厳格 `protocol_revision=identical_randomseed_fix_20261031` を追加して再起動要求commit `a0deb65bf499012c4a6ff0c629c982117462b372` を保存。**修正後の新run IDと200局の成績は、実状態が確認できるまで未確認。** 初回runの一部ジョブをcancelledと確認済み。
+
+
+## D13修正版200局の確定監査（2026-10-31 JST17:41以降）
+有効run [41184685991](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/41184685991)、request SHA `a0deb65bf499012c4a6ff0c629c982117462b372`。Actionsはsuccess。announce/preflight/prepare、20/20 games shard、aggregate、final_statusの全26 job成功。入力1、shard20、結果1の計22 artifactsを確認。`research/d13-kumoji-cross200/run-status.json`はverified_200_complete、summaryは全200局合法再生、両arm同一RandomSeed・同一雲路binary/settings・G8モデルSHA照合成功を記録。旧run41184358423はRandomSeed交絡のため採否から除外。
+
+確定結果：FastLegalGuard OFF 100局＝深路0勝/雲路100勝/未決着0、ON 100局＝深路0勝/雲路100勝/未決着0。50ペアすべてequal、符号検定は有効な不一致ペア0のためp値なし。深さ3完了OFF165/2162手、ON320/2271手、深さ2はOFF1566/ON1772、深さ1はOFF431/ON179。雲路知識ヒットOFF0/4060 probe、ON0/4278 probe。G8モデルSHA256 `18b39f647caa458389a1900b875337adadac74ae37e27343e7f0094ed663c492`、雲路binary SHA256 `2e4ad04ac7fee914573f8a369cf10724701891041cfa32aa59741a8390eab9ff`、知識SHA256 `082f2aaf58201e44f6fa786a6253a2584e9191cbaf55d13f49d56e57198dde2a`、全棋譜SHA256 `ab29882f059166427d369ea033773fee63360a6916244ad661d097a0b7c0ea58`。
+
+判断：D12の独立240局での高速化優位は保持するが、D13では雲路相手の棋力改善は実証されず、正式採用しない。雲路は2スレッド・長考/先読みを使い、深路と対称な計算資源ではない。次は同一G8/同一高速化設定で王手応手・末端取り返しの単独仮説を固定局面診断→別seed40局→有望時240局で検証する。対雲路0勝を手数延長だけで改善認定しない。AddnessはFORBIDDENのため再試行せず未保存。既定USI・正式G8は不変更。
