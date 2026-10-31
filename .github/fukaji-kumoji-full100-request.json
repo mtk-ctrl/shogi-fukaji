@@ -1,0 +1,23 @@
+{
+  "research_only": true,
+  "formal_adoption": false,
+  "fukaji_model_kind": "G8_frozen_studied_depth3",
+  "fukaji_g8_sha256": "18b39f647caa458389a1900b875337adadac74ae37e27343e7f0094ed663c492",
+  "kumoji_commit": "76ee74d04a800285e24dd81ef01711e990cfa181",
+  "prior_adopted_knowledge_sha256": "6da204cd1e65600ccdbb9f3dbe463627687d6cf7eb8347da6a103239129dac4c",
+  "games": 100,
+  "pairs": 50,
+  "shards": 20,
+  "opening_plies": 6,
+  "max_plies": 300,
+  "seed": 202610315,
+  "movetime_ms": 200,
+  "depth_fukaji": 3,
+  "g8_mix_percent": 25,
+  "fast_relative": true,
+  "fast_move_list": true,
+  "root_alpha_beta": true,
+  "kumoji_adaptive_long_think": true,
+  "kumoji_search_threads": 2,
+  "kumoji_ponder": true
+}
