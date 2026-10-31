@@ -1,0 +1,372 @@
+{
+  "status": "D13_studied_FUKAJI_G8_fastlegal_v_same_KUMOJI_200_games",
+  "research_only": true,
+  "formal_adoption": false,
+  "source_run": 41177748192,
+  "input_receipt_sha256": "4cfbfc90b3d5505bea4fc55097581237249b732d85008c7baf5b91ec7c1f5459",
+  "kumoji_commit": "76ee74d04a800285e24dd81ef01711e990cfa181",
+  "kumoji_binary_sha256": "2e4ad04ac7fee914573f8a369cf10724701891041cfa32aa59741a8390eab9ff",
+  "kumoji_knowledge_sha256": "082f2aaf58201e44f6fa786a6253a2584e9191cbaf55d13f49d56e57198dde2a",
+  "kumoji_known_research_positions": 460,
+  "g8_model_sha256": "18b39f647caa458389a1900b875337adadac74ae37e27343e7f0094ed663c492",
+  "new_seed": 202611015,
+  "new_openings_disjoint_from_old": true,
+  "pairs": 50,
+  "games": 200,
+  "all_games_legally_replayed": true,
+  "same_KUMOJI_binary_settings": true,
+  "same_fukaji_model_and_settings_other_than_fast_legal": true,
+  "same_KUMOJI_RandomSeed_for_identical_pair_and_color": true,
+  "arms": {
+    "baseline": {
+      "games": 100,
+      "fukaji_wins": 0,
+      "kumoji_wins": 100,
+      "unresolved": 0,
+      "reasons": {
+        "checkmate": 100
+      },
+      "fukaji_plays": 2162,
+      "kumoji_plays": 2212,
+      "fukaji_depth_histogram": {
+        "3": 165,
+        "2": 1566,
+        "1": 431
+      },
+      "kumoji_knowledge_hits": 0,
+      "kumoji_knowledge_probes": 4060
+    },
+    "fastlegal": {
+      "games": 100,
+      "fukaji_wins": 0,
+      "kumoji_wins": 100,
+      "unresolved": 0,
+      "reasons": {
+        "checkmate": 100
+      },
+      "fukaji_plays": 2271,
+      "kumoji_plays": 2321,
+      "fukaji_depth_histogram": {
+        "3": 320,
+        "2": 1772,
+        "1": 179
+      },
+      "kumoji_knowledge_hits": 0,
+      "kumoji_knowledge_probes": 4278
+    }
+  },
+  "paired_comparison": {
+    "equal": 50
+  },
+  "paired_sign_p_two_sided": null,
+  "per_pair": [
+    {
+      "pair": 0,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 1,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 2,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 3,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 4,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 5,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 6,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 7,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 8,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 9,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 10,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 11,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 12,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 13,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 14,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 15,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 16,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 17,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 18,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 19,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 20,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 21,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 22,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 23,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 24,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 25,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 26,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 27,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 28,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 29,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 30,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 31,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 32,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 33,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 34,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 35,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 36,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 37,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 38,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 39,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 40,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 41,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 42,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 43,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 44,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 45,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 46,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 47,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 48,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    },
+    {
+      "pair": 49,
+      "baseline_fukaji_wins": 0,
+      "fastlegal_fukaji_wins": 0,
+      "comparison": "equal"
+    }
+  ],
+  "limitations": [
+    "KUMOJI has more compute: 2 threads, optional 1000ms longthink, ponder; FUKAJI has one 200ms search.",
+    "KUMOJI uses research-candidate 460-position knowledge, not a formally adopted new KUMOJI release.",
+    "FUKAJI G8 is a research candidate. Engine/default/model are not promoted.",
+    "Unresolved is neither a draw nor a win; checkmate and other outcomes remain separated.",
+    "Against-KUMOJI outcomes are external challenge, not a substitute for frozen G8 independent selfplay."
+  ],
+  "all_games_sha256": "ab29882f059166427d369ea033773fee63360a6916244ad661d097a0b7c0ea58"
+}
