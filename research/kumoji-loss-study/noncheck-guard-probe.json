@@ -9,53 +9,53 @@
   "groups": {
     "opening_early/baseline": {
       "calls": 40,
-      "median_ms": 205.041,
-      "mean_ms": 193.567,
-      "median_nodes": 1088.0,
+      "median_ms": 201.336,
+      "mean_ms": 182.111,
+      "median_nodes": 1362.5,
       "completed_depth": {
-        "2": 32,
-        "3": 8
+        "2": 30,
+        "3": 10
       },
-      "depth_three_completed": 8,
-      "over_200_ms": 32
+      "depth_three_completed": 10,
+      "over_200_ms": 30
     },
     "opening_early/skip_no_check_mate_test": {
       "calls": 40,
-      "median_ms": 203.947,
-      "mean_ms": 192.239,
-      "median_nodes": 1088.0,
+      "median_ms": 201.582,
+      "mean_ms": 182.284,
+      "median_nodes": 1362.5,
       "completed_depth": {
-        "2": 32,
-        "3": 8
+        "2": 30,
+        "3": 10
       },
-      "depth_three_completed": 8,
-      "over_200_ms": 32
+      "depth_three_completed": 10,
+      "over_200_ms": 30
     },
     "pre_last_defense/baseline": {
       "calls": 40,
-      "median_ms": 212.324,
-      "mean_ms": 230.144,
-      "median_nodes": 512.0,
+      "median_ms": 206.895,
+      "mean_ms": 208.32,
+      "median_nodes": 549.0,
       "completed_depth": {
-        "2": 24,
+        "2": 22,
         "1": 6,
-        "3": 10
+        "3": 12
       },
-      "depth_three_completed": 10,
-      "over_200_ms": 34
+      "depth_three_completed": 12,
+      "over_200_ms": 28
     },
     "pre_last_defense/skip_no_check_mate_test": {
       "calls": 40,
-      "median_ms": 214.031,
-      "mean_ms": 230.544,
-      "median_nodes": 512.0,
+      "median_ms": 207.601,
+      "mean_ms": 210.008,
+      "median_nodes": 549.0,
       "completed_depth": {
-        "2": 24,
+        "2": 22,
         "1": 6,
-        "3": 10
+        "3": 12
       },
-      "depth_three_completed": 10,
-      "over_200_ms": 34
+      "depth_three_completed": 12,
+      "over_200_ms": 28
     }
   },
   "calls": [
@@ -66,9 +66,9 @@
       "variant": "baseline",
       "move": "9g9f",
       "depth": 2,
-      "nodes": 1280,
-      "elapsed_ms": 200.221,
-      "root_preparation_ms": 1.318381000004365
+      "nodes": 1664,
+      "elapsed_ms": 204.762,
+      "root_preparation_ms": 1.15529400000014
     },
     {
       "game_id": 0,
@@ -77,9 +77,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "9g9f",
       "depth": 2,
-      "nodes": 1280,
-      "elapsed_ms": 200.643,
-      "root_preparation_ms": 1.249672000000146
+      "nodes": 1664,
+      "elapsed_ms": 203.77,
+      "root_preparation_ms": 1.0310469999978977
     },
     {
       "game_id": 0,
@@ -88,9 +88,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "9g9f",
       "depth": 2,
-      "nodes": 1280,
-      "elapsed_ms": 203.694,
-      "root_preparation_ms": 1.2380210000060288
+      "nodes": 1664,
+      "elapsed_ms": 204.382,
+      "root_preparation_ms": 1.0569860000089193
     },
     {
       "game_id": 0,
@@ -99,9 +99,9 @@
       "variant": "baseline",
       "move": "9g9f",
       "depth": 2,
-      "nodes": 1280,
-      "elapsed_ms": 202.281,
-      "root_preparation_ms": 1.2530579999889824
+      "nodes": 1664,
+      "elapsed_ms": 204.946,
+      "root_preparation_ms": 1.1589590000085082
     },
     {
       "game_id": 0,
@@ -111,8 +111,8 @@
       "move": "6h5h",
       "depth": 2,
       "nodes": 640,
-      "elapsed_ms": 391.24,
-      "root_preparation_ms": 4.1676709999904915
+      "elapsed_ms": 324.274,
+      "root_preparation_ms": 3.4021249999796055
     },
     {
       "game_id": 0,
@@ -122,8 +122,8 @@
       "move": "6h5h",
       "depth": 2,
       "nodes": 640,
-      "elapsed_ms": 400.844,
-      "root_preparation_ms": 4.155729000004271
+      "elapsed_ms": 316.167,
+      "root_preparation_ms": 3.341518000013366
     },
     {
       "game_id": 0,
@@ -133,8 +133,8 @@
       "move": "6h5h",
       "depth": 2,
       "nodes": 640,
-      "elapsed_ms": 394.351,
-      "root_preparation_ms": 4.12959899999521
+      "elapsed_ms": 315.125,
+      "root_preparation_ms": 3.320165999980418
     },
     {
       "game_id": 0,
@@ -144,8 +144,8 @@
       "move": "6h5h",
       "depth": 2,
       "nodes": 640,
-      "elapsed_ms": 394.422,
-      "root_preparation_ms": 4.11247700000672
+      "elapsed_ms": 313.925,
+      "root_preparation_ms": 3.3371719999877314
     },
     {
       "game_id": 1,
@@ -155,8 +155,8 @@
       "move": "1a1b",
       "depth": 3,
       "nodes": 531,
-      "elapsed_ms": 105.023,
-      "root_preparation_ms": 0.9520139999921184
+      "elapsed_ms": 87.22,
+      "root_preparation_ms": 0.8615159999862954
     },
     {
       "game_id": 1,
@@ -166,8 +166,8 @@
       "move": "1a1b",
       "depth": 3,
       "nodes": 531,
-      "elapsed_ms": 105.079,
-      "root_preparation_ms": 0.9999140000047646
+      "elapsed_ms": 90.159,
+      "root_preparation_ms": 0.7556870000087201
     },
     {
       "game_id": 1,
@@ -177,8 +177,8 @@
       "move": "1a1b",
       "depth": 3,
       "nodes": 531,
-      "elapsed_ms": 104.899,
-      "root_preparation_ms": 0.8928429999883747
+      "elapsed_ms": 94.243,
+      "root_preparation_ms": 0.8652619999907074
     },
     {
       "game_id": 1,
@@ -188,8 +188,8 @@
       "move": "1a1b",
       "depth": 3,
       "nodes": 531,
-      "elapsed_ms": 104.51,
-      "root_preparation_ms": 0.8892959999968753
+      "elapsed_ms": 86.392,
+      "root_preparation_ms": 0.7403339999996206
     },
     {
       "game_id": 1,
@@ -198,9 +198,9 @@
       "variant": "baseline",
       "move": "5a4b",
       "depth": 1,
-      "nodes": 1106,
-      "elapsed_ms": 200.232,
-      "root_preparation_ms": 3.850255999992669
+      "nodes": 1342,
+      "elapsed_ms": 200.063,
+      "root_preparation_ms": 3.156248999999889
     },
     {
       "game_id": 1,
@@ -209,9 +209,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "5a4b",
       "depth": 1,
-      "nodes": 1106,
-      "elapsed_ms": 201.97,
-      "root_preparation_ms": 3.731212999994682
+      "nodes": 1342,
+      "elapsed_ms": 202.941,
+      "root_preparation_ms": 3.064681999973118
     },
     {
       "game_id": 1,
@@ -220,9 +220,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "5a4b",
       "depth": 1,
-      "nodes": 1104,
-      "elapsed_ms": 200.285,
-      "root_preparation_ms": 3.839276000007885
+      "nodes": 1342,
+      "elapsed_ms": 202.227,
+      "root_preparation_ms": 3.0696789999922203
     },
     {
       "game_id": 1,
@@ -231,9 +231,9 @@
       "variant": "baseline",
       "move": "5a4b",
       "depth": 1,
-      "nodes": 1104,
-      "elapsed_ms": 200.33,
-      "root_preparation_ms": 3.755498000003854
+      "nodes": 1342,
+      "elapsed_ms": 202.135,
+      "root_preparation_ms": 3.078573000010465
     },
     {
       "game_id": 10,
@@ -243,8 +243,8 @@
       "move": "6h6i",
       "depth": 3,
       "nodes": 354,
-      "elapsed_ms": 126.573,
-      "root_preparation_ms": 0.9164079999948171
+      "elapsed_ms": 99.014,
+      "root_preparation_ms": 0.7275050000146166
     },
     {
       "game_id": 10,
@@ -254,8 +254,8 @@
       "move": "6h6i",
       "depth": 3,
       "nodes": 354,
-      "elapsed_ms": 127.224,
-      "root_preparation_ms": 0.7507170000025098
+      "elapsed_ms": 100.413,
+      "root_preparation_ms": 0.6281550000153402
     },
     {
       "game_id": 10,
@@ -265,8 +265,8 @@
       "move": "6h6i",
       "depth": 3,
       "nodes": 354,
-      "elapsed_ms": 129.546,
-      "root_preparation_ms": 0.7800420000023678
+      "elapsed_ms": 100.544,
+      "root_preparation_ms": 0.6123419999823909
     },
     {
       "game_id": 10,
@@ -276,8 +276,8 @@
       "move": "6h6i",
       "depth": 3,
       "nodes": 354,
-      "elapsed_ms": 130.001,
-      "root_preparation_ms": 0.786394000002133
+      "elapsed_ms": 100.267,
+      "root_preparation_ms": 0.6385109999769156
     },
     {
       "game_id": 10,
@@ -287,8 +287,8 @@
       "move": "7h8g",
       "depth": 3,
       "nodes": 274,
-      "elapsed_ms": 100.584,
-      "root_preparation_ms": 0.7764650000012807
+      "elapsed_ms": 78.722,
+      "root_preparation_ms": 0.6253409999885662
     },
     {
       "game_id": 10,
@@ -298,8 +298,8 @@
       "move": "7h8g",
       "depth": 3,
       "nodes": 274,
-      "elapsed_ms": 100.52,
-      "root_preparation_ms": 0.6423539999929062
+      "elapsed_ms": 78.456,
+      "root_preparation_ms": 0.4971190000162551
     },
     {
       "game_id": 10,
@@ -309,8 +309,8 @@
       "move": "7h8g",
       "depth": 3,
       "nodes": 274,
-      "elapsed_ms": 107.813,
-      "root_preparation_ms": 0.6202520000044842
+      "elapsed_ms": 78.685,
+      "root_preparation_ms": 0.5061020000027838
     },
     {
       "game_id": 10,
@@ -320,8 +320,8 @@
       "move": "7h8g",
       "depth": 3,
       "nodes": 274,
-      "elapsed_ms": 100.154,
-      "root_preparation_ms": 0.6194810000010875
+      "elapsed_ms": 78.135,
+      "root_preparation_ms": 0.5034879999925579
     },
     {
       "game_id": 11,
@@ -330,9 +330,9 @@
       "variant": "baseline",
       "move": "B*5e",
       "depth": 2,
-      "nodes": 467,
-      "elapsed_ms": 239.887,
-      "root_preparation_ms": 4.1155720000034535
+      "nodes": 512,
+      "elapsed_ms": 201.389,
+      "root_preparation_ms": 3.199313999999731
     },
     {
       "game_id": 11,
@@ -341,9 +341,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "B*5e",
       "depth": 2,
-      "nodes": 467,
-      "elapsed_ms": 242.987,
-      "root_preparation_ms": 3.753434000003608
+      "nodes": 512,
+      "elapsed_ms": 200.648,
+      "root_preparation_ms": 3.084811000007903
     },
     {
       "game_id": 11,
@@ -352,9 +352,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "B*5e",
       "depth": 2,
-      "nodes": 467,
-      "elapsed_ms": 241.54,
-      "root_preparation_ms": 3.711324000008176
+      "nodes": 512,
+      "elapsed_ms": 200.192,
+      "root_preparation_ms": 3.1357480000053783
     },
     {
       "game_id": 11,
@@ -363,9 +363,9 @@
       "variant": "baseline",
       "move": "B*5e",
       "depth": 2,
-      "nodes": 467,
-      "elapsed_ms": 243.818,
-      "root_preparation_ms": 3.7382050000047684
+      "nodes": 534,
+      "elapsed_ms": 201.575,
+      "root_preparation_ms": 3.079905000021199
     },
     {
       "game_id": 11,
@@ -374,9 +374,9 @@
       "variant": "baseline",
       "move": "P*2e",
       "depth": 1,
-      "nodes": 1024,
-      "elapsed_ms": 211.209,
-      "root_preparation_ms": 6.269457999991346
+      "nodes": 1086,
+      "elapsed_ms": 201.683,
+      "root_preparation_ms": 5.199423999982855
     },
     {
       "game_id": 11,
@@ -385,9 +385,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "P*2e",
       "depth": 1,
-      "nodes": 896,
-      "elapsed_ms": 200.59,
-      "root_preparation_ms": 6.323668999996812
+      "nodes": 1086,
+      "elapsed_ms": 202.472,
+      "root_preparation_ms": 5.125592000013057
     },
     {
       "game_id": 11,
@@ -396,9 +396,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "P*2e",
       "depth": 1,
-      "nodes": 896,
-      "elapsed_ms": 201.421,
-      "root_preparation_ms": 6.313861999998949
+      "nodes": 1086,
+      "elapsed_ms": 202.83,
+      "root_preparation_ms": 5.050560000000814
     },
     {
       "game_id": 11,
@@ -407,9 +407,9 @@
       "variant": "baseline",
       "move": "P*2e",
       "depth": 1,
-      "nodes": 896,
-      "elapsed_ms": 201.807,
-      "root_preparation_ms": 6.347884999996722
+      "nodes": 1086,
+      "elapsed_ms": 202.67,
+      "root_preparation_ms": 5.064359999977341
     },
     {
       "game_id": 20,
@@ -418,9 +418,9 @@
       "variant": "baseline",
       "move": "9i9h",
       "depth": 2,
-      "nodes": 1280,
-      "elapsed_ms": 206.013,
-      "root_preparation_ms": 1.1666059999981826
+      "nodes": 1469,
+      "elapsed_ms": 201.698,
+      "root_preparation_ms": 0.9624790000088979
     },
     {
       "game_id": 20,
@@ -429,9 +429,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "9i9h",
       "depth": 2,
-      "nodes": 1280,
-      "elapsed_ms": 206.434,
-      "root_preparation_ms": 1.0502979999955642
+      "nodes": 1469,
+      "elapsed_ms": 202.465,
+      "root_preparation_ms": 0.8185720000142283
     },
     {
       "game_id": 20,
@@ -440,9 +440,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "9i9h",
       "depth": 2,
-      "nodes": 1280,
-      "elapsed_ms": 203.99,
-      "root_preparation_ms": 1.0190999999935002
+      "nodes": 1469,
+      "elapsed_ms": 202.832,
+      "root_preparation_ms": 0.8390819999988253
     },
     {
       "game_id": 20,
@@ -451,9 +451,9 @@
       "variant": "baseline",
       "move": "9i9h",
       "depth": 2,
-      "nodes": 1280,
-      "elapsed_ms": 204.697,
-      "root_preparation_ms": 1.0240900000013653
+      "nodes": 1469,
+      "elapsed_ms": 201.921,
+      "root_preparation_ms": 0.8393020000028173
     },
     {
       "game_id": 20,
@@ -461,10 +461,10 @@
       "trial": 0,
       "variant": "baseline",
       "move": "5h6h",
-      "depth": 2,
-      "nodes": 512,
-      "elapsed_ms": 205.03,
-      "root_preparation_ms": 0.8162290000086614
+      "depth": 3,
+      "nodes": 586,
+      "elapsed_ms": 191.754,
+      "root_preparation_ms": 0.6467619999739327
     },
     {
       "game_id": 20,
@@ -472,10 +472,10 @@
       "trial": 1,
       "variant": "skip_no_check_mate_test",
       "move": "5h6h",
-      "depth": 2,
-      "nodes": 512,
-      "elapsed_ms": 206.287,
-      "root_preparation_ms": 0.7247380000023895
+      "depth": 3,
+      "nodes": 586,
+      "elapsed_ms": 193.379,
+      "root_preparation_ms": 0.5293359999996028
     },
     {
       "game_id": 20,
@@ -483,10 +483,10 @@
       "trial": 2,
       "variant": "skip_no_check_mate_test",
       "move": "5h6h",
-      "depth": 2,
-      "nodes": 512,
-      "elapsed_ms": 204.22,
-      "root_preparation_ms": 0.6864859999922146
+      "depth": 3,
+      "nodes": 586,
+      "elapsed_ms": 194.455,
+      "root_preparation_ms": 0.5378689999986364
     },
     {
       "game_id": 20,
@@ -494,10 +494,10 @@
       "trial": 3,
       "variant": "baseline",
       "move": "5h6h",
-      "depth": 2,
-      "nodes": 512,
-      "elapsed_ms": 204.482,
-      "root_preparation_ms": 0.6754559999961884
+      "depth": 3,
+      "nodes": 586,
+      "elapsed_ms": 194.647,
+      "root_preparation_ms": 0.542535999983329
     },
     {
       "game_id": 21,
@@ -506,9 +506,9 @@
       "variant": "baseline",
       "move": "8c8d",
       "depth": 2,
-      "nodes": 1267,
-      "elapsed_ms": 228.486,
-      "root_preparation_ms": 1.3972490000071502
+      "nodes": 1408,
+      "elapsed_ms": 201.603,
+      "root_preparation_ms": 1.1217269999974633
     },
     {
       "game_id": 21,
@@ -517,9 +517,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "8c8d",
       "depth": 2,
-      "nodes": 1267,
-      "elapsed_ms": 228.268,
-      "root_preparation_ms": 1.177987000005487
+      "nodes": 1408,
+      "elapsed_ms": 204.172,
+      "root_preparation_ms": 1.1070740000036494
     },
     {
       "game_id": 21,
@@ -528,9 +528,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "8c8d",
       "depth": 2,
-      "nodes": 1267,
-      "elapsed_ms": 228.014,
-      "root_preparation_ms": 1.1835579999939227
+      "nodes": 1408,
+      "elapsed_ms": 203.365,
+      "root_preparation_ms": 0.9939939999981107
     },
     {
       "game_id": 21,
@@ -539,9 +539,9 @@
       "variant": "baseline",
       "move": "8c8d",
       "depth": 2,
-      "nodes": 1267,
-      "elapsed_ms": 228.936,
-      "root_preparation_ms": 1.1890579999942474
+      "nodes": 1408,
+      "elapsed_ms": 204.091,
+      "root_preparation_ms": 1.0012350000181414
     },
     {
       "game_id": 21,
@@ -550,9 +550,9 @@
       "variant": "baseline",
       "move": "6d7d",
       "depth": 2,
-      "nodes": 1024,
-      "elapsed_ms": 210.094,
-      "root_preparation_ms": 4.984039999996526
+      "nodes": 1152,
+      "elapsed_ms": 385.389,
+      "root_preparation_ms": 4.100425000018504
     },
     {
       "game_id": 21,
@@ -561,9 +561,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "6d7d",
       "depth": 2,
-      "nodes": 896,
-      "elapsed_ms": 200.477,
-      "root_preparation_ms": 4.889020999996774
+      "nodes": 1152,
+      "elapsed_ms": 384.536,
+      "root_preparation_ms": 3.9429480000023887
     },
     {
       "game_id": 21,
@@ -572,9 +572,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "6d7d",
       "depth": 2,
-      "nodes": 896,
-      "elapsed_ms": 200.148,
-      "root_preparation_ms": 4.986513000005743
+      "nodes": 1152,
+      "elapsed_ms": 383.359,
+      "root_preparation_ms": 3.9346359999967717
     },
     {
       "game_id": 21,
@@ -583,9 +583,9 @@
       "variant": "baseline",
       "move": "6d7d",
       "depth": 2,
-      "nodes": 1024,
-      "elapsed_ms": 210.702,
-      "root_preparation_ms": 4.84471800000108
+      "nodes": 1152,
+      "elapsed_ms": 382.516,
+      "root_preparation_ms": 4.016127999989294
     },
     {
       "game_id": 30,
@@ -594,9 +594,9 @@
       "variant": "baseline",
       "move": "8g8f",
       "depth": 2,
-      "nodes": 1024,
-      "elapsed_ms": 203.251,
-      "root_preparation_ms": 1.5374309999884872
+      "nodes": 1317,
+      "elapsed_ms": 200.074,
+      "root_preparation_ms": 1.241125999996484
     },
     {
       "game_id": 30,
@@ -605,9 +605,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "8g8f",
       "depth": 2,
-      "nodes": 1024,
-      "elapsed_ms": 203.333,
-      "root_preparation_ms": 1.3891629999989163
+      "nodes": 1317,
+      "elapsed_ms": 201.593,
+      "root_preparation_ms": 1.1514409999904274
     },
     {
       "game_id": 30,
@@ -616,9 +616,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "8g8f",
       "depth": 2,
-      "nodes": 1024,
-      "elapsed_ms": 203.862,
-      "root_preparation_ms": 1.395966000004023
+      "nodes": 1317,
+      "elapsed_ms": 202.001,
+      "root_preparation_ms": 1.1481559999992896
     },
     {
       "game_id": 30,
@@ -627,9 +627,9 @@
       "variant": "baseline",
       "move": "8g8f",
       "depth": 2,
-      "nodes": 1024,
-      "elapsed_ms": 202.674,
-      "root_preparation_ms": 1.393359999994459
+      "nodes": 1317,
+      "elapsed_ms": 203.14,
+      "root_preparation_ms": 1.1589020000428718
     },
     {
       "game_id": 30,
@@ -639,8 +639,8 @@
       "move": "5h5i",
       "depth": 3,
       "nodes": 242,
-      "elapsed_ms": 72.549,
-      "root_preparation_ms": 0.785721999989164
+      "elapsed_ms": 57.277,
+      "root_preparation_ms": 0.6639279999944847
     },
     {
       "game_id": 30,
@@ -650,8 +650,8 @@
       "move": "5h5i",
       "depth": 3,
       "nodes": 242,
-      "elapsed_ms": 74.113,
-      "root_preparation_ms": 0.6744039999944107
+      "elapsed_ms": 57.744,
+      "root_preparation_ms": 0.5644189999998162
     },
     {
       "game_id": 30,
@@ -661,8 +661,8 @@
       "move": "5h5i",
       "depth": 3,
       "nodes": 242,
-      "elapsed_ms": 73.556,
-      "root_preparation_ms": 0.7153999999900407
+      "elapsed_ms": 56.917,
+      "root_preparation_ms": 0.5498069999703148
     },
     {
       "game_id": 30,
@@ -672,8 +672,8 @@
       "move": "5h5i",
       "depth": 3,
       "nodes": 242,
-      "elapsed_ms": 72.787,
-      "root_preparation_ms": 0.6710569999910376
+      "elapsed_ms": 57.236,
+      "root_preparation_ms": 0.6093770000461518
     },
     {
       "game_id": 31,
@@ -683,8 +683,8 @@
       "move": "2c2d",
       "depth": 3,
       "nodes": 988,
-      "elapsed_ms": 177.173,
-      "root_preparation_ms": 1.520659999997065
+      "elapsed_ms": 143.116,
+      "root_preparation_ms": 1.2398840000287237
     },
     {
       "game_id": 31,
@@ -694,8 +694,8 @@
       "move": "2c2d",
       "depth": 3,
       "nodes": 988,
-      "elapsed_ms": 176.629,
-      "root_preparation_ms": 1.346784000006096
+      "elapsed_ms": 143.611,
+      "root_preparation_ms": 1.107515000001058
     },
     {
       "game_id": 31,
@@ -705,8 +705,8 @@
       "move": "2c2d",
       "depth": 3,
       "nodes": 988,
-      "elapsed_ms": 180.486,
-      "root_preparation_ms": 1.3800149999951827
+      "elapsed_ms": 146.832,
+      "root_preparation_ms": 1.1171400000193898
     },
     {
       "game_id": 31,
@@ -716,8 +716,8 @@
       "move": "2c2d",
       "depth": 3,
       "nodes": 988,
-      "elapsed_ms": 177.75,
-      "root_preparation_ms": 1.344067999994536
+      "elapsed_ms": 143.476,
+      "root_preparation_ms": 1.0996340000133387
     },
     {
       "game_id": 31,
@@ -727,8 +727,8 @@
       "move": "5c4d",
       "depth": 2,
       "nodes": 512,
-      "elapsed_ms": 300.693,
-      "root_preparation_ms": 1.0449889999932793
+      "elapsed_ms": 237.962,
+      "root_preparation_ms": 0.8993420000251717
     },
     {
       "game_id": 31,
@@ -738,8 +738,8 @@
       "move": "5c4d",
       "depth": 2,
       "nodes": 512,
-      "elapsed_ms": 299.839,
-      "root_preparation_ms": 0.9682249999940495
+      "elapsed_ms": 238.299,
+      "root_preparation_ms": 0.7883250000304542
     },
     {
       "game_id": 31,
@@ -749,8 +749,8 @@
       "move": "5c4d",
       "depth": 2,
       "nodes": 512,
-      "elapsed_ms": 298.681,
-      "root_preparation_ms": 0.962543999989407
+      "elapsed_ms": 238.501,
+      "root_preparation_ms": 0.7850009999970098
     },
     {
       "game_id": 31,
@@ -760,8 +760,8 @@
       "move": "5c4d",
       "depth": 2,
       "nodes": 512,
-      "elapsed_ms": 298.844,
-      "root_preparation_ms": 0.9619730000025584
+      "elapsed_ms": 239.672,
+      "root_preparation_ms": 0.7773390000238578
     },
     {
       "game_id": 40,
@@ -770,9 +770,9 @@
       "variant": "baseline",
       "move": "6h6g",
       "depth": 2,
-      "nodes": 1024,
-      "elapsed_ms": 213.634,
-      "root_preparation_ms": 1.546098999995138
+      "nodes": 1280,
+      "elapsed_ms": 203.911,
+      "root_preparation_ms": 1.2860939999654875
     },
     {
       "game_id": 40,
@@ -781,9 +781,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "6h6g",
       "depth": 2,
-      "nodes": 1024,
-      "elapsed_ms": 215.888,
-      "root_preparation_ms": 1.8089309999993475
+      "nodes": 1280,
+      "elapsed_ms": 204.764,
+      "root_preparation_ms": 1.1611570000127358
     },
     {
       "game_id": 40,
@@ -792,9 +792,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "6h6g",
       "depth": 2,
-      "nodes": 1024,
-      "elapsed_ms": 214.951,
-      "root_preparation_ms": 1.3850570000073503
+      "nodes": 1280,
+      "elapsed_ms": 205.202,
+      "root_preparation_ms": 1.1530550000315998
     },
     {
       "game_id": 40,
@@ -803,9 +803,9 @@
       "variant": "baseline",
       "move": "6h6g",
       "depth": 2,
-      "nodes": 1024,
-      "elapsed_ms": 214.899,
-      "root_preparation_ms": 1.3810390000088546
+      "nodes": 1280,
+      "elapsed_ms": 204.898,
+      "root_preparation_ms": 1.173936999975922
     },
     {
       "game_id": 40,
@@ -815,8 +815,8 @@
       "move": "9h9e",
       "depth": 2,
       "nodes": 512,
-      "elapsed_ms": 267.122,
-      "root_preparation_ms": 2.5882119999920405
+      "elapsed_ms": 208.416,
+      "root_preparation_ms": 2.1163939999837567
     },
     {
       "game_id": 40,
@@ -826,8 +826,8 @@
       "move": "9h9e",
       "depth": 2,
       "nodes": 512,
-      "elapsed_ms": 269.037,
-      "root_preparation_ms": 2.5247540000066238
+      "elapsed_ms": 209.735,
+      "root_preparation_ms": 1.9940899999824069
     },
     {
       "game_id": 40,
@@ -837,8 +837,8 @@
       "move": "9h9e",
       "depth": 2,
       "nodes": 512,
-      "elapsed_ms": 270.445,
-      "root_preparation_ms": 2.4325409999903513
+      "elapsed_ms": 209.636,
+      "root_preparation_ms": 2.006078000022171
     },
     {
       "game_id": 40,
@@ -848,8 +848,8 @@
       "move": "9h9e",
       "depth": 2,
       "nodes": 512,
-      "elapsed_ms": 266.769,
-      "root_preparation_ms": 2.428854000001479
+      "elapsed_ms": 208.78,
+      "root_preparation_ms": 1.9867290000092908
     },
     {
       "game_id": 41,
@@ -858,9 +858,9 @@
       "variant": "baseline",
       "move": "4b4c",
       "depth": 2,
-      "nodes": 1227,
-      "elapsed_ms": 208.662,
-      "root_preparation_ms": 1.4815269999957081
+      "nodes": 1536,
+      "elapsed_ms": 213.318,
+      "root_preparation_ms": 1.2504709999916486
     },
     {
       "game_id": 41,
@@ -869,9 +869,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "4b4c",
       "depth": 2,
-      "nodes": 1227,
-      "elapsed_ms": 208.375,
-      "root_preparation_ms": 1.3451020000019298
+      "nodes": 1536,
+      "elapsed_ms": 212.269,
+      "root_preparation_ms": 1.1118069999724867
     },
     {
       "game_id": 41,
@@ -880,9 +880,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "4b4c",
       "depth": 2,
-      "nodes": 1227,
-      "elapsed_ms": 207.25,
-      "root_preparation_ms": 1.3317769999900975
+      "nodes": 1536,
+      "elapsed_ms": 211.534,
+      "root_preparation_ms": 1.106660000004922
     },
     {
       "game_id": 41,
@@ -891,9 +891,9 @@
       "variant": "baseline",
       "move": "4b4c",
       "depth": 2,
-      "nodes": 1227,
-      "elapsed_ms": 206.667,
-      "root_preparation_ms": 1.3199050000025636
+      "nodes": 1536,
+      "elapsed_ms": 210.961,
+      "root_preparation_ms": 1.1010309999619494
     },
     {
       "game_id": 41,
@@ -902,9 +902,9 @@
       "variant": "baseline",
       "move": "5c4b",
       "depth": 1,
-      "nodes": 1408,
-      "elapsed_ms": 205.131,
-      "root_preparation_ms": 4.980047000003651
+      "nodes": 1536,
+      "elapsed_ms": 205.055,
+      "root_preparation_ms": 4.157474999999522
     },
     {
       "game_id": 41,
@@ -913,9 +913,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "5c4b",
       "depth": 1,
-      "nodes": 1408,
-      "elapsed_ms": 205.583,
-      "root_preparation_ms": 4.857537999995998
+      "nodes": 1536,
+      "elapsed_ms": 207.001,
+      "root_preparation_ms": 4.076955000016369
     },
     {
       "game_id": 41,
@@ -924,9 +924,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "5c4b",
       "depth": 1,
-      "nodes": 1408,
-      "elapsed_ms": 205.639,
-      "root_preparation_ms": 4.826850000000604
+      "nodes": 1536,
+      "elapsed_ms": 207.816,
+      "root_preparation_ms": 4.201421000004757
     },
     {
       "game_id": 41,
@@ -935,9 +935,9 @@
       "variant": "baseline",
       "move": "5c4b",
       "depth": 1,
-      "nodes": 1408,
-      "elapsed_ms": 206.641,
-      "root_preparation_ms": 4.920745999996257
+      "nodes": 1536,
+      "elapsed_ms": 207.225,
+      "root_preparation_ms": 4.081490999965354
     },
     {
       "game_id": 50,
@@ -946,9 +946,9 @@
       "variant": "baseline",
       "move": "5i6h",
       "depth": 2,
-      "nodes": 857,
-      "elapsed_ms": 209.628,
-      "root_preparation_ms": 1.6664349999899741
+      "nodes": 974,
+      "elapsed_ms": 200.375,
+      "root_preparation_ms": 1.3562350000029255
     },
     {
       "game_id": 50,
@@ -957,9 +957,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "5i6h",
       "depth": 2,
-      "nodes": 857,
-      "elapsed_ms": 210.442,
-      "root_preparation_ms": 1.5003630000052226
+      "nodes": 971,
+      "elapsed_ms": 200.018,
+      "root_preparation_ms": 1.2311760000329741
     },
     {
       "game_id": 50,
@@ -968,9 +968,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "5i6h",
       "depth": 2,
-      "nodes": 857,
-      "elapsed_ms": 210.125,
-      "root_preparation_ms": 1.4851939999971364
+      "nodes": 974,
+      "elapsed_ms": 201.782,
+      "root_preparation_ms": 1.2125879999871358
     },
     {
       "game_id": 50,
@@ -979,9 +979,9 @@
       "variant": "baseline",
       "move": "5i6h",
       "depth": 2,
-      "nodes": 857,
-      "elapsed_ms": 208.601,
-      "root_preparation_ms": 1.4942019999892864
+      "nodes": 971,
+      "elapsed_ms": 200.428,
+      "root_preparation_ms": 1.212998999960746
     },
     {
       "game_id": 50,
@@ -990,9 +990,9 @@
       "variant": "baseline",
       "move": "5g4h",
       "depth": 2,
-      "nodes": 686,
-      "elapsed_ms": 213.439,
-      "root_preparation_ms": 0.76732899999854
+      "nodes": 896,
+      "elapsed_ms": 244.082,
+      "root_preparation_ms": 0.5742210000221348
     },
     {
       "game_id": 50,
@@ -1001,9 +1001,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "5g4h",
       "depth": 2,
-      "nodes": 686,
-      "elapsed_ms": 221.288,
-      "root_preparation_ms": 0.62176599999475
+      "nodes": 896,
+      "elapsed_ms": 245.292,
+      "root_preparation_ms": 0.5080720000023575
     },
     {
       "game_id": 50,
@@ -1012,9 +1012,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "5g4h",
       "depth": 2,
-      "nodes": 686,
-      "elapsed_ms": 217.044,
-      "root_preparation_ms": 0.6372050000038598
+      "nodes": 896,
+      "elapsed_ms": 242.165,
+      "root_preparation_ms": 0.49492300001929834
     },
     {
       "game_id": 50,
@@ -1023,9 +1023,9 @@
       "variant": "baseline",
       "move": "5g4h",
       "depth": 2,
-      "nodes": 686,
-      "elapsed_ms": 215.751,
-      "root_preparation_ms": 0.6135609999944336
+      "nodes": 896,
+      "elapsed_ms": 245.145,
+      "root_preparation_ms": 0.5164059999742676
     },
     {
       "game_id": 51,
@@ -1035,8 +1035,8 @@
       "move": "6b7b",
       "depth": 3,
       "nodes": 280,
-      "elapsed_ms": 76.0,
-      "root_preparation_ms": 0.9814699999992627
+      "elapsed_ms": 61.291,
+      "root_preparation_ms": 0.7330830000000788
     },
     {
       "game_id": 51,
@@ -1046,8 +1046,8 @@
       "move": "6b7b",
       "depth": 3,
       "nodes": 280,
-      "elapsed_ms": 76.051,
-      "root_preparation_ms": 0.8211990000006608
+      "elapsed_ms": 60.952,
+      "root_preparation_ms": 0.6665129999987585
     },
     {
       "game_id": 51,
@@ -1057,8 +1057,8 @@
       "move": "6b7b",
       "depth": 3,
       "nodes": 280,
-      "elapsed_ms": 75.678,
-      "root_preparation_ms": 0.8107299999835504
+      "elapsed_ms": 60.826,
+      "root_preparation_ms": 0.6625070000154665
     },
     {
       "game_id": 51,
@@ -1068,8 +1068,8 @@
       "move": "6b7b",
       "depth": 3,
       "nodes": 280,
-      "elapsed_ms": 74.977,
-      "root_preparation_ms": 0.826198999988037
+      "elapsed_ms": 68.3,
+      "root_preparation_ms": 0.6677449999870078
     },
     {
       "game_id": 51,
@@ -1079,8 +1079,8 @@
       "move": "5a4b",
       "depth": 2,
       "nodes": 640,
-      "elapsed_ms": 260.118,
-      "root_preparation_ms": 1.1354290000156197
+      "elapsed_ms": 225.767,
+      "root_preparation_ms": 1.0562489999870195
     },
     {
       "game_id": 51,
@@ -1090,8 +1090,8 @@
       "move": "5a4b",
       "depth": 2,
       "nodes": 640,
-      "elapsed_ms": 261.951,
-      "root_preparation_ms": 0.9943150000140122
+      "elapsed_ms": 232.52,
+      "root_preparation_ms": 0.9548960000529405
     },
     {
       "game_id": 51,
@@ -1101,8 +1101,8 @@
       "move": "5a4b",
       "depth": 2,
       "nodes": 640,
-      "elapsed_ms": 262.225,
-      "root_preparation_ms": 0.9722229999908905
+      "elapsed_ms": 242.683,
+      "root_preparation_ms": 0.9172690000127659
     },
     {
       "game_id": 51,
@@ -1112,8 +1112,8 @@
       "move": "5a4b",
       "depth": 2,
       "nodes": 640,
-      "elapsed_ms": 265.291,
-      "root_preparation_ms": 0.9782040000061443
+      "elapsed_ms": 221.454,
+      "root_preparation_ms": 1.1316129999840996
     },
     {
       "game_id": 60,
@@ -1122,9 +1122,9 @@
       "variant": "baseline",
       "move": "9i9h",
       "depth": 2,
-      "nodes": 1234,
-      "elapsed_ms": 208.843,
-      "root_preparation_ms": 1.2669250000101329
+      "nodes": 1562,
+      "elapsed_ms": 201.18,
+      "root_preparation_ms": 1.0212359999854925
     },
     {
       "game_id": 60,
@@ -1133,9 +1133,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "9i9h",
       "depth": 2,
-      "nodes": 1234,
-      "elapsed_ms": 209.524,
-      "root_preparation_ms": 1.111082999983637
+      "nodes": 1562,
+      "elapsed_ms": 201.869,
+      "root_preparation_ms": 0.9218169999485326
     },
     {
       "game_id": 60,
@@ -1144,9 +1144,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "9i9h",
       "depth": 2,
-      "nodes": 1234,
-      "elapsed_ms": 209.876,
-      "root_preparation_ms": 1.1013449999950353
+      "nodes": 1562,
+      "elapsed_ms": 201.535,
+      "root_preparation_ms": 0.9149560000309975
     },
     {
       "game_id": 60,
@@ -1155,9 +1155,9 @@
       "variant": "baseline",
       "move": "9i9h",
       "depth": 2,
-      "nodes": 1234,
-      "elapsed_ms": 209.287,
-      "root_preparation_ms": 1.1140579999846523
+      "nodes": 1536,
+      "elapsed_ms": 201.127,
+      "root_preparation_ms": 0.9133439999686743
     },
     {
       "game_id": 60,
@@ -1167,8 +1167,8 @@
       "move": "4g3f",
       "depth": 2,
       "nodes": 512,
-      "elapsed_ms": 267.2,
-      "root_preparation_ms": 2.8965889999881256
+      "elapsed_ms": 215.348,
+      "root_preparation_ms": 2.3956239999733953
     },
     {
       "game_id": 60,
@@ -1178,8 +1178,8 @@
       "move": "4g3f",
       "depth": 2,
       "nodes": 512,
-      "elapsed_ms": 266.706,
-      "root_preparation_ms": 2.8134220000026744
+      "elapsed_ms": 237.424,
+      "root_preparation_ms": 2.3488830000246708
     },
     {
       "game_id": 60,
@@ -1189,8 +1189,8 @@
       "move": "4g3f",
       "depth": 2,
       "nodes": 512,
-      "elapsed_ms": 269.07,
-      "root_preparation_ms": 2.8513419999853795
+      "elapsed_ms": 223.449,
+      "root_preparation_ms": 2.915674999997009
     },
     {
       "game_id": 60,
@@ -1200,8 +1200,8 @@
       "move": "4g3f",
       "depth": 2,
       "nodes": 512,
-      "elapsed_ms": 270.367,
-      "root_preparation_ms": 2.8523049999762407
+      "elapsed_ms": 214.021,
+      "root_preparation_ms": 2.272368000035385
     },
     {
       "game_id": 61,
@@ -1210,9 +1210,9 @@
       "variant": "baseline",
       "move": "6c6d",
       "depth": 2,
-      "nodes": 1152,
-      "elapsed_ms": 208.884,
-      "root_preparation_ms": 1.5387339999790584
+      "nodes": 1408,
+      "elapsed_ms": 200.735,
+      "root_preparation_ms": 1.1718920000021171
     },
     {
       "game_id": 61,
@@ -1221,9 +1221,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "6c6d",
       "depth": 2,
-      "nodes": 1152,
-      "elapsed_ms": 208.359,
-      "root_preparation_ms": 1.2849379999977373
+      "nodes": 1408,
+      "elapsed_ms": 200.098,
+      "root_preparation_ms": 1.0604349999994156
     },
     {
       "game_id": 61,
@@ -1232,9 +1232,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "6c6d",
       "depth": 2,
-      "nodes": 1152,
-      "elapsed_ms": 206.089,
-      "root_preparation_ms": 1.3755679999860604
+      "nodes": 1408,
+      "elapsed_ms": 200.642,
+      "root_preparation_ms": 1.0581120000097144
     },
     {
       "game_id": 61,
@@ -1243,9 +1243,9 @@
       "variant": "baseline",
       "move": "6c6d",
       "depth": 2,
-      "nodes": 1152,
-      "elapsed_ms": 205.609,
-      "root_preparation_ms": 1.2799680000057378
+      "nodes": 1408,
+      "elapsed_ms": 200.113,
+      "root_preparation_ms": 1.0670860000345783
     },
     {
       "game_id": 61,
@@ -1255,8 +1255,8 @@
       "move": "6b6a",
       "depth": 2,
       "nodes": 512,
-      "elapsed_ms": 376.057,
-      "root_preparation_ms": 3.0257189999929324
+      "elapsed_ms": 303.849,
+      "root_preparation_ms": 2.4405109999747765
     },
     {
       "game_id": 61,
@@ -1266,8 +1266,8 @@
       "move": "6b6a",
       "depth": 2,
       "nodes": 512,
-      "elapsed_ms": 376.844,
-      "root_preparation_ms": 2.872040999989167
+      "elapsed_ms": 301.791,
+      "root_preparation_ms": 2.302464000024429
     },
     {
       "game_id": 61,
@@ -1277,8 +1277,8 @@
       "move": "6b6a",
       "depth": 2,
       "nodes": 512,
-      "elapsed_ms": 376.73,
-      "root_preparation_ms": 2.883423000014318
+      "elapsed_ms": 303.663,
+      "root_preparation_ms": 2.320961000009447
     },
     {
       "game_id": 61,
@@ -1288,8 +1288,8 @@
       "move": "6b6a",
       "depth": 2,
       "nodes": 512,
-      "elapsed_ms": 376.122,
-      "root_preparation_ms": 2.884674999990011
+      "elapsed_ms": 302.559,
+      "root_preparation_ms": 2.3023929999794746
     },
     {
       "game_id": 70,
@@ -1298,9 +1298,9 @@
       "variant": "baseline",
       "move": "B*5e",
       "depth": 2,
-      "nodes": 512,
-      "elapsed_ms": 205.127,
-      "root_preparation_ms": 3.782378000011022
+      "nodes": 758,
+      "elapsed_ms": 202.908,
+      "root_preparation_ms": 3.0712789999824963
     },
     {
       "game_id": 70,
@@ -1309,9 +1309,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "B*5e",
       "depth": 2,
-      "nodes": 512,
-      "elapsed_ms": 205.138,
-      "root_preparation_ms": 3.6843640000085998
+      "nodes": 758,
+      "elapsed_ms": 202.858,
+      "root_preparation_ms": 2.943156000014824
     },
     {
       "game_id": 70,
@@ -1320,9 +1320,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "B*5e",
       "depth": 2,
-      "nodes": 512,
-      "elapsed_ms": 202.749,
-      "root_preparation_ms": 3.675979000007601
+      "nodes": 758,
+      "elapsed_ms": 203.364,
+      "root_preparation_ms": 2.963978000025236
     },
     {
       "game_id": 70,
@@ -1331,9 +1331,9 @@
       "variant": "baseline",
       "move": "B*5e",
       "depth": 2,
-      "nodes": 554,
-      "elapsed_ms": 220.544,
-      "root_preparation_ms": 3.5553310000011606
+      "nodes": 758,
+      "elapsed_ms": 202.889,
+      "root_preparation_ms": 2.950117000011687
     },
     {
       "game_id": 70,
@@ -1343,8 +1343,8 @@
       "move": "5d6c",
       "depth": 2,
       "nodes": 640,
-      "elapsed_ms": 362.366,
-      "root_preparation_ms": 2.086148999978832
+      "elapsed_ms": 290.017,
+      "root_preparation_ms": 1.6893410000307085
     },
     {
       "game_id": 70,
@@ -1354,8 +1354,8 @@
       "move": "5d6c",
       "depth": 2,
       "nodes": 640,
-      "elapsed_ms": 371.287,
-      "root_preparation_ms": 2.008103000008532
+      "elapsed_ms": 290.86,
+      "root_preparation_ms": 1.6086900000118476
     },
     {
       "game_id": 70,
@@ -1365,8 +1365,8 @@
       "move": "5d6c",
       "depth": 2,
       "nodes": 640,
-      "elapsed_ms": 364.108,
-      "root_preparation_ms": 1.962227000007033
+      "elapsed_ms": 291.82,
+      "root_preparation_ms": 1.574268000013035
     },
     {
       "game_id": 70,
@@ -1376,8 +1376,8 @@
       "move": "5d6c",
       "depth": 2,
       "nodes": 640,
-      "elapsed_ms": 365.611,
-      "root_preparation_ms": 2.01675900001419
+      "elapsed_ms": 291.81,
+      "root_preparation_ms": 1.5575130000229365
     },
     {
       "game_id": 71,
@@ -1386,9 +1386,9 @@
       "variant": "baseline",
       "move": "5d5e",
       "depth": 2,
-      "nodes": 1253,
-      "elapsed_ms": 207.036,
-      "root_preparation_ms": 1.2820630000192068
+      "nodes": 1519,
+      "elapsed_ms": 200.424,
+      "root_preparation_ms": 1.1013770000545264
     },
     {
       "game_id": 71,
@@ -1397,9 +1397,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "5d5e",
       "depth": 2,
-      "nodes": 1253,
-      "elapsed_ms": 206.269,
-      "root_preparation_ms": 1.2041869999848132
+      "nodes": 1536,
+      "elapsed_ms": 201.777,
+      "root_preparation_ms": 1.0121629999844117
     },
     {
       "game_id": 71,
@@ -1408,9 +1408,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "5d5e",
       "depth": 2,
-      "nodes": 1197,
-      "elapsed_ms": 200.48,
-      "root_preparation_ms": 1.215236999996705
+      "nodes": 1536,
+      "elapsed_ms": 201.57,
+      "root_preparation_ms": 1.0036099999979342
     },
     {
       "game_id": 71,
@@ -1419,9 +1419,9 @@
       "variant": "baseline",
       "move": "5d5e",
       "depth": 2,
-      "nodes": 1197,
-      "elapsed_ms": 203.001,
-      "root_preparation_ms": 1.2093760000198017
+      "nodes": 1536,
+      "elapsed_ms": 201.814,
+      "root_preparation_ms": 1.0063629999876866
     },
     {
       "game_id": 71,
@@ -1431,8 +1431,8 @@
       "move": "5b5a",
       "depth": 3,
       "nodes": 168,
-      "elapsed_ms": 57.551,
-      "root_preparation_ms": 0.8004690000120718
+      "elapsed_ms": 45.645,
+      "root_preparation_ms": 0.6743940000433213
     },
     {
       "game_id": 71,
@@ -1442,8 +1442,8 @@
       "move": "5b5a",
       "depth": 3,
       "nodes": 168,
-      "elapsed_ms": 58.571,
-      "root_preparation_ms": 0.6927880000091591
+      "elapsed_ms": 45.846,
+      "root_preparation_ms": 0.5544240000290301
     },
     {
       "game_id": 71,
@@ -1453,8 +1453,8 @@
       "move": "5b5a",
       "depth": 3,
       "nodes": 168,
-      "elapsed_ms": 58.591,
-      "root_preparation_ms": 0.6966759999897931
+      "elapsed_ms": 45.865,
+      "root_preparation_ms": 0.5525619999957598
     },
     {
       "game_id": 71,
@@ -1464,8 +1464,8 @@
       "move": "5b5a",
       "depth": 3,
       "nodes": 168,
-      "elapsed_ms": 58.926,
-      "root_preparation_ms": 0.6778599999961443
+      "elapsed_ms": 45.676,
+      "root_preparation_ms": 0.5507390000047963
     },
     {
       "game_id": 80,
@@ -1473,10 +1473,10 @@
       "trial": 0,
       "variant": "baseline",
       "move": "P*8g",
-      "depth": 2,
-      "nodes": 1152,
-      "elapsed_ms": 202.713,
-      "root_preparation_ms": 1.8569599999977981
+      "depth": 3,
+      "nodes": 1432,
+      "elapsed_ms": 198.356,
+      "root_preparation_ms": 1.539506000028723
     },
     {
       "game_id": 80,
@@ -1484,10 +1484,10 @@
       "trial": 1,
       "variant": "skip_no_check_mate_test",
       "move": "P*8g",
-      "depth": 2,
-      "nodes": 1152,
-      "elapsed_ms": 202.662,
-      "root_preparation_ms": 1.7220170000200596
+      "depth": 3,
+      "nodes": 1432,
+      "elapsed_ms": 198.137,
+      "root_preparation_ms": 1.423810999995112
     },
     {
       "game_id": 80,
@@ -1495,10 +1495,10 @@
       "trial": 2,
       "variant": "skip_no_check_mate_test",
       "move": "P*8g",
-      "depth": 2,
-      "nodes": 1152,
-      "elapsed_ms": 203.156,
-      "root_preparation_ms": 1.7067280000162555
+      "depth": 3,
+      "nodes": 1432,
+      "elapsed_ms": 197.288,
+      "root_preparation_ms": 1.4012169999659818
     },
     {
       "game_id": 80,
@@ -1506,10 +1506,10 @@
       "trial": 3,
       "variant": "baseline",
       "move": "P*8g",
-      "depth": 2,
-      "nodes": 1152,
-      "elapsed_ms": 202.749,
-      "root_preparation_ms": 1.7334279999943192
+      "depth": 3,
+      "nodes": 1432,
+      "elapsed_ms": 196.693,
+      "root_preparation_ms": 1.3704820000270956
     },
     {
       "game_id": 80,
@@ -1518,9 +1518,9 @@
       "variant": "baseline",
       "move": "6g7f",
       "depth": 2,
-      "nodes": 1649,
-      "elapsed_ms": 208.119,
-      "root_preparation_ms": 0.7298870000056468
+      "nodes": 1792,
+      "elapsed_ms": 202.485,
+      "root_preparation_ms": 0.6024060000413556
     },
     {
       "game_id": 80,
@@ -1529,9 +1529,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "6g7f",
       "depth": 2,
-      "nodes": 1649,
-      "elapsed_ms": 206.861,
-      "root_preparation_ms": 0.573723999991671
+      "nodes": 1792,
+      "elapsed_ms": 203.182,
+      "root_preparation_ms": 0.4779289999987668
     },
     {
       "game_id": 80,
@@ -1540,9 +1540,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "6g7f",
       "depth": 2,
-      "nodes": 1649,
-      "elapsed_ms": 209.544,
-      "root_preparation_ms": 0.5859479999799078
+      "nodes": 1792,
+      "elapsed_ms": 204.725,
+      "root_preparation_ms": 0.487844000019777
     },
     {
       "game_id": 80,
@@ -1551,9 +1551,9 @@
       "variant": "baseline",
       "move": "6g7f",
       "depth": 2,
-      "nodes": 1649,
-      "elapsed_ms": 207.389,
-      "root_preparation_ms": 0.5895949999796812
+      "nodes": 1792,
+      "elapsed_ms": 202.71,
+      "root_preparation_ms": 0.4829160000099364
     },
     {
       "game_id": 81,
@@ -1563,8 +1563,8 @@
       "move": "6c6d",
       "depth": 2,
       "nodes": 896,
-      "elapsed_ms": 246.699,
-      "root_preparation_ms": 1.4599560000192469
+      "elapsed_ms": 201.067,
+      "root_preparation_ms": 1.214116000028298
     },
     {
       "game_id": 81,
@@ -1573,9 +1573,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "6c6d",
       "depth": 2,
-      "nodes": 781,
-      "elapsed_ms": 202.23,
-      "root_preparation_ms": 1.3271869999869068
+      "nodes": 896,
+      "elapsed_ms": 201.409,
+      "root_preparation_ms": 1.08603299997867
     },
     {
       "game_id": 81,
@@ -1584,9 +1584,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "6c6d",
       "depth": 2,
-      "nodes": 781,
-      "elapsed_ms": 201.086,
-      "root_preparation_ms": 1.303343000017776
+      "nodes": 896,
+      "elapsed_ms": 200.625,
+      "root_preparation_ms": 1.0899800000174764
     },
     {
       "game_id": 81,
@@ -1595,9 +1595,9 @@
       "variant": "baseline",
       "move": "6c6d",
       "depth": 2,
-      "nodes": 781,
-      "elapsed_ms": 203.002,
-      "root_preparation_ms": 1.3068290000148863
+      "nodes": 896,
+      "elapsed_ms": 201.283,
+      "root_preparation_ms": 1.0948969999731162
     },
     {
       "game_id": 81,
@@ -1607,8 +1607,8 @@
       "move": "4a3a",
       "depth": 3,
       "nodes": 445,
-      "elapsed_ms": 224.402,
-      "root_preparation_ms": 1.77977600000645
+      "elapsed_ms": 176.728,
+      "root_preparation_ms": 1.451363000001038
     },
     {
       "game_id": 81,
@@ -1618,8 +1618,8 @@
       "move": "4a3a",
       "depth": 3,
       "nodes": 445,
-      "elapsed_ms": 231.503,
-      "root_preparation_ms": 1.6848879999997735
+      "elapsed_ms": 177.89,
+      "root_preparation_ms": 1.3882179999882283
     },
     {
       "game_id": 81,
@@ -1629,8 +1629,8 @@
       "move": "4a3a",
       "depth": 3,
       "nodes": 445,
-      "elapsed_ms": 216.107,
-      "root_preparation_ms": 1.8857539999999062
+      "elapsed_ms": 176.196,
+      "root_preparation_ms": 1.338433000000805
     },
     {
       "game_id": 81,
@@ -1640,8 +1640,8 @@
       "move": "4a3a",
       "depth": 3,
       "nodes": 445,
-      "elapsed_ms": 216.9,
-      "root_preparation_ms": 1.6332609999949455
+      "elapsed_ms": 176.536,
+      "root_preparation_ms": 1.3347369999792136
     },
     {
       "game_id": 90,
@@ -1650,9 +1650,9 @@
       "variant": "baseline",
       "move": "6h6g",
       "depth": 2,
-      "nodes": 1280,
-      "elapsed_ms": 214.996,
-      "root_preparation_ms": 1.277114000004076
+      "nodes": 1536,
+      "elapsed_ms": 206.528,
+      "root_preparation_ms": 1.0949770000365788
     },
     {
       "game_id": 90,
@@ -1661,9 +1661,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "6h6g",
       "depth": 2,
-      "nodes": 1280,
-      "elapsed_ms": 217.657,
-      "root_preparation_ms": 1.1486119999801758
+      "nodes": 1536,
+      "elapsed_ms": 206.892,
+      "root_preparation_ms": 0.9695979999833071
     },
     {
       "game_id": 90,
@@ -1672,9 +1672,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "6h6g",
       "depth": 2,
-      "nodes": 1152,
-      "elapsed_ms": 200.301,
-      "root_preparation_ms": 1.1807630000078007
+      "nodes": 1536,
+      "elapsed_ms": 206.487,
+      "root_preparation_ms": 0.9702790000005734
     },
     {
       "game_id": 90,
@@ -1683,9 +1683,9 @@
       "variant": "baseline",
       "move": "6h6g",
       "depth": 2,
-      "nodes": 1152,
-      "elapsed_ms": 200.936,
-      "root_preparation_ms": 1.2039160000085758
+      "nodes": 1536,
+      "elapsed_ms": 206.552,
+      "root_preparation_ms": 0.9691679999832559
     },
     {
       "game_id": 90,
@@ -1695,8 +1695,8 @@
       "move": "3i4i",
       "depth": 3,
       "nodes": 305,
-      "elapsed_ms": 209.829,
-      "root_preparation_ms": 0.6383959999993749
+      "elapsed_ms": 168.219,
+      "root_preparation_ms": 0.479611000002933
     },
     {
       "game_id": 90,
@@ -1706,8 +1706,8 @@
       "move": "3i4i",
       "depth": 3,
       "nodes": 305,
-      "elapsed_ms": 208.745,
-      "root_preparation_ms": 0.5306749999931526
+      "elapsed_ms": 169.909,
+      "root_preparation_ms": 0.4572469999857276
     },
     {
       "game_id": 90,
@@ -1717,8 +1717,8 @@
       "move": "3i4i",
       "depth": 3,
       "nodes": 305,
-      "elapsed_ms": 211.954,
-      "root_preparation_ms": 0.5326080000145339
+      "elapsed_ms": 169.537,
+      "root_preparation_ms": 0.43247099995369354
     },
     {
       "game_id": 90,
@@ -1728,8 +1728,8 @@
       "move": "3i4i",
       "depth": 3,
       "nodes": 305,
-      "elapsed_ms": 210.578,
-      "root_preparation_ms": 0.558607000016309
+      "elapsed_ms": 168.757,
+      "root_preparation_ms": 0.43626600000834515
     },
     {
       "game_id": 91,
@@ -1738,9 +1738,9 @@
       "variant": "baseline",
       "move": "1a1b",
       "depth": 2,
-      "nodes": 1395,
-      "elapsed_ms": 204.956,
-      "root_preparation_ms": 1.2732259999950202
+      "nodes": 1646,
+      "elapsed_ms": 208.071,
+      "root_preparation_ms": 1.0480159999701755
     },
     {
       "game_id": 91,
@@ -1749,9 +1749,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "1a1b",
       "depth": 2,
-      "nodes": 1395,
-      "elapsed_ms": 204.709,
-      "root_preparation_ms": 1.1543430000244825
+      "nodes": 1646,
+      "elapsed_ms": 208.013,
+      "root_preparation_ms": 0.9259629999860408
     },
     {
       "game_id": 91,
@@ -1760,9 +1760,9 @@
       "variant": "skip_no_check_mate_test",
       "move": "1a1b",
       "depth": 2,
-      "nodes": 1395,
-      "elapsed_ms": 203.905,
-      "root_preparation_ms": 1.1236249999910797
+      "nodes": 1570,
+      "elapsed_ms": 200.238,
+      "root_preparation_ms": 0.9275140000113424
     },
     {
       "game_id": 91,
@@ -1771,9 +1771,9 @@
       "variant": "baseline",
       "move": "1a1b",
       "depth": 2,
-      "nodes": 1395,
-      "elapsed_ms": 203.92,
-      "root_preparation_ms": 1.1053819999915504
+      "nodes": 1646,
+      "elapsed_ms": 206.533,
+      "root_preparation_ms": 0.9071339999877637
     },
     {
       "game_id": 91,
@@ -1783,8 +1783,8 @@
       "move": "6b7a",
       "depth": 2,
       "nodes": 512,
-      "elapsed_ms": 259.024,
-      "root_preparation_ms": 1.9994170000074973
+      "elapsed_ms": 207.892,
+      "root_preparation_ms": 1.627616999996917
     },
     {
       "game_id": 91,
@@ -1794,8 +1794,8 @@
       "move": "6b7a",
       "depth": 2,
       "nodes": 512,
-      "elapsed_ms": 259.561,
-      "root_preparation_ms": 1.8385159999922962
+      "elapsed_ms": 207.826,
+      "root_preparation_ms": 1.483480000047166
     },
     {
       "game_id": 91,
@@ -1805,8 +1805,8 @@
       "move": "6b7a",
       "depth": 2,
       "nodes": 512,
-      "elapsed_ms": 257.246,
-      "root_preparation_ms": 1.832655000015393
+      "elapsed_ms": 207.387,
+      "root_preparation_ms": 1.4888380000002144
     },
     {
       "game_id": 91,
@@ -1816,8 +1816,8 @@
       "move": "6b7a",
       "depth": 2,
       "nodes": 512,
-      "elapsed_ms": 259.899,
-      "root_preparation_ms": 1.8654650000087258
+      "elapsed_ms": 206.566,
+      "root_preparation_ms": 1.4976909999973032
     }
   ],
   "limitations": [
