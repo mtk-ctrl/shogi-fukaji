@@ -84,13 +84,17 @@ class FastLegalGuardTests(unittest.TestCase):
         for fn in (ordered_moves, select_move, negamax):
             self.assertFalse(inspect.signature(fn).parameters["fast_legal_guard"].default)
 
-    def test_usi_opt_in(self):
-        p = subprocess.run([sys.executable, "-m", "fukaji.engine"],
-            input="usi\nsetoption name FastLegalGuard value true\nisready\nposition startpos\ngo movetime 30\nquit\n",
-            text=True, capture_output=True, timeout=15)
-        self.assertEqual(p.returncode, 0, p.stderr)
-        self.assertIn("option name FastLegalGuard type check default false", p.stdout)
-        self.assertIn("bestmove ", p.stdout)
+    def test_usi_formally_adopted_default_and_legacy_override(self):
+        for choice in ("", "setoption name FastLegalGuard value false\n",
+                       "setoption name FastLegalGuard value true\n"):
+            with self.subTest(option=choice):
+                p = subprocess.run([sys.executable, "-m", "fukaji.engine"],
+                    input="usi\n" + choice + "isready\nposition startpos\ngo movetime 30\nquit\n",
+                    text=True, capture_output=True, timeout=15)
+                self.assertEqual(p.returncode, 0, p.stderr)
+                self.assertIn("id name FUKAJI v0.1.0", p.stdout)
+                self.assertIn("option name FastLegalGuard type check default true", p.stdout)
+                self.assertIn("bestmove ", p.stdout)
 
 if __name__ == "__main__":
     unittest.main()
