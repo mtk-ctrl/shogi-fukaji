@@ -1,0 +1,33 @@
+{
+  "enabled": true,
+  "research_only": true,
+  "formal_adoption": false,
+  "training_allowed": false,
+  "kumoji_source_run": 41177748192,
+  "kumoji_input_artifact_id": 13033349670,
+  "source_artifact_name": "fukaji-kumoji-full100-input-41177748192",
+  "original_kumoji_seed": 202610315,
+  "kumoji_commit": "76ee74d04a800285e24dd81ef01711e990cfa181",
+  "fukaji_g8_sha256": "18b39f647caa458389a1900b875337adadac74ae37e27343e7f0094ed663c492",
+  "seed": 202611015,
+  "pairs": 50,
+  "games": 200,
+  "shards": 20,
+  "opening_plies": 6,
+  "max_plies": 300,
+  "movetime_ms": 200,
+  "depth_fukaji": 3,
+  "g8_mix_percent": 25,
+  "fast_relative": true,
+  "fast_move_list": true,
+  "root_alpha_beta": true,
+  "arms": [
+    "baseline",
+    "fastlegal"
+  ],
+  "only_difference": "FastLegalGuard",
+  "kumoji_research_candidate": "unchanged_prior_460_positions",
+  "kumoji_adaptive_long_think": true,
+  "kumoji_search_threads": 2,
+  "kumoji_ponder": true
+}
