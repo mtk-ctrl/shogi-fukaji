@@ -1,0 +1,142 @@
+name: KUMOJI historical game failure study
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/fukaji-kumoji-loss-study-request.json
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: fukaji-kumoji-loss-study
+  cancel-in-progress: false
+
+jobs:
+  announce:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Record actual research run ID on main
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const {owner,repo}=context.repo;
+            const path="research/kumoji-loss-study/status.json";
+            let current;
+            try {current=(await github.rest.repos.getContent({owner,repo,path,ref:"main"})).data.sha;}
+            catch(e) {if(e.status!==404) throw e;}
+            const data={schema:"fukaji-kumoji-loss-study-v1",state:"started",
+              run_id:context.runId,run_url:"https://github.com/"+owner+"/"+repo+"/actions/runs/"+context.runId,
+              base_comparison_run:41177748192,request_commit:context.sha,
+              updated_at:new Date().toISOString(),research_only:true,model_promoted:false};
+            const args={owner,repo,path,branch:"main",message:"ci(loss-study): record real run "+context.runId,
+              content:Buffer.from(JSON.stringify(data,null,2)+"\n").toString("base64")};
+            if(current)args.sha=current;
+            await github.rest.repos.createOrUpdateFileContents(args);
+
+  study:
+    needs: announce
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -r requirements.txt
+      - name: Verify bounded tactical diagnostic unit tests
+        run: python -m unittest discover -s tests -p 'test_kumoji_loss_study.py' -v
+      - name: Download and verify exact archived 100 games
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python - <<'PY'
+          import io, json
+          from pathlib import Path
+          from zipfile import ZipFile
+          from fukaji.g8_artifact_selection import artifact_bytes
+          from fukaji.kumoji_loss_study import GAMES_SHA
+          import hashlib
+          req=json.loads(Path(".github/fukaji-kumoji-loss-study-request.json").read_text())
+          expected={"research_only":True,"source_run":41177748192,
+                    "source_artifact_id":13034155311,
+                    "source_zip_sha256":"a4bb82455e818873771b8290f1c5c52770a1bf628c99ebd94b7ea8231565ad9c",
+                    "all_games_sha256":GAMES_SHA,"engine_changes":False,"training_labels":False}
+          if req != expected: raise ValueError("unapproved immutable source request")
+          raw=artifact_bytes(13034155311,"fukaji-kumoji-full100-aggregate-41177748192",
+                             41177748192, expected["source_zip_sha256"], __import__("os").environ["GH_TOKEN"])
+          with ZipFile(io.BytesIO(raw)) as z:
+              if set(z.namelist())!={"all_games.jsonl","summary.json"}: raise ValueError("unexpected source file set")
+              games=z.read("all_games.jsonl")
+              report=z.read("summary.json")
+          if hashlib.sha256(games).hexdigest()!=GAMES_SHA: raise ValueError("100-game source SHA mismatch")
+          out=Path("build/loss-study/input");out.mkdir(parents=True,exist_ok=True)
+          (out/"all_games.jsonl").write_bytes(games)
+          (out/"summary.json").write_bytes(report)
+          print("Verified original 100 games and archive hashes.")
+          PY
+      - name: Independently replay every loss and verify mate-defense alternatives
+        run: |
+          python -m fukaji.kumoji_loss_study --games build/loss-study/input/all_games.jsonl \
+            --summary build/loss-study/input/summary.json --out build/loss-study/result
+      - name: Save bounded audited findings permanently in the research source
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs=require("fs");
+            const {owner,repo}=context.repo;
+            const path="research/kumoji-loss-study/verified-report.json";
+            const data=fs.readFileSync("build/loss-study/result/loss_study.json","utf8");
+            const report=JSON.parse(data);
+            if(report.games_replayed!==100||report.last_defense_probes.length!==20)
+              throw Error("invalid audited output");
+            let sha;
+            try {sha=(await github.rest.repos.getContent({owner,repo,path,ref:"main"})).data.sha;}
+            catch(e) {if(e.status!==404) throw e;}
+            const args={owner,repo,path,branch:"main",
+              message:"research: archive 100-game loss tactics for run "+context.runId,
+              content:Buffer.from(data).toString("base64")};
+            if(sha)args.sha=sha;
+            await github.rest.repos.createOrUpdateFileContents(args);
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kumoji-loss-study-${{ github.run_id }}
+          path: build/loss-study/result/
+          retention-days: 90
+
+  final_status:
+    needs: [announce, study]
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      STUDY_STATUS: ${{ needs.study.result }}
+    steps:
+      - name: Persist final study job status
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const {owner,repo}=context.repo;
+            const path="research/kumoji-loss-study/status.json";
+            const data={schema:"fukaji-kumoji-loss-study-v1",
+              state:process.env.STUDY_STATUS==="success"?"verified_report_saved":"incomplete_or_failed",
+              study_job:process.env.STUDY_STATUS,
+              run_id:context.runId,run_url:"https://github.com/"+owner+"/"+repo+"/actions/runs/"+context.runId,
+              base_comparison_run:41177748192,request_commit:context.sha,
+              updated_at:new Date().toISOString(),research_only:true,model_promoted:false};
+            let current;
+            try {current=(await github.rest.repos.getContent({owner,repo,path,ref:"main"})).data.sha;}
+            catch(e) {if(e.status!==404) throw e;}
+            const args={owner,repo,path,branch:"main",message:"ci(loss-study): record result "+context.runId,
+              content:Buffer.from(JSON.stringify(data,null,2)+"\n").toString("base64")};
+            if(current)args.sha=current;
+            await github.rest.repos.createOrUpdateFileContents(args);
