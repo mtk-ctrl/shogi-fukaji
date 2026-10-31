@@ -1,0 +1,1275 @@
+{
+  "status": "historical_G8_defense_candidate_dev_benchmark_only",
+  "source_games_sha256": "c0874b1b7cb96464385e76544a4fac69454ac3c9ebf681127bbca20c909e019f",
+  "model_sha256": "18b39f647caa458389a1900b875337adadac74ae37e27343e7f0094ed663c492",
+  "historical_sampled_games": 20,
+  "same_runner_total_calls": 80,
+  "order": "baseline_guard_guard_baseline",
+  "baseline": {
+    "calls": 40,
+    "moves_allow_immediate_mate": 34,
+    "median_wall_ms": 201.496,
+    "mean_wall_ms": 178.769,
+    "over_200_ms": 26,
+    "depth_three_completed": 16
+  },
+  "guard": {
+    "calls": 40,
+    "moves_allow_immediate_mate": 34,
+    "median_wall_ms": 184.825,
+    "mean_wall_ms": 158.871,
+    "over_200_ms": 12,
+    "depth_three_completed": 14
+  },
+  "by_game": {
+    "0": {
+      "baseline_unsafe": [
+        true,
+        true
+      ],
+      "guard_unsafe": [
+        true,
+        true
+      ],
+      "guard_status": [
+        "confirmed_immediate_mate_no_safe_alt_yet",
+        "confirmed_immediate_mate_no_safe_alt_yet"
+      ]
+    },
+    "1": {
+      "baseline_unsafe": [
+        false,
+        false
+      ],
+      "guard_unsafe": [
+        true,
+        true
+      ],
+      "guard_status": [
+        "unknown_time_expired_after_danger",
+        "unknown_time_expired_after_danger"
+      ]
+    },
+    "10": {
+      "baseline_unsafe": [
+        true,
+        true
+      ],
+      "guard_unsafe": [
+        true,
+        true
+      ],
+      "guard_status": [
+        "confirmed_immediate_mate_no_safe_alt_yet",
+        "confirmed_immediate_mate_no_safe_alt_yet"
+      ]
+    },
+    "11": {
+      "baseline_unsafe": [
+        true,
+        true
+      ],
+      "guard_unsafe": [
+        true,
+        true
+      ],
+      "guard_status": [
+        "unknown_time_expired_after_danger",
+        "unknown_time_expired_after_danger"
+      ]
+    },
+    "20": {
+      "baseline_unsafe": [
+        true,
+        true
+      ],
+      "guard_unsafe": [
+        true,
+        true
+      ],
+      "guard_status": [
+        "confirmed_immediate_mate_no_safe_alt_yet",
+        "confirmed_immediate_mate_no_safe_alt_yet"
+      ]
+    },
+    "21": {
+      "baseline_unsafe": [
+        true,
+        true
+      ],
+      "guard_unsafe": [
+        true,
+        true
+      ],
+      "guard_status": [
+        "unknown_time_expired",
+        "unknown_time_expired"
+      ]
+    },
+    "30": {
+      "baseline_unsafe": [
+        true,
+        true
+      ],
+      "guard_unsafe": [
+        true,
+        true
+      ],
+      "guard_status": [
+        "confirmed_immediate_mate_no_safe_alt_yet",
+        "confirmed_immediate_mate_no_safe_alt_yet"
+      ]
+    },
+    "31": {
+      "baseline_unsafe": [
+        true,
+        true
+      ],
+      "guard_unsafe": [
+        true,
+        true
+      ],
+      "guard_status": [
+        "unknown_time_expired_after_danger",
+        "unknown_time_expired_after_danger"
+      ]
+    },
+    "40": {
+      "baseline_unsafe": [
+        false,
+        false
+      ],
+      "guard_unsafe": [
+        false,
+        false
+      ],
+      "guard_status": [
+        "verified_no_immediate_mate",
+        "verified_no_immediate_mate"
+      ]
+    },
+    "41": {
+      "baseline_unsafe": [
+        true,
+        true
+      ],
+      "guard_unsafe": [
+        false,
+        false
+      ],
+      "guard_status": [
+        "confirmed_avoidable_immediate_mate",
+        "confirmed_avoidable_immediate_mate"
+      ]
+    },
+    "50": {
+      "baseline_unsafe": [
+        true,
+        true
+      ],
+      "guard_unsafe": [
+        true,
+        true
+      ],
+      "guard_status": [
+        "confirmed_immediate_mate_no_safe_alt_yet",
+        "confirmed_immediate_mate_no_safe_alt_yet"
+      ]
+    },
+    "51": {
+      "baseline_unsafe": [
+        true,
+        true
+      ],
+      "guard_unsafe": [
+        true,
+        true
+      ],
+      "guard_status": [
+        "confirmed_immediate_mate_no_safe_alt_yet",
+        "confirmed_immediate_mate_no_safe_alt_yet"
+      ]
+    },
+    "60": {
+      "baseline_unsafe": [
+        true,
+        true
+      ],
+      "guard_unsafe": [
+        true,
+        true
+      ],
+      "guard_status": [
+        "unknown_time_expired",
+        "unknown_time_expired"
+      ]
+    },
+    "61": {
+      "baseline_unsafe": [
+        true,
+        true
+      ],
+      "guard_unsafe": [
+        true,
+        true
+      ],
+      "guard_status": [
+        "confirmed_immediate_mate_no_safe_alt_yet",
+        "confirmed_immediate_mate_no_safe_alt_yet"
+      ]
+    },
+    "70": {
+      "baseline_unsafe": [
+        true,
+        true
+      ],
+      "guard_unsafe": [
+        true,
+        true
+      ],
+      "guard_status": [
+        "confirmed_immediate_mate_no_safe_alt_yet",
+        "confirmed_immediate_mate_no_safe_alt_yet"
+      ]
+    },
+    "71": {
+      "baseline_unsafe": [
+        true,
+        true
+      ],
+      "guard_unsafe": [
+        true,
+        true
+      ],
+      "guard_status": [
+        "confirmed_immediate_mate_no_safe_alt_yet",
+        "confirmed_immediate_mate_no_safe_alt_yet"
+      ]
+    },
+    "80": {
+      "baseline_unsafe": [
+        false,
+        false
+      ],
+      "guard_unsafe": [
+        false,
+        false
+      ],
+      "guard_status": [
+        "verified_no_immediate_mate",
+        "verified_no_immediate_mate"
+      ]
+    },
+    "81": {
+      "baseline_unsafe": [
+        true,
+        true
+      ],
+      "guard_unsafe": [
+        true,
+        true
+      ],
+      "guard_status": [
+        "confirmed_immediate_mate_no_safe_alt_yet",
+        "confirmed_immediate_mate_no_safe_alt_yet"
+      ]
+    },
+    "90": {
+      "baseline_unsafe": [
+        true,
+        true
+      ],
+      "guard_unsafe": [
+        true,
+        true
+      ],
+      "guard_status": [
+        "confirmed_immediate_mate_no_safe_alt_yet",
+        "confirmed_immediate_mate_no_safe_alt_yet"
+      ]
+    },
+    "91": {
+      "baseline_unsafe": [
+        true,
+        true
+      ],
+      "guard_unsafe": [
+        true,
+        true
+      ],
+      "guard_status": [
+        "confirmed_immediate_mate_no_safe_alt_yet",
+        "confirmed_immediate_mate_no_safe_alt_yet"
+      ]
+    }
+  },
+  "per_call": [
+    {
+      "game_id": 0,
+      "trial": 0,
+      "arm": "baseline",
+      "move": "6h5h",
+      "source_historical_move": "6h5h",
+      "depth": 2,
+      "nodes": 768,
+      "elapsed_ms": 309.172,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 0,
+      "trial": 1,
+      "arm": "guard",
+      "move": "6h5h",
+      "source_historical_move": "6h5h",
+      "depth": 2,
+      "nodes": 640,
+      "elapsed_ms": 200.579,
+      "allows_immediate_mate": true,
+      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+    },
+    {
+      "game_id": 0,
+      "trial": 2,
+      "arm": "guard",
+      "move": "6h5h",
+      "source_historical_move": "6h5h",
+      "depth": 2,
+      "nodes": 640,
+      "elapsed_ms": 200.421,
+      "allows_immediate_mate": true,
+      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+    },
+    {
+      "game_id": 0,
+      "trial": 3,
+      "arm": "baseline",
+      "move": "6h5h",
+      "source_historical_move": "6h5h",
+      "depth": 2,
+      "nodes": 768,
+      "elapsed_ms": 293.324,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 1,
+      "trial": 0,
+      "arm": "baseline",
+      "move": "5b4b",
+      "source_historical_move": "5a4b",
+      "depth": 2,
+      "nodes": 1920,
+      "elapsed_ms": 238.86,
+      "allows_immediate_mate": false,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 1,
+      "trial": 1,
+      "arm": "guard",
+      "move": "5a4b",
+      "source_historical_move": "5a4b",
+      "depth": 1,
+      "nodes": 1642,
+      "elapsed_ms": 200.682,
+      "allows_immediate_mate": true,
+      "guard_status": "unknown_time_expired_after_danger"
+    },
+    {
+      "game_id": 1,
+      "trial": 2,
+      "arm": "guard",
+      "move": "5a4b",
+      "source_historical_move": "5a4b",
+      "depth": 1,
+      "nodes": 1644,
+      "elapsed_ms": 200.679,
+      "allows_immediate_mate": true,
+      "guard_status": "unknown_time_expired_after_danger"
+    },
+    {
+      "game_id": 1,
+      "trial": 3,
+      "arm": "baseline",
+      "move": "5b4b",
+      "source_historical_move": "5a4b",
+      "depth": 2,
+      "nodes": 1920,
+      "elapsed_ms": 238.709,
+      "allows_immediate_mate": false,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 10,
+      "trial": 0,
+      "arm": "baseline",
+      "move": "7h8g",
+      "source_historical_move": "7h8g",
+      "depth": 3,
+      "nodes": 274,
+      "elapsed_ms": 53.561,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 10,
+      "trial": 1,
+      "arm": "guard",
+      "move": "7h8g",
+      "source_historical_move": "7h8g",
+      "depth": 3,
+      "nodes": 274,
+      "elapsed_ms": 51.984,
+      "allows_immediate_mate": true,
+      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+    },
+    {
+      "game_id": 10,
+      "trial": 2,
+      "arm": "guard",
+      "move": "7h8g",
+      "source_historical_move": "7h8g",
+      "depth": 3,
+      "nodes": 274,
+      "elapsed_ms": 51.773,
+      "allows_immediate_mate": true,
+      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+    },
+    {
+      "game_id": 10,
+      "trial": 3,
+      "arm": "baseline",
+      "move": "7h8g",
+      "source_historical_move": "7h8g",
+      "depth": 3,
+      "nodes": 274,
+      "elapsed_ms": 48.147,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 11,
+      "trial": 0,
+      "arm": "baseline",
+      "move": "P*2e",
+      "source_historical_move": "P*2e",
+      "depth": 1,
+      "nodes": 1146,
+      "elapsed_ms": 202.703,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 11,
+      "trial": 1,
+      "arm": "guard",
+      "move": "P*2e",
+      "source_historical_move": "P*2e",
+      "depth": 1,
+      "nodes": 1115,
+      "elapsed_ms": 201.035,
+      "allows_immediate_mate": true,
+      "guard_status": "unknown_time_expired_after_danger"
+    },
+    {
+      "game_id": 11,
+      "trial": 2,
+      "arm": "guard",
+      "move": "P*2e",
+      "source_historical_move": "P*2e",
+      "depth": 1,
+      "nodes": 1117,
+      "elapsed_ms": 201.718,
+      "allows_immediate_mate": true,
+      "guard_status": "unknown_time_expired_after_danger"
+    },
+    {
+      "game_id": 11,
+      "trial": 3,
+      "arm": "baseline",
+      "move": "P*2e",
+      "source_historical_move": "P*2e",
+      "depth": 1,
+      "nodes": 1144,
+      "elapsed_ms": 200.491,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 20,
+      "trial": 0,
+      "arm": "baseline",
+      "move": "5h6h",
+      "source_historical_move": "5h6h",
+      "depth": 3,
+      "nodes": 586,
+      "elapsed_ms": 118.317,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 20,
+      "trial": 1,
+      "arm": "guard",
+      "move": "5h6h",
+      "source_historical_move": "5h6h",
+      "depth": 3,
+      "nodes": 586,
+      "elapsed_ms": 125.068,
+      "allows_immediate_mate": true,
+      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+    },
+    {
+      "game_id": 20,
+      "trial": 2,
+      "arm": "guard",
+      "move": "5h6h",
+      "source_historical_move": "5h6h",
+      "depth": 3,
+      "nodes": 586,
+      "elapsed_ms": 125.312,
+      "allows_immediate_mate": true,
+      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+    },
+    {
+      "game_id": 20,
+      "trial": 3,
+      "arm": "baseline",
+      "move": "5h6h",
+      "source_historical_move": "5h6h",
+      "depth": 3,
+      "nodes": 586,
+      "elapsed_ms": 119.211,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 21,
+      "trial": 0,
+      "arm": "baseline",
+      "move": "6d7d",
+      "source_historical_move": "6d7d",
+      "depth": 2,
+      "nodes": 1152,
+      "elapsed_ms": 221.907,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 21,
+      "trial": 1,
+      "arm": "guard",
+      "move": "6d7d",
+      "source_historical_move": "6d7d",
+      "depth": 2,
+      "nodes": 1152,
+      "elapsed_ms": 224.109,
+      "allows_immediate_mate": true,
+      "guard_status": "unknown_time_expired"
+    },
+    {
+      "game_id": 21,
+      "trial": 2,
+      "arm": "guard",
+      "move": "6d7d",
+      "source_historical_move": "6d7d",
+      "depth": 2,
+      "nodes": 1152,
+      "elapsed_ms": 224.073,
+      "allows_immediate_mate": true,
+      "guard_status": "unknown_time_expired"
+    },
+    {
+      "game_id": 21,
+      "trial": 3,
+      "arm": "baseline",
+      "move": "6d7d",
+      "source_historical_move": "6d7d",
+      "depth": 2,
+      "nodes": 1152,
+      "elapsed_ms": 221.513,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 30,
+      "trial": 0,
+      "arm": "baseline",
+      "move": "5h5i",
+      "source_historical_move": "5h5i",
+      "depth": 3,
+      "nodes": 242,
+      "elapsed_ms": 34.243,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 30,
+      "trial": 1,
+      "arm": "guard",
+      "move": "5h5i",
+      "source_historical_move": "5h5i",
+      "depth": 3,
+      "nodes": 242,
+      "elapsed_ms": 38.3,
+      "allows_immediate_mate": true,
+      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+    },
+    {
+      "game_id": 30,
+      "trial": 2,
+      "arm": "guard",
+      "move": "5h5i",
+      "source_historical_move": "5h5i",
+      "depth": 3,
+      "nodes": 242,
+      "elapsed_ms": 38.166,
+      "allows_immediate_mate": true,
+      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+    },
+    {
+      "game_id": 30,
+      "trial": 3,
+      "arm": "baseline",
+      "move": "5h5i",
+      "source_historical_move": "5h5i",
+      "depth": 3,
+      "nodes": 242,
+      "elapsed_ms": 33.991,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 31,
+      "trial": 0,
+      "arm": "baseline",
+      "move": "5c4d",
+      "source_historical_move": "5c4d",
+      "depth": 2,
+      "nodes": 640,
+      "elapsed_ms": 201.411,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 31,
+      "trial": 1,
+      "arm": "guard",
+      "move": "5c4d",
+      "source_historical_move": "5c4d",
+      "depth": 2,
+      "nodes": 591,
+      "elapsed_ms": 201.482,
+      "allows_immediate_mate": true,
+      "guard_status": "unknown_time_expired_after_danger"
+    },
+    {
+      "game_id": 31,
+      "trial": 2,
+      "arm": "guard",
+      "move": "5c4d",
+      "source_historical_move": "5c4d",
+      "depth": 2,
+      "nodes": 591,
+      "elapsed_ms": 200.572,
+      "allows_immediate_mate": true,
+      "guard_status": "unknown_time_expired_after_danger"
+    },
+    {
+      "game_id": 31,
+      "trial": 3,
+      "arm": "baseline",
+      "move": "5c4d",
+      "source_historical_move": "5c4d",
+      "depth": 2,
+      "nodes": 640,
+      "elapsed_ms": 200.415,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 40,
+      "trial": 0,
+      "arm": "baseline",
+      "move": "9h9e",
+      "source_historical_move": "5e5d",
+      "depth": 2,
+      "nodes": 896,
+      "elapsed_ms": 201.131,
+      "allows_immediate_mate": false,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 40,
+      "trial": 1,
+      "arm": "guard",
+      "move": "9h9e",
+      "source_historical_move": "5e5d",
+      "depth": 2,
+      "nodes": 640,
+      "elapsed_ms": 178.135,
+      "allows_immediate_mate": false,
+      "guard_status": "verified_no_immediate_mate"
+    },
+    {
+      "game_id": 40,
+      "trial": 2,
+      "arm": "guard",
+      "move": "9h9e",
+      "source_historical_move": "5e5d",
+      "depth": 2,
+      "nodes": 640,
+      "elapsed_ms": 178.859,
+      "allows_immediate_mate": false,
+      "guard_status": "verified_no_immediate_mate"
+    },
+    {
+      "game_id": 40,
+      "trial": 3,
+      "arm": "baseline",
+      "move": "9h9e",
+      "source_historical_move": "5e5d",
+      "depth": 2,
+      "nodes": 896,
+      "elapsed_ms": 201.456,
+      "allows_immediate_mate": false,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 41,
+      "trial": 0,
+      "arm": "baseline",
+      "move": "5c4b",
+      "source_historical_move": "5c4b",
+      "depth": 1,
+      "nodes": 2043,
+      "elapsed_ms": 205.3,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 41,
+      "trial": 1,
+      "arm": "guard",
+      "move": "P*3d",
+      "source_historical_move": "5c4b",
+      "depth": 1,
+      "nodes": 2023,
+      "elapsed_ms": 190.703,
+      "allows_immediate_mate": false,
+      "guard_status": "confirmed_avoidable_immediate_mate"
+    },
+    {
+      "game_id": 41,
+      "trial": 2,
+      "arm": "guard",
+      "move": "P*3d",
+      "source_historical_move": "5c4b",
+      "depth": 1,
+      "nodes": 2023,
+      "elapsed_ms": 190.888,
+      "allows_immediate_mate": false,
+      "guard_status": "confirmed_avoidable_immediate_mate"
+    },
+    {
+      "game_id": 41,
+      "trial": 3,
+      "arm": "baseline",
+      "move": "5c4b",
+      "source_historical_move": "5c4b",
+      "depth": 1,
+      "nodes": 2045,
+      "elapsed_ms": 201.536,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 50,
+      "trial": 0,
+      "arm": "baseline",
+      "move": "5g4h",
+      "source_historical_move": "5g4h",
+      "depth": 3,
+      "nodes": 967,
+      "elapsed_ms": 158.635,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 50,
+      "trial": 1,
+      "arm": "guard",
+      "move": "5g4h",
+      "source_historical_move": "5g4h",
+      "depth": 3,
+      "nodes": 967,
+      "elapsed_ms": 175.773,
+      "allows_immediate_mate": true,
+      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+    },
+    {
+      "game_id": 50,
+      "trial": 2,
+      "arm": "guard",
+      "move": "5g4h",
+      "source_historical_move": "5g4h",
+      "depth": 3,
+      "nodes": 967,
+      "elapsed_ms": 176.619,
+      "allows_immediate_mate": true,
+      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+    },
+    {
+      "game_id": 50,
+      "trial": 3,
+      "arm": "baseline",
+      "move": "5g4h",
+      "source_historical_move": "5g4h",
+      "depth": 3,
+      "nodes": 967,
+      "elapsed_ms": 161.493,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 51,
+      "trial": 0,
+      "arm": "baseline",
+      "move": "5a4b",
+      "source_historical_move": "5a4b",
+      "depth": 3,
+      "nodes": 886,
+      "elapsed_ms": 202.54,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 51,
+      "trial": 1,
+      "arm": "guard",
+      "move": "5a4b",
+      "source_historical_move": "5a4b",
+      "depth": 2,
+      "nodes": 768,
+      "elapsed_ms": 184.071,
+      "allows_immediate_mate": true,
+      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+    },
+    {
+      "game_id": 51,
+      "trial": 2,
+      "arm": "guard",
+      "move": "5a4b",
+      "source_historical_move": "5a4b",
+      "depth": 2,
+      "nodes": 768,
+      "elapsed_ms": 182.591,
+      "allows_immediate_mate": true,
+      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+    },
+    {
+      "game_id": 51,
+      "trial": 3,
+      "arm": "baseline",
+      "move": "5a4b",
+      "source_historical_move": "5a4b",
+      "depth": 3,
+      "nodes": 886,
+      "elapsed_ms": 200.822,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 60,
+      "trial": 0,
+      "arm": "baseline",
+      "move": "4g3f",
+      "source_historical_move": "4g3f",
+      "depth": 2,
+      "nodes": 640,
+      "elapsed_ms": 208.824,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 60,
+      "trial": 1,
+      "arm": "guard",
+      "move": "4g3f",
+      "source_historical_move": "4g3f",
+      "depth": 2,
+      "nodes": 640,
+      "elapsed_ms": 210.429,
+      "allows_immediate_mate": true,
+      "guard_status": "unknown_time_expired"
+    },
+    {
+      "game_id": 60,
+      "trial": 2,
+      "arm": "guard",
+      "move": "4g3f",
+      "source_historical_move": "4g3f",
+      "depth": 2,
+      "nodes": 640,
+      "elapsed_ms": 210.47,
+      "allows_immediate_mate": true,
+      "guard_status": "unknown_time_expired"
+    },
+    {
+      "game_id": 60,
+      "trial": 3,
+      "arm": "baseline",
+      "move": "4g3f",
+      "source_historical_move": "4g3f",
+      "depth": 2,
+      "nodes": 640,
+      "elapsed_ms": 208.495,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 61,
+      "trial": 0,
+      "arm": "baseline",
+      "move": "6b6a",
+      "source_historical_move": "6b6a",
+      "depth": 2,
+      "nodes": 640,
+      "elapsed_ms": 301.182,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 61,
+      "trial": 1,
+      "arm": "guard",
+      "move": "6b6a",
+      "source_historical_move": "6b6a",
+      "depth": 2,
+      "nodes": 512,
+      "elapsed_ms": 185.578,
+      "allows_immediate_mate": true,
+      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+    },
+    {
+      "game_id": 61,
+      "trial": 2,
+      "arm": "guard",
+      "move": "6b6a",
+      "source_historical_move": "6b6a",
+      "depth": 2,
+      "nodes": 512,
+      "elapsed_ms": 185.922,
+      "allows_immediate_mate": true,
+      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+    },
+    {
+      "game_id": 61,
+      "trial": 3,
+      "arm": "baseline",
+      "move": "6b6a",
+      "source_historical_move": "6b6a",
+      "depth": 2,
+      "nodes": 640,
+      "elapsed_ms": 303.511,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 70,
+      "trial": 0,
+      "arm": "baseline",
+      "move": "5d6c",
+      "source_historical_move": "5d6c",
+      "depth": 2,
+      "nodes": 768,
+      "elapsed_ms": 256.075,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 70,
+      "trial": 1,
+      "arm": "guard",
+      "move": "5d6c",
+      "source_historical_move": "5d6c",
+      "depth": 2,
+      "nodes": 640,
+      "elapsed_ms": 188.141,
+      "allows_immediate_mate": true,
+      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+    },
+    {
+      "game_id": 70,
+      "trial": 2,
+      "arm": "guard",
+      "move": "5d6c",
+      "source_historical_move": "5d6c",
+      "depth": 2,
+      "nodes": 640,
+      "elapsed_ms": 188.029,
+      "allows_immediate_mate": true,
+      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+    },
+    {
+      "game_id": 70,
+      "trial": 3,
+      "arm": "baseline",
+      "move": "5d6c",
+      "source_historical_move": "5d6c",
+      "depth": 2,
+      "nodes": 768,
+      "elapsed_ms": 258.463,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 71,
+      "trial": 0,
+      "arm": "baseline",
+      "move": "5b5a",
+      "source_historical_move": "5b5a",
+      "depth": 3,
+      "nodes": 168,
+      "elapsed_ms": 28.398,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 71,
+      "trial": 1,
+      "arm": "guard",
+      "move": "5b5a",
+      "source_historical_move": "5b5a",
+      "depth": 3,
+      "nodes": 168,
+      "elapsed_ms": 34.31,
+      "allows_immediate_mate": true,
+      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+    },
+    {
+      "game_id": 71,
+      "trial": 2,
+      "arm": "guard",
+      "move": "5b5a",
+      "source_historical_move": "5b5a",
+      "depth": 3,
+      "nodes": 168,
+      "elapsed_ms": 33.708,
+      "allows_immediate_mate": true,
+      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+    },
+    {
+      "game_id": 71,
+      "trial": 3,
+      "arm": "baseline",
+      "move": "5b5a",
+      "source_historical_move": "5b5a",
+      "depth": 3,
+      "nodes": 168,
+      "elapsed_ms": 28.773,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 80,
+      "trial": 0,
+      "arm": "baseline",
+      "move": "6g7f",
+      "source_historical_move": "6g6h",
+      "depth": 2,
+      "nodes": 2382,
+      "elapsed_ms": 201.621,
+      "allows_immediate_mate": false,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 80,
+      "trial": 1,
+      "arm": "guard",
+      "move": "6g7f",
+      "source_historical_move": "6g6h",
+      "depth": 2,
+      "nodes": 2176,
+      "elapsed_ms": 179.455,
+      "allows_immediate_mate": false,
+      "guard_status": "verified_no_immediate_mate"
+    },
+    {
+      "game_id": 80,
+      "trial": 2,
+      "arm": "guard",
+      "move": "6g7f",
+      "source_historical_move": "6g6h",
+      "depth": 2,
+      "nodes": 2176,
+      "elapsed_ms": 179.141,
+      "allows_immediate_mate": false,
+      "guard_status": "verified_no_immediate_mate"
+    },
+    {
+      "game_id": 80,
+      "trial": 3,
+      "arm": "baseline",
+      "move": "6g7f",
+      "source_historical_move": "6g6h",
+      "depth": 2,
+      "nodes": 2382,
+      "elapsed_ms": 203.15,
+      "allows_immediate_mate": false,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 81,
+      "trial": 0,
+      "arm": "baseline",
+      "move": "4a3a",
+      "source_historical_move": "4a3a",
+      "depth": 3,
+      "nodes": 445,
+      "elapsed_ms": 104.033,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 81,
+      "trial": 1,
+      "arm": "guard",
+      "move": "4a3a",
+      "source_historical_move": "4a3a",
+      "depth": 3,
+      "nodes": 445,
+      "elapsed_ms": 111.373,
+      "allows_immediate_mate": true,
+      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+    },
+    {
+      "game_id": 81,
+      "trial": 2,
+      "arm": "guard",
+      "move": "4a3a",
+      "source_historical_move": "4a3a",
+      "depth": 3,
+      "nodes": 445,
+      "elapsed_ms": 111.302,
+      "allows_immediate_mate": true,
+      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+    },
+    {
+      "game_id": 81,
+      "trial": 3,
+      "arm": "baseline",
+      "move": "4a3a",
+      "source_historical_move": "4a3a",
+      "depth": 3,
+      "nodes": 445,
+      "elapsed_ms": 104.655,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 90,
+      "trial": 0,
+      "arm": "baseline",
+      "move": "3i4i",
+      "source_historical_move": "3i4i",
+      "depth": 3,
+      "nodes": 305,
+      "elapsed_ms": 99.395,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 90,
+      "trial": 1,
+      "arm": "guard",
+      "move": "3i4i",
+      "source_historical_move": "3i4i",
+      "depth": 3,
+      "nodes": 305,
+      "elapsed_ms": 104.121,
+      "allows_immediate_mate": true,
+      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+    },
+    {
+      "game_id": 90,
+      "trial": 2,
+      "arm": "guard",
+      "move": "3i4i",
+      "source_historical_move": "3i4i",
+      "depth": 3,
+      "nodes": 305,
+      "elapsed_ms": 103.915,
+      "allows_immediate_mate": true,
+      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+    },
+    {
+      "game_id": 90,
+      "trial": 3,
+      "arm": "baseline",
+      "move": "3i4i",
+      "source_historical_move": "3i4i",
+      "depth": 3,
+      "nodes": 305,
+      "elapsed_ms": 98.855,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 91,
+      "trial": 0,
+      "arm": "baseline",
+      "move": "6b7a",
+      "source_historical_move": "6b7a",
+      "depth": 2,
+      "nodes": 768,
+      "elapsed_ms": 238.894,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    },
+    {
+      "game_id": 91,
+      "trial": 1,
+      "arm": "guard",
+      "move": "6b7a",
+      "source_historical_move": "6b7a",
+      "depth": 2,
+      "nodes": 640,
+      "elapsed_ms": 192.924,
+      "allows_immediate_mate": true,
+      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+    },
+    {
+      "game_id": 91,
+      "trial": 2,
+      "arm": "guard",
+      "move": "6b7a",
+      "source_historical_move": "6b7a",
+      "depth": 2,
+      "nodes": 640,
+      "elapsed_ms": 192.421,
+      "allows_immediate_mate": true,
+      "guard_status": "confirmed_immediate_mate_no_safe_alt_yet"
+    },
+    {
+      "game_id": 91,
+      "trial": 3,
+      "arm": "baseline",
+      "move": "6b7a",
+      "source_historical_move": "6b7a",
+      "depth": 2,
+      "nodes": 768,
+      "elapsed_ms": 237.543,
+      "allows_immediate_mate": true,
+      "guard_status": "baseline"
+    }
+  ],
+  "limitations": [
+    "The 20 roots are retrospective development data, not independent playing strength.",
+    "Baseline uses whole-call clock; original historical USI used internal clock; do not equate their moves.",
+    "Defense guard only prevents one-ply mate when proof completes before deadline.",
+    "Equal requested 200ms does not imply equal measured wall-clock; regressions must be reported.",
+    "No model trained, engine defaults changed, or candidate formally adopted."
+  ]
+}
