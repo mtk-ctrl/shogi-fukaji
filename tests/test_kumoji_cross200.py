@@ -7,7 +7,7 @@ from pathlib import Path
 from fukaji.arena import opening
 from fukaji.kumoji_cross200 import (
     ARMS, G8_SHA, KUMOJI_COMMIT, NEW_SEED, OLD_SEED, PAIRS,
-    SHARDS, check_request, config, exact_sign_p, indices
+    SHARDS, check_request, config, exact_sign_p, indices, matched_seed
 )
 
 
@@ -38,6 +38,16 @@ class KumojiCross200Tests(unittest.TestCase):
         self.assertFalse(old & fresh)
         ids = [i for shard in range(SHARDS) for i in indices(shard)]
         self.assertEqual(sorted(ids), list(range(PAIRS)))
+
+    def test_opponent_random_seed_is_identical_within_matched_color(self):
+        for pair in range(PAIRS):
+            for seat in (0, 1):
+                expected = NEW_SEED + pair * 16 + seat * 2
+                self.assertEqual(matched_seed(pair, seat), expected)
+                self.assertEqual(matched_seed(pair, seat), matched_seed(pair, seat))
+        self.assertNotEqual(matched_seed(0, 0), matched_seed(0, 1))
+        with self.assertRaises(ValueError):
+            matched_seed(0, 2)
 
     def test_sign_p_uses_non_tied_paired_openings_only(self):
         self.assertEqual(exact_sign_p(0, 0), None)
