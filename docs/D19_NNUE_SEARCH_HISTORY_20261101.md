@@ -17,3 +17,9 @@
 python -m unittest discover -s tests -p 'test_online*.py' -v
 python scripts/check_fukaji_contracts.py
 ```
+
+## 学習状態からの再開
+
+新しいモデル・optimizer・実棋譜を含む完全状態は、本人のみが閲覧できる保存先で管理する。再開時は[深路Goal](https://www.addness.com/goals/ab88e21e-083f-41b3-8b65-daf39872a2e1)の最新の再開点・保存先・checksumを確認し、別の作業領域へ復元して検査する。
+
+リポジトリ内の既定復元archiveは、公開済みの以前のcheckpointである。これを最新の研究状態と取り違えて初期化・巻戻ししない。公開先へ学習データを自動転送せず、コードのmain保存と学習状態の保存を分けて記録する。
