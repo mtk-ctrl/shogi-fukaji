@@ -12,7 +12,7 @@ import numpy as np
 import shogi
 
 from .engine import ordered_moves
-from .nnue_research import _piece_index, _hand_index, SmallNNUE
+from .nnue_research import _piece_index, _hand_index, SmallNNUE, relative_piece_indices
 
 MATE = 1000000.0
 
@@ -65,6 +65,8 @@ class Position:
         color = b.turn
         squares = [move.to_square] + ([move.from_square] if move.from_square is not None else [])
         before = [(sq, b.piece_at(sq)) for sq in squares]
+        king_move = (self.model.king_relative and move.from_square is not None and
+                     b.piece_type_at(move.from_square) == shogi.KING)
         captured = b.piece_type_at(move.to_square)
         if captured == shogi.KING:
             raise ValueError("invalid position allows king capture")
@@ -74,14 +76,23 @@ class Position:
         saved = self.acc.copy()
         b.push(move)
         try:
-            if self.incremental:
+            if self.incremental and king_move:
+                # Moving either anchor changes both perspectives' relations.
+                self.acc = np.stack([self.model.full_accumulator(b, p) for p in (0, 1)])
+            elif self.incremental:
                 for p in (0, 1):
                     for sq, piece in before:
                         if piece:
                             self.acc[p] -= self.model.hidden_weights[_piece_index(piece, sq, p)]
+                            if self.model.king_relative:
+                                for i in relative_piece_indices(piece, sq, p, b.king_squares):
+                                    self.acc[p] -= self.model.hidden_weights[i]
                         piece = b.piece_at(sq)
                         if piece:
                             self.acc[p] += self.model.hidden_weights[_piece_index(piece, sq, p)]
+                            if self.model.king_relative:
+                                for i in relative_piece_indices(piece, sq, p, b.king_squares):
+                                    self.acc[p] += self.model.hidden_weights[i]
                     if hand_kind:
                         new_count = b.pieces_in_hand[color].get(hand_kind, 0)
                         for j in range(min(old_count, new_count), max(old_count, new_count)):
