@@ -16,6 +16,8 @@ INPUTS = FEATURES - 1  # Exclude the existing constant intercept feature.
 HIDDEN = 32
 HAND_BASE = 81 * PIECES * 2
 HAND_LIMIT = 20
+KING_RELATIVE_INPUTS = 2 * 2 * (PIECES - 1) * 17 * 17
+KING_INPUTS = INPUTS + KING_RELATIVE_INPUTS
 
 
 def _piece_index(piece, square, perspective):
@@ -47,6 +49,37 @@ def active_indices(board, perspective):
     return result
 
 
+def relative_piece_indices(piece, square, perspective, kings):
+    """Two king anchors, relative owner/type and signed 17x17 displacement.
+
+    Kings are anchors rather than piece features. Missing kings in diagnostic
+    fixtures omit only that anchor; legal play still uses the board rules.
+    """
+    if piece.piece_type == shogi.KING:
+        return []
+    kind = piece.piece_type - 1 - int(piece.piece_type > shogi.KING)
+    owner = int(piece.color) ^ int(perspective)
+    result = []
+    for anchor, color in enumerate((perspective, 1-perspective)):
+        king = kings[color]
+        if king is None:
+            continue
+        direction = 1 if perspective == shogi.BLACK else -1
+        row = direction * (square//9 - king//9) + 8
+        col = direction * (square%9 - king%9) + 8
+        result.append(INPUTS + (((anchor*2 + owner)*(PIECES-1) + kind)*17 + row)*17 + col)
+    return result
+
+
+def king_relative_indices(board, perspective):
+    result = []
+    for square in range(81):
+        piece = board.piece_at(square)
+        if piece is not None:
+            result.extend(relative_piece_indices(piece, square, perspective, board.king_squares))
+    return result
+
+
 class SmallNNUE:
     """32-unit clipped-ReLU test architecture; no trained model is loaded."""
 
@@ -55,7 +88,7 @@ class SmallNNUE:
         b = np.asarray(hidden_bias, dtype=np.float32)
         v = np.asarray(output_weights, dtype=np.float32)
         o = float(output_bias)
-        if (w.shape != (INPUTS, HIDDEN) or b.shape != (HIDDEN,) or
+        if (w.shape not in ((INPUTS, HIDDEN), (KING_INPUTS, HIDDEN)) or b.shape != (HIDDEN,) or
                 v.shape != (HIDDEN,) or not np.isfinite(w).all() or
                 not np.isfinite(b).all() or not np.isfinite(v).all() or
                 not np.isfinite(o)):
@@ -64,6 +97,12 @@ class SmallNNUE:
         self.hidden_bias = b.astype(np.float64).copy()
         self.output_weights = v.copy()
         self.output_bias = o
+        self.inputs = w.shape[0]
+        self.king_relative = self.inputs == KING_INPUTS
+
+    def active_indices(self, board, perspective):
+        base = active_indices(board, perspective)
+        return base + king_relative_indices(board, perspective) if self.king_relative else base
 
     @classmethod
     def synthetic_test_model(cls, seed=42):
@@ -75,9 +114,15 @@ class SmallNNUE:
 
     def full_accumulator(self, board, perspective):
         indexes = active_indices(board, perspective)
-        if not indexes:
-            return self.hidden_bias.copy()
-        return self.hidden_bias + self.hidden_weights[indexes].astype(np.float64).sum(axis=0)
+        result = self.hidden_bias.copy()
+        if indexes:
+            result += self.hidden_weights[indexes].astype(np.float64).sum(axis=0)
+        # Sum separately: a zero extension preserves the old accumulator exactly.
+        if self.king_relative:
+            relative = king_relative_indices(board, perspective)
+            if relative:
+                result += self.hidden_weights[relative].astype(np.float64).sum(axis=0)
+        return result
 
     def logit(self, board, accumulator=None):
         if accumulator is None:
@@ -127,12 +172,18 @@ class DualAccumulator:
         squares = sorted(set(([move.from_square] if move.from_square is not None else [])
                              + [move.to_square]))
         before_pieces, before_hands = self._snapshot(squares)
+        old_relative = ({p: set(king_relative_indices(self.board, p)) for p in (0, 1)}
+                        if self.model.king_relative else None)
         self.board.push(move)
         try:
             after_pieces, after_hands = self._snapshot(squares)
             changes = {shogi.BLACK: [], shogi.WHITE: []}
             for perspective in (shogi.BLACK, shogi.WHITE):
                 items = changes[perspective]
+                if old_relative is not None:
+                    new_relative = set(king_relative_indices(self.board, perspective))
+                    items.extend((-1, i) for i in sorted(old_relative[perspective]-new_relative))
+                    items.extend((1, i) for i in sorted(new_relative-old_relative[perspective]))
                 for square in squares:
                     old = before_pieces[square]
                     new = after_pieces[square]

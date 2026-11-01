@@ -16,11 +16,12 @@ import zipfile
 import numpy as np
 import shogi
 
-from .nnue_research import SmallNNUE, INPUTS, HIDDEN, active_indices
+from .nnue_research import SmallNNUE, INPUTS, HIDDEN, KING_INPUTS
 from .nnue_train_research import SOURCE_ZIP_SHA, MERGED_SHA
 from .online_search import Position, terminal
 
 SCHEMA = "fukaji-online-nnue-v1"
+KING_SCHEMA = "fukaji-online-nnue-king-relative-v1"
 
 
 def digest(raw):
@@ -30,7 +31,7 @@ def digest(raw):
 def implementation_digest():
     base = Path(__file__).parent
     return digest(b"\n".join((base/name).read_bytes() for name in
-                  ("online_learning.py", "online_search.py", "online_cycle.py")))
+                  ("nnue_research.py", "online_learning.py", "online_search.py", "online_cycle.py")))
 
 
 def atomic_json(path, data):
@@ -56,6 +57,21 @@ def parameters(model):
             model.output_weights.copy(), np.array([model.output_bias], dtype=np.float32)]
 
 
+def expand_king_relative(parent, optimizer):
+    """Preserve trained parameters/moments and zero only the additional rows."""
+    if parent.king_relative:
+        raise ValueError('parent already has king-relative features')
+    def expand(array):
+        return np.concatenate((array, np.zeros((KING_INPUTS-INPUTS, HIDDEN), dtype=array.dtype)))
+    model = SmallNNUE(expand(parent.hidden_weights), parent.hidden_bias,
+                      parent.output_weights, parent.output_bias)
+    opt = None if optimizer is None else {
+        'step': optimizer['step'],
+        'm': [expand(optimizer['m'][0]), *[x.copy() for x in optimizer['m'][1:]]],
+        's': [expand(optimizer['s'][0]), *[x.copy() for x in optimizer['s'][1:]]]}
+    return model, opt
+
+
 def save_snapshot(root, model, optimizer, metadata):
     root = Path(root)
     root.mkdir(parents=True, exist_ok=True)
@@ -76,7 +92,8 @@ def save_snapshot(root, model, optimizer, metadata):
         temp = path.with_suffix(".tmp")
         temp.write_bytes(raw)
         os.replace(temp, path)
-    manifest = {"schema": SCHEMA, "sha256": key, "architecture": [INPUTS, HIDDEN, 1],
+    manifest = {"schema": KING_SCHEMA if model.king_relative else SCHEMA,
+                "sha256": key, "architecture": [model.inputs, HIDDEN, 1],
                 "implementation_sha256": implementation_digest(),
                 "research_only": True, "formal_adoption": False, **metadata}
     manifest_path = root / (key + ".json")
@@ -93,12 +110,15 @@ def load_snapshot(root, key):
     root = Path(root)
     raw = (root / (key + ".npz")).read_bytes()
     manifest = json.loads((root / (key + ".json")).read_text())
-    if digest(raw) != key or manifest.get("sha256") != key or manifest.get("schema") != SCHEMA:
+    if digest(raw) != key or manifest.get("sha256") != key or manifest.get("schema") not in (SCHEMA, KING_SCHEMA):
         raise ValueError("snapshot checksum/schema mismatch")
     if manifest.get("formal_adoption") is not False or manifest.get("research_only") is not True:
         raise ValueError("not a research snapshot")
     with np.load(io.BytesIO(raw), allow_pickle=False) as a:
         model = SmallNNUE(a["w"], a["b"], a["v"], a["o"][0])
+        if (manifest.get('architecture') != [model.inputs, HIDDEN, 1] or
+            manifest['schema'] != (KING_SCHEMA if model.king_relative else SCHEMA)):
+            raise ValueError('snapshot architecture/schema mismatch')
         opt = None
         if "step" in a:
             opt = {"step": int(a["step"]), "m": [a[f"m{i}"].copy() for i in range(4)],
@@ -143,7 +163,7 @@ def opening_key(start_sfen, moves):
     return digest((start_sfen + "|" + " ".join(moves[:6])).encode())
 
 
-def validate_game(game, model, *, training=False, protected=()):
+def validate_game(game, model, *, training=False, protected=(), feature_model=None):
     if game.get("source") != "selfplay" or game.get("role") not in ("train", "monitor", "audit"):
         raise ValueError("untrusted game source or role")
     if training and (game["role"] != "train" or game.get("parent_id") in protected):
@@ -160,7 +180,7 @@ def validate_game(game, model, *, training=False, protected=()):
         # mate/no legal moves. Only repetition needs a separate prefix guard.
         if state.repetition() is not None:
             raise ValueError("move after terminal position")
-        ix.append(active_indices(b, b.turn))
+        ix.append((feature_model or model).active_indices(b, b.turn))
         turns.append(b.turn)
         probs.append(float(probability(state.logit())))
         state.push(shogi.Move.from_usi(word))
@@ -194,7 +214,7 @@ def bootstrap_games(archive):
 
 
 def make_samples(games, parent, *, seed, per_game=32, outcome_weight=.75,
-                 td_lambda=.8, protected=()):
+                 td_lambda=.8, protected=(), feature_model=None):
     rng = np.random.default_rng(seed)
     samples, labels, stats, seen = [], [], {"games": 0, "resolved": 0, "unresolved_excluded": 0}, set()
     for game in games:
@@ -202,7 +222,8 @@ def make_samples(games, parent, *, seed, per_game=32, outcome_weight=.75,
         if key in seen:
             continue
         seen.add(key)
-        ix, probs, z, resolved = validate_game(game, parent, training=True, protected=protected)
+        ix, probs, z, resolved = validate_game(game, parent, training=True, protected=protected,
+                                             feature_model=feature_model)
         stats["games"] += 1
         if not resolved:
             stats["unresolved_excluded"] += 1
@@ -221,7 +242,7 @@ def make_samples(games, parent, *, seed, per_game=32, outcome_weight=.75,
     if not samples:
         raise ValueError("no verified resolved train experience")
     width = max(map(len, samples))
-    indices = np.full((len(samples), width), INPUTS, dtype=np.int32)
+    indices = np.full((len(samples), width), (feature_model or parent).inputs, dtype=np.int32)
     for i, row in enumerate(samples):
         indices[i, :len(row)] = row
     return indices, np.asarray(labels, np.float32), stats
@@ -239,7 +260,7 @@ def fit(parent, optimizer, samples, labels, *, epochs=2, lr=.001, seed=1,
         batch_size=128):
     if not (1 <= epochs <= 20 and 0 < lr <= .01 and 1 <= batch_size <= 1024):
         raise ValueError("training bounds exceeded")
-    if samples.ndim != 2 or labels.shape != (len(samples),) or not len(labels) or not np.isfinite(labels).all() or np.any((labels < 0) | (labels > 1)) or np.any((samples < 0) | (samples > INPUTS)):
+    if samples.ndim != 2 or labels.shape != (len(samples),) or not len(labels) or not np.isfinite(labels).all() or np.any((labels < 0) | (labels > 1)) or np.any((samples < 0) | (samples > parent.inputs)):
         raise ValueError("invalid sparse batch")
     params = parameters(parent)
     if optimizer is None:
@@ -265,7 +286,7 @@ def fit(parent, optimizer, samples, labels, *, epochs=2, lr=.001, seed=1,
             pre, hidden, logits = logits_for(params, ix)
             error = (probability(logits)-y)/len(y)
             dh = error[:, None]*params[2][None, :]*((pre > 0) & (pre < 1))
-            gw = np.zeros((INPUTS+1, HIDDEN), np.float32)
+            gw = np.zeros((parent.inputs+1, HIDDEN), np.float32)
             np.add.at(gw, ix.reshape(-1), np.repeat(dh, ix.shape[1], axis=0))
             grads = [gw[:-1], dh.sum(axis=0), hidden.T @ error, np.array([error.sum()], np.float32)]
             norm = float(np.sqrt(sum(np.sum(g.astype(float)**2) for g in grads)))
