@@ -89,11 +89,17 @@ def cpu_plan(workers):
 
 
 def prepare(root, *, name='d24-nnue400', pairs=100, seed=202611012800,
-            movetime=100, max_total_plies=512, workers=4, purpose='strength'):
+            movetime=100, max_total_plies=512, workers=4, purpose='strength',
+            candidate_id=None, opponents=None):
     if not name or Path(name).name!=name or name in ('.','..'):
         raise ValueError('single-level campaign name required')
+    if opponents is not None and (not isinstance(opponents,list) or not 1<=len(opponents)<=2 or
+        any(set(o)!={'label','model'} or not isinstance(o['label'],str) or not o['label']
+            for o in opponents) or len({o['label'] for o in opponents})!=len(opponents)):
+        raise ValueError('one or two uniquely labeled explicit opponents required')
+    comparisons=len(opponents) if opponents is not None else (2 if purpose=='strength' else 1)
     if (purpose not in ('strength','regression') or not 1<=pairs<=128 or
-        (purpose=='strength' and pairs<required_pairs()) or
+        (purpose=='strength' and pairs<required_pairs(comparisons=comparisons)) or
         not 1<=movetime<=200 or not 16<=max_total_plies<=512):
         raise ValueError('budget does not satisfy the prespecified precision plan')
     affinity=cpu_plan(workers)
@@ -101,10 +107,11 @@ def prepare(root, *, name='d24-nnue400', pairs=100, seed=202611012800,
         verify(root);state=json.loads((root/'state.json').read_text());out=root/name
         if out.exists() or state['paused'] or state.get('pending_comparison') or state.get('pending_campaign'):
             raise ValueError('existing/paused evaluation must be inspected or resumed')
-        candidate=state['research_latest']
-        opponents=[{'label':'before_three_cycles_11','model':'ac2d9c51ceb2979f79be5363f3d1f45bac020bcc9d15d58a3fb67c96145e227f'},
-                   {'label':'initial_trained_665','model':state['fixed_anchor']}]
-        if purpose=='regression':opponents=[{'label':'reference','model':state['fixed_anchor']}]
+        candidate=candidate_id or state['research_latest']
+        if opponents is None:
+            opponents=[{'label':'before_three_cycles_11','model':'ac2d9c51ceb2979f79be5363f3d1f45bac020bcc9d15d58a3fb67c96145e227f'},
+                       {'label':'initial_trained_665','model':state['fixed_anchor']}]
+            if purpose=='regression':opponents=[{'label':'reference','model':state['fixed_anchor']}]
         for key in {candidate,*[x['model'] for x in opponents]}:
             model,_,_=load_snapshot(root/'models',key)
             if model.inputs!=2548:raise ValueError('campaign native model architecture unsupported')
@@ -121,7 +128,8 @@ def prepare(root, *, name='d24-nnue400', pairs=100, seed=202611012800,
             'source_sha256':digest(Path(__file__).read_bytes()),
             'engine_sha256':implementation_digest(),'formal_adoption':False,
             'created_unix':time.time(),'planned_games':pairs*2*len(opponents),
-            'frozen_cycles':len(state['cycles']),'frozen_history':state['history']}
+            'frozen_cycles':len(state['cycles']),'frozen_history':state['history'],
+            'research_latest_at_start':state['research_latest']}
         out.mkdir();atomic_json(out/'plan.json',plan)
         state.update(paused=True,pending_campaign=name,
             pending_campaign_sha256=digest((out/'plan.json').read_bytes()),
@@ -215,7 +223,8 @@ def run(root, *, name='d24-nnue400', checkpoint_every=20):
             digest((out/'plan.json').read_bytes())!=state.get('pending_campaign_sha256') or
             plan['source_sha256']!=digest(Path(__file__).read_bytes()) or
             plan['engine_sha256']!=implementation_digest() or
-            state['research_latest']!=plan['candidate'] or state['history']!=plan['frozen_history']):
+            state['research_latest']!=plan.get('research_latest_at_start',plan['candidate']) or
+            state['history']!=plan['frozen_history']):
             raise ValueError('campaign identity/source/state mismatch')
         families=_recover(root,plan,state);original_affinity=os.sched_getaffinity(0)
         started=time.monotonic();durations=[];ctx=mp.get_context('spawn');stop=ctx.Event();queue=ctx.Queue()
