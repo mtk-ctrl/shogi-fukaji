@@ -31,7 +31,9 @@ def digest(raw):
 def implementation_digest():
     base = Path(__file__).parent
     return digest(b"\n".join((base/name).read_bytes() for name in
-                  ("nnue_research.py", "online_learning.py", "online_search.py", "online_cycle.py")))
+                  ("nnue_research.py", "online_learning.py", "online_search.py", "online_cycle.py",
+                   "native_nnue.py", "../native/nnue_search_ffi.cpp",
+                   "../native/rules_state_ffi.cpp", "../native/rules_probe.cpp")))
 
 
 def atomic_json(path, data):
