@@ -4,6 +4,7 @@ from pathlib import Path
 import random
 import tempfile
 import unittest
+from unittest.mock import patch
 
 import numpy as np
 import shogi
@@ -126,6 +127,27 @@ class KingRelativeTests(unittest.TestCase):
         row=select(b,self.model,movetime_ms=1)
         self.assertIn(shogi.Move.from_usi(row['move']),b.legal_moves)
         self.assertEqual(b.sfen(),before);self.assertEqual(+b.transpositions,counts)
+
+    def test_full_replay_uses_only_training_receipts_and_excludes_unresolved(self):
+        from fukaji.online_feature_trial import train_games
+        def game(number, status='checkmate'):
+            g=mate_game()
+            g['start_sfen']=g['start_sfen'].rsplit(' ',1)[0]+' '+str(number)
+            return {**g, 'status':status}
+        batches={'bootstrap':[game(i+1) for i in range(60)],
+                 'old':[game(i+100) for i in range(3)]+[game(199,'move_limit_unresolved')],
+                 **{f'recent-{i}':[game(200+i*4+j) for j in range(4)] for i in range(3)},
+                 'monitor':[game(999)]}
+        state={'bootstrap':{'path':'bootstrap'},
+               'train_batches':[{'path':name} for name in ('old','recent-0','recent-1','recent-2')],
+               'evaluation_batches':[{'path':'monitor'}]}
+        with patch('fukaji.online_feature_trial.read_games', side_effect=lambda root,r:batches[r['path']]):
+            small=train_games(None,state,17)
+            full=train_games(None,state,17,full_replay=True)
+        self.assertEqual(len(small),64);self.assertEqual(len(full),75)
+        self.assertTrue(all(g['status']=='checkmate' for g in full))
+        self.assertNotIn(batches['monitor'][0],full)
+        self.assertEqual(small[:12],full[:12])
 
 
 if __name__=='__main__':unittest.main()

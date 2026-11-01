@@ -23,7 +23,7 @@ from .online_search import Position, select
 from .online_state import verify
 
 
-def train_games(root, state, seed):
+def train_games(root, state, seed, *, full_replay=False):
     if len(state['train_batches']) < 3:
         raise ValueError('three recent batches required')
     recent = []
@@ -34,9 +34,14 @@ def train_games(root, state, seed):
     if len(recent) != 12:
         raise ValueError('protocol requires twelve recent resolved games')
     recent_ids = {game_key(g) for g in recent}
-    historical = [g for g in read_games(root, state['bootstrap']) if game_key(g) not in recent_ids]
-    games = recent + random.Random(seed).sample(historical, 52)
-    if len({game_key(g) for g in games}) != 64:
+    historical = list(read_games(root, state['bootstrap']))
+    if full_replay:
+        for receipt in state['train_batches'][:-3]:
+            historical.extend(g for g in read_games(root, receipt)
+                              if g['status'] in ('checkmate', 'perpetual_check', 'repetition_draw'))
+    historical = list({game_key(g):g for g in historical if game_key(g) not in recent_ids}.values())
+    games = recent + (historical if full_replay else random.Random(seed).sample(historical, 52))
+    if len({game_key(g) for g in games}) != len(games) or not 64 <= len(games) <= 1000:
         raise ValueError('duplicate training experience')
     return games
 
@@ -72,21 +77,24 @@ def probe(parent, expanded, games):
             'rows':rows}
 
 
-def prepare(root, *, seed=202611012100):
+def prepare(root, *, seed=202611012100, full_replay=False, name='d21-feature'):
+    if not name or Path(name).name != name or name in ('.', '..'):
+        raise ValueError('single-level trial name required')
     with lock(root) as root:
         verify(root)
         state=json.loads((root/'state.json').read_text())
         if state['paused'] or state.get('pending_comparison'):
             raise ValueError('inspect unfinished state before training')
-        out=root/'d21-feature-training'
+        out=root/(name+'-training')
         if out.exists(): raise ValueError('immutable trial exists')
         parent_id=state['research_latest']
         parent,opt,_=load_snapshot(root/'models',parent_id)
         expanded,expanded_opt=expand_king_relative(parent,opt)
-        games=train_games(root,state,seed)
+        games=train_games(root,state,seed,full_replay=full_replay)
         out.mkdir()
         protocol={'parent':parent_id,'seed':seed,'outcome_weight':.75,'td_lambda':.8,
-                  'epochs':2,'lr':.001,'recent_games':12,'historical_games':52,
+                  'epochs':2,'lr':.001,'recent_games':12,'historical_games':len(games)-12,
+                  'full_replay':full_replay,
                   'game_hashes':[game_key(g) for g in games],
                   'implementation_source_sha256':digest(Path(__file__).read_bytes()),
                   'research_pointer_changed':False,'formal_adoption':False,'strength_proven':False}
@@ -122,11 +130,13 @@ def main():
     p=argparse.ArgumentParser()
     p.add_argument('--root',required=True)
     p.add_argument('--seed',type=int,default=202611012100)
+    p.add_argument('--full-replay',action='store_true')
+    p.add_argument('--name',default='d21-feature')
     a=p.parse_args()
-    report=prepare(a.root,seed=a.seed)
+    report=prepare(a.root,seed=a.seed,full_replay=a.full_replay,name=a.name)
     print(json.dumps(report),flush=True)
     result=compare_saved(a.root,report['candidates']['king_relative']['model'],
-        report['candidates']['absolute']['model'],name='d21-feature-arena',
+        report['candidates']['absolute']['model'],name=a.name+'-arena',
         seed=a.seed+100000,pairs=8,movetime=100,max_plies=256)
     print(json.dumps(result),flush=True)
 
