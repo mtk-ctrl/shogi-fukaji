@@ -17,7 +17,7 @@ def audit(root, output, *, seed=202611012801, model_ids=None):
     raw_state=(root/'state.json').read_bytes();state=json.loads(raw_state)
     ids=model_ids or {'first_trained_665':state['fixed_anchor'],
         'before_three_cycles_11':'ac2d9c51ceb2979f79be5363f3d1f45bac020bcc9d15d58a3fb67c96145e227f',
-        'latest_14':state['research_latest']}
+        f"latest_cycle_{len(state.get('cycles',state['train_batches']))}":state['research_latest']}
     models={label:load_snapshot(root/'models',key)[0] for label,key in ids.items()}
     if any(m.inputs!=INPUTS for m in models.values()):raise ValueError('matching absolute architectures required')
     target_parent=next(iter(models.values()));params={k:parameters(m) for k,m in models.items()}
@@ -25,7 +25,9 @@ def audit(root, output, *, seed=202611012801, model_ids=None):
             'selfplay_cycles_1_to_11':[],'selfplay_cycles_12_to_14':[]}
     for receipt in state['train_batches']:
         number=int(receipt['path'].split('/')[0].split('-')[1])
-        groups['selfplay_cycles_1_to_11' if number<=11 else 'selfplay_cycles_12_to_14'].extend(read_games(root,receipt))
+        group=('selfplay_cycles_1_to_11' if number<=11 else
+               'selfplay_cycles_12_to_14' if number<=14 else f'selfplay_cycle_{number}')
+        groups.setdefault(group,[]).extend(read_games(root,receipt))
     rng=np.random.default_rng(seed);details=[];summary={};seen=set()
     for group,games in groups.items():
         metrics={k:[] for k in models};unresolved=0;positions=0;duplicates=0;resolved_count=0

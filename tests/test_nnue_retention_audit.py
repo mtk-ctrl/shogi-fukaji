@@ -54,5 +54,15 @@ class RetentionAuditTests(unittest.TestCase):
             self.assertEqual(group['resolved_games'],0)
             self.assertEqual(group['sampled_positions'],0)
 
+    def test_later_cycle_is_not_mislabeled_as_cycles12_to14(self):
+        with tempfile.TemporaryDirectory() as t:
+            p=Path(t);key=self.fixture(p)
+            state=json.loads((p/'state.json').read_text());(p/'cycle-0015').mkdir()
+            state['train_batches']=[write_games(p,'cycle-0015/train.jsonl',[mate_game()])]
+            atomic_json(p/'state.json',state)
+            result=audit(p,p/'audit.json',model_ids={'first':key})
+            self.assertEqual(result['groups']['selfplay_cycle_15']['raw_games'],1)
+            self.assertEqual(result['groups']['selfplay_cycles_12_to_14']['raw_games'],0)
+
 
 if __name__=='__main__':unittest.main()
