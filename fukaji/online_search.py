@@ -24,22 +24,33 @@ class Position:
     push_legal(). Undo restores saved accumulators, avoiding floating drift
     across sibling branches. Only the one changed hand count is inspected.
     """
-    def __init__(self, board, model, incremental=True):
+    def __init__(self, board, model, incremental=True, *, history=None):
         if not isinstance(model, SmallNNUE):
             raise TypeError("SmallNNUE required")
         self.board, self.model, self.incremental = board, model, incremental
         self.acc = np.stack([model.full_accumulator(board, p) for p in (0, 1)])
         self.undo = []
-        b = copy.deepcopy(board)
-        reversed_history = []
-        while b.move_stack:
-            reversed_history.append((b.zobrist_hash(), int(not b.turn), b.is_check()))
-            b.pop()
-        self.keys = [b.zobrist_hash()]
-        self.checks = []
-        for key, mover, check in reversed(reversed_history):
-            self.keys.append(key)
-            self.checks.append((mover, check))
+        if history is not None:
+            # play() already maintains exact repetition/check history. Borrow
+            # its facts, never its model-specific accumulators or undo stack.
+            if (not isinstance(history, Position) or history.board is not board or
+                len(history.keys) != len(board.move_stack) + 1 or
+                len(history.checks) != len(board.move_stack) or
+                history.keys[-1] != board.zobrist_hash()):
+                raise ValueError("stale or unrelated repetition history")
+            self.keys = list(history.keys)
+            self.checks = list(history.checks)
+        else:
+            b = copy.deepcopy(board)
+            reversed_history = []
+            while b.move_stack:
+                reversed_history.append((b.zobrist_hash(), int(not b.turn), b.is_check()))
+                b.pop()
+            self.keys = [b.zobrist_hash()]
+            self.checks = []
+            for key, mover, check in reversed(reversed_history):
+                self.keys.append(key)
+                self.checks.append((mover, check))
         self.base_depth = len(board.move_stack)
 
     def push(self, move):
@@ -126,12 +137,12 @@ def terminal(position, legal):
 
 
 def select(board, model, *, movetime_ms=50, max_depth=64, incremental=True,
-           ordering=True, fixed_depth=False, fast_leaf=True):
+           ordering=True, fixed_depth=False, fast_leaf=True, history=None):
     if not 1 <= movetime_ms <= 10000 or not 1 <= max_depth <= 64:
         raise ValueError("invalid search bounds")
     started = time.monotonic()
     deadline = float("inf") if fixed_depth else started + movetime_ms / 1000
-    state = Position(board, model, incremental)
+    state = Position(board, model, incremental, history=history)
     original = board.sfen()
     original_counts = +board.transpositions
     nodes, evals = 0, 0
