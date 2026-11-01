@@ -1,4 +1,5 @@
 import tempfile
+import json
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -33,10 +34,11 @@ class QuiescenceTests(unittest.TestCase):
     def test_poisoned_capture_is_seen_through_recapture(self):
         b=shogi.Board('4k4/9/5g3/4p4/9/4R4/9/9/4K4 b - 1')
         plain=select(b,self.model,max_depth=1,fixed_depth=True)
-        quiet=select(b,self.model,max_depth=1,fixed_depth=True,quiescence=2)
         self.assertEqual(plain['move'],'5f5d')
-        self.assertNotEqual(quiet['move'],'5f5d')
-        self.assertGreater(quiet['quiescence_nodes'],0)
+        for depth in (1,2):
+            quiet=select(b,self.model,max_depth=1,fixed_depth=True,quiescence=depth)
+            self.assertNotEqual(quiet['move'],'5f5d')
+            self.assertGreater(quiet['quiescence_nodes'],0)
         self.assertEqual(plain['quiescence_nodes'],0)
         self.assertEqual(b.sfen(),'4k4/9/5g3/4p4/9/4R4/9/9/4K4 b - 1')
 
@@ -90,6 +92,29 @@ class QuiescenceTests(unittest.TestCase):
             self.assertEqual(flags,[(2,0),(0,2)])
             self.assertEqual(report['quiescence_by_model'],[2,0])
             self.assertFalse(report['research_pointer_changed'])
+
+    def test_learning_cycle_uses_same_search_for_train_screen_and_periodic(self):
+        from fukaji.online_cycle import cycle, write_games
+        from fukaji.online_learning import fresh_model, save_snapshot, atomic_json
+        from test_online_learning import mate_game
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            key=save_snapshot(root/'models',fresh_model(871),None,{'parent':None})
+            receipt=write_games(root,'bootstrap.jsonl',[mate_game()])
+            atomic_json(root/'state.json',{'formal_adoption':False,'paused':False,'cycles':[],
+                'research_latest':key,'checkpoint':key,'fixed_anchor':key,'bootstrap':receipt,
+                'excluded_openings':[],'protected_parents':[],'seed':1,'used_seeds':[],
+                'train_batches':[],'evaluation_batches':[],'history':[key],'generation':0})
+            monitor=[{**mate_game(),'role':'monitor','parent_id':'b'*64,'candidate_side':0}]*4
+            with patch('fukaji.online_cycle.play',return_value=mate_game()) as playing, \
+                 patch('fukaji.online_cycle.compare',return_value=monitor) as comparing:
+                report=cycle(root,pairs=1,max_plies=16,periodic_every=1,audit_pairs=2,quiescence=2)
+            self.assertEqual(report['config']['quiescence'],2)
+            self.assertTrue(all(c.kwargs['quiescence']==2 for c in playing.call_args_list))
+            self.assertEqual(len(comparing.call_args_list),2)
+            self.assertTrue(all(c.kwargs['quiescence']==2 for c in comparing.call_args_list))
+            state=json.loads((root/'state.json').read_text())
+            self.assertFalse(state['formal_adoption']);self.assertEqual(state['fixed_anchor'],key)
 
 
 if __name__=='__main__':unittest.main()

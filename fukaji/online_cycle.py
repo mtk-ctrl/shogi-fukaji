@@ -151,7 +151,7 @@ def fresh_prefix(seed, excluded):
     raise ValueError("no unused opening found")
 
 
-def compare(root, left, opponents, *, seed, pairs, movetime, max_plies, excluded):
+def compare(root, left, opponents, *, seed, pairs, movetime, max_plies, excluded, quiescence=0):
     games = []
     model_a = load_snapshot(root/"models", left)[0]
     for pair in range(pairs):
@@ -162,7 +162,7 @@ def compare(root, left, opponents, *, seed, pairs, movetime, max_plies, excluded
             models = [model_a, model_b] if black else [model_b, model_a]
             ids = [left, right] if black else [right, left]
             g = play(models, ids, prefix, role="monitor", parent_id=parent,
-                     seed=seed+pair, movetime=movetime, max_plies=max_plies)
+                     seed=seed+pair, movetime=movetime, max_plies=max_plies, quiescence=quiescence)
             g["candidate_side"] = 0 if black else 1
             games.append(g)
     return games
@@ -193,10 +193,12 @@ def gate(games, *, periodic=False):
 
 
 def cycle(root, *, pairs=2, movetime=50, max_plies=256, epochs=2,
-          outcome_weight=.75, periodic_every=3, audit_pairs=4):
+          outcome_weight=.75, periodic_every=3, audit_pairs=4, quiescence=0):
     if not (1 <= pairs <= 16 and 1 <= movetime <= 200 and 16 <= max_plies <= 512 and
             1 <= epochs <= 4 and 1 <= periodic_every <= 5 and 2 <= audit_pairs <= 16):
         raise ValueError("research resource budget exceeded")
+    if type(quiescence) is not int or not 0 <= quiescence <= 4:
+        raise ValueError('quiescence must be an integer in 0..4')
     with lock(root) as root:
         state = json.loads((root/"state.json").read_text())
         if state["formal_adoption"] is not False or state["paused"]:
@@ -234,7 +236,8 @@ def cycle(root, *, pairs=2, movetime=50, max_plies=256, epochs=2,
                 models = [parent, opponent] if black else [opponent, parent]
                 ids = [parent_id, opponent_id] if black else [opponent_id, parent_id]
                 games.append(play(models, ids, prefix, role="train", parent_id=group,
-                                  seed=seed+pair*2+int(black), movetime=movetime, max_plies=max_plies))
+                                  seed=seed+pair*2+int(black), movetime=movetime,
+                                  max_plies=max_plies, quiescence=quiescence))
         train_receipt = write_games(root, f"cycle-{generation:04d}/selfplay.jsonl", games)
         atomic_json(out/"status.json", {"stage": "training"})
         resolved = list({game_key(g): g for g in games
@@ -244,6 +247,7 @@ def cycle(root, *, pairs=2, movetime=50, max_plies=256, epochs=2,
                   "formal_adoption": False, "strength_proven": False,
                   "config": {"pairs": pairs, "movetime_ms": movetime, "max_plies": max_plies,
                              "outcome_weight": outcome_weight, "td_lambda": .8,
+                             "quiescence": quiescence,
                              "epochs": epochs, "periodic_every": periodic_every}}
         state["used_seeds"].append(seed)
         state["train_batches"].append(train_receipt)
@@ -271,7 +275,8 @@ def cycle(root, *, pairs=2, movetime=50, max_plies=256, epochs=2,
                           replay_games=len(old), recent_games=len(resolved))
             atomic_json(out/"status.json", {"stage": "screen", "candidate": key})
             screening = compare(root, key, [parent_id], seed=seed+50000, pairs=2,
-                                movetime=movetime, max_plies=max_plies, excluded=excluded)
+                                movetime=movetime, max_plies=max_plies, excluded=excluded,
+                                quiescence=quiescence)
             periodic = generation % periodic_every == 0
             audits = []
             if periodic:
@@ -279,7 +284,7 @@ def cycle(root, *, pairs=2, movetime=50, max_plies=256, epochs=2,
                 audit_opponents = list(dict.fromkeys([state["fixed_anchor"], state["checkpoint"],
                     state["history"][max(0, len(state["history"])-2)]]))
                 audits = compare(root, key, audit_opponents, seed=seed+70000, pairs=audit_pairs,
-                    movetime=movetime, max_plies=max_plies, excluded=excluded)
+                    movetime=movetime, max_plies=max_plies, excluded=excluded, quiescence=quiescence)
             evaluation = screening + audits
             receipt = write_games(root, f"cycle-{generation:04d}/monitor.jsonl", evaluation)
             state["evaluation_batches"].append(receipt)
@@ -326,6 +331,7 @@ def main():
     p.add_argument("--max-plies", type=int, default=256)
     p.add_argument("--outcome-weight", type=float, default=.75)
     p.add_argument("--periodic-every", type=int, default=3)
+    p.add_argument("--quiescence", type=int, default=0)
     args = p.parse_args()
     if args.mode == "init":
         if not args.source:
@@ -338,7 +344,8 @@ def main():
         for _ in range(args.cycles):
             result = cycle(args.root, pairs=args.pairs, movetime=args.movetime,
                            max_plies=args.max_plies, epochs=args.epochs or 2,
-                           outcome_weight=args.outcome_weight, periodic_every=args.periodic_every)
+                           outcome_weight=args.outcome_weight, periodic_every=args.periodic_every,
+                           quiescence=args.quiescence)
             print(json.dumps(result, ensure_ascii=False), flush=True)
             if json.loads((Path(args.root)/"state.json").read_text())["paused"]:
                 break
