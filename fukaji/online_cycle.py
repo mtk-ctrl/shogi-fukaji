@@ -84,8 +84,25 @@ def initialize(root, source, *, seed=2026103101, epochs=8):
         return state
 
 
-def play(models, model_ids, prefix, *, role, parent_id, seed, movetime=20,
-         max_plies=256, ordering=True, reuse_history=True, quiescence=0):
+def play(models, model_ids, prefix, *, native_backend=False, **options):
+    if type(native_backend) is bool:
+        native_backend=(native_backend,native_backend)
+    if (not isinstance(native_backend,(list,tuple)) or len(native_backend)!=2 or
+        any(type(flag) is not bool for flag in native_backend)):
+        raise ValueError('two boolean native backend flags required')
+    if not any(native_backend):
+        return _play(models,model_ids,prefix,native_sides=native_backend,**options)
+    from .native_nnue import NativeSelector
+    with NativeSelector() as selector:
+        for model,enabled in zip(models,native_backend):
+            if enabled:selector.register(model)
+        return _play(models,model_ids,prefix,native_sides=native_backend,
+                     native_selector=selector,**options)
+
+
+def _play(models, model_ids, prefix, *, role, parent_id, seed, movetime=20,
+          max_plies=256, ordering=True, reuse_history=True, quiescence=0,
+          native_sides=(False,False),native_selector=None):
     if type(reuse_history) is bool:
         reuse_history = (reuse_history, reuse_history)
     if (not isinstance(reuse_history, (tuple, list)) or len(reuse_history) != 2 or
@@ -112,7 +129,8 @@ def play(models, model_ids, prefix, *, role, parent_id, seed, movetime=20,
         end = terminal(rules, list(b.legal_moves))
         if end:
             break
-        row = select(b, models[b.turn], movetime_ms=movetime, ordering=ordering,
+        chooser = native_selector.select if native_sides[b.turn] else select
+        row = chooser(b, models[b.turn], movetime_ms=movetime, ordering=ordering,
                      history=rules if reuse_history[b.turn] else None,
                      quiescence=quiescence[b.turn])
         if row["move"] is None:
@@ -134,6 +152,7 @@ def play(models, model_ids, prefix, *, role, parent_id, seed, movetime=20,
             "max_additional_plies": max_plies, "ordering": ordering,
             "reuse_history_by_side": list(reuse_history),
             "quiescence_by_side": list(quiescence),
+            "backend_by_side": ['cpp_nnue' if flag else 'python' for flag in native_sides],
             "value": "nnue_only", "knowledge": False,
             "exploration_probability": .05 if role == "train" else 0,
             "exploration_additional_plies": 24 if role == "train" else 0}}
@@ -151,7 +170,8 @@ def fresh_prefix(seed, excluded):
     raise ValueError("no unused opening found")
 
 
-def compare(root, left, opponents, *, seed, pairs, movetime, max_plies, excluded, quiescence=0):
+def compare(root, left, opponents, *, seed, pairs, movetime, max_plies, excluded, quiescence=0,
+            native_backend=False):
     games = []
     model_a = load_snapshot(root/"models", left)[0]
     for pair in range(pairs):
@@ -162,7 +182,8 @@ def compare(root, left, opponents, *, seed, pairs, movetime, max_plies, excluded
             models = [model_a, model_b] if black else [model_b, model_a]
             ids = [left, right] if black else [right, left]
             g = play(models, ids, prefix, role="monitor", parent_id=parent,
-                     seed=seed+pair, movetime=movetime, max_plies=max_plies, quiescence=quiescence)
+                     seed=seed+pair, movetime=movetime, max_plies=max_plies, quiescence=quiescence,
+                     native_backend=native_backend)
             g["candidate_side"] = 0 if black else 1
             games.append(g)
     return games
@@ -193,12 +214,14 @@ def gate(games, *, periodic=False):
 
 
 def cycle(root, *, pairs=2, movetime=50, max_plies=256, epochs=2,
-          outcome_weight=.75, periodic_every=3, audit_pairs=4, quiescence=0):
+          outcome_weight=.75, periodic_every=3, audit_pairs=4, quiescence=0,native_backend=False):
     if not (1 <= pairs <= 16 and 1 <= movetime <= 200 and 16 <= max_plies <= 512 and
             1 <= epochs <= 4 and 1 <= periodic_every <= 5 and 2 <= audit_pairs <= 16):
         raise ValueError("research resource budget exceeded")
     if type(quiescence) is not int or not 0 <= quiescence <= 4:
         raise ValueError('quiescence must be an integer in 0..4')
+    if type(native_backend) is not bool or (native_backend and quiescence!=0):
+        raise ValueError('native learning backend requires quiescence=0')
     with lock(root) as root:
         state = json.loads((root/"state.json").read_text())
         if state["formal_adoption"] is not False or state["paused"]:
@@ -237,7 +260,8 @@ def cycle(root, *, pairs=2, movetime=50, max_plies=256, epochs=2,
                 ids = [parent_id, opponent_id] if black else [opponent_id, parent_id]
                 games.append(play(models, ids, prefix, role="train", parent_id=group,
                                   seed=seed+pair*2+int(black), movetime=movetime,
-                                  max_plies=max_plies, quiescence=quiescence))
+                                  max_plies=max_plies, quiescence=quiescence,
+                                  native_backend=native_backend))
         train_receipt = write_games(root, f"cycle-{generation:04d}/selfplay.jsonl", games)
         atomic_json(out/"status.json", {"stage": "training"})
         resolved = list({game_key(g): g for g in games
@@ -248,6 +272,7 @@ def cycle(root, *, pairs=2, movetime=50, max_plies=256, epochs=2,
                   "config": {"pairs": pairs, "movetime_ms": movetime, "max_plies": max_plies,
                              "outcome_weight": outcome_weight, "td_lambda": .8,
                              "quiescence": quiescence,
+                             "backend": 'cpp_nnue' if native_backend else 'python',
                              "epochs": epochs, "periodic_every": periodic_every}}
         state["used_seeds"].append(seed)
         state["train_batches"].append(train_receipt)
@@ -276,7 +301,7 @@ def cycle(root, *, pairs=2, movetime=50, max_plies=256, epochs=2,
             atomic_json(out/"status.json", {"stage": "screen", "candidate": key})
             screening = compare(root, key, [parent_id], seed=seed+50000, pairs=2,
                                 movetime=movetime, max_plies=max_plies, excluded=excluded,
-                                quiescence=quiescence)
+                                quiescence=quiescence,native_backend=native_backend)
             periodic = generation % periodic_every == 0
             audits = []
             if periodic:
@@ -284,7 +309,8 @@ def cycle(root, *, pairs=2, movetime=50, max_plies=256, epochs=2,
                 audit_opponents = list(dict.fromkeys([state["fixed_anchor"], state["checkpoint"],
                     state["history"][max(0, len(state["history"])-2)]]))
                 audits = compare(root, key, audit_opponents, seed=seed+70000, pairs=audit_pairs,
-                    movetime=movetime, max_plies=max_plies, excluded=excluded, quiescence=quiescence)
+                    movetime=movetime, max_plies=max_plies, excluded=excluded, quiescence=quiescence,
+                    native_backend=native_backend)
             evaluation = screening + audits
             receipt = write_games(root, f"cycle-{generation:04d}/monitor.jsonl", evaluation)
             state["evaluation_batches"].append(receipt)
@@ -332,6 +358,7 @@ def main():
     p.add_argument("--outcome-weight", type=float, default=.75)
     p.add_argument("--periodic-every", type=int, default=3)
     p.add_argument("--quiescence", type=int, default=0)
+    p.add_argument("--native-backend", action='store_true')
     args = p.parse_args()
     if args.mode == "init":
         if not args.source:
@@ -345,7 +372,7 @@ def main():
             result = cycle(args.root, pairs=args.pairs, movetime=args.movetime,
                            max_plies=args.max_plies, epochs=args.epochs or 2,
                            outcome_weight=args.outcome_weight, periodic_every=args.periodic_every,
-                           quiescence=args.quiescence)
+                           quiescence=args.quiescence,native_backend=args.native_backend)
             print(json.dumps(result, ensure_ascii=False), flush=True)
             if json.loads((Path(args.root)/"state.json").read_text())["paused"]:
                 break

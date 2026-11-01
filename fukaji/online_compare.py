@@ -16,12 +16,17 @@ from .online_state import verify
 
 
 def compare_saved(root, left, right, *, name, seed, pairs=8, movetime=100, max_plies=256,
-                  left_quiescence=0, right_quiescence=0):
+                  left_quiescence=0, right_quiescence=0,
+                  left_backend='python',right_backend='python'):
     if (not name or Path(name).name != name or name in ('.', '..') or
         not 1 <= pairs <= 16 or not 1 <= movetime <= 200 or not 16 <= max_plies <= 512):
         raise ValueError('invalid bounded comparison')
     if any(type(q) is not int or not 0 <= q <= 4 for q in (left_quiescence, right_quiescence)):
         raise ValueError('quiescence depths must be in 0..4')
+    backends=(left_backend,right_backend)
+    if any(b not in ('python','cpp_nnue') for b in backends) or any(
+        b=='cpp_nnue' and q!=0 for b,q in zip(backends,(left_quiescence,right_quiescence))):
+        raise ValueError('native backend requires basic quiescence=0 search')
     with lock(root) as root:
         verify(root)
         state = json.loads((root/'state.json').read_text())
@@ -51,6 +56,7 @@ def compare_saved(root, left, right, *, name, seed, pairs=8, movetime=100, max_p
                     'role': 'monitor', 'formal_adoption': False,
                     'strength_proven': False, 'planned_parents': [p for _,p in planned]}
         manifest['quiescence_by_model'] = [left_quiescence, right_quiescence]
+        manifest['backend_by_model'] = list(backends)
         manifest['implementation_sha256'] = implementation_digest()
         manifest['comparison_source_sha256'] = digest(Path(__file__).read_bytes())
         atomic_json(out/'manifest.json', manifest)
@@ -63,9 +69,10 @@ def compare_saved(root, left, right, *, name, seed, pairs=8, movetime=100, max_p
                 ids = [left,right] if black else [right,left]
                 quiescence = ((left_quiescence, right_quiescence) if black else
                               (right_quiescence, left_quiescence))
+                native = tuple(b=='cpp_nnue' for b in (backends if black else backends[::-1]))
                 game = play(models, ids, prefix, role='monitor', parent_id=parent,
                             seed=seed+pair, movetime=movetime, max_plies=max_plies,
-                            quiescence=quiescence)
+                            quiescence=quiescence,native_backend=native)
                 game['candidate_side'] = 0 if black else 1
                 current.append(game)
             receipt = write_games(root, f'{name}/pair-{pair:03d}.jsonl', current)
@@ -99,10 +106,13 @@ def main():
     p.add_argument('--movetime',type=int,default=100);p.add_argument('--max-plies',type=int,default=256)
     p.add_argument('--left-quiescence',type=int,default=0)
     p.add_argument('--right-quiescence',type=int,default=0)
+    p.add_argument('--left-backend',choices=('python','cpp_nnue'),default='python')
+    p.add_argument('--right-backend',choices=('python','cpp_nnue'),default='python')
     a=p.parse_args()
     print(json.dumps(compare_saved(a.root,a.left,a.right,name=a.name,seed=a.seed,
                     pairs=a.pairs,movetime=a.movetime,max_plies=a.max_plies,
-                    left_quiescence=a.left_quiescence,right_quiescence=a.right_quiescence),indent=2))
+                    left_quiescence=a.left_quiescence,right_quiescence=a.right_quiescence,
+                    left_backend=a.left_backend,right_backend=a.right_backend),indent=2))
 
 
 if __name__=='__main__':main()

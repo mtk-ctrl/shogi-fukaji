@@ -146,7 +146,7 @@ static array<array<int,7>,2> parse_hands(const string& hand) {
   if(number)throw runtime_error("dangling hand count");
   return counts;
 }
-static vector<string> pseudo_moves(const Board& b,bool self_check_filter) {
+static vector<string> pseudo_moves(const Board& b,bool self_check_filter,bool first_only=false) {
   vector<string> result;
   bool side=b.turn=="b";
   for(int from=0;from<81;++from) {
@@ -169,6 +169,7 @@ static vector<string> pseudo_moves(const Board& b,bool self_check_filter) {
       string move=square_usi(from)+square_usi(to);
       if(plain)result.push_back(move);
       if(promo)result.push_back(move+"+");
+      if(first_only&&!result.empty())return result;
     }
   }
   const string kinds="PLNSGBR";
@@ -201,11 +202,12 @@ static vector<string> pseudo_moves(const Board& b,bool self_check_filter) {
           if(enemy_king>=0 &&
              attacks(next,to/9,to%9,enemy_king/9,enemy_king%9,p)) {
             next.turn=side?"w":"b";
-            if(pseudo_moves(next,true).empty())continue;
+            if(pseudo_moves(next,true,first_only).empty())continue;
           }
         }
       }
       result.push_back(string(1,p.type)+"*"+square_usi(to));
+      if(first_only)return result;
     }
   }
   sort(result.begin(),result.end());
