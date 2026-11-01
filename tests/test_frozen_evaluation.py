@@ -79,6 +79,21 @@ class FrozenEvaluationStatistics(unittest.TestCase):
 
 @unittest.skipUnless(available(),'isolated writer+worker CPU and g++ required')
 class FrozenEvaluationRecovery(unittest.TestCase):
+    def test_explicit_trial_candidate_runs_without_changing_research_pointer(self):
+        from fukaji.online_learning import fresh_model,save_snapshot
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t)/'state';old=fixture(root)
+            candidate=save_snapshot(root/'models',fresh_model(919),None,{'parent':old})
+            plan=prepare(root,name='custom',pairs=1,workers=1,movetime=1,max_total_plies=16,
+                purpose='regression',candidate_id=candidate,
+                opponents=[{'label':'control','model':old}])
+            self.assertEqual(plan['candidate'],candidate)
+            self.assertEqual(plan['research_latest_at_start'],old)
+            report=run(root,name='custom',checkpoint_every=0)
+            self.assertEqual(report['completed_games'],2)
+            self.assertEqual(json.loads((root/'state.json').read_text())['research_latest'],old)
+            self.assertEqual(verify(root)['monitor_games'],2)
+
     def test_all_families_reserved_and_other_comparison_cannot_start(self):
         from fukaji.online_compare import compare_saved
         with tempfile.TemporaryDirectory() as t:
