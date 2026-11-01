@@ -15,10 +15,13 @@ from .online_learning import atomic_json, load_snapshot, digest, implementation_
 from .online_state import verify
 
 
-def compare_saved(root, left, right, *, name, seed, pairs=8, movetime=100, max_plies=256):
+def compare_saved(root, left, right, *, name, seed, pairs=8, movetime=100, max_plies=256,
+                  left_quiescence=0, right_quiescence=0):
     if (not name or Path(name).name != name or name in ('.', '..') or
         not 1 <= pairs <= 16 or not 1 <= movetime <= 200 or not 16 <= max_plies <= 512):
         raise ValueError('invalid bounded comparison')
+    if any(type(q) is not int or not 0 <= q <= 4 for q in (left_quiescence, right_quiescence)):
+        raise ValueError('quiescence depths must be in 0..4')
     with lock(root) as root:
         verify(root)
         state = json.loads((root/'state.json').read_text())
@@ -47,6 +50,7 @@ def compare_saved(root, left, right, *, name, seed, pairs=8, movetime=100, max_p
                     'movetime_ms': movetime, 'max_plies': max_plies,
                     'role': 'monitor', 'formal_adoption': False,
                     'strength_proven': False, 'planned_parents': [p for _,p in planned]}
+        manifest['quiescence_by_model'] = [left_quiescence, right_quiescence]
         manifest['implementation_sha256'] = implementation_digest()
         manifest['comparison_source_sha256'] = digest(Path(__file__).read_bytes())
         atomic_json(out/'manifest.json', manifest)
@@ -57,8 +61,11 @@ def compare_saved(root, left, right, *, name, seed, pairs=8, movetime=100, max_p
             for black in (True,False):
                 models = [a,b] if black else [b,a]
                 ids = [left,right] if black else [right,left]
+                quiescence = ((left_quiescence, right_quiescence) if black else
+                              (right_quiescence, left_quiescence))
                 game = play(models, ids, prefix, role='monitor', parent_id=parent,
-                            seed=seed+pair, movetime=movetime, max_plies=max_plies)
+                            seed=seed+pair, movetime=movetime, max_plies=max_plies,
+                            quiescence=quiescence)
                 game['candidate_side'] = 0 if black else 1
                 current.append(game)
             receipt = write_games(root, f'{name}/pair-{pair:03d}.jsonl', current)
@@ -90,9 +97,12 @@ def main():
     p.add_argument('--right',required=True);p.add_argument('--name',required=True)
     p.add_argument('--seed',required=True,type=int);p.add_argument('--pairs',type=int,default=8)
     p.add_argument('--movetime',type=int,default=100);p.add_argument('--max-plies',type=int,default=256)
+    p.add_argument('--left-quiescence',type=int,default=0)
+    p.add_argument('--right-quiescence',type=int,default=0)
     a=p.parse_args()
     print(json.dumps(compare_saved(a.root,a.left,a.right,name=a.name,seed=a.seed,
-                    pairs=a.pairs,movetime=a.movetime,max_plies=a.max_plies),indent=2))
+                    pairs=a.pairs,movetime=a.movetime,max_plies=a.max_plies,
+                    left_quiescence=a.left_quiescence,right_quiescence=a.right_quiescence),indent=2))
 
 
 if __name__=='__main__':main()
