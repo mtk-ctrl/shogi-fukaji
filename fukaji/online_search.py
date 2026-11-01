@@ -148,15 +148,18 @@ def terminal(position, legal):
 
 
 def select(board, model, *, movetime_ms=50, max_depth=64, incremental=True,
-           ordering=True, fixed_depth=False, fast_leaf=True, history=None):
+           ordering=True, fixed_depth=False, fast_leaf=True, history=None, quiescence=0):
     if not 1 <= movetime_ms <= 10000 or not 1 <= max_depth <= 64:
         raise ValueError("invalid search bounds")
+    if type(quiescence) is not int or not 0 <= quiescence <= 4:
+        raise ValueError('quiescence must be an integer in 0..4')
     started = time.monotonic()
     deadline = float("inf") if fixed_depth else started + movetime_ms / 1000
     state = Position(board, model, incremental, history=history)
     original = board.sfen()
     original_counts = +board.transpositions
     nodes, evals = 0, 0
+    qnodes = 0
     hints = {}
 
     def moves_at(ply):
@@ -166,8 +169,53 @@ def select(board, model, *, movetime_ms=50, max_depth=64, incremental=True,
             moves.sort(key=lambda m: m.usi() != hint)
         return moves
 
+    def static_value():
+        nonlocal evals
+        evals += 1
+        return float(np.clip(state.logit(), -20, 20)) * 1000
+
+    def quiet(alpha, beta, ply, remaining):
+        nonlocal nodes, qnodes
+        nodes += 1
+        qnodes += 1
+        if time.monotonic() >= deadline:
+            raise TimeoutError
+        # Terminal/repetition facts always precede a stand-pat approximation.
+        first = next(iter(board.legal_moves), None)
+        end = terminal(state, [] if first is None else [first])
+        if end is not None:
+            if end['winner'] is None:
+                return 0.0
+            return (MATE-ply) * (1 if end['winner'] == board.turn else -1)
+        if remaining == 0:
+            return static_value()
+        check = board.is_check()
+        best = -2*MATE if check else static_value()
+        if not check:
+            if best >= beta:
+                return best
+            alpha = max(alpha, best)
+        # In check every legal evasion is eligible; standing still is not.
+        # Otherwise extend only captures and promotions, with a hard ply cap.
+        moves = moves_at(ply)
+        if not check:
+            moves = [m for m in moves if m.promotion or board.piece_type_at(m.to_square)]
+        for move in moves:
+            state.push_legal(move)
+            try:
+                value = -quiet(-beta, -alpha, ply+1, remaining-1)
+            finally:
+                state.pop()
+            best = max(best, value)
+            alpha = max(alpha, best)
+            if alpha >= beta:
+                break
+        return best
+
     def search(depth, alpha, beta, ply):
         nonlocal nodes, evals
+        if depth == 0 and quiescence:
+            return quiet(alpha, beta, ply, quiescence)
         nodes += 1
         if time.monotonic() >= deadline:
             raise TimeoutError
@@ -185,8 +233,7 @@ def select(board, model, *, movetime_ms=50, max_depth=64, incremental=True,
                 return 0.0
             return (MATE - ply) * (1 if end["winner"] == board.turn else -1)
         if depth == 0:
-            evals += 1
-            return float(np.clip(state.logit(), -20, 20)) * 1000
+            return static_value()
         best, word = -2*MATE, None
         for move in moves:
             state.push_legal(move)
@@ -241,4 +288,5 @@ def select(board, model, *, movetime_ms=50, max_depth=64, incremental=True,
     return {"move": best.usi() if best else None, "depth": completed,
             "partial_root_moves": partial_root_moves, "root_moves": len(moves),
             "nodes": nodes, "evaluations": evals, "score": score,
+            "quiescence_depth": quiescence, "quiescence_nodes": qnodes,
             "elapsed_ms": (time.monotonic()-started)*1000, "terminal": end}

@@ -30,3 +30,5 @@ D9/PR132、D10途中実験、正式版・学習済みモデル・凍結データ
 保存・再開の修復と現在のMC/TD一要因比較は [D20](D20_RELIABLE_RESUME_AND_TARGET_TRIAL_20261101.md) を参照。公開第5周を本人限定の最新状態と取り違えない。
 
 NNUEの玉相対特徴と同一経験比較は [D21](D21_KING_RELATIVE_NNUE_20261101.md) を参照。
+
+凍結NNUEでの静止探索の比較は [D22](D22_NNUE_QUIESCENCE_20261101.md) を参照。

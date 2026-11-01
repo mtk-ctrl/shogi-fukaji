@@ -85,12 +85,17 @@ def initialize(root, source, *, seed=2026103101, epochs=8):
 
 
 def play(models, model_ids, prefix, *, role, parent_id, seed, movetime=20,
-         max_plies=256, ordering=True, reuse_history=True):
+         max_plies=256, ordering=True, reuse_history=True, quiescence=0):
     if type(reuse_history) is bool:
         reuse_history = (reuse_history, reuse_history)
     if (not isinstance(reuse_history, (tuple, list)) or len(reuse_history) != 2 or
         any(type(flag) is not bool for flag in reuse_history)):
         raise ValueError("two boolean history-reuse flags required")
+    if type(quiescence) is int:
+        quiescence = (quiescence, quiescence)
+    if (not isinstance(quiescence, (tuple, list)) or len(quiescence) != 2 or
+        any(type(q) is not int or not 0 <= q <= 4 for q in quiescence)):
+        raise ValueError('two quiescence depths in 0..4 required')
     b = shogi.Board()
     rng = random.Random(seed)
     for word in prefix:
@@ -108,7 +113,8 @@ def play(models, model_ids, prefix, *, role, parent_id, seed, movetime=20,
         if end:
             break
         row = select(b, models[b.turn], movetime_ms=movetime, ordering=ordering,
-                     history=rules if reuse_history[b.turn] else None)
+                     history=rules if reuse_history[b.turn] else None,
+                     quiescence=quiescence[b.turn])
         if row["move"] is None:
             raise ValueError("nonterminal search returned no move")
         if role == "train" and len(stats) < 24 and rng.random() < .05:
@@ -127,6 +133,7 @@ def play(models, model_ids, prefix, *, role, parent_id, seed, movetime=20,
             "telemetry": stats, "conditions": {"movetime_ms": movetime,
             "max_additional_plies": max_plies, "ordering": ordering,
             "reuse_history_by_side": list(reuse_history),
+            "quiescence_by_side": list(quiescence),
             "value": "nnue_only", "knowledge": False,
             "exploration_probability": .05 if role == "train" else 0,
             "exploration_additional_plies": 24 if role == "train" else 0}}
