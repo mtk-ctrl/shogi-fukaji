@@ -31,7 +31,7 @@ def compare_saved(root, left, right, *, name, seed, pairs=8, movetime=100, max_p
         verify(root)
         state = json.loads((root/'state.json').read_text())
         out = root/name
-        if out.exists() or state.get('pending_comparison'):
+        if out.exists() or state.get('pending_comparison') or state.get('pending_campaign'):
             raise ValueError('comparison exists or unfinished; inspect before retrying')
         out.mkdir()
         a, _, _ = load_snapshot(root/'models', left)

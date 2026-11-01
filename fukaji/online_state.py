@@ -48,6 +48,27 @@ def verify(root):
         report = json.loads(report_path.read_text())
         if report.get('candidate'):
             load_snapshot(root / 'models', report['candidate'])
+    campaigns = list(state.get('frozen_evaluations', []))
+    if state.get('pending_campaign'):
+        campaigns.append({'plan': state['pending_campaign']+'/plan.json',
+                          'plan_sha256': state['pending_campaign_sha256']})
+        if not state['paused']:
+            raise ValueError('pending evaluation requires paused learning')
+    for receipt in campaigns:
+        path = safe_path(root, receipt['plan'])
+        if digest(path.read_bytes()) != receipt['plan_sha256']:
+            raise ValueError('frozen evaluation plan checksum mismatch')
+        plan = json.loads(path.read_text())
+        if any(f['parent'] not in protected for f in plan['families']):
+            raise ValueError('unprotected frozen evaluation opening')
+        for key in [plan['candidate'], *[o['model'] for o in plan['opponents']]]:
+            load_snapshot(root/'models', key)
+        if receipt.get('report'):
+            path = safe_path(root, receipt['report'])
+            if digest(path.read_bytes()) != receipt['sha256']:
+                raise ValueError('frozen evaluation report checksum mismatch')
+            if not json.loads(path.read_text()).get('complete'):
+                raise ValueError('completed evaluation has incomplete report')
     if len(state['used_seeds']) != len(set(state['used_seeds'])):
         raise ValueError('duplicate generation seeds')
     return {'models': len(model_ids), 'train_games': len(train),
