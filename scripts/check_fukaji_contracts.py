@@ -22,4 +22,10 @@ archive = (root/'research/d17-fast-self-learning'/receipt['archive']).resolve()
 assert archive.is_relative_to((root/'research').resolve()), 'archive outside research'
 assert hashlib.sha256(archive.read_bytes()).hexdigest() == receipt['sha256'], 'saved state missing/corrupt'
 assert 'latest-state.json' in workflow and 'fresh_bootstrap:' in workflow
-print('Formal contract, router links, durable state and bounded workflow: OK')
+
+assert 'published_checkpoint:' in workflow and 'allow_public_state_artifact:' in workflow
+assert 'python -m fukaji.online_resume validate-actions' in workflow
+assert 'if: always() && inputs.allow_public_state_artifact' in workflow
+assert 'Restore durable repository state by default' not in workflow
+
+print('Formal contract, router links, durable state and explicit resume/publication: OK')
