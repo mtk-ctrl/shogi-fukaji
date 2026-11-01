@@ -8,14 +8,16 @@ from statistics import mean,median
 
 import shogi
 from .native_nnue import NativeSelector,build_native
-from .online_learning import load_snapshot,atomic_json,game_key
+from .online_learning import load_snapshot,atomic_json,game_key,implementation_digest
 from .online_cycle import read_games
 from .online_search import Position,select
 from .online_state import verify
 
 
-def probe(root, *, seed=202611012300):
-    root=Path(root);verify(root);out=root/'d23-native-probe.json'
+def probe(root, *, seed=202611012300,output_name='d23-native-probe.json'):
+    if Path(output_name).name!=output_name or not output_name.endswith('.json'):
+        raise ValueError('single-level JSON probe name required')
+    root=Path(root);verify(root);out=root/output_name
     if out.exists():raise ValueError('immutable native probe exists')
     state=json.loads((root/'state.json').read_text())
     key=state['research_latest'];model=load_snapshot(root/'models',key)[0]
@@ -28,6 +30,7 @@ def probe(root, *, seed=202611012300):
         raise ValueError('probe source is not isolated training experience')
     binary=build_native();rows=[]
     report={'model':key,'seed':seed,'depth':2,'game_hashes':[game_key(g) for g in games],
+            'implementation_sha256':implementation_digest(),
             'new_games':0,'formal_adoption':False,'strength_proven':False,'rows':rows}
     for game in games:
         for fraction in (.15,.4,.65,.9):
@@ -62,7 +65,8 @@ def probe(root, *, seed=202611012300):
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--root',required=True)
-    a=p.parse_args();print(json.dumps(probe(a.root),indent=2))
+    p.add_argument('--output-name',default='d23-native-probe.json')
+    a=p.parse_args();print(json.dumps(probe(a.root,output_name=a.output_name),indent=2))
 
 
 if __name__=='__main__':main()

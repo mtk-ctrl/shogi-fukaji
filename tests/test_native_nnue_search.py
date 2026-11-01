@@ -39,6 +39,7 @@ class NativeNNUEOnlineTests(unittest.TestCase):
         sfens=[shogi.STARTING_SFEN,'4k4/9/4P4/9/9/9/9/9/4K4 b P 1',
             '4k4/9/4R4/9/9/9/9/9/4K4 w - 1',
             '4k4/9/3+p5/4S4/9/9/9/9/4K4 b - 1',
+            '3pkp3/3p1p3/4G4/9/9/9/9/9/4K4 b P 1',
             '7lk/8p/7G1/9/9/9/9/9/4K3R b - 1']
         for sfen in sfens:
             with self.subTest(sfen=sfen), NativeSelector(self.binary) as native:

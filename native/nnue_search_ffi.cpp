@@ -102,7 +102,8 @@ struct NSearch {
   };
   double search(int depth,double alpha,double beta,int ply) {
     ++nodes;time_check();
-    const auto legal=moves(depth!=0);
+    // Static leaves need only legal existence, not a complete sorted list.
+    const auto legal=depth==0?pseudo_moves(board,true,true):moves();
     const auto end=terminal(legal);
     if(!end.first.empty())return end.second<0?0.:(kNMate-ply)*(end.second==(board.turn=="b"?0:1)?1.:-1.);
     if(depth==0) {++evals;return clamp(nnue_value(board,model,board.turn=="b"?0:1),-20.,20.)*1000.;}
