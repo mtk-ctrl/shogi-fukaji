@@ -206,6 +206,7 @@ def gate(games, *, periodic=False):
     information = w+l >= 4
     action = "rollback" if collapse else ("pause" if periodic and not information else "provisional")
     return {"wins": w, "losses": l, "draws": d, "unresolved": u,
+            "evidence_stage": "bounded_fault_screen_not_strength_estimate",
             "action": action, "strength_proven": False,
             "score_resolved": (w+.5*d)/(w+l+d) if w+l+d else None,
             "reason": "catastrophic screen" if collapse else
