@@ -4,9 +4,15 @@
 
 Work障害からの復旧と直近の追加学習・比較の正本は [D18](D18_RECOVERY_AND_LEARNING_20261101.md)。保存済みのモデル・optimizerから再開し、初期化を繰り返さない。
 
-## 最新の研究判断（D30完了）
+## 最新の研究判断（D31完了・D33学習済み、計算環境の再開待ち）
 
-新55決着経験で追加学習したD30候補912db54f/Adam1452は、未更新15周へ新200序盤400局で224勝168敗1分7未決着。事前区間46.522〜67.478%は未確定だが、勝ち越しと全seedの新monitor予測改善から、有限の次研究用latestへ暫定反映した。研究巻戻し先は15周ae53ce0d/Adam1324、固定初回anchorは保持。以後の本人指示でこの候補を正式v0.2.0へ採用したが、研究stateの履歴は書き換えない。通常cycle数15とoffline研究更新を区別する。[D30結果](D30_FRESH_EXPERIENCE_20261102.md)を正本とし、次は新旧2バッチを保持して忘却を抑える。
+新旧経験を保持したD31候補c8ad43bf/Adam1580は、追加学習前の正式採用NNUE912db54fへ119勝76敗1分4未決着、新経験のみ対照b73f0c24へ97勝97敗4分2未決着。新100序盤・先後・同一C++q0/100msの全400局と全65,551手を検証・本人限定保存した。保持方式の対局優位は未確認。親への勝ち越しと忘却抑制を根拠とする、評価完了後の別判断で研究用latestをc8へ更新した。正式v0.2.0・固定anchor・過去モデルは保持する。[D31結果](D31_TWO_BATCH_RETENTION_20261103.md)。
+
+[D33](D33_CANDIDATE_EXPERIENCE_20261103.md)は候補同士の新64局から46決着を加え、3seedをAdam1580→1708で追加学習済み。代表e0cbd2ab対学習直前親c8の新200局planを固定したが、実行環境の再接続障害で起動要求が拒否された。比較を稼働中・完了と扱わない。
+
+[最新の完全状態](https://drive.google.com/file/d/1l-ukhYLegviNJ-Qt9Wz4rmJtijWboiP5/view)・[停止済み再開index](https://drive.google.com/file/d/1YGAMrWE31sv2znT7ufY_UHEeMzAcV0IC/view)。47models/train945/monitor2524/15cycles、研究latest c8/Adam1580、D33候補はAdam1708、pending=d33-followup200、保存時点0/100組。owner-only・遠隔SHA・標準復元・元state一致・index読戻しまで確認済み。起動拒否後の元writer/progress/lockを確認してから、同じ凍結planを再開する。初期化や未保存旧結果との合算をしない。
+
+コード正本31e799a9/PR158は全713検査・正式契約成功。[再開メタデータ](../research/d33-candidate-experience/resume.json)を参照。稼働を確認した待ち対象がないためタイマーは設定しない。
 
 ## 現在地
 
