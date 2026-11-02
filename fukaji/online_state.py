@@ -17,6 +17,9 @@ from .online_cycle import read_games, lock
 from .supplemental_training import verified_receipts
 
 STATE_SCHEMA_MAX = 2
+# D31: 190 MB before evaluation + ~25 MB for the fixed 400 games.
+# Keep a finite 256 MiB restore bound; all member/path/type checks still apply.
+MAX_STATE_BYTES = 256 * 1024 * 1024
 
 
 def verify(root):
@@ -117,7 +120,7 @@ def restore(archive, destination, expected_sha):
     with tempfile.TemporaryDirectory(dir=destination.parent) as tmp:
         with tarfile.open(archive) as t:
             members = t.getmembers()
-            if len(members) > 20000 or sum(m.size for m in members) > 200_000_000:
+            if len(members) > 20000 or sum(m.size for m in members) > MAX_STATE_BYTES:
                 raise ValueError('state exceeds reviewed size')
             seen = set()
             for member in members:

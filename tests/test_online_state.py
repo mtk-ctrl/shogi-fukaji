@@ -102,3 +102,19 @@ class ResumePolicyTests(unittest.TestCase):
 
 
 if __name__=='__main__': unittest.main()
+
+class StateSizeBudgetTests(unittest.TestCase):
+    def test_restore_still_refuses_over_budget_archive_before_extracting(self):
+        from unittest.mock import patch
+        from fukaji.online_state import MAX_STATE_BYTES
+        from fukaji.online_learning import digest
+        self.assertGreater(MAX_STATE_BYTES,215_000_000)
+        with tempfile.TemporaryDirectory() as tmp:
+            p=Path(tmp);archive=p/'oversized.tar.gz';archive.write_bytes(b'size-check-fixture')
+            member=tarfile.TarInfo('d17-state/payload');member.size=MAX_STATE_BYTES+1
+            with patch('fukaji.online_state.tarfile.open') as opened:
+                opened.return_value.__enter__.return_value.getmembers.return_value=[member]
+                with self.assertRaisesRegex(ValueError,'reviewed size'):
+                    restore(archive,p/'destination',digest(archive.read_bytes()))
+                opened.return_value.__enter__.return_value.extractall.assert_not_called()
+            self.assertFalse((p/'destination').exists())
