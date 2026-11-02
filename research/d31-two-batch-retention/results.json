@@ -1,0 +1,299 @@
+{
+  "schema": "fukaji-frozen-evaluation-v1",
+  "complete": true,
+  "planned_families": 100,
+  "completed_families": 100,
+  "completed_games": 400,
+  "candidate": "c8ad43bfd17a1b6bd551cab1073f6ef13d04ad501ea4cf64f3b319a8c259e37a",
+  "conditions": {
+    "backend": "cpp_nnue",
+    "quiescence": 0,
+    "movetime_ms": 100,
+    "max_total_plies": 512
+  },
+  "alpha_familywise": 0.05,
+  "formal_adoption": false,
+  "research_pointer_changed": false,
+  "strength_proven": false,
+  "old_exploratory_games_included": false,
+  "legal_replay_moves": 65551,
+  "outcomes_match": true,
+  "session_seconds": 391.82064079799966,
+  "total_wall_seconds": 3062.4661405086517,
+  "plan_sha256": "483d743cad413320976155c67b71b915375cf5b7bc8ecfbbdcc49bba3abeb5d8",
+  "source_sha256": "9e7c0195806288ebad9cf3f5cdbfb184c8345f5fd7001de84a18e6ce3d47118e",
+  "comparisons": {
+    "matched_fresh_only_same_seed": {
+      "opponent_id": "b73f0c24e07f45b27f8e1d1c741c42607c81845477c19a33cb4268fd87cfb330",
+      "opening_families": 100,
+      "games": 200,
+      "wins": 97,
+      "losses": 97,
+      "draws": 4,
+      "unresolved": 2,
+      "all_game_score_identification_bounds": [
+        0.495,
+        0.505
+      ],
+      "simultaneous_hoeffding_interval": [
+        0.34697928126992017,
+        0.6530207187300798
+      ],
+      "sampling_half_width": 0.14802071873007983,
+      "conclusion": "inconclusive"
+    },
+    "approved_start_D30": {
+      "opponent_id": "912db54f04429a0a10d3adb7960c23d7fa43ecdead8115c89b1de2e570afb03c",
+      "opening_families": 100,
+      "games": 200,
+      "wins": 119,
+      "losses": 76,
+      "draws": 1,
+      "unresolved": 4,
+      "all_game_score_identification_bounds": [
+        0.5975,
+        0.6175
+      ],
+      "simultaneous_hoeffding_interval": [
+        0.4494792812699202,
+        0.7655207187300799
+      ],
+      "sampling_half_width": 0.14802071873007983,
+      "conclusion": "inconclusive"
+    }
+  },
+  "training": {
+    "parent": "912db54f04429a0a10d3adb7960c23d7fa43ecdead8115c89b1de2e570afb03c",
+    "parent_optimizer_step": 1452,
+    "final_optimizer_step": 1580,
+    "seeds": [
+      202611033101,
+      202611033102,
+      202611033103
+    ],
+    "games": {
+      "fresh": 54,
+      "d30": 55,
+      "cycle15": 27,
+      "bootstrap": 665,
+      "historical_nnue": 53
+    },
+    "pool_sizes": {
+      "fresh": 1624,
+      "d30": 1618,
+      "cycle15": 703,
+      "bootstrap": 19982,
+      "historical_nnue": 1481
+    },
+    "schedule_counts": {
+      "fresh_only": [
+        4096,
+        0,
+        0,
+        2048,
+        2048
+      ],
+      "retain_two": [
+        2048,
+        1024,
+        1024,
+        2048,
+        2048
+      ]
+    },
+    "parent_cohort_loss": {
+      "fresh": 0.7457779381662754,
+      "d30": 0.491666381232376,
+      "cycle15": 0.5642425623930365,
+      "bootstrap": 0.49902777173786167,
+      "historical_nnue": 0.4702291546602011
+    },
+    "candidates": {
+      "fresh_only_seed202611033101": {
+        "model": "b73f0c24e07f45b27f8e1d1c741c42607c81845477c19a33cb4268fd87cfb330",
+        "cohort_loss": {
+          "fresh": 0.5252694590338345,
+          "d30": 0.506961270816836,
+          "cycle15": 0.5999649720714239,
+          "bootstrap": 0.4947764307227701,
+          "historical_nnue": 0.44845560448625293
+        }
+      },
+      "retain_two_seed202611033101": {
+        "model": "c8ad43bfd17a1b6bd551cab1073f6ef13d04ad501ea4cf64f3b319a8c259e37a",
+        "cohort_loss": {
+          "fresh": 0.5767032313229415,
+          "d30": 0.48847699725288984,
+          "cycle15": 0.4561637563691879,
+          "bootstrap": 0.49491764754340306,
+          "historical_nnue": 0.4429607713327144
+        }
+      },
+      "fresh_only_seed202611033102": {
+        "model": "8e5677bb948ed96af299f91c87c7599f15ae66065f4c2f84ad7332ea45693e13",
+        "cohort_loss": {
+          "fresh": 0.5231915224949127,
+          "d30": 0.5061018204659555,
+          "cycle15": 0.6018237986232274,
+          "bootstrap": 0.4943463061142464,
+          "historical_nnue": 0.4462786358325245
+        }
+      },
+      "retain_two_seed202611033102": {
+        "model": "b4f97e1feadaaea6982e0f728d510efaba31526c63c6387a96c2286e02abcd20",
+        "cohort_loss": {
+          "fresh": 0.581509745179726,
+          "d30": 0.4875349485682616,
+          "cycle15": 0.45907753392269735,
+          "bootstrap": 0.4939840915575124,
+          "historical_nnue": 0.4406993899451648
+        }
+      },
+      "fresh_only_seed202611033103": {
+        "model": "81e34d763e8f292a3ca5db78051336297732437d9ccc1e8f7a466591c7fcc042",
+        "cohort_loss": {
+          "fresh": 0.5238667239109284,
+          "d30": 0.5036917876254201,
+          "cycle15": 0.5950437629884202,
+          "bootstrap": 0.4935267772203021,
+          "historical_nnue": 0.4465945164630898
+        }
+      },
+      "retain_two_seed202611033103": {
+        "model": "3a78cd54c71c0eaa62fdfb17a1de4dc5c185c32720560f62181259cacc709ed2",
+        "cohort_loss": {
+          "fresh": 0.5808337216306789,
+          "d30": 0.4873026834872214,
+          "cycle15": 0.455882043960593,
+          "bootstrap": 0.4926509550414564,
+          "historical_nnue": 0.4425969300923679
+        }
+      }
+    }
+  },
+  "old_monitor": {
+    "campaign": "d30-fresh400",
+    "trial": "d31-retained-replay",
+    "parent_model_sha256": "912db54f04429a0a10d3adb7960c23d7fa43ecdead8115c89b1de2e570afb03c",
+    "candidate_models": {
+      "fresh_only_seed202611033101": "b73f0c24e07f45b27f8e1d1c741c42607c81845477c19a33cb4268fd87cfb330",
+      "retain_two_seed202611033101": "c8ad43bfd17a1b6bd551cab1073f6ef13d04ad501ea4cf64f3b319a8c259e37a",
+      "fresh_only_seed202611033102": "8e5677bb948ed96af299f91c87c7599f15ae66065f4c2f84ad7332ea45693e13",
+      "retain_two_seed202611033102": "b4f97e1feadaaea6982e0f728d510efaba31526c63c6387a96c2286e02abcd20",
+      "fresh_only_seed202611033103": "81e34d763e8f292a3ca5db78051336297732437d9ccc1e8f7a466591c7fcc042",
+      "retain_two_seed202611033103": "3a78cd54c71c0eaa62fdfb17a1de4dc5c185c32720560f62181259cacc709ed2"
+    },
+    "resolved_games": 393,
+    "unresolved_excluded": 7,
+    "sampled_positions": 11742,
+    "unique_trajectories": 400,
+    "mean_game_outcome_bce": {
+      "learning_parent": 0.7333454768936003,
+      "fresh_only_seed202611033101": 0.7130299520642355,
+      "retain_two_seed202611033101": 0.7105852970676217,
+      "fresh_only_seed202611033102": 0.7195349483978075,
+      "retain_two_seed202611033102": 0.7169318371992975,
+      "fresh_only_seed202611033103": 0.7091800188907191,
+      "retain_two_seed202611033103": 0.7034100608020278
+    },
+    "labels": "observed outcome only; no training",
+    "all_seeds_reported": true,
+    "candidate_selection_changed": false,
+    "purpose": "development monitor prediction diagnostic, not playing strength",
+    "source_sha256": "a28ae1783a70eb32c47dee105b4ed3f40b02051b18ef00395b943ca389b16f3b"
+  },
+  "new_monitor": {
+    "campaign": "d31-retention400",
+    "trial": "d31-retained-replay",
+    "parent_model_sha256": "912db54f04429a0a10d3adb7960c23d7fa43ecdead8115c89b1de2e570afb03c",
+    "candidate_models": {
+      "fresh_only_seed202611033101": "b73f0c24e07f45b27f8e1d1c741c42607c81845477c19a33cb4268fd87cfb330",
+      "retain_two_seed202611033101": "c8ad43bfd17a1b6bd551cab1073f6ef13d04ad501ea4cf64f3b319a8c259e37a",
+      "fresh_only_seed202611033102": "8e5677bb948ed96af299f91c87c7599f15ae66065f4c2f84ad7332ea45693e13",
+      "retain_two_seed202611033102": "b4f97e1feadaaea6982e0f728d510efaba31526c63c6387a96c2286e02abcd20",
+      "fresh_only_seed202611033103": "81e34d763e8f292a3ca5db78051336297732437d9ccc1e8f7a466591c7fcc042",
+      "retain_two_seed202611033103": "3a78cd54c71c0eaa62fdfb17a1de4dc5c185c32720560f62181259cacc709ed2"
+    },
+    "resolved_games": 394,
+    "unresolved_excluded": 6,
+    "sampled_positions": 11799,
+    "unique_trajectories": 400,
+    "mean_game_outcome_bce": {
+      "learning_parent": 0.8015086763710135,
+      "fresh_only_seed202611033101": 0.7399417296309924,
+      "retain_two_seed202611033101": 0.7505899023619983,
+      "fresh_only_seed202611033102": 0.7421974843952925,
+      "retain_two_seed202611033102": 0.753184431425194,
+      "fresh_only_seed202611033103": 0.73867327039637,
+      "retain_two_seed202611033103": 0.7438251775616117
+    },
+    "labels": "observed outcome only; no training",
+    "all_seeds_reported": true,
+    "candidate_selection_changed": false,
+    "purpose": "development monitor prediction diagnostic, not playing strength",
+    "source_sha256": "a28ae1783a70eb32c47dee105b4ed3f40b02051b18ef00395b943ca389b16f3b"
+  },
+  "sampling": {
+    "games": {
+      "fresh": 54,
+      "d30": 55,
+      "cycle15": 27,
+      "bootstrap": 665,
+      "historical_nnue": 53
+    },
+    "pool_positions": {
+      "fresh": 1624,
+      "d30": 1618,
+      "cycle15": 703,
+      "bootstrap": 19982,
+      "historical_nnue": 1481
+    },
+    "arms": {
+      "fresh_only_seed202611033101": {
+        "draws": 8192,
+        "unique_pool_rows": 4505,
+        "unique_feature_vectors": 4456,
+        "unique_games": 748
+      },
+      "retain_two_seed202611033101": {
+        "draws": 8192,
+        "unique_pool_rows": 5470,
+        "unique_feature_vectors": 5407,
+        "unique_games": 830
+      },
+      "fresh_only_seed202611033102": {
+        "draws": 8192,
+        "unique_pool_rows": 4542,
+        "unique_feature_vectors": 4506,
+        "unique_games": 743
+      },
+      "retain_two_seed202611033102": {
+        "draws": 8192,
+        "unique_pool_rows": 5495,
+        "unique_feature_vectors": 5448,
+        "unique_games": 825
+      },
+      "fresh_only_seed202611033103": {
+        "draws": 8192,
+        "unique_pool_rows": 4575,
+        "unique_feature_vectors": 4535,
+        "unique_games": 747
+      },
+      "retain_two_seed202611033103": {
+        "draws": 8192,
+        "unique_pool_rows": 5524,
+        "unique_feature_vectors": 5471,
+        "unique_games": 829
+      }
+    }
+  },
+  "complete_state_archive": {
+    "drive_id": "1rvR4zoOTL7sWzyd7DgSIwfZUesx7TsbY",
+    "sha256": "a4377858a07f299fb676e5c7afcbe6a6d83252515fe369666f49ebd1d4ce2ceb",
+    "bytes": 62973450,
+    "index_drive_id": "1exa63zxjsdjN9K1QFSB76lFJC7NVPXIz",
+    "owner_only_readback_restore_verified": true,
+    "pointer_at_archive": "912db54f"
+  },
+  "research_decision": "Select c8ad43bf for finite continuation: parent-model score positive; fresh-only ablation tied; retention superiority unproven. Pointer update is separate from immutable evaluation and not formal adoption."
+}
