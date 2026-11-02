@@ -10,7 +10,26 @@ from .online_learning import atomic_json,digest,load_snapshot
 from .online_state import verify
 
 
-def apply(root, *, campaign, name, reason):
+def decision_comparisons(report, parent, primary_label=None):
+    """Keep ablation controls visible without mistaking them for the old model."""
+    comparisons=report['comparisons']
+    if not comparisons:
+        raise ValueError('nonempty completed comparisons required')
+    if primary_label is None:
+        required=list(comparisons)
+    else:
+        if (not isinstance(primary_label,str) or primary_label not in comparisons or
+            comparisons[primary_label]['opponent_id']!=parent):
+            raise ValueError('primary comparison must be against current research parent')
+        required=[primary_label]
+        if any(r['conclusion']=='worse_on_this_distribution' for label,r in comparisons.items() if label!=primary_label):
+            raise ValueError('diagnostic control shows established inferiority')
+    if any(comparisons[label]['all_game_score_identification_bounds'][0]<=.5 for label in required):
+        raise ValueError('no positive lower score bound against required reference')
+    return required
+
+
+def apply(root, *, campaign, name, reason, primary_label=None):
     if not reason.strip() or any(not s or Path(s).name!=s or s in ('.','..') for s in (campaign,name)):
         raise ValueError('explicit reason and single-level names required')
     with lock(root) as root:
@@ -23,9 +42,11 @@ def apply(root, *, campaign, name, reason):
         plan=json.loads((root/receipts[0]['plan']).read_text())
         parent=state['research_latest'];candidate=plan['candidate']
         if (not report.get('complete') or report['candidate']!=candidate or candidate in state['history'] or
-            plan['research_latest_at_start']!=parent or not report['comparisons'] or
-            any(r['all_game_score_identification_bounds'][0]<=.5 for r in report['comparisons'].values())):
+            plan['research_latest_at_start']!=parent or
+            set(report['comparisons'])!={o['label'] for o in plan['opponents']} or
+            any(report['comparisons'][o['label']]['opponent_id']!=o['model'] for o in plan['opponents'])):
             raise ValueError('no unselected positive-score candidate from current parent')
+        required=decision_comparisons(report,parent,primary_label)
         model,opt,manifest=load_snapshot(root/'models',candidate)
         old,old_opt,_=load_snapshot(root/'models',parent)
         if (manifest['parent']!=parent or model.inputs!=old.inputs or opt is None or old_opt is None or
@@ -35,7 +56,10 @@ def apply(root, *, campaign, name, reason):
         decision=dict(schema='fukaji-provisional-update-v1',parent=parent,candidate=candidate,
             rollback_checkpoint=state['checkpoint'],fixed_anchor=state['fixed_anchor'],
             reason=reason,formal_adoption=False,research_only=True,strength_proven=False,
-            rule='positive lower score-identification bound, not a confidence-interval strength claim',
+            rule='positive lower score-identification bound against explicit references; not a confidence-interval strength claim',
+            primary_opponent_label=primary_label,required_comparisons=required,
+            diagnostic_comparisons=[label for label in report['comparisons'] if label not in required],
+            full_comparison_report_retained=True,
             evaluation_report=receipts[0]['report'],evaluation_sha256=receipts[0]['sha256'],
             candidate_optimizer_step=opt['step'],parent_optimizer_step=old_opt['step'],
             cycle_counter_unchanged=True)
