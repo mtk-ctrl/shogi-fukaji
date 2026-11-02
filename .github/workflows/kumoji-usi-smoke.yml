@@ -54,7 +54,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p build
-          printf '#!/bin/sh\nexec python3 -m fukaji.engine\n' > build/fukaji-usi
+          printf '#!/bin/sh\nexec python3 -m fukaji.engine --legacy\n' > build/fukaji-usi
           chmod 755 build/fukaji-usi
       - name: Frozen model, USI, legal replay and knowledge/timing audit
         run: |

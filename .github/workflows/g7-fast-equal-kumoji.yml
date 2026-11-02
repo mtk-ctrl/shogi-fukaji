@@ -84,7 +84,7 @@ jobs:
       - name: Verify frozen model and prepare FUKAJI USI
         run: |
           chmod +x build/kumoji
-          printf '#!/bin/sh\nexec python3 -m fukaji.engine\n' > build/fukaji-usi
+          printf '#!/bin/sh\nexec python3 -m fukaji.engine --legacy\n' > build/fukaji-usi
           chmod +x build/fukaji-usi
           echo "417d18e7b64494c9febdf6d217afbe4e4979e68d04528f16db8b45c0bcde2a0e  build/g7/mover-relative-generation7-research.npz" | sha256sum -c -
       - name: Play independent same-opening color-swapped equal-time games

@@ -4,6 +4,8 @@
 #include <cmath>
 #include <iomanip>
 #include <functional>
+#include <atomic>
+#include <new>
 
 namespace {
 constexpr size_t kNInputs=2548, kNHidden=32;
@@ -54,13 +56,14 @@ struct NSearch {
   vector<bool> mover_black,gave_check;
   unordered_map<string,string> hints;
   chrono::steady_clock::time_point deadline;
+  const atomic<bool>* stop=nullptr;
   uint64_t nodes=0,evals=0;
   explicit NSearch(const NModel& m,const NativeState& s):model(m),board(s.board),
     history(s.history),mover_black(s.mover_black),gave_check(s.gave_check) {
     history.reserve(history.size()+64);mover_black.reserve(mover_black.size()+64);
     gave_check.reserve(gave_check.size()+64);
   }
-  void time_check() const {if(chrono::steady_clock::now()>=deadline)throw NTimeout{};}
+  void time_check() const {if((stop&&stop->load(memory_order_relaxed))||chrono::steady_clock::now()>=deadline)throw NTimeout{};}
   vector<string> moves(bool use_hint=true) const {
     auto result=ordered_legal_moves(board);
     const auto score=[&](const string& word) {
@@ -139,14 +142,15 @@ extern "C" int fukaji_nnue_value(uint64_t model,uint64_t state,int perspective,d
   try {lock_guard<mutex> lock(state_mutex);*output=nnue_value(find_state(state).board,nnue_models.at(model),perspective);return 0;}
   catch(...){return -3;}
 }
-extern "C" int fukaji_nnue_search(uint64_t model,uint64_t state,int milliseconds,int max_depth,
-                                   int fixed_depth,char* output,size_t capacity) noexcept {
+static int nnue_search_impl(uint64_t model,uint64_t state,int milliseconds,int max_depth,
+                            int fixed_depth,char* output,size_t capacity,const atomic<bool>* stop) noexcept {
   if(milliseconds<1||milliseconds>10000||max_depth<1||max_depth>64||
      (fixed_depth!=0&&fixed_depth!=1))return -1;
   try {
     lock_guard<mutex> lock(state_mutex);
     const auto started=chrono::steady_clock::now();
     NSearch search(nnue_models.at(model),find_state(state));
+    search.stop=stop;
     search.deadline=fixed_depth?chrono::steady_clock::time_point::max():started+chrono::milliseconds(milliseconds);
     auto moves=search.moves(false);const auto end=search.terminal(moves);
     string best=moves.empty()||!end.first.empty()?"":moves[0];
@@ -177,4 +181,21 @@ extern "C" int fukaji_nnue_search(uint64_t model,uint64_t state,int milliseconds
       if(end.second<0)out<<"null";else out<<end.second;out<<'}';}
     out<<'}';return copy_text(out.str(),output,capacity);
   }catch(...){return -3;}
+}
+extern "C" int fukaji_nnue_search(uint64_t model,uint64_t state,int milliseconds,int max_depth,
+                                   int fixed_depth,char* output,size_t capacity) noexcept {
+  return nnue_search_impl(model,state,milliseconds,max_depth,fixed_depth,output,capacity,nullptr);
+}
+// Cancellation never takes state_mutex, which is held by the search thread.
+// The caller owns this token and frees it only after the search has returned.
+extern "C" void* fukaji_nnue_stop_open() noexcept {return new(nothrow) atomic<bool>(false);}
+extern "C" void fukaji_nnue_stop_signal(void* token) noexcept {
+  if(token)static_cast<atomic<bool>*>(token)->store(true,memory_order_relaxed);
+}
+extern "C" void fukaji_nnue_stop_close(void* token) noexcept {delete static_cast<atomic<bool>*>(token);}
+extern "C" int fukaji_nnue_search_interruptible(uint64_t model,uint64_t state,int milliseconds,
+    int max_depth,int fixed_depth,char* output,size_t capacity,void* token) noexcept {
+  if(!token)return -1;
+  return nnue_search_impl(model,state,milliseconds,max_depth,fixed_depth,output,capacity,
+                         static_cast<atomic<bool>*>(token));
 }

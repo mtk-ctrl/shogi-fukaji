@@ -31,7 +31,7 @@ class FastMoveListTests(unittest.TestCase):
         self.assertFalse(inspect.signature(negamax).parameters["fast_move_list"].default)
 
     def test_usi_opt_in(self):
-        p = subprocess.run([sys.executable, "-m", "fukaji.engine"],
+        p = subprocess.run([sys.executable, "-m", "fukaji.engine", "--legacy"],
             input="usi\nsetoption name FastMoveList value true\nisready\nposition startpos\ngo movetime 30\nquit\n",
             text=True, capture_output=True, timeout=15)
         self.assertEqual(p.returncode, 0, p.stderr)

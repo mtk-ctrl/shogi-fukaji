@@ -61,7 +61,7 @@ class D14CheckLeafTests(unittest.TestCase):
             self.assertIs(inspect.signature(fn).parameters["leaf_check_evasion"].default,False)
         from fukaji import engine
         import subprocess,sys
-        result=subprocess.run([sys.executable,"-m","fukaji.engine"],
+        result=subprocess.run([sys.executable,"-m","fukaji.engine","--legacy"],
             input="usi\nquit\n",text=True,capture_output=True,timeout=10)
         self.assertEqual(result.returncode,0,result.stderr)
         self.assertIn("FastLegalGuard type check default true",result.stdout)

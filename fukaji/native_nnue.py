@@ -1,4 +1,4 @@
-"""D23 research-only native NNUE search with explicit, reversible rule state.
+"""D23 native NNUE search, shared by research and the approved formal USI with explicit, reversible rule state.
 
 Only trained absolute-feature NNUE tensors are accepted. The native legal core
 is reused, never its G7 evaluation. No silent fallback to a different search.
@@ -27,7 +27,7 @@ ROOT=Path(__file__).resolve().parents[1]
 @lru_cache(maxsize=1)
 def build_native():
     if not shutil.which('g++'):
-        raise RuntimeError('g++ required for native NNUE research')
+        raise RuntimeError('g++ required for native NNUE')
     files=[ROOT/'native'/name for name in ('nnue_search_ffi.cpp','rules_state_ffi.cpp','rules_probe.cpp')]
     source=hashlib.sha256(b'\n'.join(p.read_bytes() for p in files)).hexdigest()
     folder=ROOT/'build/native-nnue';folder.mkdir(parents=True,exist_ok=True)
@@ -58,6 +58,8 @@ class NativeSelector:
         self.lib.fukaji_nnue_search.argtypes=[ct.c_uint64,ct.c_uint64,ct.c_int,ct.c_int,
                                              ct.c_int,ct.c_void_p,ct.c_size_t]
         self.lib.fukaji_nnue_search.restype=ct.c_int
+        self.lib.fukaji_nnue_search_interruptible.argtypes=self.lib.fukaji_nnue_search.argtypes+[ct.c_void_p]
+        self.lib.fukaji_nnue_search_interruptible.restype=ct.c_int
         self.models={};self.state=None;self.moves=[];self.start_sfen=None;self.closed=False
 
     def register(self, model):
@@ -106,7 +108,7 @@ class NativeSelector:
         return out.value
 
     def select(self, board, model, *, movetime_ms=50,max_depth=64,fixed_depth=False,
-               history=None,ordering=True,quiescence=0):
+               history=None,ordering=True,quiescence=0,cancel=None):
         if not 1<=movetime_ms<=10000 or not 1<=max_depth<=64:
             raise ValueError('invalid native search bounds')
         if quiescence!=0 or not ordering:
@@ -118,8 +120,9 @@ class NativeSelector:
         setup_ms=(time.monotonic()-started)*1000
         budget=max(1,int(movetime_ms-setup_ms))
         output=ct.create_string_buffer(16384)
-        rc=self.lib.fukaji_nnue_search(key,self.state.handle.value,budget,max_depth,
-                                     int(fixed_depth),output,len(output))
+        args=(key,self.state.handle.value,budget,max_depth,int(fixed_depth),output,len(output))
+        rc=(self.lib.fukaji_nnue_search(*args) if cancel is None else
+            self.lib.fukaji_nnue_search_interruptible(*args,cancel.handle))
         if rc<0 or rc>=len(output):raise RuntimeError(f'native NNUE search failed: {rc}')
         result=json.loads(output.raw[:rc])
         self.state.assert_equal(board)

@@ -90,7 +90,7 @@ jobs:
       - name: Verify model/knowledge and prepare USI launcher
         run: |
           chmod +x build/kumoji
-          printf '#!/bin/sh\nexec python3 -m fukaji.engine\n' > build/fukaji-usi
+          printf '#!/bin/sh\nexec python3 -m fukaji.engine --legacy\n' > build/fukaji-usi
           chmod +x build/fukaji-usi
           echo "417d18e7b64494c9febdf6d217afbe4e4979e68d04528f16db8b45c0bcde2a0e  build/g7/mover-relative-generation7-research.npz" | sha256sum -c -
           echo "6da204cd1e65600ccdbb9f3dbe463627687d6cf7eb8347da6a103239129dac4c  build/position-knowledge-v1.tsv" | sha256sum -c -

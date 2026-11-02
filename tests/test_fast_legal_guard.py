@@ -88,7 +88,7 @@ class FastLegalGuardTests(unittest.TestCase):
         for choice in ("", "setoption name FastLegalGuard value false\n",
                        "setoption name FastLegalGuard value true\n"):
             with self.subTest(option=choice):
-                p = subprocess.run([sys.executable, "-m", "fukaji.engine"],
+                p = subprocess.run([sys.executable, "-m", "fukaji.engine", "--legacy"],
                     input="usi\n" + choice + "isready\nposition startpos\ngo movetime 30\nquit\n",
                     text=True, capture_output=True, timeout=15)
                 self.assertEqual(p.returncode, 0, p.stderr)
