@@ -50,3 +50,5 @@ D26固定400局は同じモデル/optimizer/全序盤を保つ開始前snapshot�
 D26復旧400局は全68,143手再生一致、両比較は未確定。NNUEを変えないC++差分計算の効率と同時間統合screenは [D28](D28_NATIVE_ACCUMULATOR_20261102.md) を参照。
 
 NNUE自体の追加学習は [D29](D29_STRATIFIED_REPLAY_20261102.md) の出所層化比較、[D30](D30_FRESH_EXPERIENCE_20261102.md) の新規TRAIN収集・最近経験置換へ進む。D28の計算効率改善をNNUE重みの改善と混同しない。
+
+正式採用NNUEを起点に新経験と直前2バッチ保持を同じ学習量で比較する次研究は [D31](D31_TWO_BATCH_RETENTION_20261103.md) を参照。正式モデルは固定する。
