@@ -76,6 +76,20 @@ def verify(root):
                 raise ValueError('completed evaluation has incomplete report')
     if len(state['used_seeds']) != len(set(state['used_seeds'])):
         raise ValueError('duplicate generation seeds')
+    for receipt in state.get('research_updates',[]):
+        path=safe_path(root,receipt['report'])
+        if digest(path.read_bytes())!=receipt['sha256']:
+            raise ValueError('research decision checksum mismatch')
+        decision=json.loads(path.read_text())
+        if (decision.get('schema')!='fukaji-provisional-update-v1' or
+            decision.get('formal_adoption') is not False or decision.get('research_only') is not True or
+            decision.get('candidate') not in state['history'] or decision.get('parent') not in state['history']):
+            raise ValueError('invalid research-only decision')
+        for key in (decision['candidate'],decision['parent'],decision['rollback_checkpoint']):
+            load_snapshot(root/'models',key)
+        report=safe_path(root,decision['evaluation_report'])
+        if digest(report.read_bytes())!=decision['evaluation_sha256']:
+            raise ValueError('research decision evaluation checksum mismatch')
     return {'models': len(model_ids), 'train_games': len(train),
             'monitor_games': len(monitor), 'cycles': len(state['cycles']),
             'research_latest': state['research_latest'], 'paused': state['paused'],

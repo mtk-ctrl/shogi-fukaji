@@ -90,9 +90,11 @@ def cpu_plan(workers):
 
 def prepare(root, *, name='d24-nnue400', pairs=100, seed=202611012800,
             movetime=100, max_total_plies=512, workers=4, purpose='strength',
-            candidate_id=None, opponents=None, target_half_width=.15):
+            candidate_id=None, opponents=None, target_half_width=.15, execution_chunk_families=None):
     if not name or Path(name).name!=name or name in ('.','..'):
         raise ValueError('single-level campaign name required')
+    if execution_chunk_families is not None and (type(execution_chunk_families) is not int or not 1<=execution_chunk_families<=256):
+        raise ValueError('execution chunk must contain 1..256 families')
     if opponents is not None and (not isinstance(opponents,list) or not 1<=len(opponents)<=2 or
         any(set(o)!={'label','model'} or not isinstance(o['label'],str) or not o['label']
             for o in opponents) or len({o['label'] for o in opponents})!=len(opponents)):
@@ -122,7 +124,8 @@ def prepare(root, *, name='d24-nnue400', pairs=100, seed=202611012800,
         plan={'schema':SCHEMA,'name':name,'candidate':candidate,'opponents':opponents,
             'pairs':pairs,'seed':seed,'alpha':.05,'target_sampling_half_width':target_half_width,
             'minimum_pairs':required_pairs(target_half_width,comparisons=len(opponents)),
-            'purpose':purpose,'conditions':{'backend':'cpp_nnue','quiescence':0,
+            'purpose':purpose,'execution_chunk_families':execution_chunk_families,
+            'conditions':{'backend':'cpp_nnue','quiescence':0,
                 'movetime_ms':movetime,'max_total_plies':max_total_plies},
             'cpu':affinity,'families':families,'original_paused':state['paused'],
             'source_sha256':digest(Path(__file__).read_bytes()),
@@ -226,6 +229,9 @@ def run(root, *, name='d24-nnue400', checkpoint_every=20):
             state['research_latest']!=plan.get('research_latest_at_start',plan['candidate']) or
             state['history']!=plan['frozen_history']):
             raise ValueError('campaign identity/source/state mismatch')
+        chunk_limit=plan.get('execution_chunk_families')
+        if chunk_limit is not None and (type(chunk_limit) is not int or not 1<=chunk_limit<=256):
+            raise ValueError('invalid frozen execution chunk')
         families=_recover(root,plan,state);original_affinity=os.sched_getaffinity(0)
         started=time.monotonic();durations=[];ctx=mp.get_context('spawn');stop=ctx.Event();queue=ctx.Queue()
         for cpu in plan['cpu']['worker_cpus']:queue.put(cpu)
@@ -233,7 +239,9 @@ def run(root, *, name='d24-nnue400', checkpoint_every=20):
         executor=ProcessPoolExecutor(max_workers=plan['cpu']['workers'],mp_context=ctx,
             initializer=_worker_init,initargs=(str(root.resolve()),plan,queue,stop))
         try:
-            futures={executor.submit(_work,f):f for f in plan['families'] if f['index'] not in families}
+            remaining=[f for f in plan['families'] if f['index'] not in families]
+            if chunk_limit is not None:remaining=remaining[:chunk_limit]
+            futures={executor.submit(_work,f):f for f in remaining}
             for future in as_completed(futures):
                 index,games,seconds=future.result();_commit(root,plan['families'][index],games,plan,state)
                 families[index]=games;durations.append(seconds)
@@ -246,11 +254,28 @@ def run(root, *, name='d24-nnue400', checkpoint_every=20):
                 progress['counts']={label:{k:value[k] for k in ('wins','losses','draws','unresolved')}
                                     for label,value in summary['comparisons'].items()}
                 atomic_json(out/'progress.json',progress);print(json.dumps(progress),flush=True)
-                if checkpoint_every and len(families)%checkpoint_every==0:
+                if checkpoint_every and chunk_limit is None and len(families)%checkpoint_every==0:
                     archive=root.parent/f'{name}-checkpoint-{len(families):03d}.tar.gz'
                     if not archive.exists():
                         receipt=_pack(root,archive);print(json.dumps({'checkpoint':receipt}),flush=True)
             executor.shutdown(wait=True);executor=None
+            if len(families)<plan['pairs']:
+                # A complete compute chunk is not a complete strength experiment.
+                # Keep learning paused and return only after every worker stops.
+                partial=summarize(families,plan)
+                partial.update(execution_chunk_boundary=True,learning_remains_paused=True,
+                    resume_command=f'python -m fukaji.frozen_evaluation run --root {root} --name {name}')
+                chunk_report=out/f'chunk-{len(families):03d}.json'
+                if chunk_report.exists():raise ValueError('immutable chunk report already exists')
+                atomic_json(chunk_report,partial)
+                atomic_json(out/'progress.json',{'phase':'chunk_saved','complete':False,
+                    'completed_games':len(families)*2*len(plan['opponents']),
+                    'planned_games':plan['planned_games'],'completed_families':len(families),
+                    'planned_families':plan['pairs'],'writer_stops_on_return':True})
+                state_sha=digest((root/'state.json').read_bytes())[:12]
+                archive=root.parent/f'{name}-chunk-{len(families):03d}-{state_sha}.tar.gz'
+                partial['checkpoint']=_pack(root,archive)
+                return partial
             report=summarize(families,plan)
             latest=load_snapshot(root/'models',plan['candidate'])[0];moves=0
             for games in families.values():
@@ -279,9 +304,13 @@ def main():
     p=argparse.ArgumentParser();p.add_argument('mode',choices=('prepare','run','start'))
     p.add_argument('--root',required=True);p.add_argument('--name',default='d24-nnue400')
     p.add_argument('--pairs',type=int,default=100);p.add_argument('--workers',type=int,default=4)
+    p.add_argument('--chunk-families',type=int)
     a=p.parse_args()
+    if a.mode=='run' and a.chunk_families is not None:
+        p.error('--chunk-families belongs to prepare/start; run follows the frozen plan')
     if a.mode in ('prepare','start'):
-        plan=prepare(a.root,name=a.name,pairs=a.pairs,workers=a.workers)
+        plan=prepare(a.root,name=a.name,pairs=a.pairs,workers=a.workers,
+                     execution_chunk_families=a.chunk_families)
         print(json.dumps({k:v for k,v in plan.items() if k not in ('families','frozen_history')}),flush=True)
     if a.mode in ('run','start'):print(json.dumps(run(a.root,name=a.name),indent=2))
 
