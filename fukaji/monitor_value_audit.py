@@ -43,17 +43,19 @@ def game_metrics(game, models, *, seed, protected):
     return dict(game_sha256=game_key(game), sampled_plies=selected, positions=len(y), metrics=metrics)
 
 
-def audit(root, name, output, *, seed=202611022950):
+def audit(root, name, output, *, seed=202611022950, model_ids=None):
     root, output = Path(root), Path(output)
     if output.exists():
         raise ValueError('immutable monitor diagnosis exists')
     verify(root)
     state_raw = (root/'state.json').read_bytes(); state = json.loads(state_raw)
     matching = [r for r in state.get('frozen_evaluations', []) if r['report'] == name+'/report.json']
-    if len(matching) != 1 or state.get('pending_campaign'):
+    if len(matching) != 1 or state.get('pending_campaign') == name:
         raise ValueError('completed registered campaign required')
     plan = json.loads((root/name/'plan.json').read_text())
-    ids = {'candidate':plan['candidate'], **{o['label']:o['model'] for o in plan['opponents']}}
+    ids = model_ids or {'candidate':plan['candidate'], **{o['label']:o['model'] for o in plan['opponents']}}
+    if not isinstance(ids,dict) or any(not isinstance(k,str) or not k for k in ids):
+        raise ValueError('named immutable research models required')
     models = {label:load_snapshot(root/'models',key)[0] for label,key in ids.items()}
     families = {f['index']:f for f in plan['families']}; details = []; excluded = 0
     for receipt in state['evaluation_batches']:
