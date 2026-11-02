@@ -1,8 +1,8 @@
-"""Independent FUKAJI v0.1.0 USI search engine.
+"""Official NNUE USI entry point; legacy search functions retained for replay.
 
-This deliberately small engine is a bootstrapping search baseline, NOT a port
-of KUMOJI search or an NNUE-enabled model. It uses python-shogi's legal rules,
-our own negamax alpha-beta and material/position evaluation.
+command_loop uses the owner-approved NNUE. --legacy explicitly selects the
+previous v0.1.0 USI engine. Research calls to the functions below keep their
+original defaults and material/position evaluation.
 """
 from __future__ import annotations
 import argparse
@@ -240,7 +240,7 @@ def select_move(board, movetime_ms=200, max_depth=5, model=None, avoid_repetitio
                          completed_depth=complete_depth, nodes=nodes[0])
     return best.usi(),complete_depth,nodes[0]
 
-def command_loop():
+def legacy_command_loop():
     board=shogi.Board()
     depth=4
     model_path = None
@@ -345,5 +345,14 @@ def command_loop():
         elif cmd=="quit":
             break
 
-if __name__=="__main__":
-    command_loop()
+def command_loop():
+    parser=argparse.ArgumentParser(description='FUKAJI official NNUE USI engine')
+    parser.add_argument('--legacy',action='store_true',help='explicit v0.1.0 comparison engine')
+    args=parser.parse_args()
+    if args.legacy:legacy_command_loop()
+    else:
+        from .formal_usi import command_loop as nnue_loop
+        nnue_loop()
+
+
+if __name__=="__main__":command_loop()

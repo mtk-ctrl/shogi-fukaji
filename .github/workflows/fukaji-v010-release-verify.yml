@@ -1,4 +1,4 @@
-name: FUKAJI v0.1.0 formal FastLegalGuard release audit
+name: FUKAJI v0.1.0 historical compatibility audit
 
 on:
   push:
@@ -50,14 +50,14 @@ jobs:
           python -m unittest discover -s tests -v
           python - <<'PY'
           import subprocess,sys
-          p=subprocess.run([sys.executable,"-m","fukaji.engine"],
+          p=subprocess.run([sys.executable,"-m","fukaji.engine","--legacy"],
             input="usi\nquit\n",text=True,capture_output=True,timeout=15)
           assert p.returncode==0,p.stderr
           assert "id name FUKAJI v0.1.0" in p.stdout
           assert "option name FastLegalGuard type check default true" in p.stdout
           assert "option name SearchDepth type spin default 4" in p.stdout
           assert "option name ValueModelType type combo default legacy" in p.stdout
-          print("Official USI v0.1.0 FastLegalGuard ON and unchanged other defaults")
+          print("Historical v0.1.0 compatibility entry: FastLegalGuard ON")
           PY
       - name: Download authenticated frozen G8 model for real runtime smoke
         uses: actions/download-artifact@v4
@@ -87,7 +87,7 @@ jobs:
             "setoption name FastMoveList value true\n")
           for option in ("", "setoption name FastLegalGuard value false\n"):
               cmd=setup+option+"isready\nposition startpos\ngo movetime 200\nquit\n"
-              p=subprocess.run([sys.executable,"-m","fukaji.engine"],
+              p=subprocess.run([sys.executable,"-m","fukaji.engine","--legacy"],
                   input=cmd,text=True,capture_output=True,timeout=25)
               if p.returncode!=0: raise RuntimeError(p.stderr)
               if f"value_model sha256 {expected}" not in p.stdout:

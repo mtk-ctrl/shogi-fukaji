@@ -49,7 +49,7 @@ class CheckmateGuardTests(unittest.TestCase):
         import subprocess
         import sys
         p = subprocess.run(
-            [sys.executable, "-m", "fukaji.engine"],
+            [sys.executable, "-m", "fukaji.engine", "--legacy"],
             input="usi\nsetoption name GuardCheckmate value true\nisready\nposition startpos\ngo movetime 30\nquit\n",
             text=True, capture_output=True, timeout=15)
         self.assertEqual(p.returncode, 0, p.stderr)

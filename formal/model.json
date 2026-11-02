@@ -1,0 +1,30 @@
+{
+  "schema": "fukaji-approved-nnue-v1",
+  "version": "FUKAJI v0.2.0",
+  "approved_on": "2026-11-02",
+  "approved_by": "owner: 正式反映させてください",
+  "research_snapshot_sha256": "912db54f04429a0a10d3adb7960c23d7fa43ecdead8115c89b1de2e570afb03c",
+  "weights_file": "models/fukaji-v0.2.0.nnue.npz",
+  "weights_sha256": "3705c31fcc99a896c95bf27906319c9ab6a1222bac1afe62c6f0b36b0d12c40b",
+  "architecture": [
+    2548,
+    32,
+    1
+  ],
+  "backend": "cpp_nnue",
+  "quiescence": 0,
+  "default_move_time_ms": 100,
+  "default_search_depth": 64,
+  "validation": {
+    "opponent": "pre-update cycle15 ae53ce0d",
+    "wins": 224,
+    "losses": 168,
+    "draws": 1,
+    "unresolved": 7,
+    "opening_families": 200,
+    "games": 400,
+    "legal_replay_plies": 64867,
+    "strength_conclusion": "inconclusive"
+  },
+  "model_distribution": "owner-private bundle; learned data not uploaded to public GitHub"
+}

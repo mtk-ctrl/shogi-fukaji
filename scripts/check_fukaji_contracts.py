@@ -1,4 +1,4 @@
-"""Protect the unchanged formal implementation and D17 entrypoint links."""
+"""Protect the owner-approved formal implementation and D17 entrypoint links."""
 import hashlib
 import json
 from pathlib import Path

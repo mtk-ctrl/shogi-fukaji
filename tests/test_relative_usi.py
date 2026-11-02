@@ -31,7 +31,7 @@ class RelativeUSITests(unittest.TestCase):
                 "quit\n"
             )
             p = subprocess.run(
-                [sys.executable, "-m", "fukaji.engine"],
+                [sys.executable, "-m", "fukaji.engine", "--legacy"],
                 input=transcript, text=True, capture_output=True, timeout=20,
             )
             self.assertEqual(p.returncode, 0, p.stderr + p.stdout)
@@ -49,7 +49,7 @@ class RelativeUSITests(unittest.TestCase):
 
     def test_invalid_model_fails_closed_before_readyok(self):
         p = subprocess.run(
-            [sys.executable, "-m", "fukaji.engine"],
+            [sys.executable, "-m", "fukaji.engine", "--legacy"],
             input="setoption name ValueModelType value relative\n"
                   "setoption name ValueModelFile value /nonexistent/fukaji-model.npz\n"
                   "isready\nquit\n",

@@ -1,0 +1,33 @@
+{
+  "version": "FUKAJI v0.2.0",
+  "weights_sha256": "3705c31fcc99a896c95bf27906319c9ab6a1222bac1afe62c6f0b36b0d12c40b",
+  "identical_depth2_positions": 32,
+  "usi_games": 2,
+  "legal_usi_plies": 60,
+  "movetime_ms": 20,
+  "observed_max_ms": 22.97137000005023,
+  "stop_ms": 0.9269839999888063,
+  "bundle_member_hashes_verified": false,
+  "purpose": "deployment correctness, not strength",
+  "local_unittest": {
+    "tests": 701,
+    "seconds": 90.253,
+    "result": "OK"
+  },
+  "preflight_restore": {
+    "version": "FUKAJI v0.2.0",
+    "weights_sha256": "3705c31fcc99a896c95bf27906319c9ab6a1222bac1afe62c6f0b36b0d12c40b",
+    "identical_depth2_positions": 32,
+    "usi_games": 2,
+    "legal_usi_plies": 60,
+    "movetime_ms": 20,
+    "observed_max_ms": 22.08395999991808,
+    "stop_ms": 0.6316510000488051,
+    "bundle_member_hashes_verified": true,
+    "purpose": "deployment correctness, not strength"
+  },
+  "formal_contract": "passed",
+  "owner_instruction": "正式反映させてください",
+  "approved_on": "2026-11-02",
+  "research_state_unchanged": true
+}

@@ -42,7 +42,7 @@ class EngineTests(unittest.TestCase):
 
     def test_usi_protocol(self):
         import subprocess,sys
-        process=subprocess.run([sys.executable,"-m","fukaji.engine"],
+        process=subprocess.run([sys.executable,"-m","fukaji.engine","--legacy"],
             input="usi\nisready\nposition startpos\ngo movetime 30\nquit\n",
             stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,timeout=15)
         self.assertEqual(process.returncode,0,process.stderr)

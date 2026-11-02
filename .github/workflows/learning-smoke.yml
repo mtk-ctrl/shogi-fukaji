@@ -17,6 +17,11 @@ on:
   push:
     paths:
       - "fukaji/**"
+      - "formal/**"
+      - "native/**"
+      - "scripts/check_fukaji_contracts.py"
+      - "scripts/build_formal_bundle.py"
+      - "scripts/verify_formal_release.py"
       - "tests/**"
       - "requirements.txt"
       - ".github/workflows/learning-smoke.yml"

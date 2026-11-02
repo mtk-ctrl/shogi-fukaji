@@ -1,6 +1,6 @@
 # 深路 GitHub Actions 現役入口
 
-深路は雲路と独立したAIで、正式USIと研究経路を分ける。研究workflowは正式モデルを自動採用しない。
+深路は雲路と独立したAIで、正式USIと研究経路を分ける。研究workflowは正式モデルを自動採用しない。正式版は [FUKAJI v0.2.0のNNUE](../../docs/D32_FORMAL_NNUE_RELEASE_20261102.md)。過去G7/G8のUSI研究workflowは--legacyを明示し、凍結比較条件を保つ。
 
 | Workflow | 役割・起動 |
 
