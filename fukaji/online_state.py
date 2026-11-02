@@ -136,6 +136,17 @@ def restore(archive, destination, expected_sha):
     return result
 
 
+def verified_archive_receipt(archive):
+    """Refuse a changed local checkpoint before a connector upload is attempted."""
+    archive = Path(archive)
+    receipt = json.loads(archive.with_suffix(archive.suffix+'.json').read_text())
+    raw = archive.read_bytes()
+    if (receipt.get('archive') != archive.name or receipt.get('bytes') != len(raw) or
+        receipt.get('sha256') != digest(raw)):
+        raise ValueError('archive bytes differ from immutable checkpoint receipt')
+    return receipt
+
+
 def pack(root, archive):
     with lock(root):
         return _pack(root, archive)
@@ -147,14 +158,32 @@ def _pack(root, archive):
     if archive.exists():
         raise ValueError('archive exists; immutable output required')
     archive.parent.mkdir(parents=True, exist_ok=True)
-    with tarfile.open(archive, 'w:gz') as t:
-        t.add(root, arcname='d17-state', filter=lambda m: None if m.name.endswith('/.lock') else m)
-    receipt = {**result, 'archive': archive.name, 'sha256': digest(archive.read_bytes()),
-               'bytes': archive.stat().st_size}
-    # A new environment must be able to restore it before publication succeeds.
-    with tempfile.TemporaryDirectory() as tmp:
-        assert restore(archive, Path(tmp) / 'restored', receipt['sha256']) == result
-    atomic_json(archive.with_suffix(archive.suffix + '.json'), receipt)
+    # Never publish a path while its compressed stream is still being written.
+    # Validate a closed, fsynced staging file before an immutable atomic link.
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(dir=archive.parent, prefix=archive.name+'.',
+                                         suffix='.tmp', delete=False) as stream:
+            temporary = Path(stream.name)
+            with tarfile.open(fileobj=stream, mode='w:gz') as t:
+                t.add(root, arcname='d17-state', filter=lambda m: None if m.name.endswith('/.lock') else m)
+            stream.flush()
+            os.fsync(stream.fileno())
+        receipt = {**result, 'archive': archive.name, 'sha256': digest(temporary.read_bytes()),
+                   'bytes': temporary.stat().st_size}
+        with tempfile.TemporaryDirectory() as tmp:
+            assert restore(temporary, Path(tmp)/'restored', receipt['sha256']) == result
+        # link() fails if another caller already published this immutable name.
+        os.link(temporary, archive)
+        directory = os.open(archive.parent, os.O_DIRECTORY)
+        try:
+            os.fsync(directory)
+        finally:
+            os.close(directory)
+        atomic_json(archive.with_suffix(archive.suffix+'.json'), receipt)
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
     return receipt
 
 

@@ -118,3 +118,30 @@ class StateSizeBudgetTests(unittest.TestCase):
                     restore(archive,p/'destination',digest(archive.read_bytes()))
                 opened.return_value.__enter__.return_value.extractall.assert_not_called()
             self.assertFalse((p/'destination').exists())
+
+class AtomicArchivePublicationTests(unittest.TestCase):
+    def test_failed_restore_does_not_publish_an_archive(self):
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as tmp:
+            p=Path(tmp);StateRecoveryTests().state(p/'old');archive=p/'saved.tar.gz'
+            with patch('fukaji.online_state.restore',side_effect=ValueError('restore validation failed')):
+                with self.assertRaisesRegex(ValueError,'restore validation failed'):pack(p/'old',archive)
+            self.assertFalse(archive.exists());self.assertFalse(list(p.glob('saved.tar.gz.*')))
+
+    def test_existing_archive_is_never_replaced(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p=Path(tmp);StateRecoveryTests().state(p/'old');archive=p/'saved.tar.gz'
+            pack(p/'old',archive);before=archive.read_bytes()
+            with self.assertRaisesRegex(ValueError,'immutable'):pack(p/'old',archive)
+            self.assertEqual(archive.read_bytes(),before)
+
+class CheckpointReceiptTests(unittest.TestCase):
+    def test_postpublication_corruption_is_refused_before_upload(self):
+        from fukaji.online_state import verified_archive_receipt
+        with tempfile.TemporaryDirectory() as tmp:
+            p=Path(tmp);StateRecoveryTests().state(p/'old');archive=p/'saved.tar.gz'
+            receipt=pack(p/'old',archive)
+            self.assertEqual(verified_archive_receipt(archive),receipt)
+            archive.write_bytes(archive.read_bytes()[:-1])
+            with self.assertRaisesRegex(ValueError,'immutable checkpoint receipt'):
+                verified_archive_receipt(archive)
