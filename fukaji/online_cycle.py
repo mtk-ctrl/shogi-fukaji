@@ -283,7 +283,7 @@ def cycle(root, *, pairs=2, movetime=50, max_plies=256, epochs=2,
             # Equal per-game sample caps, 50% recent and 50% historical games.
             # Old raw games are retained even when not selected this cycle.
             replay = list(bootstrap)
-            for receipt in state["train_batches"][:-1]:
+            for receipt in [*state["train_batches"][:-1], *state.get("supplemental_train_batches", [])]:
                 replay.extend(g for g in read_games(root, receipt)
                               if g["status"] in ("checkmate", "perpetual_check", "repetition_draw"))
             recent_keys = {game_key(g) for g in resolved}

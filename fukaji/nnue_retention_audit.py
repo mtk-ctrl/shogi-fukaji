@@ -28,6 +28,8 @@ def audit(root, output, *, seed=202611012801, model_ids=None):
         group=('selfplay_cycles_1_to_11' if number<=11 else
                'selfplay_cycles_12_to_14' if number<=14 else f'selfplay_cycle_{number}')
         groups.setdefault(group,[]).extend(read_games(root,receipt))
+    for receipt in state.get('supplemental_train_batches',[]):
+        groups.setdefault('supplemental_'+receipt['cohort'],[]).extend(read_games(root,receipt))
     rng=np.random.default_rng(seed);details=[];summary={};seen=set()
     for group,games in groups.items():
         metrics={k:[] for k in models};unresolved=0;positions=0;duplicates=0;resolved_count=0
@@ -62,7 +64,7 @@ def audit(root, output, *, seed=202611012801, model_ids=None):
     report={'schema':'fukaji-retention-diagnosis-v2','seed':seed,'models':ids,'groups':summary,'games':details,
         'deduplication':'game_key across all training groups before sampling; first occurrence retained',
         'labels':'verified actual outcome only; both players; no TD mixture',
-        'source':'bootstrap/train_batches only','monitor_used':False,'model_updated':False,
+        'source':'bootstrap/train_batches/supplemental_train_batches only','monitor_used':False,'model_updated':False,
         'strength_claim':False,'purpose':'training retention/adaptation diagnosis, not unseen strength test',
         'state_snapshot_sha256':digest(raw_state),'source_sha256':digest(Path(__file__).read_bytes())}
     atomic_json(output,report)

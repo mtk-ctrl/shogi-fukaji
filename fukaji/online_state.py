@@ -14,13 +14,18 @@ import tempfile
 
 from .online_learning import digest, load_snapshot, atomic_json
 from .online_cycle import read_games, lock
+from .supplemental_training import verified_receipts
+
+STATE_SCHEMA_MAX = 2
 
 
 def verify(root):
     root = Path(root)
     state = json.loads((root / 'state.json').read_text())
-    if state.get('schema') != 1 or state.get('formal_adoption') is not False:
+    if state.get('schema') not in (1, 2) or state.get('formal_adoption') is not False:
         raise ValueError('not a D17 research state')
+    if state['schema']==1 and (state.get('supplemental_train_batches') or state.get('supplemental_collections')):
+        raise ValueError('supplemental TRAIN requires state schema2')
     model_ids = set(state['history']) | {
         state['research_latest'], state['checkpoint'], state['fixed_anchor']}
     for path in (root / 'models').glob('*.npz'):
@@ -29,7 +34,7 @@ def verify(root):
         load_snapshot(root / 'models', key)
     protected = set(state['protected_parents'])
     train, monitor = [], []
-    for receipt in [state['bootstrap'], *state['train_batches']]:
+    for receipt in [state['bootstrap'], *state['train_batches'], *verified_receipts(root, state)]:
         safe_path(root, receipt['path'])
         train.extend(read_games(root, receipt))
     for receipt in state['evaluation_batches']:
