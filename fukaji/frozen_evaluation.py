@@ -90,7 +90,7 @@ def cpu_plan(workers):
 
 def prepare(root, *, name='d24-nnue400', pairs=100, seed=202611012800,
             movetime=100, max_total_plies=512, workers=4, purpose='strength',
-            candidate_id=None, opponents=None):
+            candidate_id=None, opponents=None, target_half_width=.15):
     if not name or Path(name).name!=name or name in ('.','..'):
         raise ValueError('single-level campaign name required')
     if opponents is not None and (not isinstance(opponents,list) or not 1<=len(opponents)<=2 or
@@ -98,8 +98,8 @@ def prepare(root, *, name='d24-nnue400', pairs=100, seed=202611012800,
             for o in opponents) or len({o['label'] for o in opponents})!=len(opponents)):
         raise ValueError('one or two uniquely labeled explicit opponents required')
     comparisons=len(opponents) if opponents is not None else (2 if purpose=='strength' else 1)
-    if (purpose not in ('strength','regression') or not 1<=pairs<=128 or
-        (purpose=='strength' and pairs<required_pairs(comparisons=comparisons)) or
+    if (purpose not in ('strength','regression') or not 1<=pairs<=256 or not 0<target_half_width<=.15 or
+        (purpose=='strength' and pairs<required_pairs(target_half_width,comparisons=comparisons)) or
         not 1<=movetime<=200 or not 16<=max_total_plies<=512):
         raise ValueError('budget does not satisfy the prespecified precision plan')
     affinity=cpu_plan(workers)
@@ -120,8 +120,8 @@ def prepare(root, *, name='d24-nnue400', pairs=100, seed=202611012800,
             prefix,parent=fresh_prefix(seed+i*1000,excluded);protected.add(parent)
             families.append({'index':i,'prefix':prefix,'parent':parent})
         plan={'schema':SCHEMA,'name':name,'candidate':candidate,'opponents':opponents,
-            'pairs':pairs,'seed':seed,'alpha':.05,'target_sampling_half_width':.15,
-            'minimum_pairs':required_pairs(comparisons=len(opponents)),
+            'pairs':pairs,'seed':seed,'alpha':.05,'target_sampling_half_width':target_half_width,
+            'minimum_pairs':required_pairs(target_half_width,comparisons=len(opponents)),
             'purpose':purpose,'conditions':{'backend':'cpp_nnue','quiescence':0,
                 'movetime_ms':movetime,'max_total_plies':max_total_plies},
             'cpu':affinity,'families':families,'original_paused':state['paused'],
