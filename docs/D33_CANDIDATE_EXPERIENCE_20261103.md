@@ -21,3 +21,13 @@ D33の46決着（43詰み＋3通常千日手）・D31の54・D30の55・bootstra
 2epoch/batch128/lr.001/128追加stepでAdam1708。seed202611033301/202611033302/202611033303を全件保存し、対局代表は先頭33301へ固定する。研究用latestと正式モデルは学習器自身では変更しない。実装 `fukaji/followup_learning.py`。
 
 追加学習後は代表対学習直前親c8を新100序盤×先後=200局、C++q0/100ms/総512手、評価seed202611033380で測る。1比較の保守的標本誤差幅約±14点を予算の目的とし、20組ずつ停止保存して全終点へ進む。未決着を別表示し、途中成績で停止・seed変更・正式採用をしない。
+
+## 現在の保存状態と再開条件
+
+全3候補の追加学習と、D31全400局・D33全TRAIN・次200局planを含む完全状態を保存済み。事前代表e0cbd2abe53b1d151bb73407f848b4087456c1466121333ad490a96aee131b0a/Adam1708を、親c8ad43bf/Adam1580と比較する。
+
+[全状態](https://drive.google.com/file/d/1l-ukhYLegviNJ-Qt9Wz4rmJtijWboiP5/view)は66,725,804bytes、SHA256 `3f70f9c720d5f360753b85bf8941cf12cb75b3f7f51c9972c6a02f6a15dd1762`。[再開index](https://drive.google.com/file/d/1YGAMrWE31sv2znT7ufY_UHEeMzAcV0IC/view)でowner-only・遠隔SHA・標準復元・元state一致を検証済み。47models/train945/monitor2524/15cycles、研究latestはc8。D33候補をlatestや正式版へ反映したという意味ではない。
+
+保存直後の200局起動要求は `exec-server transport disconnected; recovery timed out after 25s` で拒否され、実行環境がunavailableとなった。保存済み進捗は0/100組。計算中との報告や、実処理のないタイマー予約をしない。
+
+再開時は元環境のwriter・progress・lockを確認し、稼働済みなら二重起動しない。source `31e799a9a506befad5bd8b5ce8ccab26edc33863` とindex照合で標準復元する。依存は今回checkoutの `build/runtime-deps` へrequirements.txtどおり導入し、`run-research.sh` で検査して `./run-research.sh -m fukaji.frozen_evaluation run --root RESTORED_ROOT --name d33-followup200` を実行する。source/engine/model/Adam/CPUをplanと照合し、既存の完了組を保持、20組ずつ保存・復元して全100組へ進む。

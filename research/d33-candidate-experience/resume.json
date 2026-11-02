@@ -1,0 +1,39 @@
+{
+  "schema": "fukaji-research-resume-status-v1",
+  "date": "2026-11-03",
+  "stage": "D33 comparison pending; managed executor unavailable",
+  "training_complete": true,
+  "comparison_complete": false,
+  "saved_completed_games": 0,
+  "planned_games": 200,
+  "saved_completed_families": 0,
+  "planned_families": 100,
+  "candidate": "e0cbd2abe53b1d151bb73407f848b4087456c1466121333ad490a96aee131b0a",
+  "candidate_optimizer_step": 1708,
+  "research_latest": "c8ad43bfd17a1b6bd551cab1073f6ef13d04ad501ea4cf64f3b319a8c259e37a",
+  "research_latest_optimizer_step": 1580,
+  "source_commit": "31e799a9a506befad5bd8b5ce8ccab26edc33863",
+  "source_ci_run": 41541315609,
+  "source_tests": 713,
+  "archive_drive_id": "1l-ukhYLegviNJ-Qt9Wz4rmJtijWboiP5",
+  "archive_sha256": "3f70f9c720d5f360753b85bf8941cf12cb75b3f7f51c9972c6a02f6a15dd1762",
+  "archive_bytes": 66725804,
+  "index_drive_id": "1YGAMrWE31sv2znT7ufY_UHEeMzAcV0IC",
+  "owner_only_readback_restore_verified": true,
+  "counts": {
+    "models": 47,
+    "train_games": 945,
+    "monitor_games": 2524,
+    "cycles": 15
+  },
+  "pending_campaign": "d33-followup200",
+  "formal_adoption": false,
+  "last_start_attempt": "Rejected: Failed to create unified exec process: exec-server transport disconnected; failed to resume exec-server session: recovery timed out after 25s",
+  "resume_preconditions": [
+    "Check original writer, progress and lock; do not duplicate an active process",
+    "Restore using the exact index/source; verify model, Adam, source, engine and CPU conditions",
+    "Install pinned requirements in this checkout; do not borrow another workspace venv",
+    "Keep committed families and finish the fixed endpoint; do not merge lost old outcomes",
+    "No timer without an actually running external wait target"
+  ]
+}
