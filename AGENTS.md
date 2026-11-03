@@ -1,6 +1,6 @@
 # 深路：ChatGPT・Claude共通の作業入口
 
-ChatGPT・Claude等は同じRuleと同じGitHub正本を使う。まず[開発ルーター](docs/00_開発ルーター.md)、[F00](docs/rules/F00_深路の目的と権限.md)、[ROADMAP](docs/ROADMAP.md)を読む。共通原則は[Drive 00_AI共通ルーター](https://drive.google.com/file/d/1Kft2Uyld-m4b48Dp4e3P4BzYfBH96waY/view)第5節（判断記録の正本）・第6節（複数AI）。
+ChatGPT・Claude等は同じRuleと同じGitHub正本を使う。まず[開発ルーター](docs/00_開発ルーター.md)、[F00](docs/rules/F00_深路の目的と権限.md)、[ROADMAP](docs/ROADMAP.md)を読む。共通原則はGoogle Driveの `00_AI運用基盤/00_AI共通ルーター.md`（名前が「日付_旧_」で始まらない現行版）の第5節（判断記録の正本）・第6節（複数AI）。
 
 深路 `mtk-ctrl/shogi-fukaji` と雲路 `mtk-ctrl/shogi-ai` は独立。雲路の手作業評価配点・重み・研究手・局面知識を教師として移植しない。合法手・探索・時間管理の一般技術は深路で独立検証。
 
