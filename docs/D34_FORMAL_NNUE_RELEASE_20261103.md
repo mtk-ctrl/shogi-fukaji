@@ -20,6 +20,6 @@
 
 正式パッケージ生成：`python scripts/build_formal_bundle.py --out build/fukaji-v0.3.0.tar.gz --source-commit COMMIT`。manifestが指す重みと全メンバーのSHAを `BUNDLE.json` に記録する。展開・依存導入後、`python scripts/verify_formal_release.py --out build/formal-real-model-verification.json` で実モデルの起動、32局面の深さ2一致、2局・合法USI、stop、bundle hashを検証する。これは配布・起動の正しさの確認であり、棋力比較ではない。
 
-GitHub CI、本人限定Drive配布、再取得SHA、別ディレクトリ展開と実モデル起動の証跡は、`research/releases/v0.3.0/verification.json` およびAddnessの深路Goalへ保存する。
+GitHub CI、本人限定Drive配布、再取得SHA、別ディレクトリ展開と実モデル起動の証跡は、`research/releases/v0.3.0/verification.json` とGitHub本D34・採用判断記録へ保存する。Addness Goalは保留中・過去経緯参照用。
 
 旧版復元記録：[D32 v0.2.0](D32_FORMAL_NNUE_RELEASE_20261102.md)。採用判断：[D33採用決定](decisions/2026-11-03_D33_NNUE正式採用.md)。

@@ -25,4 +25,9 @@
 
 ## 次の学習
 
-`db94693a` は次の研究用候補として保持する。次は独立した32序盤の先後64局を学習用に集め、終局が確定した経験を従来の棋譜と混ぜて更新する。今回の164局は評価群として保護する。次候補の評価では親 `db94693a` と正式版 `e0cbd2ab` を区別する。重み、Adam、原棋譜、試験計画、対局レポートの保存先は[深路の研究Goal](https://www.addness.com/goals/ab88e21e-083f-41b3-8b65-daf39872a2e1)で管理する。
+`db94693a` は次の研究用候補として保持する。次は独立した32序盤の先後64局を学習用に集め、終局が確定した経験を従来の棋譜と混ぜて更新する。今回の164局は評価群として保護する。次候補の評価では親 `db94693a` と正式版 `e0cbd2ab` を区別する。重み・Adam・原棋譜・計画・対局結果の正本は本人限定Driveの最終archiveと停止済みindex。判断・次工程は本D35と `docs/decisions/` に保存。[Addness深路Goal](https://www.addness.com/goals/ab88e21e-083f-41b3-8b65-daf39872a2e1)は利用保留・過去経緯の参照用。
+
+## 最終保存・引継ぎ
+- [164局完了archive](https://drive.google.com/file/d/1CVmql8AfDYv6KJ7XSh4J3W5UoAlTeSSj/view)：72,281,217 bytes、SHA256 `c3586ba2e9f0a8af9552526e71476603dc854f16e5763002931967fd49d66ffe`。
+- [停止済み再開index](https://drive.google.com/file/d/1fmFfrzFpU5mPAiEVclnrUVZPO91gMIfr/view)：`stopped_handoff`、code commit `10fb29b43ff4468d2c228dd602475f23b9db86fb`、49models/train961/monitor2896/17cycles、研究latest db94693a/Adam1722、owner-only・遠隔SHA・実復元確認。次のrunは未予約。正式採用はなし。
+- indexの `legal_replay_performed=false` は可搬index生成時のフラグであり、本文の独立した31,018手対局検証の代用ではない。次のTRAIN64局を始める場合、他AI・元writer・Actions・正式版境界を再確認する。

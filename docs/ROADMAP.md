@@ -1,62 +1,21 @@
-# 深路：NNUEによる高速自己強化
+# 深路：NNUE高速自己強化 — 現在地
 
-更新：2026-11-03。研究方針の正本は [D17](D17_FAST_SELF_LEARNING_20261031.md)。正式版はオーナー指示でD33 NNUEを採用した FUKAJI v0.3.0。[正式採用・配布](D34_FORMAL_NNUE_RELEASE_20261103.md)を参照。採用時の200局比較は未実施で、棋力優位を示すものではない。今後の研究更新を正式版へ自動反映しない。
+2026-11-03更新。現行状態は以下。研究方針は[D17](D17_FAST_SELF_LEARNING_20261031.md)、判断正本は[decisions/](decisions/)、各比較結果はD系文書。ChatGPT・Claudeで同一Rule、Addness保留。
 
-Work障害からの復旧と直近の追加学習・比較の正本は [D18](D18_RECOVERY_AND_LEARNING_20261101.md)。保存済みのモデル・optimizerから再開し、初期化を繰り返さない。
+## 現在の正式版
+**FUKAJI v0.3.0（D33 NNUE e0cbd2ab）**。本人判断で正式採用。[D34](D34_FORMAL_NNUE_RELEASE_20261103.md)・[正式採用判断](decisions/2026-11-03_D33_NNUE正式採用.md)・[現行仕様](現行エンジン仕様.md)を参照。採用時点ではD33比較0局。後日完了した結果を採用時点の根拠に遡及しない。旧v0.2.0は[D32](D32_FORMAL_NNUE_RELEASE_20261102.md)に保全。
 
-## 最新の研究判断（D31完了・D33学習済み、計算環境の再開待ち）
+## 現在の研究
+- [D31](D31_TWO_BATCH_RETENTION_20261103.md)：400局/65,551手完了。c8対当時の正式NNUEは119勝76敗1分4未決着、対新経験のみ候補は97勝97敗4分2未決着。保持方式の候補間優位は未確定。
+- [D33](D33_CANDIDATE_EXPERIENCE_20261103.md)：TRAIN64局（46決着）、Adam1580→1708の3seed追加学習。固定100序盤×先後**200局完了**。e0対親c8：113勝83敗1分3未決着、34,726手合法再生。95%区間43.17〜71.83%、50%を含み棋力差未確定。旧「起動拒否・待機」は履歴。
+- [D35](D35_SELFPLAY_NNUE_CONTINUATION_20261103.md)：正式e0の学習状態から別領域で第16・17周自己対局・追加学習。研究latest db94693a/Adam1722。固定82序盤×先後164局：84勝72敗5分3未決着、31,018手合法再生。95%区間が50%を含み棋力差未確定。
+- 最新の**保存済み再開点**：[D35 164局完了archive](https://drive.google.com/file/d/1CVmql8AfDYv6KJ7XSh4J3W5UoAlTeSSj/view) 72,281,217 bytes、[停止済みindex](https://drive.google.com/file/d/1fmFfrzFpU5mPAiEVclnrUVZPO91gMIfr/view)。indexは49models/train961/monitor2896/17cycles、研究latest db94693a、Adam1722、owner-only/再取得SHA/復元確認、`stopped_handoff`。正式版e0は未変更。
+- D35の次の研究計画は独立32序盤×先後64局のTRAIN生成。**本書の更新で新しいrunを起動していない**。既存164局評価群を学習に使用しない。
 
-新旧経験を保持したD31候補c8ad43bf/Adam1580は、追加学習前の正式採用NNUE912db54fへ119勝76敗1分4未決着、新経験のみ対照b73f0c24へ97勝97敗4分2未決着。新100序盤・先後・同一C++q0/100msの全400局と全65,551手を検証・本人限定保存した。保持方式の対局優位は未確認。親への勝ち越しと忘却抑制を根拠とする、評価完了後の別判断で研究用latestをc8へ更新した。固定anchor・過去モデルは保持する。[D31結果](D31_TWO_BATCH_RETENTION_20261103.md)。
+## 実行・判断の境界
+最新main commit、稼働Actions、他AI/元writer、正式manifest、凍結plan、復旧archiveのSHAを確認。D17の結果重視学習とデータ分離を維持。研究pointerと正式採用を分離し、正式版更新は本人の明示指示に限る。少数局の故障確認は棋力実証と呼ばない。
 
-[D33](D33_CANDIDATE_EXPERIENCE_20261103.md)は候補同士の新64局から46決着を加え、3seedをAdam1580→1708で追加学習済み。代表e0cbd2ab対学習直前親c8の新200局planを固定したが、実行環境の再接続障害で起動要求が拒否された。比較を稼働中・完了と扱わない。
+## 過去の結果へのリンク
+[D17](D17_FAST_SELF_LEARNING_20261031.md) / [D18](D18_RECOVERY_AND_LEARNING_20261101.md) / [D20](D20_RELIABLE_RESUME_AND_TARGET_TRIAL_20261101.md) / [D21](D21_KING_RELATIVE_NNUE_20261101.md) / [D22](D22_NNUE_QUIESCENCE_20261101.md) / [D23](D23_NATIVE_NNUE_SEARCH_20261101.md) / [D24](D24_FROZEN_NNUE_EVALUATION_20261101.md) / [D25](D25_REPLAY_RATIO_20261101.md) / [D26](D26_EXPERIENCE_DIVERSITY_20261101.md) / [D27](D27_PORTABLE_RECOVERY_20261102.md) / [D28](D28_NATIVE_ACCUMULATOR_20261102.md) / [D29](D29_STRATIFIED_REPLAY_20261102.md) / [D30](D30_FRESH_EXPERIENCE_20261102.md) / [D31](D31_TWO_BATCH_RETENTION_20261103.md) / [D32](D32_FORMAL_NNUE_RELEASE_20261102.md) / [D33](D33_CANDIDATE_EXPERIENCE_20261103.md) / [D34](D34_FORMAL_NNUE_RELEASE_20261103.md) / [D35](D35_SELFPLAY_NNUE_CONTINUATION_20261103.md)。[旧ROADMAP](archive/2026-10-31_ROADMAP_before_D17.md)は履歴。古い「現在」「次」は現行指示ではない。
 
-[最新の完全状態](https://drive.google.com/file/d/1l-ukhYLegviNJ-Qt9Wz4rmJtijWboiP5/view)・[停止済み再開index](https://drive.google.com/file/d/1YGAMrWE31sv2znT7ufY_UHEeMzAcV0IC/view)。47models/train945/monitor2524/15cycles、研究latest c8/Adam1580、D33候補はAdam1708、pending=d33-followup200、保存時点0/100組。owner-only・遠隔SHA・標準復元・元state一致・index読戻しまで確認済み。起動拒否後の元writer/progress/lockを確認してから、同じ凍結planを再開する。初期化や未保存旧結果との合算をしない。
-
-コード正本31e799a9/PR158は全713検査・正式契約成功。[再開メタデータ](../research/d33-candidate-experience/resume.json)を参照。稼働を確認した待ち対象がないためタイマーは設定しない。
-
-## 現在地
-
-- 既存G8は線形評価。小型NNUEの過去の不成功をNNUE方式全体の限界と扱わない。
-- 勝敗の両側を使う局面価値学習＋結果を強く残すTD(λ)を第一候補にする。勝ち棋譜の全着手を最善手として模倣しない。
-- D17は自己対局→継続学習→不変モデル保存・再読込→軽量比較→研究pointer更新→定期比較・巻戻しの有界研究経路。正式USIの変更経路を持たない。
-- 全研究更新への40→240局の一律条件を外す。少数局検査は崩壊検出であり、強さの証明ではない。固定基準・歴代モデル・新しい独立対局を別に必要とする。
-- 実測結果・未実装・次の実装単位はD17および `research/d17-fast-self-learning/` を参照。
-
-## 次の判断
-
-1. 実対局で決着経験が得られるか、追加学習・復旧まで成立するかを確認する。
-2. 同一NNUE・同一局面で差分評価と手順序の速度を測り、探索と評価の変更を分離する。
-3. 決着が少なければ、まず学習用終盤からの再対局割合・探索時間を調整し、未決着を偽の引分教師にしない。
-4. 生成効率を確保した後、MCのみ対結果重視TDの同一経験比較、NNUEの玉相対特徴と幅の拡張へ進む。
-
-## 維持する境界
-
-外部AI・雲路の評価値/手/重み/局面知識は教師にしない。合法性・詰み・千日手とNNUEの近似値を分離する。旧評価400局・既存holdout・新monitorは学習から隔離する。
-
-D9/PR132、D10途中実験、正式版・学習済みモデル・凍結データは保全。D15手作業配点は保留。D16のNNUE主軸は維持し、一律研究ゲートはD17で更新した。
-
-[過去の方針全文](archive/2026-10-31_ROADMAP_before_D17.md)は履歴資料であり、その中の「現行」「次」は現在の指示ではない。旧相対リンクは移動前の `docs/` 起点で読む。個別のD6/G8/D12〜D16文書は元の場所に保全している。
-
-保存・再開の修復と現在のMC/TD一要因比較は [D20](D20_RELIABLE_RESUME_AND_TARGET_TRIAL_20261101.md) を参照。公開第5周を本人限定の最新状態と取り違えない。
-
-NNUEの玉相対特徴と同一経験比較は [D21](D21_KING_RELATIVE_NNUE_20261101.md) を参照。
-
-凍結NNUEでの静止探索の比較は [D22](D22_NNUE_QUIESCENCE_20261101.md) を参照。
-
-同じNNUEのC++評価・探索と同時間対局は [D23](D23_NATIVE_NNUE_SEARCH_20261101.md) を参照。
-
-NNUE世代の意味・比較の必要数・固定400局評価は [D24](D24_FROZEN_NNUE_EVALUATION_20261101.md) を参照。故障screenと強化判断を分ける。
-
-旧経験保持の同一更新量・再生割合比較は [D25](D25_REPLAY_RATIO_20261101.md) を参照。D24は固定400局完了、両基準との棋力差は未確定。
-
-D25の固定200局は比率候補の優位未確定。新経験の開始親を広げる有限1周は [D26](D26_EXPERIENCE_DIVERSITY_20261101.md) を参照。
-
-D26固定400局は同じモデル/optimizer/全序盤を保つ開始前snapshotから復旧し、全400局の合法再生・本人限定保存を完了した。原因と別環境への安全な引継ぎは [D27](D27_PORTABLE_RECOVERY_20261102.md) を参照。
-
-D26復旧400局は全68,143手再生一致、両比較は未確定。NNUEを変えないC++差分計算の効率と同時間統合screenは [D28](D28_NATIVE_ACCUMULATOR_20261102.md) を参照。
-
-NNUE自体の追加学習は [D29](D29_STRATIFIED_REPLAY_20261102.md) の出所層化比較、[D30](D30_FRESH_EXPERIENCE_20261102.md) の新規TRAIN収集・最近経験置換へ進む。D28の計算効率改善をNNUE重みの改善と混同しない。
-
-正式採用NNUEを起点に新経験と直前2バッチ保持を同じ学習量で比較する次研究は [D31](D31_TWO_BATCH_RETENTION_20261103.md) を参照。正式モデルは固定する。
-
-D31は全400局・全65551手の検証と本人限定保存を完了。追加学習前NNUEへ119勝76敗1分4未決着、同量の新経験のみ対照へ97勝97敗4分2未決着。[D31結果](D31_TWO_BATCH_RETENTION_20261103.md)、次の[D33追加学習](D33_CANDIDATE_EXPERIENCE_20261103.md)を参照。正式版はD33代表候補をv0.3.0として採用（採用時の棋力比較は未実施）。
+[F01](rules/F01_継続実行とタイマー.md) / [F30](rules/F30_実行保存と再開.md) / [Drive容量候補台帳](operations/2026-11-03_Drive容量と保持候補.md)に従う。Addness Goalは保留中・履歴参照のみ任意。
