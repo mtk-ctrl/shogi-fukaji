@@ -9,8 +9,8 @@
 - [D31](D31_TWO_BATCH_RETENTION_20261103.md)：400局/65,551手完了。c8対当時の正式NNUEは119勝76敗1分4未決着、対新経験のみ候補は97勝97敗4分2未決着。保持方式の候補間優位は未確定。
 - [D33](D33_CANDIDATE_EXPERIENCE_20261103.md)：TRAIN64局（46決着）、Adam1580→1708の3seed追加学習。固定100序盤×先後**200局完了**。e0対親c8：113勝83敗1分3未決着、34,726手合法再生。95%区間43.17〜71.83%、50%を含み棋力差未確定。旧「起動拒否・待機」は履歴。
 - [D35](D35_SELFPLAY_NNUE_CONTINUATION_20261103.md)：正式e0の学習状態から別領域で第16・17周自己対局・追加学習。研究latest db94693a/Adam1722。固定82序盤×先後164局：84勝72敗5分3未決着、31,018手合法再生。95%区間が50%を含み棋力差未確定。
-- 最新の**保存済み再開点**：[D35 164局完了archive](https://drive.google.com/file/d/1CVmql8AfDYv6KJ7XSh4J3W5UoAlTeSSj/view) 72,281,217 bytes、[停止済みindex](https://drive.google.com/file/d/1fmFfrzFpU5mPAiEVclnrUVZPO91gMIfr/view)。indexは49models/train961/monitor2896/17cycles、研究latest db94693a、Adam1722、owner-only/再取得SHA/復元確認、`stopped_handoff`。正式版e0は未変更。
-- D35の次の研究計画は独立32序盤×先後64局のTRAIN生成。**本書の更新で新しいrunを起動していない**。既存164局評価群を学習に使用しない。
+- [D36](D36_SELFPLAY_NNUE_64_GAMES_20261103.md)は新32序盤・自己対局64局（56詰み、8未決着）を2回の追加学習につないだ。研究latest `7d74b86b`／Adam 1850。新20序盤を使った50ms比較で、学習前 `db94693a` に24勝16敗、正式 `e0cbd2ab` に22勝17敗1分。次の判断は[研究記録](decisions/2026-11-03_D36_研究用NNUE継続.md)。
+- 最新の**保存済み再開点**は[D36完全状態](https://drive.google.com/file/d/1zhJnQ9krUjbcvTm0hXQou1Vnb2zAzL2G/view)と[停止済みindex](https://drive.google.com/file/d/1b4c70boQyHHqivukDbZ7QCJBnO9sRZGn/view)。本人限定権限、再取得SHA、別領域実復元、両学習結果と比較結果の一致を確認。以前のD35再開点は[D35](D35_SELFPLAY_NNUE_CONTINUATION_20261103.md)に保全。
 
 ## 実行・判断の境界
 最新main commit、稼働Actions、他AI/元writer、正式manifest、凍結plan、復旧archiveのSHAを確認。D17の結果重視学習とデータ分離を維持。研究pointerと正式採用を分離し、正式版更新は本人の明示指示に限る。少数局の故障確認は棋力実証と呼ばない。
