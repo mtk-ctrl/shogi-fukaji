@@ -18,8 +18,9 @@ from .supplemental_training import verified_receipts
 
 STATE_SCHEMA_MAX = 2
 # D31: 190 MB before evaluation + ~25 MB for the fixed 400 games.
-# Keep a finite 256 MiB restore bound; all member/path/type checks still apply.
-MAX_STATE_BYTES = 256 * 1024 * 1024
+# D36 reached approximately 251 MiB before the 200-game D37 generation.
+# Allow that generation and its optimizer while retaining a finite restore bound.
+MAX_STATE_BYTES = 320 * 1024 * 1024
 
 
 def verify(root):

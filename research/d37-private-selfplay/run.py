@@ -232,6 +232,8 @@ def main():
     }
     if any(getattr(args, key) is None for key in required[args.phase]):
         parser.error("missing arguments for " + args.phase)
+    if args.root is not None:
+        args.root = args.root.resolve()
     if args.phase == "prepare":
         print(prepare(args.root, args.package))
     elif args.phase == "shard":

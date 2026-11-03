@@ -1,0 +1,59 @@
+name: D37 private input staging
+on:
+  workflow_dispatch:
+    inputs:
+      archive_sha:
+        description: SHA256 of the owner-only input archive
+        required: true
+        type: string
+      preflight_confirmed:
+        description: Confirm owner-only repository and available Actions budget
+        required: true
+        type: boolean
+        default: false
+permissions: {}
+jobs:
+  stage:
+    if: github.repository_owner == 'mtk-ctrl' && github.event.repository.private && inputs.preflight_confirmed
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Fetch and verify the private input
+        env:
+          DOWNLOAD_URL: ${{ secrets.D37_INPUT_DOWNLOAD_URL }}
+          ARCHIVE_SHA: ${{ inputs.archive_sha }}
+        run: |
+          test -n "$DOWNLOAD_URL"
+          curl --proto '=https' --proto-redir '=https' -fsSL --max-time 45 -o input.tar.gz "$DOWNLOAD_URL"
+          python3 - <<'PY'
+          import hashlib
+          import os
+          from pathlib import Path
+          import re
+          import tarfile
+          archive = Path("input.tar.gz")
+          if archive.stat().st_size > 8 * 1024 * 1024:
+              raise SystemExit("input archive exceeds 8 MiB")
+          if hashlib.sha256(archive.read_bytes()).hexdigest() != os.environ["ARCHIVE_SHA"]:
+              raise SystemExit("input archive checksum mismatch")
+          with tarfile.open(archive, "r:gz") as stream:
+              members = stream.getmembers()
+              files = [m for m in members if m.isfile()]
+              names = {m.name for m in files}
+              if (len(members) != 6 or len(files) != 5 or len(names) != 5
+                  or "plan.json" not in names or sum(m.size for m in files) > 8 * 1024 * 1024
+                  or any(not (m.isdir() and m.name == "models" or m.isfile() and
+                             (m.name == "plan.json" or re.fullmatch(r"models/[0-9a-f]{64}\.(json|npz)", m.name)))
+                         for m in members)):
+                  raise SystemExit("unexpected archive members")
+              for member in files:
+                  target = Path("private-input") / member.name
+                  target.parent.mkdir(parents=True, exist_ok=True)
+                  target.write_bytes(stream.extractfile(member).read())
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d37-private-input
+          path: private-input/
+          if-no-files-found: error
+          retention-days: 1
