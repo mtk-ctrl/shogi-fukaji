@@ -31,3 +31,8 @@ D33の46決着（43詰み＋3通常千日手）・D31の54・D30の55・bootstra
 保存直後の200局起動要求は `exec-server transport disconnected; recovery timed out after 25s` で拒否され、実行環境がunavailableとなった。保存済み進捗は0/100組。計算中との報告や、実処理のないタイマー予約をしない。
 
 再開時は元環境のwriter・progress・lockを確認し、稼働済みなら二重起動しない。source `31e799a9a506befad5bd8b5ce8ccab26edc33863` とindex照合で標準復元する。依存は今回checkoutの `build/runtime-deps` へrequirements.txtどおり導入し、`run-research.sh` で検査して `./run-research.sh -m fukaji.frozen_evaluation run --root RESTORED_ROOT --name d33-followup200` を実行する。source/engine/model/Adam/CPUをplanと照合し、既存の完了組を保持、20組ずつ保存・復元して全100組へ進む。
+
+
+## 後続判断：代表NNUEの正式採用
+
+2026-11-03、オーナーの明示指示により代表 `e0cbd2abe53b1d151bb73407f848b4087456c1466121333ad490a96aee131b0a` をFUKAJI v0.3.0へ正式採用した。D33の固定200局は採用時点で0/200局のため、棋力向上が実証されたという意味ではない。正式仕様と配布状況は [D34](D34_FORMAL_NNUE_RELEASE_20261103.md)、判断理由は [採用記録](decisions/2026-11-03_D33_NNUE正式採用.md) に記録する。研究latestはc8ad43bfのまま、元の比較は続行する。

@@ -7,7 +7,8 @@ import shogi
 from . import formal_model
 from .native_nnue import NativeSelector
 
-VERSION='FUKAJI v0.2.0'
+# Keep the USI identity coupled to the checked formal model manifest.
+VERSION=formal_model.manifest()['version']
 
 
 class StopToken:
