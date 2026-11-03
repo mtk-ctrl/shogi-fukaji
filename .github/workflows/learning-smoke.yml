@@ -29,7 +29,8 @@ permissions:
   contents: read
 concurrency:
   group: fukaji-learning-${{ github.ref }}
-  cancel-in-progress: true
+  # A newer push must not cancel a verification already in progress.
+  cancel-in-progress: false
 jobs:
   verify:
     runs-on: ubuntu-latest

@@ -5,6 +5,10 @@ Total output lines: 124
 
 深路は雲路と独立したAIで、正式USIと研究経路を分ける。研究workflowは正式モデルを自動採用しない。正式版は [FUKAJI v0.3.0のNNUE](../../docs/D34_FORMAL_NNUE_RELEASE_20261103.md)。過去G7/G8のUSI研究workflowは--legacyを明示し、凍結比較条件を保つ。
 
+## 停止・失敗時の扱い
+
+`learning-smoke.yml` は同一branchの新しいpushで実行中の検証をキャンセルしない（`cancel-in-progress: false`）。停止・失敗を見たら、runのcommit/branch、job・step、ログの例外を先に確認する。コードや契約の不一致は修正後に失敗jobを再実行し、runner等の一時障害は原因確認後に限り再実行する。手動キャンセルや古いcommitのrunは自動再試行しない。無差別な再試行ループで同じ失敗や計算費用を増やさない。
+
 | Workflow | 役割・起動 |
 
 | --- | --- |
