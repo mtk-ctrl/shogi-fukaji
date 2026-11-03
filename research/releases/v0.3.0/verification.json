@@ -14,7 +14,41 @@
     "games_completed_at_adoption": 0,
     "games_planned": 200,
     "evidence_of_strength_improvement": false,
-    "note": "Formal adoption follows explicit owner instruction; no claim of proven strength gain. The preplanned comparison remains separate and pending."
+    "note": "Adopted first on explicit owner instruction. The comparison then completed under the original frozen plan and was inconclusive; it does not prove strength improvement."
+  },
+  "followup_comparison": {
+    "completed": true,
+    "candidate": "e0cbd2abe53b1d151bb73407f848b4087456c1466121333ad490a96aee131b0a",
+    "opponent": "c8ad43bfd17a1b6bd551cab1073f6ef13d04ad501ea4cf64f3b319a8c259e37a",
+    "opening_families": 100,
+    "games": 200,
+    "conditions": {
+      "backend": "cpp_nnue",
+      "quiescence": 0,
+      "movetime_ms": 100,
+      "max_total_plies": 512,
+      "seed": 202611033380
+    },
+    "outcomes": {
+      "candidate_wins": 113,
+      "opponent_wins": 83,
+      "draws": 1,
+      "unresolved": 3
+    },
+    "candidate_score_identification_bounds": [
+      0.5675,
+      0.5825
+    ],
+    "simultaneous_95_percent_interval": [
+      0.43168984842593805,
+      0.718310151574062
+    ],
+    "conclusion": "inconclusive; interval includes 0.5",
+    "legal_replay_moves": 34726,
+    "outcomes_match": true,
+    "old_exploratory_games_included": false,
+    "strength_proven": false,
+    "research_latest_after_run": "c8ad43bfd17a1b6bd551cab1073f6ef13d04ad501ea4cf64f3b319a8c259e37a"
   },
   "ci": {
     "commit": "f8d00293c801a9699c88e87909efdfb116aea43d",
@@ -33,6 +67,16 @@
     "bytes": 619658,
     "sha256": "5bdb55af453cfaa48f74616f00ea6ed9f44b83ebc97738919c10a3513abb8015",
     "drive_readback_sha256": "5bdb55af453cfaa48f74616f00ea6ed9f44b83ebc97738919c10a3513abb8015"
+  },
+  "private_research_state": {
+    "drive_file_id": "1x6JssFUtjVldoTv5akWLs_EhlEegcffH",
+    "url": "https://drive.google.com/file/d/1x6JssFUtjVldoTv5akWLs_EhlEegcffH/view",
+    "visibility": "owner only; shared=false; sole permission is owner",
+    "bytes": 68841629,
+    "sha256": "92ab80bc0ce6f8ba976772b6ec4c9529a91ddb714fec80cc2330e51d3d6ccbd4",
+    "drive_readback_sha256": "92ab80bc0ce6f8ba976772b6ec4c9529a91ddb714fec80cc2330e51d3d6ccbd4",
+    "standard_restore_verified": true,
+    "restored_report_sha256": "0986f27a41672f9369667a3b128b6d4df286b21e93f239dd557a2179abc3c35d"
   },
   "restored_bundle_verification": {
     "version": "FUKAJI v0.3.0",
@@ -56,6 +100,6 @@
     ],
     "independent_bundle_check": 28.429,
     "final_drive_readback_restore": 25.367,
-    "note": "Observed wall-time values varied materially across runs. These samples do not establish a 20 ms upper bound or a 100 ms deadline guarantee. An opening-only 20-ply diagnostic observed a 22.29 ms maximum and does not cover later or deeper positions."
+    "note": "Observed wall-time values varied materially across runs. These samples do not establish a 20 ms upper bound or a 100 ms deadline guarantee. An opening-only 20-ply diagnostic observed 22.29 ms maximum and does not cover later or deeper positions."
   }
 }
