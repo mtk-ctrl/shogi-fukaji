@@ -7,7 +7,7 @@ import shogi
 from . import formal_model
 from .native_nnue import NativeSelector
 
-VERSION='FUKAJI v0.2.0'
+VERSION='FUKAJI v0.3.0'
 
 
 class StopToken:
