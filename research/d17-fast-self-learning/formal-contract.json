@@ -1,10 +1,10 @@
 {
   "fukaji/engine.py": "690ca0f2a783addf0f6405ec1766d6220a7d966826caa0f709f6d683f78c15bc",
   "fukaji/formal_model.py": "5001bcea51b1d7050a70e0299b57d332838d5fdc973eab6594b77fdbf3887425",
-  "fukaji/formal_usi.py": "d179273f22787f828ae6fdacc1a011fcd7154c062b7dcbb3c252e7dbcad7def8",
+  "fukaji/formal_usi.py": "92ef94b5ed9f9eb0204d8b580b2a2f5ef691c38456f2ef5135a8737b6f439f8a",
   "fukaji/native_nnue.py": "4f73394986a2ee3df5bdf820b901a0c9b4193fd62168c342ac7260121c9363d4",
   "native/nnue_search_ffi.cpp": "32ad7eb07bb531f30271e5db9ecaaa591ac2a047c3b168f3466ae78860a3e453",
-  "formal/model.json": "7941c77dc82700886fc6180529735217db48ecfab583b15aa7cdc8e06da4b2c8",
-  "docs/現行エンジン仕様.md": "b595bd43edd0b874c238fe99eaa69b88694ce8768ac8248780b7d14c11152fca",
+  "formal/model.json": "b98410ee5364b892bde17a686b78788a66e971c3001f368500d424cbaf3f39de",
+  "docs/現行エンジン仕様.md": "0e7d555f10226d8b7f7a7ab49aa21f9548e5010cc3e2495f7bccbb7ca289f578",
   "benchmarks/baseline_ref.txt": "eae0eac37a9b5822557f3ac337519f62c1bd4491851b720835240bcf065f81c9"
 }
