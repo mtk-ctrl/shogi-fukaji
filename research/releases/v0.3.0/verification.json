@@ -1,0 +1,61 @@
+{
+  "schema": "fukaji-formal-release-verification-v1",
+  "version": "FUKAJI v0.3.0",
+  "adopted_at": "2026-11-03",
+  "adoption_authority": "Explicit owner instruction",
+  "model": {
+    "d33_candidate_sha256": "e0cbd2abe53b1d151bb73407f848b4087456c1466121333ad490a96aee131b0a",
+    "weights_sha256": "146dd1b0b45bc1cda03a7b16c74f5892894f44b4e2e6e331f008439448503497",
+    "research_latest_pointer_unchanged": "c8ad43bfd17a1b6bd551cab1073f6ef13d04ad501ea4cf64f3b319a8c259e37a",
+    "prior_official_version_preserved": "FUKAJI v0.2.0"
+  },
+  "strength_evaluation": {
+    "planned_comparison": "d33-followup200",
+    "games_completed_at_adoption": 0,
+    "games_planned": 200,
+    "evidence_of_strength_improvement": false,
+    "note": "Formal adoption follows explicit owner instruction; no claim of proven strength gain. The preplanned comparison remains separate and pending."
+  },
+  "ci": {
+    "commit": "f8d00293c801a9699c88e87909efdfb116aea43d",
+    "workflow_run_id": 41556230980,
+    "result": "success",
+    "test_count": 713,
+    "formal_contract_check": "success",
+    "bounded_real_alpha_beta_selfplay": "success"
+  },
+  "private_bundle": {
+    "drive_file_id": "1NID37EHMKOytjsCUhBU6xcTtytIT3thn",
+    "drive_url": "https://drive.google.com/file/d/1NID37EHMKOytjsCUhBU6xcTtytIT3thn/view",
+    "visibility": "owner only; shared=false; sole permission is owner",
+    "source_commit": "b64c7a2016aa8ec5e7ba331b2663ada21055b7cc",
+    "filename": "20261103_FUKAJI_v0.3.0_D33_NNUE正式版_本人限定.tar.gz",
+    "bytes": 619658,
+    "sha256": "5bdb55af453cfaa48f74616f00ea6ed9f44b83ebc97738919c10a3513abb8015",
+    "drive_readback_sha256": "5bdb55af453cfaa48f74616f00ea6ed9f44b83ebc97738919c10a3513abb8015"
+  },
+  "restored_bundle_verification": {
+    "version": "FUKAJI v0.3.0",
+    "weights_sha256_match": true,
+    "identical_fixed_depth_2_positions": 32,
+    "legal_usi_games": 2,
+    "legal_usi_plies": 60,
+    "bundle_member_hashes_verified": true,
+    "stop_response_ms": 9.328215999858003,
+    "movetime_requested_ms": 20,
+    "final_drive_restore_observed_max_ms": 25.367245000097682,
+    "purpose": "Deployment correctness only; not a strength experiment"
+  },
+  "timing_observations_ms": {
+    "earlier_package_runs": [
+      63.522,
+      36.335,
+      92.394,
+      237.74,
+      308.899
+    ],
+    "independent_bundle_check": 28.429,
+    "final_drive_readback_restore": 25.367,
+    "note": "Observed wall-time values varied materially across runs. These samples do not establish a 20 ms upper bound or a 100 ms deadline guarantee. An opening-only 20-ply diagnostic observed a 22.29 ms maximum and does not cover later or deeper positions."
+  }
+}
