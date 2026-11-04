@@ -3,7 +3,7 @@ Total output lines: 124
 
 # 深路 GitHub Actions 現役入口
 
-深路は雲路と独立したAIで、正式USIと研究経路を分ける。研究workflowは正式モデルを自動採用しない。正式版は [FUKAJI v0.3.0のNNUE](../../docs/D34_FORMAL_NNUE_RELEASE_20261103.md)。過去G7/G8のUSI研究workflowは--legacyを明示し、凍結比較条件を保つ。
+深路は雲路と独立したAIである。NNUE重みはF00/F10/F20に従い、正式版から直接学習して前後比較を通過した重みを正式版にする。現在の `online-nnue-cycle.yml` は旧research/latestのみ更新するため、この正式版更新サイクルには未対応であり、対応まで新方針の学習に使わない。正式版は [FUKAJI v0.3.0のNNUE](../../docs/D34_FORMAL_NNUE_RELEASE_20261103.md)。過去G7/G8のUSI研究workflowは--legacyを明示し、凍結比較条件を保つ。
 
 ## 停止・失敗時の扱い
 
