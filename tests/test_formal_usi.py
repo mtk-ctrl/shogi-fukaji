@@ -32,7 +32,10 @@ class FormalModelTests(unittest.TestCase):
 
     def test_cli_default_and_fail_closed_missing_model(self):
         p=subprocess.run([sys.executable,'-m','fukaji.engine'],input='usi\nquit\n',text=True,capture_output=True,timeout=10)
-        self.assertEqual(p.returncode,0);self.assertIn('id name FUKAJI v0.3.0',p.stdout)
+        self.assertEqual(p.returncode,0)
+        approved=json.loads((Path(__file__).resolve().parents[1]/'formal'/'model.json').read_text(encoding='utf-8'))
+        self.assertIn('id name '+approved['version'],p.stdout)
+        self.assertIn('option name NNUEFile type string default '+approved['weights_file'],p.stdout)
         self.assertIn('option name NNUEFile',p.stdout);self.assertNotIn('ValueModelMix',p.stdout)
         p=subprocess.run([sys.executable,'-m','fukaji.engine'],
             input='setoption name NNUEFile value /nonexistent/fukaji.npz\nisready\nquit\n',
