@@ -7,7 +7,14 @@ import re
 root = Path(__file__).resolve().parents[1]
 contract = json.loads((root/'research/d17-fast-self-learning/formal-contract.json').read_text())
 for name, expected in contract.items():
-    assert hashlib.sha256((root/name).read_bytes()).hexdigest() == expected, name
+    actual = hashlib.sha256((root/name).read_bytes()).hexdigest()
+    if actual != expected:
+        raise RuntimeError(
+            f'Owner-approved formal contract drift: {name}\n'
+            f'expected SHA256={expected}, observed SHA256={actual}. '
+            'Update formal-contract.json only when the owner-approved current model '
+            'or its formal implementation has been intentionally changed.'
+        )
 for name in ('AGENTS.md', 'docs/00_開発ルーター.md', 'docs/ROADMAP.md'):
     p = root/name
     for target in re.findall(r'\]\(([^)]+)\)', p.read_text()):
