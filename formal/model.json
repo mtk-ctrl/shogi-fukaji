@@ -1,11 +1,11 @@
 {
   "schema": "fukaji-approved-nnue-v1",
-  "version": "FUKAJI v0.3.0",
-  "approved_on": "2026-11-03",
-  "approved_by": "owner: 最新NNUE候補を正式版に採用する指示",
-  "research_snapshot_sha256": "e0cbd2abe53b1d151bb73407f848b4087456c1466121333ad490a96aee131b0a",
-  "weights_file": "models/fukaji-v0.3.0.nnue.npz",
-  "weights_sha256": "146dd1b0b45bc1cda03a7b16c74f5892894f44b4e2e6e331f008439448503497",
+  "version": "FUKAJI v0.4.0",
+  "approved_on": "2026-11-04",
+  "approved_by": "owner: D37を現行モデルとして採用し自己対局強化を継続する指示",
+  "research_snapshot_sha256": "170d6c1ee41d77b69f0b75722ece3deb85f3eea189f70d9789db477a38266db1",
+  "weights_file": "models/fukaji-v0.4.0.nnue.npz",
+  "weights_sha256": "2a0001826c2df835b063c896f8f52e2e99972e144921b1ceff6b77ed6e104b8e",
   "architecture": [
     2548,
     32,
@@ -16,18 +16,18 @@
   "default_move_time_ms": 100,
   "default_search_depth": 64,
   "validation": {
-    "opponent": "D33 learning parent c8ad43bf; fixed 100 opening families / 200 games planned, comparison pending at adoption",
-    "wins": 0,
-    "losses": 0,
-    "draws": 0,
-    "unresolved": 0,
-    "opening_families": 0,
-    "games": 0,
+    "opponent": "D36 final 7d74b86b; 100 independent opening families x swapped colors; prior 100ms/q0 conditions",
+    "wins": 129,
+    "losses": 66,
+    "draws": 1,
+    "unresolved": 4,
+    "opening_families": 100,
+    "games": 200,
     "planned_opening_families": 100,
     "planned_games": 200,
-    "strength_conclusion": "not evaluated; adopted on explicit owner instruction"
+    "strength_conclusion": "improved over D36 at 100ms/q0; owner selected as current; 200ms + 1s x10 evaluation not performed"
   },
-  "model_distribution": "owner-private bundle; learned data not uploaded to public GitHub",
-  "research_parent_sha256": "c8ad43bfd17a1b6bd551cab1073f6ef13d04ad501ea4cf64f3b319a8c259e37a",
-  "optimizer_step": 1708
+  "model_distribution": "owner-private bundle; trained data and optimizer kept only in owner-only Drive archive",
+  "research_parent_sha256": "6b3edcca24de2c48e42c26c4014ce8df0fbfd6ab744cf7a5e09d1a23db54eaa1",
+  "optimizer_step": 2106
 }
