@@ -1,0 +1,87 @@
+name: D41 D37 Adam2106 training from verified 20-runner selfplay
+
+on:
+  workflow_dispatch:
+    inputs:
+      execute:
+        type: boolean
+        required: true
+        default: false
+  push:
+    paths:
+      - research/d41-public/TRAIN_START.json
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: fukaji-d41-d37-exact-adam2106-single-writer
+  cancel-in-progress: false
+
+jobs:
+  train:
+    if: github.repository == 'mtk-ctrl/shogi-fukaji' && (github.event_name == 'push' || inputs.execute)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - name: Verify exact D37 selfplay training instruction
+        if: github.event_name == 'push'
+        run: |
+          python - <<'PY'
+          import json
+          obj=json.load(open('research/d41-public/TRAIN_START.json'))
+          expect={'enabled': True, 'baseline':'170d6c1ee41d77b69f0b75722ece3deb85f3eea189f70d9789db477a38266db1',
+                  'selfplay_run_id':42017791719,'selfplay_games':40,'preserve_formal': True}
+          if obj != expect: raise SystemExit('training request differs from user-authorized D37 continuation')
+          PY
+      - name: Validate approved D37 full optimizer (not a fresh Adam)
+        run: |
+          echo '41c8f56b76cd5d7aa87bff9131d553b304fa4134bf7448c05d3309458f66760e  research/d41-public/D37-Adam2106-training-state.tar.gz' | sha256sum -c -
+      - name: Download verified new selfplay experience
+        run: |
+          mkdir -p input
+          gh release download fukaji-d41-d37-selfplay-42017791719 \
+            --pattern D41-D37-20runner-selfplay-40games.tar.gz --dir input
+          echo '8708db460d4d2bcad949d91ab881d9aeb804abcb8e28808dbbb70bda5c21bd9f  input/D41-D37-20runner-selfplay-40games.tar.gz' | sha256sum -c -
+      - name: Train D37 with inherited Adam2106 on all verified games
+        run: |
+          python scripts/d41_public_20.py train-public \
+            --baseline research/d41-public/D37-Adam2106-training-state.tar.gz \
+            --games-release input/D41-D37-20runner-selfplay-40games.tar.gz \
+            --output trained
+      - name: Publish learned weights, original game source, optimizer and SHA
+        env:
+          TAG: fukaji-d41-d37-trained-${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          asset='trained/D41-selfplay-training-unadopted.tar.gz'
+          expected="$(sha256sum "$asset" | cut -d ' ' -f1)"
+          gh release create "$TAG" "$asset" --target "$GITHUB_SHA" \
+            --title "D41 D37 Adam2106 exact continuation (comparison pending)" \
+            --notes "Trained directly from owner-approved D37/Adam2106 on verified 20-runner 40-game data. Not adopted; requires direct D37-before vs after comparison."
+          mkdir -p readback
+          gh release download "$TAG" --pattern D41-selfplay-training-unadopted.tar.gz --dir readback
+          actual="$(sha256sum readback/D41-selfplay-training-unadopted.tar.gz | cut -d ' ' -f1)"
+          test "$expected" = "$actual"
+          echo "Verified learned model and optimizer Release $TAG $actual"
+      - name: Preserve training report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: d41-d37-training-receipt-${{ github.run_id }}
+          path: |
+            trained/report.json
+            trained/publication-receipt.json
+          if-no-files-found: warn
+          retention-days: 30
