@@ -1,0 +1,154 @@
+name: D41 D37 20 runner public selfplay
+
+on:
+  workflow_dispatch:
+    inputs:
+      execute:
+        description: 'Deliberately run the D37 20-worker selfplay'
+        required: true
+        type: boolean
+        default: false
+  push:
+    paths:
+      - research/d41-public/START.json
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fukaji-d41-d37-20-selfplay
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    if: github.repository == 'mtk-ctrl/shogi-fukaji' && (github.event_name == 'push' || inputs.execute)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - name: Confirm explicit request
+        if: github.event_name == 'push'
+        run: |
+          python - <<'PY'
+          import json
+          request=json.load(open('research/d41-public/START.json'))
+          expected={'enabled':True,'baseline':'170d6c1ee41d77b69f0b75722ece3deb85f3eea189f70d9789db477a38266db1','runners':20,'games':40,'request_id':'d41-20261105-20runners'}
+          if request!=expected:
+              raise SystemExit('D41 frozen request mismatch')
+          PY
+      - name: Verify current model contracts
+        run: python scripts/check_fukaji_contracts.py
+      - name: Freeze exactly 40 independent new D37 openings
+        run: |
+          python scripts/d41_public_selfplay_20.py prepare \
+            --bundle research/d41-public/D37-v0.4.0-current-bundle.tar.gz \
+            --output prepared
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d41-public-runtime-${{ github.run_id }}
+          path: prepared/runtime.tar.gz
+          if-no-files-found: error
+          retention-days: 14
+
+  selfplay:
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        lane: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: d41-public-runtime-${{ github.run_id }}
+          path: input
+      - name: D37 vs D37 two games per independent runner
+        env:
+          LANE: ${{ matrix.lane }}
+        run: |
+          python scripts/d41_public_selfplay_20.py worker \
+            --runtime-bundle input/runtime.tar.gz \
+            --lane "$LANE" --output "out/lane-$LANE"
+      - name: Save independently replayable game pair
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: d41-lane-${{ matrix.lane }}
+          path: out/lane-${{ matrix.lane }}/lane-*.tar.gz
+          if-no-files-found: warn
+          retention-days: 14
+
+  aggregate:
+    needs: [prepare, selfplay]
+    if: needs.prepare.result == 'success' && needs.selfplay.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: d41-public-runtime-${{ github.run_id }}
+          path: input
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: d41-lane-*
+          merge-multiple: true
+          path: input/lanes
+      - name: Independently validate all 40 complete games
+        run: |
+          python scripts/d41_public_selfplay_20.py collect \
+            --runtime-bundle input/runtime.tar.gz \
+            --downloads input/lanes --output results
+      - name: Publish exact games to public GitHub Release and verify SHA256
+        env:
+          TAG: fukaji-d41-d37-selfplay-${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          asset='results/D41-D37-20runner-selfplay-40games.tar.gz'
+          expected="$(sha256sum "$asset" | cut -d ' ' -f1)"
+          gh release create "$TAG" "$asset" --target "$GITHUB_SHA" \
+            --title "D41 D37 20-runner 40-game verified selfplay" \
+            --notes '40 new D37 selfplay games; 20 independent Actions jobs; candidate training with exact D37 Adam2106 still pending. This is not an adopted model.'
+          mkdir -p readback
+          gh release download "$TAG" --pattern 'D41-D37-20runner-selfplay-40games.tar.gz' --dir readback
+          actual="$(sha256sum readback/D41-D37-20runner-selfplay-40games.tar.gz | cut -d ' ' -f1)"
+          test "$expected" = "$actual"
+          echo "Verified durable public Release: $TAG $actual"
+      - name: Preserve result and audit receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: d41-report-${{ github.run_id }}
+          path: |
+            results/report.json
+            results/receipt.json
+          if-no-files-found: warn
+          retention-days: 30
