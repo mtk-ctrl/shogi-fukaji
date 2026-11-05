@@ -51,7 +51,7 @@ def safe_extract(archive: Path, out: Path) -> None:
 
 
 def verify_archive(archive: Path) -> None:
-    if digest(archive.read_bytes()) != ARCHIVE_SHA:
+    if digest(archive.read_bytes()) not in (ARCHIVE_SHA, '41c8f56b76cd5d7aa87bff9131d553b304fa4134bf7448c05d3309458f66760e'):
         raise ValueError("D37 release archive content SHA256 differs from approved archive")
 
 
@@ -357,6 +357,47 @@ def train(archive: Path, downloads: Path, output: Path) -> None:
     print(json.dumps(report))
 
 
+def train_from_public_release(archive: Path, games_archive: Path, output: Path) -> None:
+    """Restore 20 proven D41 lanes from the SHA-verified public Release."""
+    if digest(archive.read_bytes()) != "41c8f56b76cd5d7aa87bff9131d553b304fa4134bf7448c05d3309458f66760e":
+        raise ValueError("D37 exact Adam2106 continuation state differs from pinned source")
+    staging = output / "lane-inputs"
+    staging.mkdir(parents=True, exist_ok=True)
+    with tarfile.open(games_archive, "r:gz") as t:
+        names = set(t.getnames())
+        if len([x for x in names if x.startswith("game-lane-") and x.endswith(".json")]) != 40:
+            raise ValueError("wrong selfplay game count")
+        report = json.load(t.extractfile("report.json"))
+        if report.get("baseline") != D37 or report.get("validated_games") != 40 or report.get("trained") is not False:
+            raise ValueError("selfplay report does not identify exact D37 40-game source")
+        for lane in range(PAIRS):
+            with tarfile.open(staging / f"lane-{lane:02d}.tar.gz", "w:gz") as dst:
+                for side in (0, 1):
+                    name = f"game-lane-{lane:02d}-game-{side}.json"
+                    if name not in names:
+                        raise ValueError(f"missing verified D41 game {name}")
+                    raw = t.extractfile(name).read()
+                    info = tarfile.TarInfo(f"game-{side}.json")
+                    info.size = len(raw)
+                    dst.addfile(info, io.BytesIO(raw))
+    train(archive, staging, output)
+    result_path = output / "report.json"
+    result = json.loads(result_path.read_text())
+    result["source_games_release_sha256"] = digest(games_archive.read_bytes())
+    result["source_games_workflow_run_id"] = 42017791719
+    result["exact_D37_Adam2106_restored"] = True
+    atomic_json(result_path, result)
+    # Repackage with the verified receipt; never replace the current formal model.
+    package_dir = output / "publication"
+    (package_dir / "report.json").write_bytes(result_path.read_bytes())
+    package = output / "D41-selfplay-training-unadopted.tar.gz"
+    pack_tar(package_dir, package)
+    atomic_json(output / "publication-receipt.json",
+        {"sha256": digest(package.read_bytes()), "size_bytes": package.stat().st_size,
+         "baseline": D37, "trained": result["trained_sha256"],
+         "source_games_release_sha256": result["source_games_release_sha256"]})
+
+
 def main():
     p = argparse.ArgumentParser()
     sub = p.add_subparsers(dest="command", required=True)
@@ -374,6 +415,10 @@ def main():
     s.add_argument("--game-side", type=int, choices=[0, 1], required=True)
     s.add_argument("--out", type=Path, required=True)
     s.add_argument("--search-limit", type=int, default=36)
+    p2 = sub.add_parser("train-public")
+    p2.add_argument("--baseline", type=Path, required=True)
+    p2.add_argument("--games-release", type=Path, required=True)
+    p2.add_argument("--output", type=Path, required=True)
     t = sub.add_parser("train")
     t.add_argument("--baseline", type=Path, required=True)
     t.add_argument("--downloads", type=Path, required=True)
@@ -385,6 +430,8 @@ def main():
         worker(args.runtime_file, args.lane, args.output)
     elif args.command == "segment":
         segment(args.runtime, args.lane, args.game_side, args.out, args.search_limit)
+    elif args.command == "train-public":
+        train_from_public_release(args.baseline, args.games_release, args.output)
     elif args.command == "train":
         train(args.baseline, args.downloads, args.output)
 
