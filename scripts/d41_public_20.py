@@ -18,6 +18,10 @@ import tarfile
 import time
 from pathlib import Path
 
+# GitHub Actions invokes this file as `python scripts/...`; include repository
+# root so the sibling `fukaji` package is importable regardless of cwd.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
 import shogi
 
 from fukaji.online_cycle import fresh_prefix
