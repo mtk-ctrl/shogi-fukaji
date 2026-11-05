@@ -17,6 +17,8 @@ from collections import Counter
 
 import numpy as np
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
 from fukaji.nnue_research import SmallNNUE
 from fukaji.online_cycle import fresh_prefix
 from fukaji.online_learning import atomic_json, digest, game_key, validate_game
