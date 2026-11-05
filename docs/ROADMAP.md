@@ -42,3 +42,11 @@
 [D40：D37対D39・100局比較](D40_D37_VS_D39_100GAMES_20261104.md)を**50独立序盤×先後2局・計100局、14,535手合法再生**で完了。通常1手200ms、各陣営1秒長考最大10回、同じC++ NNUE探索。**D37＝50勝、D39＝49勝、未決着＝1（512手上限）**。D39の99決着局得点率49.49%で、50ペア単位の不確実性範囲は50%を含む。**D39の棋力向上は未確認のため、現行モデルはFUKAJI v0.4.0/D37(170d6c1e・Adam2106)を維持**。D39は学習後重み4c37e812・Adam2112として保全し、次周の親には使用しない。
 
 実行はローカル4並列で、独立GitHub Actions 20ランナーは**未使用**。通常200ms指示の約13,935探索手中、D37側1手のみ330msの時間超過を記録。対局条件の絶対的時間上限保証は未達。[本人限定Drive100局完全記録](https://drive.google.com/file/d/1NxX0YOF0DHXjXW9MdmFJTMDuFahMYV3a/view?usp=drivesdk)をownerのみ・shared=falseで保存し、再取得SHA・全108ファイルハッシュを検証。D40検証完了で、前段[D39](D39_CURRENT_D37_SELFPLAY_REINFORCEMENT_20261104.md)の「学習後モデル比較待ち」は解消。採用後の新しい研究成果としては「強化未確認・現行D37維持」が結論。
+
+## 2026-11-06：D41／20ランナー自己対局40局とD37の追加学習成功
+
+[研究結果と実行証拠](D41_D37_20RUNNER_SELFPLAY_AND_TRAINING_20261106.md)。20独立GitHub Actionsジョブの[D41 run 42017791719](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/42017791719)で**D37 vs D37 40局／5,351手**を全て合法検証し、公開[GitHub Release](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d41-d37-selfplay-42017791719)に保存。20対局ジョブ＋準備＋集約の計22ジョブ全成功。通常200ms／長考1s×各陣営最大10回、40局詰み決着。
+
+初回の追加学習run 42018509500は`ModuleNotFoundError: fukaji`で失敗。インポート経路を修正して起動した[D41学習run 42120367483](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/42120367483)は**成功**。D37からAdam**2106→2144**、新40局＋旧train40局で**2,398局面**、2epoch学習。学習後NNUE SHA256=`5cb31550fd9a011cace5b007df1c58c4e1889655e0a2f170869ce8eddb189e73`。[公開Release](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d41-d37-trained-42120367483)へ重み・optimizer・棋譜・結果を保存し、再ダウンロードSHA一致。
+
+**残工程：D37更新前vs学習後モデルの通常200ms/1s長考条件での直接比較（独立50序盤×先後交替100局／20独立Actionsランナー）。** 比較による棋力向上はまだ未検証。**現行モデルはv0.4.0/D37（170d6c1e、Adam2106）のまま**で、強化が確認されるまで正式manifestは変更しない。本人の2026-11-05指示により新規成果の正本は**公開GitHub**とし、Driveとの二重保存をしない。既存Drive資産は移行検証完了まで残す。
