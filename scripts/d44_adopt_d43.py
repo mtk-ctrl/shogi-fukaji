@@ -165,17 +165,17 @@ def prepare(trained,audit,out):
 
 ## 事前に凍結した実験と検証
 
-- [D43 run](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/{RELEASE_RUN})：5wave×独立20ジョブ×各10局＝**1000局**、994局確定・6局未決着。完全合法再生とSHA、[1000局Release](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d43-d37-1000-selfplay-{RELEASE_RUN})（SHA256 \`{TRAIN_SOURCE_SHA}\`）を確認。
-- 1000局で学習済みの重みはD37（\`{OLD}\`、Adam2106）から直接継承し、既存合法train665局をreplay、学習局面49,613、2epoch、Adam2106→2882。学習後の[完全重み・optimizer Release](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d43-d37-trained-{RELEASE_RUN})（アーカイブSHA256 \`{TRAIN_ARCHIVE_SHA}\`）。
-- 100新規独立序盤×先後交替＝200局、学習後D43 **150勝**、学習前D37 **50勝**、引分0・未決着0、25,654手合法再生、1手200ms／1秒長考各陣営最大10回。事前判定閾値「勝数差12以上、未決着10以下」を大幅超過。[全200局・plan・report Release](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d43-d37-before-after-200games-{RELEASE_RUN})（アーカイブSHA256 \`{AUDIT_ARCHIVE_SHA}\`）を照合。
-- 推論用の4テンソルのみを学習後snapshotから抽出し、optimizerを含まない\`{WEIGHTS_PATH}\`へ保存。重みSHA256 \`{weights_sha}\`。全テンソルの一致・有限値・標準\`formal_model.load\`読込を検証。
+- [D43 run](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/{RELEASE_RUN})：5wave×独立20ジョブ×各10局＝**1000局**、994局確定・6局未決着。完全合法再生とSHA、[1000局Release](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d43-d37-1000-selfplay-{RELEASE_RUN})（SHA256 `{TRAIN_SOURCE_SHA}`）を確認。
+- 1000局で学習済みの重みはD37（`{OLD}`、Adam2106）から直接継承し、既存合法train665局をreplay、学習局面49,613、2epoch、Adam2106→2882。学習後の[完全重み・optimizer Release](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d43-d37-trained-{RELEASE_RUN})（アーカイブSHA256 `{TRAIN_ARCHIVE_SHA}`）。
+- 100新規独立序盤×先後交替＝200局、学習後D43 **150勝**、学習前D37 **50勝**、引分0・未決着0、25,654手合法再生、1手200ms／1秒長考各陣営最大10回。事前判定閾値「勝数差12以上、未決着10以下」を大幅超過。[全200局・plan・report Release](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d43-d37-before-after-200games-{RELEASE_RUN})（アーカイブSHA256 `{AUDIT_ARCHIVE_SHA}`）を照合。
+- 推論用の4テンソルのみを学習後snapshotから抽出し、optimizerを含まない`{WEIGHTS_PATH}`へ保存。重みSHA256 `{weights_sha}`。全テンソルの一致・有限値・標準`formal_model.load`読込を検証。
 - 採用はNNUE重みの切替のみ。USIの表記 FUKAJI v0.4.0、探索方式と既定設定を維持する。前のD37完全snapshot／Adam2106はGitHubのD41凍結bundleと既存Drive保全から復元可能。
 
 ## 現行化と検証の完了条件
 
-\`formal/model.json\`、GitHubに追跡された推論ファイル、\`docs/現行エンジン仕様.md\`、共通ルーター入口、\`research/d17-fast-self-learning/formal-contract.json\`を同一commitで反映し、全契約テスト、実C++ NNUE・USI対局スモーク、起動パッケージRelease、ハッシュ再取得照合を実施する。途中失敗時に正式mainを更新しない。実現したcommit/run IDと検査receiptはD44実行結果に記録する。
+`formal/model.json`、GitHubに追跡された推論ファイル、`docs/現行エンジン仕様.md`、共通ルーター入口、`research/d17-fast-self-learning/formal-contract.json`を同一commitで反映し、全契約テスト、実C++ NNUE・USI対局スモーク、起動パッケージRelease、ハッシュ再取得照合を実施する。途中失敗時に正式mainを更新しない。実現したcommit/run IDと検査receiptはD44実行結果に記録する。
 
-次の自己学習の**唯一の親は現行D43 \`{NEW}\`、Adam2882**。D41の不採用モデルや旧D37から別研究を再開しない。
+次の自己学習の**唯一の親は現行D43 `{NEW}`、Adam2882**。D41の不採用モデルや旧D37から別研究を再開しない。
 """
     p=ROOT/DECISION_PATH
     if p.exists():
@@ -192,16 +192,16 @@ def prepare(trained,audit,out):
         "更新：2026-11-04。**現行モデルは FUKAJI v0.4.0 / D37 NNUE**。本人がD37を現時点の基準として採用し、次の自己対局強化はD37のAdam2106から直接始める。D37対D36の100ms/200局で勝ち越したが、200ms+長考1秒10回条件の採用時棋力比較は未実施。「正式版」は旧称として扱う。",
         f"更新：{DATE}。**現行のNNUE重みはD43（{NEW[:8]}、Adam2882）**。旧現行D37を1000局の自己対局で追加学習し、正規の200ms＋長考1秒10回の200局直接比較で**150勝50敗**。既定のUSI表記・versionはFUKAJI v0.4.0のまま、探索コードや配布形式は不変。「正式版」は旧称。"
     )
-    s=s.replace(f"\`{OLD}\`",f"\`{NEW}\`",1)
-    s=s.replace("\`models/fukaji-v0.4.0.nnue.npz\`",f"\`{WEIGHTS_PATH}\`",1)
-    s=s.replace("\`2a0001826c2df835b063c896f8f52e2e99972e144921b1ceff6b77ed6e104b8e\`",f"\`{weights_sha}\`",1)
+    s=s.replace(f"`{OLD}`",f"`{NEW}`",1)
+    s=s.replace("`models/fukaji-v0.4.0.nnue.npz`",f"`{WEIGHTS_PATH}`",1)
+    s=s.replace("`2a0001826c2df835b063c896f8f52e2e99972e144921b1ceff6b77ed6e104b8e`",f"`{weights_sha}`",1)
     s=s.replace("重みは本人限定の起動パッケージに同梱する。公開リポジトリ単独には学習済み重みを置かない。",
-                "今回採用した推論重みはGitHubの\`models/\`に保持し、公開起動パッケージにも同梱する。旧D37配布は復元用に保持。",1)
+                "今回採用した推論重みはGitHubの`models/`に保持し、公開起動パッケージにも同梱する。旧D37配布は復元用に保持。",1)
     a=s.index("## 現行モデルの採用判断と強さの不確実性")
     b=s.index("## 復元・研究との境界",a)
     s=s[:a]+f"""## 現行モデルの採用判断と強さの不確実性
 
-[D43採用記録](decisions/2026-11-07_D43学習後モデルを現行に採用.md)により、学習後D43（\`{NEW}\`、Adam2882）を現行NNUEとする。D37からの新規自己対局1000局、旧train665局のreplay、2epoch追加学習。新規100序盤先後交替200局（200ms＋各陣営1秒長考10回）でD43は**150勝50敗、引分0、未決着0**。実際の棋力向上の根拠は学習lossではなくこの対局結果。ただし他環境・他時間制御の勝率を保証するものではない。原棋譜と比較条件は[GitHub Release](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d43-d37-before-after-200games-{RELEASE_RUN})に保存済み。
+[D43採用記録](decisions/2026-11-07_D43学習後モデルを現行に採用.md)により、学習後D43（`{NEW}`、Adam2882）を現行NNUEとする。D37からの新規自己対局1000局、旧train665局のreplay、2epoch追加学習。新規100序盤先後交替200局（200ms＋各陣営1秒長考10回）でD43は**150勝50敗、引分0、未決着0**。実際の棋力向上の根拠は学習lossではなくこの対局結果。ただし他環境・他時間制御の勝率を保証するものではない。原棋譜と比較条件は[GitHub Release](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d43-d37-before-after-200games-{RELEASE_RUN})に保存済み。
 
 """ + s[b:]
     s=s.replace("NNUE重みは現行モデルD37（Adam2106）の完全stateから直接学習し、更新前snapshotと更新後の重みを同条件で対局させる。",
@@ -227,14 +227,14 @@ def prepare(trained,audit,out):
     b=s.index("## 現在の研究",a)
     s=s[:a]+f"""## 現行モデル
 
-**D43（NNUE \`{NEW[:12]}…\`、Adam2882）を現行採用。USIのversion表示はFUKAJI v0.4.0を維持。** 旧D37（Adam2106）を直接追加学習：新規1000自己対局・決着994局、合法train＋過去665局、学習49,613局面。学習前D37との**200局標準比較で150勝50敗・引分0・未決着0**。[採用判断](decisions/2026-11-07_D43学習後モデルを現行に採用.md)、[200局の全棋譜Release](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d43-d37-before-after-200games-{RELEASE_RUN})、[D43学習stateとAdam2882](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d43-d37-trained-{RELEASE_RUN})。正式[manifest](../formal/model.json)と[仕様](現行エンジン仕様.md)を正本とする。次回の自己学習は必ずD43が唯一の親。旧D37・e0などは履歴・復元用として保護。
+**D43（NNUE `{NEW[:12]}…`、Adam2882）を現行採用。USIのversion表示はFUKAJI v0.4.0を維持。** 旧D37（Adam2106）を直接追加学習：新規1000自己対局・決着994局、合法train＋過去665局、学習49,613局面。学習前D37との**200局標準比較で150勝50敗・引分0・未決着0**。[採用判断](decisions/2026-11-07_D43学習後モデルを現行に採用.md)、[200局の全棋譜Release](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d43-d37-before-after-200games-{RELEASE_RUN})、[D43学習stateとAdam2882](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d43-d37-trained-{RELEASE_RUN})。正式[manifest](../formal/model.json)と[仕様](現行エンジン仕様.md)を正本とする。次回の自己学習は必ずD43が唯一の親。旧D37・e0などは履歴・復元用として保護。
 
 """ + s[b:]
     s+=f"""
 ## {DATE}：D44、D43学習後NNUEの現行化
 
-- 本人指示によりD43(\`{NEW[:8]}\`/Adam2882)を現行モデルとして反映。[決定と採否根拠](decisions/2026-11-07_D43学習後モデルを現行に採用.md)。
-- 推論用\`{WEIGHTS_PATH}\`のSHA256：\`{weights_sha}\`。D43完全学習stateとoptimizerはGitHub Releaseに保存済み、旧D37は復元用に残す。
+- 本人指示によりD43(`{NEW[:8]}`/Adam2882)を現行モデルとして反映。[決定と採否根拠](decisions/2026-11-07_D43学習後モデルを現行に採用.md)。
+- 推論用`{WEIGHTS_PATH}`のSHA256：`{weights_sha}`。D43完全学習stateとoptimizerはGitHub Releaseに保存済み、旧D37は復元用に残す。
 - 現行のUSI/version・探索コード・既定の探索時間は従来どおり。重みとoptimizerの進行状態だけを更新。正式契約テスト、C++ NNUE/USI動作と配布・SHAの完了証拠はD44 GitHub Actions runのログ／現行Releaseを参照。
 """
     roadmap.write_text(s)
