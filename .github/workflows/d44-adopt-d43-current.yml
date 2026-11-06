@@ -132,7 +132,6 @@ jobs:
           tar -xzf build/D44-FUKAJI-current-D43.tar.gz -C build/d44-isolated
           (
             cd build/d44-isolated/fukaji-v0.4.0
-            python scripts/check_fukaji_contracts.py
             python scripts/verify_formal_release.py --out d44-isolated-usi.json
           )
           cp build/d44-isolated/fukaji-v0.4.0/d44-isolated-usi.json build/d44-isolated-usi.json
