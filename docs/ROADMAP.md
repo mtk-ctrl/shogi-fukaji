@@ -11,7 +11,7 @@
 - [D33](D33_CANDIDATE_EXPERIENCE_20261103.md)：TRAIN64局（46決着）、Adam1580→1708の3seed追加学習。固定100序盤×先後**200局完了**。e0対親c8：113勝83敗1分3未決着、34,726手合法再生。95%区間43.17〜71.83%、50%を含み棋力差未確定。旧「起動拒否・待機」は履歴。
 - [D35](D35_SELFPLAY_NNUE_CONTINUATION_20261103.md)：正式e0の学習状態から別領域で第16・17周自己対局・追加学習。研究latest db94693a/Adam1722。固定82序盤×先後164局：84勝72敗5分3未決着、31,018手合法再生。95%区間が50%を含み棋力差未確定。
 - [D36](D36_SELFPLAY_NNUE_64_GAMES_20261103.md)は新32序盤・自己対局64局（56詰み、8未決着）を2回の追加学習につないだ。研究latest `7d74b86b`／Adam 1850。新20序盤を使った50ms比較で、学習前 `db94693a` に24勝16敗、正式 `e0cbd2ab` に22勝17敗1分。次の判断は[研究記録](decisions/2026-11-03_D36_研究用NNUE継続.md)。
-- 最新の**学習再開起点**は[D37完全state](https://drive.google.com/file/d/1XYvT7jA_0fqhPuo5v_uUIrxa4Crbocf-/view)（モデル170d6c1e / Adam2106）。D36完全状態と停止indexは旧記録として保全。本人限定権限、再取得SHA、別領域実復元、両学習結果と比較結果の一致を確認。以前のD35再開点は[D35](D35_SELFPLAY_NNUE_CONTINUATION_20261103.md)に保全。
+- **過去（2026-11-04）の学習再開起点**は[D37完全state](https://drive.google.com/file/d/1XYvT7jA_0fqhPuo5v_uUIrxa4Crbocf-/view)（モデル170d6c1e / Adam2106）。**2026-11-07以降は冒頭のD43／Adam2882を現行再開点とする。**D36完全状態と停止indexは旧記録として保全。本人限定権限、再取得SHA、別領域実復元、両学習結果と比較結果の一致を確認。以前のD35再開点は[D35](D35_SELFPLAY_NNUE_CONTINUATION_20261103.md)に保全。
 
 ## 実行・判断の境界
 最新main commit、稼働Actions、他AI/元writer、正式manifest、凍結plan、復旧archiveのSHAを確認。D17の結果重視学習とデータ分離を維持。NNUEは現行正式版から直接学習し、学習前snapshotとの直接対局を通過した重みを新正式版として次周へ継続する（2026-11-04決定、F00/F10/F20参照）。旧来の別研究候補と手動昇格の流れを次回学習に使わない。現行workflowが未対応なら先に実装を合わせる。少数局の故障確認は棋力実証と呼ばない。
@@ -24,7 +24,7 @@
 ## 2026-11-04追記：D37保存成果と次の正式比較
 
 本人限定Driveの[D37最終アーカイブ](https://drive.google.com/file/d/1XYvT7jA_0fqhPuo5v_uUIrxa4Crbocf-/view)を実取得・読込し、次の実記録を確認した。
-- **以下はD37採用前の2026-11-04時点の記録。現在はv0.4.0/D37を現行モデルとして採用済み**。当時の現行版はv0.3.0 / D33 NNUE e0cbd2ab（Adam1708）。D36は `7d74b86b`（Adam1850）、D37最終は `170d6c1e`（Adam2106）。D37はD36から各200局の自己対局・学習を2回行い、完全stateを保存。
+- **以下はD37採用前の2026-11-04時点の歴史的記録。当時はv0.4.0/D37が現行だったが、2026-11-07にD43へ更新済み**。当時の現行版はv0.3.0 / D33 NNUE e0cbd2ab（Adam1708）。D36は `7d74b86b`（Adam1850）、D37最終は `170d6c1e`（Adam2106）。D37はD36から各200局の自己対局・学習を2回行い、完全stateを保存。
 - 旧条件1手100ms、長考なしの固定対局：**D36対正式e0が241勝150敗1分8未決着（400局）**、**D37対D36が129勝66敗1分4未決着（200局）**。当該分布では新モデルの勝ち越しが認められるが、本人指定の通常200ms・1秒長考10回までとは別条件。
 - 2026-11-04のローカル3並列・100msでのD36対正式e0新100局比較は、26局（D36 19勝7敗）で停止。**74局未実施かつ時間・20ランナー条件不一致のため正式棋力判断に使わない。** [途中証拠](https://drive.google.com/file/d/1WvD0bvYy32jlQ8sseLcUQOjD1UA6lOTy/view)。
 - D37の学習planにはrunners=20、比較planにはworkers=8と記載があるが、これは実際のGitHub Actions独立20ランナー起動証拠ではない。今回のローカル比較に20ランナーは使用していない。
@@ -62,13 +62,13 @@
 - [完全棋譜・結果のGitHub Release](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d42-d37-before-vs-d41-after-42218550652)を**SHA \`5b2cb8495ae7fcdbe2b9181c3d5b3aedb87b2fd72226b1e4de76abb2d3d1f570\`**で再取得検証。
 - 次工程は新しいD37自己対局・学習改善サイクル。重みの採用は学習前後の棋力比較で判断。GitHubを成果物正本とし新規Driveへの二重保存なし。
 
-## 2026-11-06：D43／D37から1000局・20ランナー・学習・200局比較（実行前）
+## 2026-11-06：D43／D37から1000局・20ランナー・学習・200局比較（当時の実行前計画）
 
 [本人依頼とD43実験計画](D43_D37_1000_SELFPLAY_LEARNING_COMPARE_PLAN_20261106.md)を保存。現行D37/Adam2106を起点に、**新規1000局＝20個の独立Actionsランナー×各10局×5wave**、D37から直接継続学習、学習後に新規100序盤×先後200局で直接比較する。学習前のD37と過去比較群を保持し、全棋譜・重み・optimizerを公開GitHub Releaseに保存する構成。
 
 **未実行**：新実行コードのGitHub作成が接続の安全性チェックにより拒否された。今回の1000局実job=0、自己対局=0、追加学習=0、比較=0。拒否を別API等で回避しない。D37現行モデル不変。権限が適切な環境でコード実装・実ジョブ起動・学習・検証・採否を進める。F01に従い実行中のD43 runがないためタイマー予約は設けない。
 
-## 2026-11-07：D43実行の一次監査（確定判定前）
+## 2026-11-07：D43実行の一次監査（当時の中間記録、D44で解消）
 
 [D43 run 42292240321](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/42292240321) の成果物一覧で5wave・学習・監査のアップロードを確認。jobs API先頭ページではprepare1件、wave0 20件、wave1 9件が成功。接続の100件ページ制限により、全100対局job、1000棋譜の独立性・合法性、学習後optimizer、200局勝敗、Release SHAは**未検証**。現行は引き続きD37/Adam2106、重み変更なし。[一次監査・次の一手](decisions/2026-11-07_D43_run42292240321_一次監査.md)。
 
@@ -77,3 +77,7 @@
 - 本人指示によりD43(`bf8c26f9`/Adam2882)を現行モデルとして反映。[決定と採否根拠](decisions/2026-11-07_D43学習後モデルを現行に採用.md)。
 - 推論用`models/fukaji-d43.nnue.npz`のSHA256：`f6ba1d5af46ae648b1921d675ada28cf5065f23a20e424154458817534bf42a6`。D43完全学習stateとoptimizerはGitHub Releaseに保存済み、旧D37は復元用に残す。
 - 現行のUSI/version・探索コード・既定の探索時間は従来どおり。重みとoptimizerの進行状態だけを更新。正式契約テスト、C++ NNUE/USI動作と配布・SHAの完了証拠はD44 GitHub Actions runのログ／現行Releaseを参照。
+
+## 2026-11-07：D44現行化の動作検証完了
+
+[D44 GitHub Actions #42309719933](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/42309719933)は成功。**713回帰テスト、正式契約、実C++ NNUEとUSIの動作、推論ファイルの再読込、別領域での配布パッケージ実起動、Release SHA再取得照合を完了。** 現行SHA `bf8c26f9f8f6adff8a87c46ab04fcf5cd76a7915be241da11b99bb4ae2ac8b9f`、Adam2882、[現行化の検証記録](D44_D43_CURRENT_ADOPTION_VERIFIED_20261107.md)、[公開モデル起動パッケージ](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-current-d43-20261107)、[採用コミット](https://github.com/mtk-ctrl/shogi-fukaji/commit/28f9d7ef0f3b77ac9086adae50e5b1f1162667e4)。将来の失敗時は更新前の**D43**に戻す。上記D37が現行だった記載は当時の記録。
