@@ -84,8 +84,7 @@ def read_d41_parent_ids(asset: Path):
     return parents
 
 
-def prepare(statefile: Path, trained: Path, selfplay: Path,
-            historical: Path, output: Path) -> None:
+def prepare(statefile: Path, trained: Path, selfplay: Path, output: Path) -> None:
     verify(statefile, STATE_SHA)
     verify(trained, TRAINED_RELEASE_SHA)
     verify(selfplay, SELFPLAY_RELEASE_SHA)
@@ -116,10 +115,22 @@ def prepare(statefile: Path, trained: Path, selfplay: Path,
         for ext in ("npz", "json"):
             (models / f"{AFTER}.{ext}").write_bytes(tar.extractfile(f"{AFTER}.{ext}").read())
     get_models(work)
-    historical_ids = json.loads(historical.read_text())
-    if not (len(historical_ids) == 50 and len(set(historical_ids)) == 50 and
-            all(isinstance(s, str) and len(s) == 64 for s in historical_ids)):
-        raise ValueError("invalid D40 comparison parent list")
+    # Reconstruct D40's 50 opening families from its frozen 20261104223027
+    # seed and four D39 pilot parents, then check the exact historical digest.
+    d39_pilot_parents = [
+        "a672b8bb21b18419bbf97aa8a03c23b043aa463e289ecedad0a4a80727ae7251",
+        "66b8bb3cfdccac6997a85ec4d8f96000ffa35a0be450d933e15ad9c1805ccdbd",
+        "6bf701d0a96a844b3bd9f70f3acaeef476ee018f5eb2ea14f3684bd3b6f87f82",
+        "175454137ddca8b4ccd1433e5dc76a1c3248a41aef226e4b75f5ced4dc90bec5",
+    ]
+    old_exclusions = set(state["excluded_openings"]) | set(d39_pilot_parents)
+    historical_ids = [
+        fresh_prefix(20261104223027 + i*1019, old_exclusions)[1] for i in range(50)
+    ]
+    old_digest = digest(json.dumps(historical_ids, sort_keys=True,
+                                   separators=(",", ":"), ensure_ascii=False).encode())
+    if old_digest != "3cafea69849c65e2cf0c570a67d6a8af58263b6070e842dd732754baec57abf7":
+        raise ValueError("historical D40 comparison 50-opening digest mismatch")
     d41_ids = read_d41_parent_ids(selfplay)
     exclusions = set(state["excluded_openings"]) | set(state["protected_parents"])
     exclusions.update(historical_ids)
@@ -374,8 +385,11 @@ def collect(runtime: Path, downloads: Path, output: Path) -> None:
                         max(used) > LONG_LIMIT):
                     raise ValueError("invalid longthink allotment")
                 key = digest((game["start_sfen"]+"|"+" ".join(game["moves"])).encode())
+                # An opening is intentionally played with swapped colors.
+                # If models select identical move histories, that is a real
+                # paired-test outcome, not invalid duplicate training data.
                 if key in seen:
-                    raise ValueError("duplicate audit trajectory")
+                    counts["identical_move_sequences"] += 1
                 seen.add(key)
                 if game["winner"] is None:
                     if game["status"] == "repetition_draw":
@@ -462,7 +476,6 @@ def main():
     a.add_argument("--state",type=Path,required=True)
     a.add_argument("--trained",type=Path,required=True)
     a.add_argument("--selfplay",type=Path,required=True)
-    a.add_argument("--excluded",type=Path,required=True)
     a.add_argument("--output",type=Path,required=True)
     b=sub.add_parser("worker")
     b.add_argument("--runtime",type=Path,required=True)
@@ -480,7 +493,7 @@ def main():
     d.add_argument("--output",type=Path,required=True)
     args=p.parse_args()
     if args.command=="prepare":
-        prepare(args.state,args.trained,args.selfplay,args.excluded,args.output)
+        prepare(args.state,args.trained,args.selfplay,args.output)
     elif args.command=="worker":
         worker(args.runtime,args.lane,args.output)
     elif args.command=="segment":
