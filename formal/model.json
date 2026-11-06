@@ -1,11 +1,11 @@
 {
   "schema": "fukaji-approved-nnue-v1",
   "version": "FUKAJI v0.4.0",
-  "approved_on": "2026-11-04",
-  "approved_by": "owner: D37を現行モデルとして採用し自己対局強化を継続する指示",
-  "research_snapshot_sha256": "170d6c1ee41d77b69f0b75722ece3deb85f3eea189f70d9789db477a38266db1",
-  "weights_file": "models/fukaji-v0.4.0.nnue.npz",
-  "weights_sha256": "2a0001826c2df835b063c896f8f52e2e99972e144921b1ceff6b77ed6e104b8e",
+  "approved_on": "2026-11-07",
+  "approved_by": "owner: 2026-11-07 D43 1000-game self-learning and 150-50 paired200 adoption",
+  "research_snapshot_sha256": "bf8c26f9f8f6adff8a87c46ab04fcf5cd76a7915be241da11b99bb4ae2ac8b9f",
+  "weights_file": "models/fukaji-d43.nnue.npz",
+  "weights_sha256": "f6ba1d5af46ae648b1921d675ada28cf5065f23a20e424154458817534bf42a6",
   "architecture": [
     2548,
     32,
@@ -16,18 +16,25 @@
   "default_move_time_ms": 100,
   "default_search_depth": 64,
   "validation": {
-    "opponent": "D36 final 7d74b86b; 100 independent opening families x swapped colors; prior 100ms/q0 conditions",
-    "wins": 129,
-    "losses": 66,
-    "draws": 1,
-    "unresolved": 4,
+    "opponent": "D37 frozen before training (170d6c1e); 100 held-out openings x swapped colors",
+    "wins": 150,
+    "losses": 50,
+    "draws": 0,
+    "unresolved": 0,
     "opening_families": 100,
     "games": 200,
     "planned_opening_families": 100,
     "planned_games": 200,
-    "strength_conclusion": "improved over D36 at 100ms/q0; owner selected as current; 200ms + 1s x10 evaluation not performed"
+    "normal_move_time_ms": 200,
+    "longthink_ms": 1000,
+    "longthink_max_per_side": 10,
+    "quiescence": 0,
+    "strength_conclusion": "D43 after 1000 training games wins 150-50 over D37 in standard 200ms plus longthink; adoption threshold satisfied"
   },
-  "model_distribution": "owner-private bundle; trained data and optimizer kept only in owner-only Drive archive",
-  "research_parent_sha256": "6b3edcca24de2c48e42c26c4014ce8df0fbfd6ab744cf7a5e09d1a23db54eaa1",
-  "optimizer_step": 2106
+  "model_distribution": "GitHub source models/fukaji-d43.nnue.npz plus public D44 runnable release; full trained optimizer retained in D43 learned Release.",
+  "research_parent_sha256": "170d6c1ee41d77b69f0b75722ece3deb85f3eea189f70d9789db477a38266db1",
+  "optimizer_step": 2882,
+  "training_source_sha256": "fe0a4eaec246a7e2e32c911c4327232eef83f8a87897e7a3a96538220ced6bbd",
+  "training_release_sha256": "955a1785940f9f2aac946739af1b8637e5ef53d06297e6ad7d32b75a5a94a236",
+  "comparison_release_sha256": "c08ccab3f5e9ef90c288e8ccfc5f3951eb188dfc30876af775c2ba3cfb03f510"
 }

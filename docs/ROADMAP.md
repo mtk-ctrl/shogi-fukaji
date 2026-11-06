@@ -1,9 +1,10 @@
 # 深路：NNUE高速自己強化 — 現在地
 
-2026-11-04更新。現行状態は以下。研究方針は[D17](D17_FAST_SELF_LEARNING_20261031.md)、判断正本は[decisions/](decisions/)、各比較結果はD系文書。ChatGPT・Claudeで同一Rule、Addness保留。
+2026-11-07更新。現行状態は以下。研究方針は[D17](D17_FAST_SELF_LEARNING_20261031.md)、判断正本は[decisions/](decisions/)、各比較結果はD系文書。ChatGPT・Claudeで同一Rule、Addness保留。
 
 ## 現行モデル
-**FUKAJI v0.4.0（D37 NNUE 170d6c1e、Adam2106）**。本人の2026-11-04指示で採用。旧e0/v0.3.0は復元用。本人限定[現行モデル配布](https://drive.google.com/file/d/1gJfz9q8TtSsyynkUrC7uP7KTwPjbNH1O/view)、[D37完全stateとoptimizer](https://drive.google.com/file/d/1XYvT7jA_0fqhPuo5v_uUIrxa4Crbocf-/view)、[判断](decisions/2026-11-04_D37を現行モデルに採用.md)、[現行仕様](現行エンジン仕様.md)。学習は**D37を親**に、更新前snapshotと更新後を直接比較し、改善なら新現行モデルへ更新する。D37対D36は100ms/q0の200局で129勝66敗1分4未決着。200ms/長考10回での強さは未測定。
+
+**D43（NNUE `bf8c26f9f8f6…`、Adam2882）を現行採用。USIのversion表示はFUKAJI v0.4.0を維持。** 旧D37（Adam2106）を直接追加学習：新規1000自己対局・決着994局、合法train＋過去665局、学習49,613局面。学習前D37との**200局標準比較で150勝50敗・引分0・未決着0**。[採用判断](decisions/2026-11-07_D43学習後モデルを現行に採用.md)、[200局の全棋譜Release](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d43-d37-before-after-200games-42292240321)、[D43学習stateとAdam2882](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d43-d37-trained-42292240321)。正式[manifest](../formal/model.json)と[仕様](現行エンジン仕様.md)を正本とする。次回の自己学習は必ずD43が唯一の親。旧D37・e0などは履歴・復元用として保護。
 
 ## 現在の研究
 - [D31](D31_TWO_BATCH_RETENTION_20261103.md)：400局/65,551手完了。c8対当時の正式NNUEは119勝76敗1分4未決着、対新経験のみ候補は97勝97敗4分2未決着。保持方式の候補間優位は未確定。
@@ -70,3 +71,9 @@
 ## 2026-11-07：D43実行の一次監査（確定判定前）
 
 [D43 run 42292240321](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/42292240321) の成果物一覧で5wave・学習・監査のアップロードを確認。jobs API先頭ページではprepare1件、wave0 20件、wave1 9件が成功。接続の100件ページ制限により、全100対局job、1000棋譜の独立性・合法性、学習後optimizer、200局勝敗、Release SHAは**未検証**。現行は引き続きD37/Adam2106、重み変更なし。[一次監査・次の一手](decisions/2026-11-07_D43_run42292240321_一次監査.md)。
+
+## 2026-11-07：D44、D43学習後NNUEの現行化
+
+- 本人指示によりD43(`bf8c26f9`/Adam2882)を現行モデルとして反映。[決定と採否根拠](decisions/2026-11-07_D43学習後モデルを現行に採用.md)。
+- 推論用`models/fukaji-d43.nnue.npz`のSHA256：`f6ba1d5af46ae648b1921d675ada28cf5065f23a20e424154458817534bf42a6`。D43完全学習stateとoptimizerはGitHub Releaseに保存済み、旧D37は復元用に残す。
+- 現行のUSI/version・探索コード・既定の探索時間は従来どおり。重みとoptimizerの進行状態だけを更新。正式契約テスト、C++ NNUE/USI動作と配布・SHAの完了証拠はD44 GitHub Actions runのログ／現行Releaseを参照。
