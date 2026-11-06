@@ -1,0 +1,11 @@
+{
+  "enabled": true,
+  "former": "170d6c1ee41d77b69f0b75722ece3deb85f3eea189f70d9789db477a38266db1",
+  "next": "bf8c26f9f8f6adff8a87c46ab04fcf5cd76a7915be241da11b99bb4ae2ac8b9f",
+  "source_run": 42292240321,
+  "games_trained": 1000,
+  "audit_games": 200,
+  "after_wins": 150,
+  "before_wins": 50,
+  "request_id": "d44-20261107-adopt-verified-d43"
+}
