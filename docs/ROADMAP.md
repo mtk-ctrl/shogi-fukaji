@@ -50,3 +50,13 @@
 初回の追加学習run 42018509500は`ModuleNotFoundError: fukaji`で失敗。インポート経路を修正して起動した[D41学習run 42120367483](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/42120367483)は**成功**。D37からAdam**2106→2144**、新40局＋旧train40局で**2,398局面**、2epoch学習。学習後NNUE SHA256=`5cb31550fd9a011cace5b007df1c58c4e1889655e0a2f170869ce8eddb189e73`。[公開Release](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d41-d37-trained-42120367483)へ重み・optimizer・棋譜・結果を保存し、再ダウンロードSHA一致。
 
 **残工程：D37更新前vs学習後モデルの通常200ms/1s長考条件での直接比較（独立50序盤×先後交替100局／20独立Actionsランナー）。** 比較による棋力向上はまだ未検証。**現行モデルはv0.4.0/D37（170d6c1e、Adam2106）のまま**で、強化が確認されるまで正式manifestは変更しない。本人の2026-11-05指示により新規成果の正本は**公開GitHub**とし、Driveとの二重保存をしない。既存Drive資産は移行検証完了まで残す。
+
+## 2026-11-06 D42：学習前D37 vs 学習後D41を20ランナー100局比較、現行D37を維持
+
+**実績：[D42全100局比較結果](D42_D37_VS_D41_100GAMES_RESULT_20261106.md)／[採否判断](decisions/2026-11-06_D42_学習前後100局比較と現行D37維持.md)**。
+
+- [GitHub Actions #42218550652](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/42218550652)は準備1＋**独立対局20**＋集約1の22ジョブ全件成功。**最大実同時稼働20**を各jobの時刻から照合。
+- D37（学習前\`170d6c1e\`/Adam2106）対 D41（学習後\`5cb31550\`/Adam2144）を**新規独立50序盤×先後交替100局**、通常1手200ms・1秒長考は各陣営10回まで。**D37＝52勝、D41＝48勝、引分0・未決着0**。13,970手を合法再生。
+- 学習後モデルは48%得点率で、事前に定めた差8勝以上の採用目安を満たさず、棋力向上未確認。**現行モデルはD37のまま維持**（\`formal/model.json\`は未変更）。D41学習後モデルは履歴として保存し、次周の学習親にしない。
+- [完全棋譜・結果のGitHub Release](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d42-d37-before-vs-d41-after-42218550652)を**SHA \`5b2cb8495ae7fcdbe2b9181c3d5b3aedb87b2fd72226b1e4de76abb2d3d1f570\`**で再取得検証。
+- 次工程は新しいD37自己対局・学習改善サイクル。重みの採用は学習前後の棋力比較で判断。GitHubを成果物正本とし新規Driveへの二重保存なし。
