@@ -74,3 +74,10 @@ Total output lines: 124
 | `uct-holdout-freeze.yml` | **UCT保持群12親の出所・合法性凍結専用（軽量・研究のみ）**：凍結240局原本をSHA照合し全240局合法再生、元開発群12親と異なる対局12親（12/50/110手目各4）のSFEN・履歴・重複を検証。モデル取得・200ms探索・対局・学習・正式採用なし。PR/main CIまたは手動で軽量監査。 |
 
 | `uct-holdout-reserve-abba.yml` | **研究専用・凍結保持群12親の200ms ABBA（既定OFF）**：開発群pair0〜11と異なる保持群pair12〜23を原本240局全手合法再生・SHA照合で固定し、単一走査/総時計/線形根選択ONのまま探索木解放予約だけOFF→ON→ON→OFF、1runner・48観測。保持群で係数調整せず、学習/新対局/正式採用/雲路変更なし。明示requestのみ実測。 |
+
+## D42：20ランナーの学習前後100局比較（2026-11-06）
+
+- Workflow: [\`d42-d37-vs-d41-paired100.yml\`](d42-d37-vs-d41-paired100.yml)。**明示request \`research/d42/START.json\` の更新または workflow_dispatch（execute=true）のみ**。定期実行・無制限ループなし。
+- **準備1 → comparison matrix20 → 集約1**。50独立序盤の先後2局100局、C++ NNUE、通常200ms／長考1000ms各陣営10回以下、学習済み親群を除外。担当lane10個には各3序盤、残る10個には各2序盤。毎手checkpoint、36手区切りで別プロセスへ復旧。集約が全100局の合法再生・勝敗・時間・SHAを検証。GitHub Releaseに全ゲーム・plan・reportを保全し再ダウンロードSHAを検査。正式モデルは自動変更しない。
+- **[実run 42218550652](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/42218550652)成功：計22ジョブ全成功、対局20独立jobsの最大実同時稼働20、D37 52勝／D41学習後48勝、引分0・未決着0。** [結果Release](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d42-d37-before-vs-d41-after-42218550652)、[D42結果](../../docs/D42_D37_VS_D41_100GAMES_RESULT_20261106.md)、[採否判断](../../docs/decisions/2026-11-06_D42_学習前後100局比較と現行D37維持.md)。**現行はD37を維持。**
+- D42は有限の比較runであって自動自己学習ではない。GitHub Releaseが成果物の永続正本、Actions artifactは一時輸送。次の自己学習を開始する際は別途固定した研究request・新規親群で実行し、過去の評価局をtrainへ転用しない。
