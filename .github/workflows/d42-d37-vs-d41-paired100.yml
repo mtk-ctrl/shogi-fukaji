@@ -1,0 +1,181 @@
+name: D42 D37 before vs D41 after 100-game 20-runner paired audit
+
+on:
+  workflow_dispatch:
+    inputs:
+      execute:
+        type: boolean
+        required: true
+        default: false
+  push:
+    paths:
+      - research/d42/START.json
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fukaji-d42-d37-vs-d41-paired100-single-audit
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    if: github.repository == 'mtk-ctrl/shogi-fukaji' && (github.event_name == 'push' || inputs.execute)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - name: Verify frozen comparison request and current formal baseline
+        if: github.event_name == 'push'
+        run: |
+          python - <<'PY'
+          import json
+          request=json.load(open('research/d42/START.json'))
+          expected={'enabled':True,
+                    'before':'170d6c1ee41d77b69f0b75722ece3deb85f3eea189f70d9789db477a38266db1',
+                    'after':'5cb31550fd9a011cace5b007df1c58c4e1889655e0a2f170869ce8eddb189e73',
+                    'pair_count':50,'games':100,'runners':20,
+                    'request_id':'d42-20261106-before-after-paired100'}
+          if request!=expected:raise SystemExit('frozen D42 100-game request differs')
+          formal=json.load(open('formal/model.json'))
+          if formal['research_snapshot_sha256']!=expected['before']:
+              raise SystemExit('formal model no longer D37: do not compare a stale parent')
+          PY
+      - name: Check frozen engine contracts and Python entrypoint
+        run: |
+          python scripts/check_fukaji_contracts.py
+          python -m py_compile scripts/d42_d37_vs_d41_paired100.py
+          python scripts/d42_d37_vs_d41_paired100.py --help
+      - name: Retrieve trained D41 after-model and D41 train games from public Release
+        run: |
+          set -euo pipefail
+          mkdir -p input
+          gh release download fukaji-d41-d37-trained-42120367483 \
+            --pattern D41-selfplay-training-unadopted.tar.gz --dir input
+          gh release download fukaji-d41-d37-selfplay-42017791719 \
+            --pattern D41-D37-20runner-selfplay-40games.tar.gz --dir input
+          echo '0ceb5bc8f419579be064c97b720dde82f21fce267cc9b1bac6edb88438370731  input/D41-selfplay-training-unadopted.tar.gz' | sha256sum -c -
+          echo '8708db460d4d2bcad949d91ab881d9aeb804abcb8e28808dbbb70bda5c21bd9f  input/D41-D37-20runner-selfplay-40games.tar.gz' | sha256sum -c -
+          echo '41c8f56b76cd5d7aa87bff9131d553b304fa4134bf7448c05d3309458f66760e  research/d41-public/D37-Adam2106-training-state.tar.gz' | sha256sum -c -
+      - name: Freeze 50 disjoint openings and full paired models
+        run: |
+          python scripts/d42_d37_vs_d41_paired100.py prepare \
+            --state research/d41-public/D37-Adam2106-training-state.tar.gz \
+            --trained input/D41-selfplay-training-unadopted.tar.gz \
+            --selfplay input/D41-D37-20runner-selfplay-40games.tar.gz \
+            --output prepared
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d42-runtime-${{ github.run_id }}
+          path: prepared/runtime.tar.gz
+          if-no-files-found: error
+          retention-days: 30
+      - name: Summarize pair allocation
+        run: cat prepared/prepare-receipt.json >> "$GITHUB_STEP_SUMMARY"
+
+  comparison:
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        lane: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: d42-runtime-${{ github.run_id }}
+          path: input
+      - name: Run 2 or 3 paired openings on independent GitHub runner
+        env:
+          LANE: ${{ matrix.lane }}
+        run: |
+          python scripts/d42_d37_vs_d41_paired100.py worker \
+            --runtime input/runtime.tar.gz --lane "$LANE" \
+            --output "out/lane-$LANE"
+      - name: Preserve 4 or 6 complete independently replayable games
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: d42-lane-${{ matrix.lane }}
+          path: out/lane-${{ matrix.lane }}/lane-*.tar.gz
+          if-no-files-found: warn
+          retention-days: 30
+
+  aggregate:
+    needs: [prepare, comparison]
+    if: needs.prepare.result == 'success' && needs.comparison.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: d42-runtime-${{ github.run_id }}
+          path: input
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: d42-lane-*
+          merge-multiple: true
+          path: input/lanes
+      - name: Independently replay 100 games and verify comparison
+        run: |
+          python scripts/d42_d37_vs_d41_paired100.py collect \
+            --runtime input/runtime.tar.gz --downloads input/lanes --output results
+      - name: Publish all games, report and SHA to public GitHub Release
+        env:
+          TAG: fukaji-d42-d37-before-vs-d41-after-${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          asset=results/D42-D37-before-vs-D41-after-100games.tar.gz
+          expected="$(sha256sum "$asset" | cut -d ' ' -f1)"
+          gh release create "$TAG" "$asset" --target "$GITHUB_SHA" \
+            --title 'D42 D37 before vs D41 after: 100 paired games 20 runners' \
+            --notes '50 fresh test openings, both colors, D37 vs D41 Adam2144. Includes 100 replayable games and frozen judgment criteria. No automatic adoption.'
+          mkdir -p readback
+          gh release download "$TAG" --pattern D42-D37-before-vs-D41-after-100games.tar.gz --dir readback
+          actual="$(sha256sum readback/D42-D37-before-vs-D41-after-100games.tar.gz | cut -d ' ' -f1)"
+          test "$expected" = "$actual"
+          echo "Verified D42 full comparison public Release $TAG $actual"
+          cat results/report.json >> "$GITHUB_STEP_SUMMARY"
+      - name: Save audit report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: d42-paired100-report-${{ github.run_id }}
+          path: |
+            results/report.json
+            results/receipt.json
+          if-no-files-found: warn
+          retention-days: 30
