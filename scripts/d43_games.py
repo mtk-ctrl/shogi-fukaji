@@ -109,7 +109,7 @@ def worker(runtime,round_number,lane,out):
             if p.returncode:raise RuntimeError(p.stderr[-1800:])
         if not(dest/"game-0.json").exists():raise RuntimeError("unfinished game "+str(i))
         obj=json.loads((dest/"game-0.json").read_text())
-        obj.update({"game_index":i,"round":round_number,"lane":lane,"seed":SEED+i*31})
+        obj.update({"game_index":i,"round":round_number,"lane":lane})
         if obj["parent_id"]!=master["families"][i]["parent_id"]:
             raise ValueError("wrong parent")
         validate_game(obj,model,training=True)
@@ -153,6 +153,13 @@ def collect(runtime,downloads,out):
             if key in seen or g["parent_id"] in parents:raise ValueError("duplicate")
             seen.add(key);parents.add(g["parent_id"])
             if len(g["telemetry"])!=len(g["moves"])-6:raise ValueError("telemetry missing")
+            used=[0,0]
+            for telemetry in g["telemetry"]:
+                if telemetry.get("backend")!="cpp_nnue" or telemetry.get("budget_ms") not in (200,1000):
+                    raise ValueError("changed NNUE backend or move time")
+                if telemetry.get("longthink"):used[int(telemetry["side"])]+=1
+            if used!=g["conditions"]["longthink_used_per_side"] or max(used)>10:
+                raise ValueError("longthink exceeded or trace changed")
             counter[g["status"]]+=1;counter["plies"]+=len(g["moves"])
             hashes[name]=digest(raw)
             (publication/"games"/name).write_bytes(raw)
