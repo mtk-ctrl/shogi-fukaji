@@ -1,0 +1,484 @@
+name: D43 D37 1000 selfplay 20 runner training and 200 game audit
+on:
+  workflow_dispatch:
+    inputs:
+      execute:
+        type: boolean
+        required: true
+        default: false
+  push:
+    paths:
+      - research/d43/START.json
+permissions:
+  contents: read
+concurrency:
+  group: fukaji-d43-d37-1000games-training-audit
+  cancel-in-progress: false
+jobs:
+  prepare:
+    if: github.repository == 'mtk-ctrl/shogi-fukaji' && (github.event_name == 'push' || inputs.execute)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - name: Verify explicit D43 request and current D37 formal model
+        run: |
+          python - <<'PY'
+          import json
+          q=json.load(open('research/d43/START.json'))
+          if q!={'enabled':True,'baseline':'170d6c1ee41d77b69f0b75722ece3deb85f3eea189f70d9789db477a38266db1','games':1000,'runners':20,'rounds':5,'compare_games':200,'request_id':'d43-20261107-1000-20runner'}:
+              raise SystemExit('D43 request changed')
+          formal=json.load(open('formal/model.json'))
+          if formal['research_snapshot_sha256']!=q['baseline'] or formal['optimizer_step']!=2106:
+              raise SystemExit('D37 formal baseline changed')
+          PY
+      - name: Run contracts, compile and import all three programs
+        run: |
+          python scripts/check_fukaji_contracts.py
+          python -m py_compile scripts/d43_games.py scripts/d43_train.py scripts/d43_arena.py
+          python scripts/d43_games.py --help
+          python scripts/d43_train.py --help
+          python scripts/d43_arena.py --help
+      - name: Restore previous training and protected evaluation parents
+        run: |
+          set -euo pipefail
+          mkdir -p input
+          gh release download fukaji-d41-d37-selfplay-42017791719 --pattern D41-D37-20runner-selfplay-40games.tar.gz --dir input
+          gh release download fukaji-d42-d37-before-vs-d41-after-42218550652 --pattern D42-D37-before-vs-D41-after-100games.tar.gz --dir input
+          echo '41c8f56b76cd5d7aa87bff9131d553b304fa4134bf7448c05d3309458f66760e  research/d41-public/D37-Adam2106-training-state.tar.gz' | sha256sum -c -
+          echo '8708db460d4d2bcad949d91ab881d9aeb804abcb8e28808dbbb70bda5c21bd9f  input/D41-D37-20runner-selfplay-40games.tar.gz' | sha256sum -c -
+          echo '5b2cb8495ae7fcdbe2b9181c3d5b3aedb87b2fd72226b1e4de76abb2d3d1f570  input/D42-D37-before-vs-D41-after-100games.tar.gz' | sha256sum -c -
+      - name: Generate 1000 unique training openings with protected evaluation groups
+        run: |
+          python scripts/d43_games.py prepare --state research/d41-public/D37-Adam2106-training-state.tar.gz --d41 input/D41-D37-20runner-selfplay-40games.tar.gz --d42 input/D42-D37-before-vs-D41-after-100games.tar.gz --out prepared
+      - name: Actual C++ NNUE smoke search with the frozen source
+        run: |
+          python scripts/d43_games.py segment --work prepared/runtime --index 0 --out smoke
+          python - <<'PY'
+          from pathlib import Path
+          assert (Path('smoke')/'game-0.partial.json').exists() or (Path('smoke')/'game-0.json').exists()
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d43-runtime-${{ github.run_id }}
+          path: prepared/runtime.tar.gz
+          if-no-files-found: error
+          retention-days: 30
+  wave0:
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        lane: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: d43-runtime-${{ github.run_id }}
+          path: input
+      - name: Play 10 D37 selfplay games in wave 0
+        env:
+          LANE: ${{ matrix.lane }}
+        run: |
+          python scripts/d43_games.py worker --runtime input/runtime.tar.gz --round 0 --lane "$LANE" --out output
+      - name: Save finished selfplay 10 games
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: d43-r0-lane-${{ matrix.lane }}
+          path: output/r0-lane-*.tar.gz
+          if-no-files-found: warn
+          retention-days: 30
+  wave1:
+    needs: wave0
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        lane: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: d43-runtime-${{ github.run_id }}
+          path: input
+      - name: Play 10 D37 selfplay games in wave 1
+        env:
+          LANE: ${{ matrix.lane }}
+        run: |
+          python scripts/d43_games.py worker --runtime input/runtime.tar.gz --round 1 --lane "$LANE" --out output
+      - name: Save finished selfplay 10 games
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: d43-r1-lane-${{ matrix.lane }}
+          path: output/r1-lane-*.tar.gz
+          if-no-files-found: warn
+          retention-days: 30
+  wave2:
+    needs: wave1
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        lane: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: d43-runtime-${{ github.run_id }}
+          path: input
+      - name: Play 10 D37 selfplay games in wave 2
+        env:
+          LANE: ${{ matrix.lane }}
+        run: |
+          python scripts/d43_games.py worker --runtime input/runtime.tar.gz --round 2 --lane "$LANE" --out output
+      - name: Save finished selfplay 10 games
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: d43-r2-lane-${{ matrix.lane }}
+          path: output/r2-lane-*.tar.gz
+          if-no-files-found: warn
+          retention-days: 30
+  wave3:
+    needs: wave2
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        lane: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: d43-runtime-${{ github.run_id }}
+          path: input
+      - name: Play 10 D37 selfplay games in wave 3
+        env:
+          LANE: ${{ matrix.lane }}
+        run: |
+          python scripts/d43_games.py worker --runtime input/runtime.tar.gz --round 3 --lane "$LANE" --out output
+      - name: Save finished selfplay 10 games
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: d43-r3-lane-${{ matrix.lane }}
+          path: output/r3-lane-*.tar.gz
+          if-no-files-found: warn
+          retention-days: 30
+  wave4:
+    needs: wave3
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        lane: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: d43-runtime-${{ github.run_id }}
+          path: input
+      - name: Play 10 D37 selfplay games in wave 4
+        env:
+          LANE: ${{ matrix.lane }}
+        run: |
+          python scripts/d43_games.py worker --runtime input/runtime.tar.gz --round 4 --lane "$LANE" --out output
+      - name: Save finished selfplay 10 games
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: d43-r4-lane-${{ matrix.lane }}
+          path: output/r4-lane-*.tar.gz
+          if-no-files-found: warn
+          retention-days: 30
+  aggregate:
+    needs: wave4
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+      actions: read
+    outputs:
+      source_sha: ${{ steps.publish.outputs.source_sha }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: d43-runtime-${{ github.run_id }}
+          path: input
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: d43-r*-lane-*
+          merge-multiple: true
+          path: input/lanes
+      - name: Verify 1000 independent training games
+        run: |
+          python scripts/d43_games.py collect --runtime input/runtime.tar.gz --downloads input/lanes --out collected
+      - name: Publish full training games to GitHub Release and SHA readback
+        id: publish
+        env:
+          TAG: fukaji-d43-d37-1000-selfplay-${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          file=collected/D43-D37-1000games.tar.gz
+          expected="$(sha256sum "$file" | cut -d ' ' -f1)"
+          gh release create "$TAG" "$file" --target "$GITHUB_SHA" --title 'D43 D37: 1000 games in five rounds of 20 runners' --notes 'One thousand new, independently replayed D37 vs D37 train games. Original game records; training follows.'
+          mkdir -p readback
+          gh release download "$TAG" --pattern D43-D37-1000games.tar.gz --dir readback
+          test "$expected" = "$(sha256sum readback/D43-D37-1000games.tar.gz | cut -d ' ' -f1)"
+          echo "source_sha=$expected" >> "$GITHUB_OUTPUT"
+          echo "Verified 1000-game release $TAG $expected"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: d43-game-receipt-${{ github.run_id }}
+          path: |
+            collected/report.json
+            collected/receipt.json
+          if-no-files-found: warn
+          retention-days: 30
+  train:
+    needs: aggregate
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    permissions:
+      contents: write
+      actions: read
+    outputs:
+      trained_sha: ${{ steps.publish.outputs.trained_sha }}
+      model_sha: ${{ steps.publish.outputs.model_sha }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - name: Fetch 1000-game Release and verify its SHA
+        run: |
+          set -euo pipefail
+          mkdir -p input
+          gh release download fukaji-d43-d37-1000-selfplay-${{ github.run_id }} --pattern D43-D37-1000games.tar.gz --dir input
+          echo '${{ needs.aggregate.outputs.source_sha }}  input/D43-D37-1000games.tar.gz' | sha256sum -c -
+      - name: Train unchanged current D37 with inherited Adam2106
+        run: |
+          python scripts/d43_train.py --state research/d41-public/D37-Adam2106-training-state.tar.gz --source input/D43-D37-1000games.tar.gz --source-sha "${{ needs.aggregate.outputs.source_sha }}" --out trained
+      - name: Publish new NNUE and optimizer Release, verify readback
+        id: publish
+        env:
+          TAG: fukaji-d43-d37-trained-${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          file=trained/D43-D37-1000trained-unadopted.tar.gz
+          expected="$(sha256sum "$file" | cut -d ' ' -f1)"
+          model_sha="$(python -c 'import json;print(json.load(open("trained/report.json"))["trained_sha256"])')"
+          gh release create "$TAG" "$file" --target "$GITHUB_SHA" --title 'D43 1000-game Adam continuation before strength audit' --notes 'Train only; not adopted until direct paired 200-game comparison verifies gain.'
+          mkdir -p readback
+          gh release download "$TAG" --pattern D43-D37-1000trained-unadopted.tar.gz --dir readback
+          test "$expected" = "$(sha256sum readback/D43-D37-1000trained-unadopted.tar.gz | cut -d ' ' -f1)"
+          echo "trained_sha=$expected" >> "$GITHUB_OUTPUT"
+          echo "model_sha=$model_sha" >> "$GITHUB_OUTPUT"
+          echo "Verified learned model $model_sha and full archive $expected"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: d43-trained-receipt-${{ github.run_id }}
+          path: |
+            trained/report.json
+            trained/receipt.json
+          if-no-files-found: warn
+          retention-days: 30
+  audit_prepare:
+    needs: [aggregate, train]
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - name: Fetch and SHA verify new D43 model and protected parent sources
+        run: |
+          set -euo pipefail
+          mkdir -p input
+          gh release download fukaji-d43-d37-trained-${{ github.run_id }} --pattern D43-D37-1000trained-unadopted.tar.gz --dir input
+          gh release download fukaji-d43-d37-1000-selfplay-${{ github.run_id }} --pattern D43-D37-1000games.tar.gz --dir input
+          gh release download fukaji-d41-d37-selfplay-42017791719 --pattern D41-D37-20runner-selfplay-40games.tar.gz --dir input
+          gh release download fukaji-d42-d37-before-vs-d41-after-42218550652 --pattern D42-D37-before-vs-D41-after-100games.tar.gz --dir input
+          echo '${{ needs.train.outputs.trained_sha }}  input/D43-D37-1000trained-unadopted.tar.gz' | sha256sum -c -
+          echo '${{ needs.aggregate.outputs.source_sha }}  input/D43-D37-1000games.tar.gz' | sha256sum -c -
+      - name: Freeze 100 independent new audit openings and both NNUE models
+        run: |
+          python scripts/d43_arena.py prepare --state research/d41-public/D37-Adam2106-training-state.tar.gz --trained input/D43-D37-1000trained-unadopted.tar.gz --trained-sha "${{ needs.train.outputs.trained_sha }}" --source input/D43-D37-1000games.tar.gz --source-sha "${{ needs.aggregate.outputs.source_sha }}" --d41 input/D41-D37-20runner-selfplay-40games.tar.gz --d42 input/D42-D37-before-vs-D41-after-100games.tar.gz --out prepared
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d43-audit-runtime-${{ github.run_id }}
+          path: prepared/runtime.tar.gz
+          if-no-files-found: error
+          retention-days: 30
+  audit:
+    needs: audit_prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        lane: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: d43-audit-runtime-${{ github.run_id }}
+          path: input
+      - name: Compare D37 and D43 NNUE 5 paired openings 10 games
+        env:
+          LANE: ${{ matrix.lane }}
+        run: |
+          python scripts/d43_arena.py worker --runtime input/runtime.tar.gz --lane "$LANE" --out output
+      - name: Preserve all ten legal paired games
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: d43-audit-lane-${{ matrix.lane }}
+          path: output/lane-*.tar.gz
+          if-no-files-found: warn
+          retention-days: 30
+  finish:
+    needs: [audit, audit_prepare]
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: d43-audit-runtime-${{ github.run_id }}
+          path: input
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: d43-audit-lane-*
+          merge-multiple: true
+          path: input/lanes
+      - name: Independently replay all 200 games and make predefined decision
+        run: |
+          python scripts/d43_arena.py collect --runtime input/runtime.tar.gz --downloads input/lanes --out results
+      - name: Publish final 200-game audit to GitHub Release with readback SHA
+        env:
+          TAG: fukaji-d43-d37-before-after-200games-${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          file=results/D43-D37-before-after-200games.tar.gz
+          expected="$(sha256sum "$file" | cut -d ' ' -f1)"
+          gh release create "$TAG" "$file" --target "$GITHUB_SHA" --title 'D43: after 1000 selfplay, D37 vs learned NNUE paired 200 games' --notes '100 new opening pairs, both colors, NNUE only; full original games and predefined comparison decision. Formal model unchanged by audit.'
+          mkdir -p readback
+          gh release download "$TAG" --pattern D43-D37-before-after-200games.tar.gz --dir readback
+          test "$expected" = "$(sha256sum readback/D43-D37-before-after-200games.tar.gz | cut -d ' ' -f1)"
+          echo "Verified final D43 200-game comparison $TAG $expected"
+          cat results/publication/report.json >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: d43-final-receipt-${{ github.run_id }}
+          path: |
+            results/publication/report.json
+            results/receipt.json
+          if-no-files-found: warn
+          retention-days: 30
