@@ -1,0 +1,182 @@
+name: D44 adopt verified D43 NNUE as current without changing USI
+on:
+  workflow_dispatch:
+    inputs:
+      execute:
+        type: boolean
+        required: true
+        default: false
+  push:
+    branches: [main]
+    paths:
+      - research/d44/START.json
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fukaji-d44-single-writer-current-model
+  cancel-in-progress: false
+
+jobs:
+  adopt:
+    if: github.repository == 'mtk-ctrl/shogi-fukaji' && (github.event_name == 'push' || inputs.execute)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - name: Verify explicit owner adoption request and immutable main parent
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          q=json.load(open('research/d44/START.json'))
+          expected={
+            'enabled': True,
+            'former':'170d6c1ee41d77b69f0b75722ece3deb85f3eea189f70d9789db477a38266db1',
+            'next':'bf8c26f9f8f6adff8a87c46ab04fcf5cd76a7915be241da11b99bb4ae2ac8b9f',
+            'source_run':42292240321,'games_trained':1000,
+            'audit_games':200,'after_wins':150,'before_wins':50,
+            'request_id':'d44-20261107-adopt-verified-d43'
+          }
+          if q!=expected:raise SystemExit('D44 request changed')
+          current=json.load(open('formal/model.json'))
+          if (current['research_snapshot_sha256']!=q['former'] or
+              current['optimizer_step']!=2106):
+            raise SystemExit('Formal model changed while D44 adoption was prepared')
+          PY
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$GITHUB_SHA" || {
+            echo "main changed: do not overwrite a concurrent AI writer"; exit 1;
+          }
+      - name: Download D43 frozen training and comparison Releases
+        run: |
+          set -euo pipefail
+          mkdir -p input
+          gh release download fukaji-d43-d37-trained-42292240321 \
+            --pattern D43-D37-1000trained-unadopted.tar.gz --dir input
+          gh release download fukaji-d43-d37-before-after-200games-42292240321 \
+            --pattern D43-D37-before-after-200games.tar.gz --dir input
+          echo '955a1785940f9f2aac946739af1b8637e5ef53d06297e6ad7d32b75a5a94a236  input/D43-D37-1000trained-unadopted.tar.gz' | sha256sum -c -
+          echo 'c08ccab3f5e9ef90c288e8ccfc5f3951eb188dfc30876af775c2ba3cfb03f510  input/D43-D37-before-after-200games.tar.gz' | sha256sum -c -
+      - name: Prepare inference-only NNUE, formal manifest, contracts and single adoption decision
+        run: |
+          python scripts/d44_adopt_d43.py \
+            --trained input/D43-D37-1000trained-unadopted.tar.gz \
+            --audit input/D43-D37-before-after-200games.tar.gz \
+            --out build/d44-prepare
+          cat build/d44-prepare/receipt.json >> "$GITHUB_STEP_SUMMARY"
+      - name: Validate official contract and all regression tests
+        run: |
+          set -euo pipefail
+          python scripts/check_fukaji_contracts.py
+          python -m unittest discover -s tests -v
+          python -m compileall -q fukaji scripts
+          git diff --check
+      - name: Validate real current NNUE C++ and USI behavior before any push
+        run: |
+          python scripts/verify_formal_release.py --out build/d44-usi-validation.json
+          python - <<'PY'
+          import json
+          d=json.load(open('build/d44-usi-validation.json'))
+          assert d['identical_depth2_positions']>=30,d
+          assert d['usi_games']==2 and d['legal_usi_plies']>0,d
+          assert d['weights_sha256']==json.load(open('formal/model.json'))['weights_sha256']
+          print('D44 D43 official model USI and native NNUE verified')
+          PY
+      - name: Atomically adopt NNUE on main only after all verification passes
+        id: adoption
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$GITHUB_SHA" || {
+            echo "Refusing to adopt: main changed during tests";exit 1;
+          }
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f models/fukaji-d43.nnue.npz
+          git add formal/model.json research/d17-fast-self-learning/formal-contract.json \
+            docs/現行エンジン仕様.md docs/00_開発ルーター.md docs/ROADMAP.md \
+            AGENTS.md docs/decisions/2026-11-07_D43学習後モデルを現行に採用.md
+          git diff --cached --check
+          git diff --cached --name-only | tee build/d44-adopted-files.txt
+          test "$(git diff --cached --name-only | wc -l)" -eq 8
+          git commit -m "adopt(D44): make proven D43 Adam2882 NNUE current after 150-50 paired200, preserve USI"
+          new_sha="$(git rev-parse HEAD)"
+          git push origin HEAD:refs/heads/main
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$new_sha"
+          echo "source_sha=$new_sha" >> "$GITHUB_OUTPUT"
+          echo "D43 current model adopted in $new_sha"
+      - name: Build current model runnable bundle and verify independent extraction
+        env:
+          SOURCE_SHA: ${{ steps.adoption.outputs.source_sha }}
+        run: |
+          set -euo pipefail
+          python scripts/build_formal_bundle.py \
+            --out build/D44-FUKAJI-current-D43.tar.gz \
+            --source-commit "$SOURCE_SHA"
+          mkdir -p build/d44-isolated
+          tar -xzf build/D44-FUKAJI-current-D43.tar.gz -C build/d44-isolated
+          (
+            cd build/d44-isolated/fukaji-v0.4.0
+            python scripts/check_fukaji_contracts.py
+            python scripts/verify_formal_release.py --out d44-isolated-usi.json
+          )
+          cp build/d44-isolated/fukaji-v0.4.0/d44-isolated-usi.json build/d44-isolated-usi.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('build/d44-isolated-usi.json').read_text())
+          assert d['bundle_member_hashes_verified'] is True,d
+          assert d['identical_depth2_positions']>=30 and d['legal_usi_plies']>=30,d
+          print('D44 isolated deployable source and weights verified')
+          PY
+      - name: Publish verified current model bundle and read back SHA
+        env:
+          SOURCE_SHA: ${{ steps.adoption.outputs.source_sha }}
+          TAG: fukaji-current-d43-20261107
+        run: |
+          set -euo pipefail
+          cp build/d44-prepare/receipt.json build/D44-adoption-receipt.json
+          gh release create "$TAG" \
+            build/D44-FUKAJI-current-D43.tar.gz \
+            build/d44-isolated-usi.json \
+            build/D44-adoption-receipt.json \
+            --target "$SOURCE_SHA" \
+            --title "FUKAJI current D43 NNUE (Adam2882), adopted after 150-50" \
+            --notes "Owner-approved D43 current NNUE. 1000 new training games, 200 verified paired audit games (150-50). Official USI version and search settings unchanged. Archived D37 preserved. Public runnable source+inference-only weights; full training state remains in the D43 training Release."
+          mkdir -p build/d44-readback
+          for file in build/D44-FUKAJI-current-D43.tar.gz \
+                      build/d44-isolated-usi.json \
+                      build/D44-adoption-receipt.json; do
+            name="$(basename "$file")"
+            gh release download "$TAG" --pattern "$name" --dir build/d44-readback
+            test "$(sha256sum "$file"|cut -d ' ' -f1)" = \
+                 "$(sha256sum "build/d44-readback/$name"|cut -d ' ' -f1)"
+          done
+          echo "D44 adopted source commit $SOURCE_SHA and public runnable Release verified" >> "$GITHUB_STEP_SUMMARY"
+          sha256sum build/D44-FUKAJI-current-D43.tar.gz >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: d44-current-adoption-validation-${{ github.run_id }}
+          path: |
+            build/d44-prepare/receipt.json
+            build/d44-usi-validation.json
+            build/d44-isolated-usi.json
+            build/d44-adopted-files.txt
+          if-no-files-found: warn
+          retention-days: 30
