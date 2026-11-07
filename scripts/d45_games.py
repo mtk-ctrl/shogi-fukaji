@@ -94,7 +94,7 @@ def prepare(state,d41_source,d42_source,d43_trained,d43_selfplay,d43_audit,out):
     families=[]
     for i in range(TOTAL):
         prefix,parent=fresh_prefix(SEED+i*1019,excluded)
-        if parent in excluded or len(prefix)!=6:
+        if parent in protected or len(prefix)!=6:
             raise ValueError("reused training/audit parent or invalid opening")
         families.append({"index":i,"prefix":prefix,"parent_id":parent,
                          "lane":(i//PER_LANE)%LANES,"round":i//(PER_LANE*LANES)})
