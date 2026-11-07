@@ -5,6 +5,6 @@
   "fukaji/native_nnue.py": "4f73394986a2ee3df5bdf820b901a0c9b4193fd62168c342ac7260121c9363d4",
   "native/nnue_search_ffi.cpp": "c9340af265368547c37cbecc311d8d3982900885b433d1b4ccdc27fbdd7d041a",
   "formal/model.json": "a779a261ece3b921abe6e633f961a2a403aa9a45e0d00daed74471b304d16502",
-  "docs/現行エンジン仕様.md": "8dac456de309f5bd6586287addb83657c965ea647bdab66829f10c3ce5a0f54c",
+  "docs/現行エンジン仕様.md": "db7801bd6709ac85e28f5601e319c7da0181a4c2c51b1a517dde8ec8142aadf2",
   "benchmarks/baseline_ref.txt": "eae0eac37a9b5822557f3ac337519f62c1bd4491851b720835240bcf065f81c9"
 }
