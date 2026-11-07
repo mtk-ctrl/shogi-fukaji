@@ -79,7 +79,7 @@ def prepare(state,baseline_archive,old_selfplay,old_audit,trained,trained_archiv
             raise ValueError("previous 1000 training parents invalid")
     with tarfile.open(old_audit,"r:gz") as t:
         old_audit_plan=json.load(t.extractfile("plan.json"))
-        if old_audit_plan["schema"]!="d45-paired200-v1" or len(old_audit_plan["families"])!=100:
+        if old_audit_plan["schema"]!="d43-paired200-v1" or len(old_audit_plan["families"])!=100:
             raise ValueError("previous 100 paired audit parents invalid")
     with tarfile.open(d42_source,"r:gz") as t:
         d42_plan=json.load(t.extractfile("plan.json"))
@@ -206,7 +206,7 @@ def collect(runtime,downloads,out):
         times[str(budget)]={"moves":len(vals),"mean_ms":statistics.mean(vals) if vals else None,
             "max_ms":max(vals) if vals else None,
             "over_budget_100ms":sum(x>budget+100 for x in vals)}
-    result={"schema":"d43-paired200-result-v1","before":BASE,"after":cfg["after"],
+    result={"schema":"d45-paired200-result-v1","before":BASE,"after":cfg["after"],
             "games":200,"opening_pairs":100,"before_wins":before_wins,
             "after_wins":after_wins,"draws":counts["draws"],"unresolved":unresolved,
             "score_lower":score_low,"score_upper":score_high,
