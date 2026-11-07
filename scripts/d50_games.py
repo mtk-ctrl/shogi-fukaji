@@ -75,7 +75,7 @@ def prepare(state,d41_source,d42_source,d43_trained,d43_selfplay,d43_audit,d45_t
             report["baseline"]!="bf8c26f9f8f6adff8a87c46ab04fcf5cd76a7915be241da11b99bb4ae2ac8b9f" or report["trained_sha256"]!=BASE or
             report["optimizer_step_before"]!=2882 or report["optimizer_step_after"]!=3794 or
             report["source_sha256"]!=D45_SELFPLAY_SHA):
-            raise ValueError("trained D43 is not the verified current continuation")
+            raise ValueError("trained D45 is not the verified current continuation")
         for ext in ("npz","json"):
             name=f"{BASE}.{ext}"
             (models/name).write_bytes(t.extractfile(name).read())
@@ -93,7 +93,7 @@ def prepare(state,d41_source,d42_source,d43_trained,d43_selfplay,d43_audit,d45_t
         prior_result=json.load(t.extractfile("report.json"))
         if (prior_audit["schema"]!="d43-paired200-v1" or
             len(prior_audit["families"])!=100 or
-            prior_result["before"]!=core.D37 or prior_result["after"]!=BASE or
+            prior_result["before"]!=core.D37 or prior_result["after"]!="bf8c26f9f8f6adff8a87c46ab04fcf5cd76a7915be241da11b99bb4ae2ac8b9f" or
             prior_result["after_wins"]!=150 or prior_result["before_wins"]!=50):
             raise ValueError("D43 old held-out comparison mismatch")
     with tarfile.open(d42_source,"r:gz") as t:
