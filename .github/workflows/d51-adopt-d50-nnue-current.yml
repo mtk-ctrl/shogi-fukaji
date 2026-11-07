@@ -1,0 +1,200 @@
+name: D51 adopt D50 Adam4702 NNUE on approved PVS mate v0.4.1
+on:
+  workflow_dispatch:
+    inputs:
+      execute:
+        type: boolean
+        required: true
+        default: false
+  push:
+    branches: [main]
+    paths:
+      - research/d51-adopt/START.json
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: fukaji-d51-single-writer-current-nnue
+  cancel-in-progress: false
+jobs:
+  adopt:
+    if: github.repository == 'mtk-ctrl/shogi-fukaji' && (github.event_name == 'push' || inputs.execute)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - name: Confirm F00 F20 owner mandate, D50 159-41 and pinned D49 native version
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          request=json.load(open('research/d51-adopt/START.json'))
+          expected={
+            "enabled":True,"request_id":"d51-d50-20261107-auto-adopt-on-audit-win",
+            "source_run":42343709475,
+            "former":"941598f2a9ec926d5f67dadf03582ccef718a56a843070dc1f576cc7eeca44e8",
+            "next":"641f36677b8d93c3237cfc4f0b6329a6beee55cff692302f529b3899ea74afd0",
+            "games_trained":1000,"audit_games":200,
+            "after_wins":159,"before_wins":41,"draws":0,"unresolved":0,
+            "optimizer_before":3794,"optimizer_after":4702,
+            "train_sha256":"a6df97b104302a4b7c9f570c289af0d001155eea44f3a7c9bb0f21184a2b3688",
+            "audit_sha256":"f6acc785531eab92e199dfb5df4d4a64f5e55246c08ec0962e24b6123fb81324",
+            "search_sha256":"c9340af265368547c37cbecc311d8d3982900885b433d1b4ccdc27fbdd7d041a",
+            "version":"FUKAJI v0.4.1",
+            "authority":"F00/F20 preauthorized direct current NNUE continuation when stronger"}
+          if request!=expected:raise ValueError("D51 request is not pinned to owner-authorized D50 audit")
+          m=json.load(open('formal/model.json'))
+          for k,value in [('research_snapshot_sha256',request['former']),('optimizer_step',3794),
+                          ('weights_file','models/fukaji-d45.nnue.npz'),
+                          ('search_implementation_sha256',request['search_sha256']),
+                          ('version',request['version']),('search_backend_variant','d48_pvs_mate')]:
+            if m.get(k)!=value:raise ValueError("old official model changed: "+k)
+          assert hashlib.sha256(Path('native/nnue_search_ffi.cpp').read_bytes()).hexdigest()==request['search_sha256']
+          PY
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$GITHUB_SHA"
+      - name: Download D50 optimizer+NNUE and complete paired200 audit; SHA verify
+        run: |
+          set -euo pipefail
+          mkdir -p input
+          gh release download fukaji-d50-d45-trained-42343709475 --pattern D50-D45-1000trained-unadopted.tar.gz --dir input
+          gh release download fukaji-d50-d45-before-after-200games-42343709475 --pattern D50-D45-before-after-200games.tar.gz --dir input
+          echo 'a6df97b104302a4b7c9f570c289af0d001155eea44f3a7c9bb0f21184a2b3688  input/D50-D45-1000trained-unadopted.tar.gz' | sha256sum -c -
+          echo 'f6acc785531eab92e199dfb5df4d4a64f5e55246c08ec0962e24b6123fb81324  input/D50-D45-before-after-200games.tar.gz' | sha256sum -c -
+      - name: Prepare formal D50 with fully checked optimizer, 200 game SHAs and unchanged mate search
+        run: |
+          python scripts/d51_adopt_d50.py \
+            --trained input/D50-D45-1000trained-unadopted.tar.gz \
+            --audit input/D50-D45-before-after-200games.tar.gz \
+            --out build/d51-prepare
+          cat build/d51-prepare/receipt.json >> "$GITHUB_STEP_SUMMARY"
+      - name: Validate source contracts and full regression with frozen search
+        run: |
+          set -euo pipefail
+          python scripts/check_fukaji_contracts.py
+          python -m unittest discover -s tests -q
+          python -m compileall -q fukaji scripts
+          git diff --check
+          python - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          r=json.load(open('build/d51-prepare/receipt.json'))
+          m=json.load(open('formal/model.json'))
+          assert m['version']=='FUKAJI v0.4.1' and m['search_backend_variant']=='d48_pvs_mate'
+          assert m['search_implementation_sha256']==r['unchanged_cpp_sha256']
+          assert m['weights_sha256']==r['weights_sha256']
+          assert hashlib.sha256(Path('native/nnue_search_ffi.cpp').read_bytes()).hexdigest()==r['unchanged_cpp_sha256']
+          assert hashlib.sha256(Path('models/fukaji-d45.nnue.npz').read_bytes()).hexdigest()=='9faf66a9d1fee9d282e35835628377ab7951bb94335a5d0498384bf88f4d2c26'
+          assert m['optimizer_step']==4702 and m['research_snapshot_sha256']==r['current_snapshot_sha256']
+          print('D51 full static contract including old weights, new weights and PVS+mate pinned')
+          PY
+      - name: Real C++ NNUE, 1-ply mate proof and current USI legal play
+        run: |
+          python scripts/verify_formal_release.py --out build/d51-usi-validation.json
+          python - <<'PY'
+          import json
+          d=json.load(open('build/d51-usi-validation.json'))
+          assert d['version']=='FUKAJI v0.4.1',d
+          assert d['search_backend_variant']=='d48_pvs_mate' and d['research_mate_proof_verified'] is True,d
+          assert d['identical_depth2_positions']>=30 and d['usi_games']==2 and d['legal_usi_plies']>=30,d
+          assert d['weights_sha256']==json.load(open('formal/model.json'))['weights_sha256'],d
+          print('D51 real USI plays with exactly current search and D50 weights')
+          PY
+      - name: Atomically commit D50 official NNUE only after complete tests and main CAS
+        id: adoption
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$GITHUB_SHA" || {
+            echo "main changed during D51; aborting without overwriting";exit 1;
+          }
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f models/fukaji-d50.nnue.npz
+          git add formal/model.json research/d17-fast-self-learning/formal-contract.json
+          git add docs/現行エンジン仕様.md docs/00_開発ルーター.md docs/ROADMAP.md
+          git add AGENTS.md docs/decisions/2026-11-07_D51_D50学習後重みを現行採用.md
+          git diff --cached --check
+          git diff --cached --name-only | tee build/d51-adopted-files.txt
+          test "$(git diff --cached --name-only | wc -l)" -eq 8
+          git commit -m "adopt(D51): current NNUE D50 Adam4702 after 159-41 paired200; preserve PVS mate v0.4.1"
+          new_sha="$(git rev-parse HEAD)"
+          git push origin HEAD:refs/heads/main
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$new_sha"
+          echo "source_sha=$new_sha" >> "$GITHUB_OUTPUT"
+      - name: Build independent bundle of formal D50 without search changes; execute USI
+        env:
+          SOURCE_SHA: ${{ steps.adoption.outputs.source_sha }}
+        run: |
+          set -euo pipefail
+          python scripts/build_formal_bundle.py --out build/D51-FUKAJI-current-D50-PVS-Mate.tar.gz --source-commit "$SOURCE_SHA"
+          mkdir -p build/d51-isolated
+          tar -xzf build/D51-FUKAJI-current-D50-PVS-Mate.tar.gz -C build/d51-isolated
+          (
+            cd build/d51-isolated/fukaji-v0.4.1
+            python scripts/verify_formal_release.py --out d51-isolated-usi.json
+          )
+          cp build/d51-isolated/fukaji-v0.4.1/d51-isolated-usi.json build/d51-isolated-usi.json
+          python - <<'PY'
+          import json
+          d=json.load(open('build/d51-isolated-usi.json'))
+          m=json.load(open('formal/model.json'))
+          assert d['bundle_member_hashes_verified'] is True,d
+          assert d['research_mate_proof_verified'] is True,d
+          assert d['search_backend_variant']=='d48_pvs_mate' and d['version']=='FUKAJI v0.4.1',d
+          assert d['identical_depth2_positions']>=30 and d['legal_usi_plies']>=30,d
+          assert d['weights_sha256']==m['weights_sha256'],d
+          print('D51 isolated official bundle actual USI and mate passed')
+          PY
+      - name: Publish D50 formal release and SHA-compare four downloaded assets
+        env:
+          SOURCE_SHA: ${{ steps.adoption.outputs.source_sha }}
+          TAG: fukaji-current-d50-d51-pvs-mate-20261107
+        run: |
+          set -euo pipefail
+          cp build/d51-prepare/receipt.json build/D51-adoption-receipt.json
+          gh release create "$TAG" \
+            build/D51-FUKAJI-current-D50-PVS-Mate.tar.gz \
+            build/d51-usi-validation.json \
+            build/d51-isolated-usi.json \
+            build/D51-adoption-receipt.json \
+            --target "$SOURCE_SHA" \
+            --title 'FUKAJI v0.4.1 current D50 Adam4702 NNUE with D49 PVS plus mate' \
+            --notes 'Owner-delegated F00/F20: 1000 new D45 v0.4.1 selfplay, D50 wins paired200 159-41 with 0 unresolved. NNUE only changes; v0.4.1 C++ PVS and forced mate search unchanged. Existing D45 full optimizer and old release preserved.'
+          mkdir -p build/d51-readback
+          for file in \
+            build/D51-FUKAJI-current-D50-PVS-Mate.tar.gz \
+            build/d51-usi-validation.json \
+            build/d51-isolated-usi.json \
+            build/D51-adoption-receipt.json; do
+            name="$(basename "$file")"
+            gh release download "$TAG" --pattern "$name" --dir build/d51-readback
+            test "$(sha256sum "$file"|cut -d ' ' -f1)" = \
+                 "$(sha256sum "build/d51-readback/$name"|cut -d ' ' -f1)"
+          done
+          echo "D51 current D50 source $SOURCE_SHA; four release SHA readback checks passed" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: d51-adopt-nnue-verification-${{ github.run_id }}
+          path: |
+            build/d51-prepare/receipt.json
+            build/d51-usi-validation.json
+            build/d51-isolated-usi.json
+            build/d51-adopted-files.txt
+          if-no-files-found: warn
+          retention-days: 30
