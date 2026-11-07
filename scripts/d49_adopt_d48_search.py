@@ -84,6 +84,22 @@ def main():
     if old.count(before)!=1:
         raise ValueError("unexpected PVS node-count legacy assertion")
     test.write_text(old.replace(before,"                self.assertGreater(got['nodes'],0)  # PVS intentionally changes nodes"))
+    # D28 accumulator backend intentionally retains old alpha-beta.
+    # PVS changes the number of visited nodes but must retain the *exact*
+    # same fixed-depth best move and minimax score. Preserve accumulator
+    # integrity checks, board restoration, and value comparison.
+    acc=ROOT/"tests/test_native_accumulator.py"
+    src=acc.read_text()
+    old_assert="""                self.assertEqual((a['move'],a['nodes'],a['evaluations']),
+                                 (c['move'],c['nodes'],c['evaluations']))"""
+    new_assert="""                self.assertEqual(a['move'],c['move'])
+                self.assertGreater(a['nodes'],0)
+                self.assertGreater(c['nodes'],0)
+                self.assertGreater(a['evaluations'],0)
+                self.assertGreater(c['evaluations'],0)"""
+    if src.count(old_assert)!=1:
+        raise ValueError("unexpected accumulator PVS comparison assertion")
+    acc.write_text(src.replace(old_assert,new_assert))
     specdoc=ROOT/"docs/現行エンジン仕様.md"
     old=specdoc.read_text()
     a="既定のUSI表記・versionはFUKAJI v0.4.0のまま、探索コードや配布形式は不変。"
@@ -132,6 +148,11 @@ D48 Actions run 42339652079で50独立序盤の先後2局100局：D48研究版55
 ## 検証と保存
 D49 CIで旧ソースの検証、D48候補のバイト一致、713件を含む回帰、実C++とUSI、隔離配布物のハッシュと起動、GitHub ReleaseのSHA再取得照合を要求。D45完全state/optimizer、旧D45配布物を保持。正式採用の完了報告はD49 CIを確認してから行う。
 """)
+    append("docs/decisions/2026-11-07_D49_D48探索を正式採用.md",
+        """## 初回D49失敗の原因と再発防止
+- 初回Actions run 42341568300の713件回帰で12件失敗。すべてtests/test_native_accumulator.pyの古い「旧アルファベータと新PVSの節点数・評価回数も一致」アサーションが原因。実際の最善手は一致し、深さ固定の点数比較は別途維持している。
+- PVSは同じ値を少ない節点で計算するため、旧方式と訪問節点数が一致することは**探索正当性の条件ではない**。同試験は最善手と評価点の一致・双方正の節点/評価回数・モデル内部/盤面復元を引き続き検査する。回帰全件再実行と実USI・詰み証明が通るまで正式コードをコミットしない。
+- 初回は安全ゲートで停止し、旧D45現行を変更せず。修正後の別runが完了するまで採用完了としない。""")
     # Atomically register owner-approved new SHA on the same staging worktree.
     for p in contract:
         if p!="benchmarks/baseline_ref.txt":contract[p]=checksum(p)
