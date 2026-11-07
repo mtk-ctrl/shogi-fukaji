@@ -4,7 +4,7 @@
 
 ## 現行モデル
 
-**現行D50 NNUE（`641f36677b8d93c3237cfc4f0b6329a6beee55cff692302f529b3899ea74afd0`、Adam4702）、USI FUKAJI v0.4.1・PVS＋詰み探索は継続。** 旧D45/Adam3794の1000局自己対局から追加学習し、新規100序盤×先後200局でD50が**159勝41敗、未決着0**。[D51採用判断](decisions/2026-11-07_D51_D50学習後重みを現行採用.md)／[D50実行](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/42343709475)／[D50完全学習state](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d50-d45-trained-42343709475)／[manifest](../formal/model.json)／[現行仕様](現行エンジン仕様.md)。次周の学習親は**D50/Adam4702のみ**。旧D45・D43は復元用に保持。
+**正式D52 NNUE（55ccc97db6c2d4ce9ff7c75f5e81d543fb6f12d169639c3ea6d24c89e95342ae、Adam5606）、FUKAJI v0.4.1・PVS＋詰み探索維持**。前正式D50/Adam4702から1000局自己対局で追加学習、新100序盤×先後入替200局で **D52 156勝、D50 44勝、引分/未決着0**、事前基準通過。[D53採用判断](decisions/2026-11-08_D53_D52学習後重みを現行採用.md)／[D52実験](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/42401026786)／[完全state](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d52-d50-trained-42401026786)／[正式manifest](../formal/model.json)／[現行仕様](現行エンジン仕様.md)。今後はD52/Adam5606から継続。旧D50/Adam4702は不変で保護。
 
 ## 現在の研究
 - [D31](D31_TWO_BATCH_RETENTION_20261103.md)：400局/65,551手完了。c8対当時の正式NNUEは119勝76敗1分4未決着、対新経験のみ候補は97勝97敗4分2未決着。保持方式の候補間優位は未確定。
@@ -140,3 +140,8 @@
 - [D52計画](D52_CURRENT_D50_V041_1000GAMES_PLAN_20261107.md)／[本人判断](decisions/2026-11-07_D52第4周1000局開始判断.md)／[起動workflow](../.github/workflows/d52-d50-v041-1000-selfplay-train-audit.yml)。正式重みの更新は200局勝率と契約・実USI・SHAを検証した後の別工程に限定。
 
 - **2026-11-07 17:07 JST D52進捗：** [run 42350699929](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/42350699929) で第1～4波（wave0～3）80/80ジョブ成功、第5波（wave4）2/20成功・17実行中・1待機、失敗0。**820局分の生成ジョブ成功、全局合法性最終検証は未確認**。1000局集約→NNUE学習→200局比較→条件を満たす場合のみ別CIで正式採用。正式D50は不変。詳細は[D52計画](D52_CURRENT_D50_V041_1000GAMES_PLAN_20261107.md)。
+
+## D53：D52 NNUE正式採用（2026-11-08）
+
+- [実行run](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/42401026786)：1000局全局決着、57,755局面・Adam4702→5606、200局比較で新D52が156勝44敗、未決着0、19,104手合法検証。学習・比較の全3 ReleaseのSHA再取得成功。
+- 正式NNUE 55ccc97db6c2d4ce9ff7c75f5e81d543fb6f12d169639c3ea6d24c89e95342ae、推論SHA c0bfe9640e8fc8d6750d263f367581d33c428c7c05cea99f384afaeabfbb569f。PVS＋詰み探索・USI v0.4.1不変。契約・回帰・実USI・隔離配布を別D53 CIで検証。[判断](decisions/2026-11-08_D53_D52学習後重みを現行採用.md)。
