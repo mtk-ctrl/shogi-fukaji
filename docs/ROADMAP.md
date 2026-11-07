@@ -4,7 +4,7 @@
 
 ## 現行モデル
 
-**D45 NNUE（`941598f2a9ec926d5f67dadf03582ccef718a56a843070dc1f576cc7eeca44e8`、Adam3794）を現行採用。USI表示 FUKAJI v0.4.0は不変。** D43（`bf8c26f9f8f6adff8a87c46ab04fcf5cd76a7915be241da11b99bb4ae2ac8b9f`、Adam2882）から自己対局1000局と58,334局面追加学習し、独立100序盤×先後200局で**155勝44敗・引分0・未決着1**。[採用決定](decisions/2026-11-07_D45学習後モデルを現行に採用.md)、[比較結果](D45_D43_SECOND_ROUND_1000_GAMES_RESULT_20261107.md)、[完全state](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d45-d43-trained-42326260509)、[manifest](../formal/model.json)・[現行仕様](現行エンジン仕様.md)。次周は必ずD45/Adam3794から。旧D43/D37は復元専用として残す。
+**現行D50 NNUE（`641f36677b8d93c3237cfc4f0b6329a6beee55cff692302f529b3899ea74afd0`、Adam4702）、USI FUKAJI v0.4.1・PVS＋詰み探索は継続。** 旧D45/Adam3794の1000局自己対局から追加学習し、新規100序盤×先後200局でD50が**159勝41敗、未決着0**。[D51採用判断](decisions/2026-11-07_D51_D50学習後重みを現行採用.md)／[D50実行](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/42343709475)／[D50完全学習state](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d50-d45-trained-42343709475)／[manifest](../formal/model.json)／[現行仕様](現行エンジン仕様.md)。次周の学習親は**D50/Adam4702のみ**。旧D45・D43は復元用に保持。
 
 ## 現在の研究
 - [D31](D31_TWO_BATCH_RETENTION_20261103.md)：400局/65,551手完了。c8対当時の正式NNUEは119勝76敗1分4未決着、対新経験のみ候補は97勝97敗4分2未決着。保持方式の候補間優位は未確定。
@@ -121,3 +121,8 @@
 - 本人指示の第3周。現行NNUE D45（snapshot `941598f2...`・Adam3794）を唯一の親として、正式PVS＋詰み1/3/5手探索による1000局生成、継続学習、同じ探索での学習前後200局比較を一つの有限GitHub Actionsで実施。
 - 5波×20独立ジョブ×各10局と比較20ジョブ。旧train/audit・D47/D48評価の局面を分離し、GitHub Releaseの原棋譜/完全学習stateをSHA再取得検証。性能を確認するまで正式重みは変更しない。強化が認められた後は別検証ワークフローでNNUEのみ採用し、探索／USI v0.4.1は維持。
 - [固定計画](D50_CURRENT_D45_V041_1000GAMES_PLAN_20261107.md)／[本人判断](decisions/2026-11-07_D50第3周1000局の実行判断.md)／[workflow](../.github/workflows/d50-d45-v041-1000-selfplay-train-audit.yml)。
+
+## D51：D50の正式採用（2026-11-07）
+
+- [D50学習・200局直接比較](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/42343709475)：1000局全決着、58,077学習局面、Adam3794→4702、**D50 159勝D45 41勝、未決着0**。事前基準通過。
+- 正式NNUEを `641f36677b8d93c3237cfc4f0b6329a6beee55cff692302f529b3899ea74afd0` へ更新（推論SHA `fbabd6b98de1d03ff8755733bb6a5a5daac7a0fd1f2f2c11ff2b21c26836c599`）。D49のPVS＋詰み探索とUSI v0.4.1は維持。[採用判断](decisions/2026-11-07_D51_D50学習後重みを現行採用.md)。契約・回帰・実USI・隔離bundle・Release SHAの通過をD51 Actionsで必須とし、正式配布の読戻しを検証する。

@@ -25,3 +25,7 @@ ChatGPT・Claude等は同じRuleと同じGitHub正本を使う。まず[開発�
 ## 最新の正式探索（2026-11-07 D49）
 
 本人はD48のPVS＋詰み探索を正式採用と明示。現行は FUKAJI v0.4.1、D48と同じPVS＋1/3/5手詰み証明＋相手1手詰みガード。NNUEはD45/Adam3794を維持。上部のv0.4.0はD49以前の履歴。判断記録：docs/decisions/2026-11-07_D49_D48探索を正式採用.md。
+
+## 最新現行NNUE（D51、2026-11-07）
+
+**現行はD50/Adam4702、snapshot `641f36677b8d93c3237cfc4f0b6329a6beee55cff692302f529b3899ea74afd0`。** 現行NNUE D45（Adam3794）から自己対局1000局＋比較200局で159勝41敗となり、F00/F20の本人委任に従ってNNUE重みのみ正式反映。**FUKAJI v0.4.1、D49のPVS＋1/3/5手詰み探索はそのまま**。上部のD45/旧版表示はその時点の歴史的記述。次周は[D50完全学習state](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d50-d45-trained-42343709475)のAdam4702を唯一の学習親とする。[判断](docs/decisions/2026-11-07_D51_D50学習後重みを現行採用.md)。
