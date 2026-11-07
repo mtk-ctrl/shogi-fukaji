@@ -1,10 +1,10 @@
 {
-    "enabled": true,
-    "request_id": "d52-20261108-fix-aggregate-only",
-    "source_run": 42350699929,
-    "expected_selfplay_jobs": 100,
-    "baseline": "641f36677b8d93c3237cfc4f0b6329a6beee55cff692302f529b3899ea74afd0",
-    "optimizer_step": 4702,
-    "preserve_search_sha256": "c9340af265368547c37cbecc311d8d3982900885b433d1b4ccdc27fbdd7d041a",
-    "recovery": "reuse existing 100 successful runner artifacts; no new selfplay"
+  "enabled": true,
+  "request_id": "d52-20261108-fix-aggregate-only",
+  "source_run": 42350699929,
+  "expected_selfplay_jobs": 100,
+  "baseline": "641f36677b8d93c3237cfc4f0b6329a6beee55cff692302f529b3899ea74afd0",
+  "optimizer_step": 4702,
+  "preserve_search_sha256": "c9340af265368547c37cbecc311d8d3982900885b433d1b4ccdc27fbdd7d041a",
+  "recovery": "reuse existing 100 successful runner artifacts; no new selfplay"
 }
