@@ -94,7 +94,7 @@ def prepare(state,baseline_archive,old_selfplay,old_audit,trained,trained_archiv
     families=[]
     for i in range(PAIRS):
         opening,parent=fresh_prefix(SEED+i*1019,exclude)
-        if parent in exclude or len(opening)!=6:
+        if parent in frozen or len(opening)!=6:
             raise ValueError("D45 audit parent is training/old evaluation or repeated")
         families.append({"index":i,"prefix":opening,"parent_id":parent,"lane":i%LANES})
         exclude.add(parent)
