@@ -81,3 +81,9 @@ Total output lines: 124
 - **準備1 → comparison matrix20 → 集約1**。50独立序盤の先後2局100局、C++ NNUE、通常200ms／長考1000ms各陣営10回以下、学習済み親群を除外。担当lane10個には各3序盤、残る10個には各2序盤。毎手checkpoint、36手区切りで別プロセスへ復旧。集約が全100局の合法再生・勝敗・時間・SHAを検証。GitHub Releaseに全ゲーム・plan・reportを保全し再ダウンロードSHAを検査。正式モデルは自動変更しない。
 - **[実run 42218550652](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/42218550652)成功：計22ジョブ全成功、対局20独立jobsの最大実同時稼働20、D37 52勝／D41学習後48勝、引分0・未決着0。** [結果Release](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d42-d37-before-vs-d41-after-42218550652)、[D42結果](../../docs/D42_D37_VS_D41_100GAMES_RESULT_20261106.md)、[採否判断](../../docs/decisions/2026-11-06_D42_学習前後100局比較と現行D37維持.md)。**現行はD37を維持。**
 - D42は有限の比較runであって自動自己学習ではない。GitHub Releaseが成果物の永続正本、Actions artifactは一時輸送。次の自己学習を開始する際は別途固定した研究request・新規親群で実行し、過去の評価局をtrainへ転用しない。
+
+
+## D48：詰み探索＋PVSの100局比較（2026-11-07・研究専用）
+
+- Workflow：`d48-mate-pvs-paired100.yml`（明示的な `research/d48/START.json` push または execute=true の有限起動のみ。定期実行なし）。対象は正式D45と、同じ重みを固定したPVS＋1/3/5手強制詰み＋相手1手詰みガードの研究版。正式USIとNNUE重みには触れない。
+- 研究計画：[D48](../../docs/D48_MATE_PVS_PAIRED100_20261107.md)。完了：[run 42339652079](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/42339652079)、準備＋対局20ランナー＋集約の22ジョブ全成功・最大同時20。50組100局で研究版55勝、現行44勝、未決着1、全12,395手合法検証。原棋譜とモデルSHA・runner auditは[Release](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d48-pvs-mate-d45-100games-42339652079)に永続保存・SHA再取得照合済み。正式採用なし。
