@@ -109,3 +109,9 @@
 ## 2026-11-07 D49：D48の探索を正式採用
 
 本人明示指示で100局実測55勝44敗・未決着1のD48 PVS＋詰み補助を正式USIへ採用。現行USI FUKAJI v0.4.1、NNUE D45 snapshot 941598f2/Adam3794を不変維持。実装・契約検査・隔離配布・SHA検証を実施して正式化する。docs/decisions/2026-11-07_D49_D48探索を正式採用.md。
+
+
+## D49正式探索採用・配布検証完了（2026-11-07）
+
+- 正式source commit **408dc2994d6fc3d2cc69d9ce9a257cd157ae75c8**、[実GitHub Actions run 42341751230](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/42341751230) **success**（713件回帰、5スキップ、実USI・詰み証明、隔離配布159ファイルSHA、Release4資産再取得SHA）。
+- 現行は**FUKAJI v0.4.1、D45 NNUE不変、探索PVS＋詰み1/3/5手・相手の1手詰みガード**。[現行配布](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-current-d45-d49-pvs-mate-20261107)。採用理由と初回失敗の再発防止は[判断記録](decisions/2026-11-07_D49_D48探索を正式採用.md)。
