@@ -1,0 +1,544 @@
+name: D50 v0.4.1 D45 PVS+mate 1000 selfplay training paired200 audit
+on:
+  workflow_dispatch:
+    inputs:
+      execute:
+        type: boolean
+        required: true
+        default: false
+  push:
+    branches: [main]
+    paths:
+      - research/d50/START.json
+permissions:
+  contents: read
+concurrency:
+  group: fukaji-d50-v041-d45-1000-selfplay-audit
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    if: github.repository == 'mtk-ctrl/shogi-fukaji' && (github.event_name == 'push' || inputs.execute)
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - name: Guard D50 request, formal v0.4.1 and SHA pinned optimizer
+        run: |
+          python - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          q=json.load(open('research/d50/START.json'))
+          expected={'enabled':True,'request_id':'d50-20261107-d45-v041-selfplay1000-20runner',
+            'baseline':'941598f2a9ec926d5f67dadf03582ccef718a56a843070dc1f576cc7eeca44e8',
+            'weights_sha256':'9faf66a9d1fee9d282e35835628377ab7951bb94335a5d0498384bf88f4d2c26',
+            'optimizer_step':3794,'search_variant':'d48_pvs_mate',
+            'search_sha256':'c9340af265368547c37cbecc311d8d3982900885b433d1b4ccdc27fbdd7d041a',
+            'version':'FUKAJI v0.4.1','games':1000,'runners':20,'rounds':5,'compare_games':200,
+            'formal_weights_adopt_after_verified_win':True}
+          if q!=expected:raise SystemExit('D50 exact request drift')
+          f=json.load(open('formal/model.json'))
+          for k,v in [('research_snapshot_sha256',q['baseline']),('weights_sha256',q['weights_sha256']),('optimizer_step',3794),('version',q['version']),('search_implementation_sha256',q['search_sha256']),('search_backend_variant',q['search_variant'])]:
+            if f.get(k)!=v:raise SystemExit('D50 formal version changed: '+k)
+          if hashlib.sha256(Path('native/nnue_search_ffi.cpp').read_bytes()).hexdigest()!=q['search_sha256']:raise SystemExit('D49 official CPP changed')
+          if hashlib.sha256(Path(f['weights_file']).read_bytes()).hexdigest()!=q['weights_sha256']:raise SystemExit('D45 inference changed')
+          print('D50 verified formal current NNUE D45/Adam3794, v0.4.1 mate plus PVS')
+          PY
+      - name: Source contracts, syntax, and known one-ply mate
+        run: |
+          set -euo pipefail
+          python scripts/check_fukaji_contracts.py
+          python -m py_compile scripts/d50_native_game.py scripts/d50_games.py scripts/d50_train.py scripts/d50_arena.py
+          python scripts/d50_games.py --help
+          python scripts/d50_train.py --help
+          python scripts/d50_arena.py --help
+          python - <<'PY'
+          import shogi
+          from fukaji.formal_model import load
+          from fukaji.native_nnue import NativeSelector
+          m,spec=load()
+          with NativeSelector() as n:
+              result=n.select(shogi.Board('8k/9/7R1/7L1/9/9/9/9/8K b - 1'),m,movetime_ms=1000)
+          assert result.get('research_mate_proven') is True and result.get('research_mate_plies')==1,result
+          print('D50 PVS+mate preflight proven')
+          PY
+      - name: Restore D45 Adam3794 and protected parent families
+        run: |
+          set -euo pipefail
+          mkdir -p input
+          gh release download fukaji-d41-d37-selfplay-42017791719 --pattern D41-D37-20runner-selfplay-40games.tar.gz --dir input
+          gh release download fukaji-d42-d37-before-vs-d41-after-42218550652 --pattern D42-D37-before-vs-D41-after-100games.tar.gz --dir input
+          gh release download fukaji-d43-d37-trained-42292240321 --pattern D43-D37-1000trained-unadopted.tar.gz --dir input
+          gh release download fukaji-d43-d37-1000-selfplay-42292240321 --pattern D43-D37-1000games.tar.gz --dir input
+          gh release download fukaji-d43-d37-before-after-200games-42292240321 --pattern D43-D37-before-after-200games.tar.gz --dir input
+          gh release download fukaji-d45-d43-trained-42326260509 --pattern D45-D43-1000trained-unadopted.tar.gz --dir input
+          gh release download fukaji-d45-d43-1000-selfplay-42326260509 --pattern D45-D43-1000games.tar.gz --dir input
+          gh release download fukaji-d45-d43-before-after-200games-42326260509 --pattern D45-D43-before-after-200games.tar.gz --dir input
+          gh release download fukaji-d47-pvs-d45-300games-42336055212 --pattern D47-PVS-vs-D45-300games-with-runner-audit.tar.gz --dir input
+          gh release download fukaji-d48-pvs-mate-d45-100games-42339652079 --pattern D48-PVS-Mate-vs-D45-100games-with-runner-audit.tar.gz --dir input
+          echo '41c8f56b76cd5d7aa87bff9131d553b304fa4134bf7448c05d3309458f66760e  research/d41-public/D37-Adam2106-training-state.tar.gz' | sha256sum -c -
+          echo '8708db460d4d2bcad949d91ab881d9aeb804abcb8e28808dbbb70bda5c21bd9f  input/D41-D37-20runner-selfplay-40games.tar.gz' | sha256sum -c -
+          echo '5b2cb8495ae7fcdbe2b9181c3d5b3aedb87b2fd72226b1e4de76abb2d3d1f570  input/D42-D37-before-vs-D41-after-100games.tar.gz' | sha256sum -c -
+          echo '955a1785940f9f2aac946739af1b8637e5ef53d06297e6ad7d32b75a5a94a236  input/D43-D37-1000trained-unadopted.tar.gz' | sha256sum -c -
+          echo 'fe0a4eaec246a7e2e32c911c4327232eef83f8a87897e7a3a96538220ced6bbd  input/D43-D37-1000games.tar.gz' | sha256sum -c -
+          echo 'c08ccab3f5e9ef90c288e8ccfc5f3951eb188dfc30876af775c2ba3cfb03f510  input/D43-D37-before-after-200games.tar.gz' | sha256sum -c -
+          echo 'd44349470b4068224ce1383f29d1afdf941c39931f6141c278927976da52c820  input/D45-D43-1000trained-unadopted.tar.gz' | sha256sum -c -
+          echo 'be22c4e92eff0b684f06502dcdf9be52071ab60beab5a4a91edd8605f4d873c4  input/D45-D43-1000games.tar.gz' | sha256sum -c -
+          echo '6531747f10d015bec7817186f6fbed149aa6ac1822d94fbcce7858a7ceae211b  input/D45-D43-before-after-200games.tar.gz' | sha256sum -c -
+          echo '7acd4abaed27f1598520228987067c459f677c2985544e8cf532d0eb7381e5a7  input/D47-PVS-vs-D45-300games-with-runner-audit.tar.gz' | sha256sum -c -
+          echo '427ebf9a8671d56b3f3b0fef24a62a2242e293a559e4307027747d30eb3a2f65  input/D48-PVS-Mate-vs-D45-100games-with-runner-audit.tar.gz' | sha256sum -c -
+      - name: Freeze 1000 entirely new PVS plus mate selfplay families
+        run: |
+          python scripts/d50_games.py prepare --state research/d41-public/D37-Adam2106-training-state.tar.gz --d41 input/D41-D37-20runner-selfplay-40games.tar.gz --d42 input/D42-D37-before-vs-D41-after-100games.tar.gz --d43-trained input/D43-D37-1000trained-unadopted.tar.gz --d43-selfplay input/D43-D37-1000games.tar.gz --d43-audit input/D43-D37-before-after-200games.tar.gz --d45-trained input/D45-D43-1000trained-unadopted.tar.gz --d45-selfplay input/D45-D43-1000games.tar.gz --d45-audit input/D45-D43-before-after-200games.tar.gz --d47-audit input/D47-PVS-vs-D45-300games-with-runner-audit.tar.gz --d48-audit input/D48-PVS-Mate-vs-D45-100games-with-runner-audit.tar.gz --out prepared
+      - name: Actual C++ D49 formal v0.4.1 search, incremental 36-ply smoke
+        run: |
+          python scripts/d50_games.py segment --work prepared/runtime --index 0 --out smoke
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          path=Path('smoke/game-0.partial.json')
+          if path.exists():
+            d=json.loads(path.read_text())
+            assert d['telemetry'] and all('research_mate_nodes' in r for r in d['telemetry'])
+          else:
+            assert Path('smoke/game-0.json').exists()
+          print('D50 first selfplay segment used official PVS+mate C++')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d50-runtime-${{ github.run_id }}
+          path: prepared/runtime.tar.gz
+          if-no-files-found: error
+          retention-days: 30
+
+  wave0:
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 160
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        lane: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: d50-runtime-${{ github.run_id }}
+          path: input
+      - name: Selfplay v0.4.1 D45 / wave 0 / 10 games per lane
+        env:
+          LANE: ${{ matrix.lane }}
+        run: python scripts/d50_games.py worker --runtime input/runtime.tar.gz --round 0 --lane "$LANE" --out output
+      - name: Save exactly 10 finished games on independent runner
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: d50-r0-lane-${{ matrix.lane }}
+          path: output/r0-lane-*.tar.gz
+          if-no-files-found: warn
+          retention-days: 30
+
+  wave1:
+    needs: wave0
+    runs-on: ubuntu-latest
+    timeout-minutes: 160
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        lane: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: d50-runtime-${{ github.run_id }}
+          path: input
+      - name: Selfplay v0.4.1 D45 / wave 1 / 10 games per lane
+        env:
+          LANE: ${{ matrix.lane }}
+        run: python scripts/d50_games.py worker --runtime input/runtime.tar.gz --round 1 --lane "$LANE" --out output
+      - name: Save exactly 10 finished games on independent runner
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: d50-r1-lane-${{ matrix.lane }}
+          path: output/r1-lane-*.tar.gz
+          if-no-files-found: warn
+          retention-days: 30
+
+  wave2:
+    needs: wave1
+    runs-on: ubuntu-latest
+    timeout-minutes: 160
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        lane: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: d50-runtime-${{ github.run_id }}
+          path: input
+      - name: Selfplay v0.4.1 D45 / wave 2 / 10 games per lane
+        env:
+          LANE: ${{ matrix.lane }}
+        run: python scripts/d50_games.py worker --runtime input/runtime.tar.gz --round 2 --lane "$LANE" --out output
+      - name: Save exactly 10 finished games on independent runner
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: d50-r2-lane-${{ matrix.lane }}
+          path: output/r2-lane-*.tar.gz
+          if-no-files-found: warn
+          retention-days: 30
+
+  wave3:
+    needs: wave2
+    runs-on: ubuntu-latest
+    timeout-minutes: 160
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        lane: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: d50-runtime-${{ github.run_id }}
+          path: input
+      - name: Selfplay v0.4.1 D45 / wave 3 / 10 games per lane
+        env:
+          LANE: ${{ matrix.lane }}
+        run: python scripts/d50_games.py worker --runtime input/runtime.tar.gz --round 3 --lane "$LANE" --out output
+      - name: Save exactly 10 finished games on independent runner
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: d50-r3-lane-${{ matrix.lane }}
+          path: output/r3-lane-*.tar.gz
+          if-no-files-found: warn
+          retention-days: 30
+
+  wave4:
+    needs: wave3
+    runs-on: ubuntu-latest
+    timeout-minutes: 160
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        lane: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: d50-runtime-${{ github.run_id }}
+          path: input
+      - name: Selfplay v0.4.1 D45 / wave 4 / 10 games per lane
+        env:
+          LANE: ${{ matrix.lane }}
+        run: python scripts/d50_games.py worker --runtime input/runtime.tar.gz --round 4 --lane "$LANE" --out output
+      - name: Save exactly 10 finished games on independent runner
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: d50-r4-lane-${{ matrix.lane }}
+          path: output/r4-lane-*.tar.gz
+          if-no-files-found: warn
+          retention-days: 30
+
+  aggregate:
+    needs: wave4
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    permissions:
+      contents: write
+      actions: read
+    outputs:
+      source_sha: ${{ steps.publish.outputs.source_sha }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: d50-runtime-${{ github.run_id }}
+          path: input
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: d50-r*-lane-*
+          merge-multiple: true
+          path: input/lanes
+      - name: Independently replay and verify all 1000 legal training games
+        run: python scripts/d50_games.py collect --runtime input/runtime.tar.gz --downloads input/lanes --out collected
+      - name: Publish full selfplay training SHA-verified release
+        id: publish
+        env:
+          TAG: fukaji-d50-d45-1000-selfplay-${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          file=collected/D50-D45-1000games.tar.gz
+          expected="$(sha256sum "$file" | cut -d ' ' -f1)"
+          gh release create "$TAG" "$file" --target "$GITHUB_SHA" --title 'D50: current D45 v0.4.1 1000 legal selfplay games' --notes '1000 owner-ordered new train games, official PVS+mate search v0.4.1, 100 independent runner jobs in five waves. NNUE unchanged until audit.'
+          mkdir -p readback
+          gh release download "$TAG" --pattern D50-D45-1000games.tar.gz --dir readback
+          test "$expected" = "$(sha256sum readback/D50-D45-1000games.tar.gz | cut -d ' ' -f1)"
+          echo "source_sha=$expected" >> "$GITHUB_OUTPUT"
+          cat collected/publication/report.json >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: d50-selfplay-receipt-${{ github.run_id }}
+          path: |
+            collected/receipt.json
+            collected/publication/report.json
+          retention-days: 30
+  train:
+    needs: aggregate
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    permissions:
+      contents: write
+      actions: read
+    outputs:
+      trained_sha: ${{ steps.publish.outputs.trained_sha }}
+      model_sha: ${{ steps.publish.outputs.model_sha }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - name: Restore D45 Adam3794 full state, D45 history and 1000 new selfplay
+        run: |
+          set -euo pipefail
+          mkdir -p input
+          gh release download fukaji-d50-d45-1000-selfplay-${{ github.run_id }} --pattern D50-D45-1000games.tar.gz --dir input
+          gh release download fukaji-d45-d43-trained-42326260509 --pattern D45-D43-1000trained-unadopted.tar.gz --dir input
+          gh release download fukaji-d45-d43-1000-selfplay-42326260509 --pattern D45-D43-1000games.tar.gz --dir input
+          echo '${{ needs.aggregate.outputs.source_sha }}  input/D50-D45-1000games.tar.gz' | sha256sum -c -
+          echo 'd44349470b4068224ce1383f29d1afdf941c39931f6141c278927976da52c820  input/D45-D43-1000trained-unadopted.tar.gz' | sha256sum -c -
+          echo 'be22c4e92eff0b684f06502dcdf9be52071ab60beab5a4a91edd8605f4d873c4  input/D45-D43-1000games.tar.gz' | sha256sum -c -
+      - name: Continue current D45 Adam3794 from verified D50 selfplay
+        run: |
+          python scripts/d50_train.py --state research/d41-public/D37-Adam2106-training-state.tar.gz --baseline-trained input/D45-D43-1000trained-unadopted.tar.gz --old-selfplay input/D45-D43-1000games.tar.gz --source input/D50-D45-1000games.tar.gz --source-sha "${{ needs.aggregate.outputs.source_sha }}" --out trained
+      - name: Release complete NNUE + optimizer and verify SHA readback
+        id: publish
+        env:
+          TAG: fukaji-d50-d45-trained-${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          file=trained/D50-D45-1000trained-unadopted.tar.gz
+          expected="$(sha256sum "$file" | cut -d ' ' -f1)"
+          model_sha="$(python -c 'import json;print(json.load(open("trained/report.json"))["trained_sha256"])')"
+          gh release create "$TAG" "$file" --target "$GITHUB_SHA" --title 'D50: v0.4.1 D45 NNUE Adam continuation before audit' --notes 'Learn current D45 from 1000 new PVS+mate games, plus permitted prior train replay. Full optimizer and NNUE preserved, not yet formally adopted.'
+          mkdir -p readback
+          gh release download "$TAG" --pattern D50-D45-1000trained-unadopted.tar.gz --dir readback
+          test "$expected" = "$(sha256sum readback/D50-D45-1000trained-unadopted.tar.gz | cut -d ' ' -f1)"
+          echo "trained_sha=$expected" >> "$GITHUB_OUTPUT"
+          echo "model_sha=$model_sha" >> "$GITHUB_OUTPUT"
+          cat trained/report.json >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: d50-trained-receipt-${{ github.run_id }}
+          path: |
+            trained/report.json
+            trained/receipt.json
+          retention-days: 30
+  audit_prepare:
+    needs: [aggregate, train]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - name: Fetch verified new model plus all protected historical groups
+        run: |
+          set -euo pipefail
+          mkdir -p input
+          gh release download fukaji-d50-d45-trained-${{ github.run_id }} --pattern D50-D45-1000trained-unadopted.tar.gz --dir input
+          gh release download fukaji-d50-d45-1000-selfplay-${{ github.run_id }} --pattern D50-D45-1000games.tar.gz --dir input
+          gh release download fukaji-d45-d43-trained-42326260509 --pattern D45-D43-1000trained-unadopted.tar.gz --dir input
+          gh release download fukaji-d45-d43-1000-selfplay-42326260509 --pattern D45-D43-1000games.tar.gz --dir input
+          gh release download fukaji-d45-d43-before-after-200games-42326260509 --pattern D45-D43-before-after-200games.tar.gz --dir input
+          gh release download fukaji-d43-d37-1000-selfplay-42292240321 --pattern D43-D37-1000games.tar.gz --dir input
+          gh release download fukaji-d43-d37-before-after-200games-42292240321 --pattern D43-D37-before-after-200games.tar.gz --dir input
+          gh release download fukaji-d41-d37-selfplay-42017791719 --pattern D41-D37-20runner-selfplay-40games.tar.gz --dir input
+          gh release download fukaji-d42-d37-before-vs-d41-after-42218550652 --pattern D42-D37-before-vs-D41-after-100games.tar.gz --dir input
+          gh release download fukaji-d47-pvs-d45-300games-42336055212 --pattern D47-PVS-vs-D45-300games-with-runner-audit.tar.gz --dir input
+          gh release download fukaji-d48-pvs-mate-d45-100games-42339652079 --pattern D48-PVS-Mate-vs-D45-100games-with-runner-audit.tar.gz --dir input
+          echo '${{ needs.train.outputs.trained_sha }}  input/D50-D45-1000trained-unadopted.tar.gz' | sha256sum -c -
+          echo '${{ needs.aggregate.outputs.source_sha }}  input/D50-D45-1000games.tar.gz' | sha256sum -c -
+          echo 'd44349470b4068224ce1383f29d1afdf941c39931f6141c278927976da52c820  input/D45-D43-1000trained-unadopted.tar.gz' | sha256sum -c -
+          echo 'be22c4e92eff0b684f06502dcdf9be52071ab60beab5a4a91edd8605f4d873c4  input/D45-D43-1000games.tar.gz' | sha256sum -c -
+          echo '6531747f10d015bec7817186f6fbed149aa6ac1822d94fbcce7858a7ceae211b  input/D45-D43-before-after-200games.tar.gz' | sha256sum -c -
+          echo 'fe0a4eaec246a7e2e32c911c4327232eef83f8a87897e7a3a96538220ced6bbd  input/D43-D37-1000games.tar.gz' | sha256sum -c -
+          echo 'c08ccab3f5e9ef90c288e8ccfc5f3951eb188dfc30876af775c2ba3cfb03f510  input/D43-D37-before-after-200games.tar.gz' | sha256sum -c -
+          echo '8708db460d4d2bcad949d91ab881d9aeb804abcb8e28808dbbb70bda5c21bd9f  input/D41-D37-20runner-selfplay-40games.tar.gz' | sha256sum -c -
+          echo '5b2cb8495ae7fcdbe2b9181c3d5b3aedb87b2fd72226b1e4de76abb2d3d1f570  input/D42-D37-before-vs-D41-after-100games.tar.gz' | sha256sum -c -
+          echo '7acd4abaed27f1598520228987067c459f677c2985544e8cf532d0eb7381e5a7  input/D47-PVS-vs-D45-300games-with-runner-audit.tar.gz' | sha256sum -c -
+          echo '427ebf9a8671d56b3f3b0fef24a62a2242e293a559e4307027747d30eb3a2f65  input/D48-PVS-Mate-vs-D45-100games-with-runner-audit.tar.gz' | sha256sum -c -
+      - name: Freeze unseen 100 opening pairs on identical v0.4.1 search
+        run: |
+          python scripts/d50_arena.py prepare --state research/d41-public/D37-Adam2106-training-state.tar.gz --baseline-archive input/D45-D43-1000trained-unadopted.tar.gz --old-selfplay input/D43-D37-1000games.tar.gz --old-audit input/D43-D37-before-after-200games.tar.gz --trained input/D50-D45-1000trained-unadopted.tar.gz --trained-sha "${{ needs.train.outputs.trained_sha }}" --source input/D50-D45-1000games.tar.gz --source-sha "${{ needs.aggregate.outputs.source_sha }}" --d41 input/D41-D37-20runner-selfplay-40games.tar.gz --d42 input/D42-D37-before-vs-D41-after-100games.tar.gz --d45-selfplay input/D45-D43-1000games.tar.gz --d45-audit input/D45-D43-before-after-200games.tar.gz --d47-audit input/D47-PVS-vs-D45-300games-with-runner-audit.tar.gz --d48-audit input/D48-PVS-Mate-vs-D45-100games-with-runner-audit.tar.gz --out prepared
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d50-audit-runtime-${{ github.run_id }}
+          path: prepared/runtime.tar.gz
+          if-no-files-found: error
+          retention-days: 30
+  audit:
+    needs: audit_prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 140
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        lane: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: d50-audit-runtime-${{ github.run_id }}
+          path: input
+      - name: Audit before D45 vs after D50, 5 pairs per independent runner
+        env:
+          LANE: ${{ matrix.lane }}
+        run: python scripts/d50_arena.py worker --runtime input/runtime.tar.gz --lane "$LANE" --out output
+      - name: Save all paired games for immutable postvalidation
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: d50-audit-lane-${{ matrix.lane }}
+          path: output/lane-*.tar.gz
+          if-no-files-found: warn
+          retention-days: 30
+  finish:
+    needs: [audit, audit_prepare]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: d50-audit-runtime-${{ github.run_id }}
+          path: input
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: d50-audit-lane-*
+          merge-multiple: true
+          path: input/lanes
+      - name: Replay all 200 legal paired games, check NNUE and clock and decide
+        run: python scripts/d50_arena.py collect --runtime input/runtime.tar.gz --downloads input/lanes --out results
+      - name: Publish complete audited 200 games as SHA-verified release
+        env:
+          TAG: fukaji-d50-d45-before-after-200games-${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          file=results/D50-D45-before-after-200games.tar.gz
+          expected="$(sha256sum "$file" | cut -d ' ' -f1)"
+          gh release create "$TAG" "$file" --target "$GITHUB_SHA" --title 'D50: current D45 vs 1000-game trained NNUE paired200' --notes 'Frozen identical PVS+mate v0.4.1 on both sides. 100 new paired openings, all original legal games, outcome and clock telemetry. Formal current model unchanged before post-audit admission.'
+          mkdir -p readback
+          gh release download "$TAG" --pattern D50-D45-before-after-200games.tar.gz --dir readback
+          test "$expected" = "$(sha256sum readback/D50-D45-before-after-200games.tar.gz | cut -d ' ' -f1)"
+          cat results/publication/report.json >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: d50-audit-result-${{ github.run_id }}
+          path: |
+            results/publication/report.json
+            results/receipt.json
+          retention-days: 30
