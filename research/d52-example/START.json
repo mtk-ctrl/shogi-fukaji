@@ -1,9 +1,9 @@
 {
-  "enabled": true,
-  "request_id": "d52-shogidroid-real-win-20261108",
-  "release": "fukaji-d52-d50-before-after-200games-42401026786",
-  "sha256": "5f05369e2ad7edec6aa4098a9393889c989697e83a607cdc062967049630a542",
-  "format": "CSA",
-  "winner": "D52",
-  "preserve_original": true
+    "enabled": true,
+    "request_id": "d52-shogidroid-real-win-20261108",
+    "release": "fukaji-d52-d50-before-after-200games-42401026786",
+    "sha256": "5f05369e2ad7edec6aa4098a9393889c989697e83a607cdc062967049630a542",
+    "format": "CSA",
+    "winner": "D52",
+    "preserve_original": true
 }
