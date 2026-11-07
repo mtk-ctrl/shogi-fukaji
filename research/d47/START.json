@@ -1,0 +1,12 @@
+{
+  "enabled": true,
+  "request_id": "d47-20261107-pvs-d45-300-paired-20",
+  "baseline": "941598f2a9ec926d5f67dadf03582ccef718a56a843070dc1f576cc7eeca44e8",
+  "search_variant": "nonpruning-pvs",
+  "games": 300,
+  "opening_pairs": 150,
+  "runners": 20,
+  "native_source_blob_sha1": "06e0bf8c7e9508a400b58955312f277289830c94",
+  "research_script_blob_sha1": "d7b30d5f58e9cfc021838e3a5c2c36a0c7e81a62",
+  "owner_authorized": "exploration and 300 game comparison, not formal engine adoption"
+}
