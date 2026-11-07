@@ -25,3 +25,13 @@
 
 ## 次
 この1回は「PVS＋詰み」複合効果。PVS単独との優劣を直接断定しない。次は5手/7手詰みの独立評価問題（原SFENの解答列は読まない）、実戦での詰み見逃し・詰まされ防止を数え、詰み予測器の導入は別実験で比較する。
+
+## 2026-11-07 実行結果・確認記録（run 42339652079）
+- Actions run は completed/success、commit c90a1b66870836f1f0f50d523cefb292aad4ef58。prepare 1、独立対局 lane 0〜19 の20ジョブすべて success、collect 1もsuccess。集約ログの実測最大同時数20。
+- 50序盤ペア100局：研究版55勝、現行αβ44勝、引分0、未決着1。候補得点幅55〜56%。50ペア基準の保守的95%区間は35.79〜75.21%。勝ち越しは観測されたが優越の確証ではない。
+- 集約検証は12,395手の合法再生を通過。現行D45 snapshot SHA256 941598f2a9ec926d5f67dadf03582ccef718a56a843070dc1f576cc7eeca44e8、weights SHA256 9faf66a9d1fee9d282e35835628377ab7951bb94335a5d0498384bf88f4d2c26、plan SHA256 dbf66f5cd4ebcbdcecb99350b8b737810ad31fdbb49d3c44ab570dbde78e0219。
+- 詰み証明113件（1手55、3手49、5手9）、根候補の詰み防御除外1,934件、詰み探索未確定2,589件。未確定を不詰とは扱わない。
+- 思考時間：現行通常4,911手平均195.70ms/最大201.25ms、長考984手平均996.73ms/最大1003.71ms。研究版通常4,915手平均193.76ms/最大201.06ms、長考985手平均998.18ms/最大1003.66ms。各分類で予算+100ms超過0。
+- Release tag fukaji-d48-pvs-mate-d45-100games-42339652079。archive SHA256 427ebf9a8671d56b3f3b0fef24a62a2242e293a559e4307027747d30eb3a2f65。collectログではReleaseへのアップロード後、再ダウンロードしてローカルSHA一致を検査し成功。今回の確認環境ではReleaseバイナリを独立再取得できず、GitHub API上のasset digest一致とActions側の再取得成功ログを確認した（独立再計算は未実施）。
+- 正式NNUE・正式USI・正式探索の変更なし。研究版は未採用。次工程は独立詰み局面での正答率と実戦の詰み見逃し分析、PVS単独との差の切分け。追加の正式変更は別途本人判断。
+- 証拠：https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/42339652079 および https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d48-pvs-mate-d45-100games-42339652079
