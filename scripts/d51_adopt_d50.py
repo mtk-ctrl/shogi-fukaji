@@ -211,21 +211,21 @@ F00/F20の既存本人指示：「現行NNUEを直接学習し、同条件200局
 
 ## 比較実測
 - [D50 Actions実run](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/{RUN}) success、全125ジョブ（100訓練＋20比較＋5準備集約等）。1000局決着1000、未決着0。新100独立序盤×先後入替え200局を全20ランナーで実施し**新D50 159勝・旧D45 41勝、引分/未決着とも0**。20,331手合法再生。事前基準勝数差12以上・未決着10以下を満たす（差+118）。200ms＋長考1000ms最大10回/陣営、双方同じPVS＋1/3/5手詰み探索。
-- 新NNUE snapshot SHA256 \`{NEW}\`、optimizer **Adam3794→4702**。学習58,077局面、2epoch。旧bootstrap665と旧D45train300を許可済みreplayとして利用。独立モデル系列は作らず更新前D45 snapshotを保全。
-- [完全NNUE＋optimizer Release](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d50-d45-trained-{RUN}) SHA256 \`{TRAIN_SHA}\`。[1000局全原棋譜](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d50-d45-1000-selfplay-{RUN}) SHA256 \`{GAMES_SHA}\`。[200局全原棋譜・比較](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d50-d45-before-after-200games-{RUN}) SHA256 \`{AUDIT_SHA}\`。いずれも元D50 ActionsでRelease再取得SHAを照合。
-- 正式推論用 \`{MODEL_PATH}\` SHA256 \`{weights_sha}\`。旧D45推論用 \`models/fukaji-d45.nnue.npz\` と完全optimizerは不変更で復元可能。
+- 新NNUE snapshot SHA256 `{NEW}`、optimizer **Adam3794→4702**。学習58,077局面、2epoch。旧bootstrap665と旧D45train300を許可済みreplayとして利用。独立モデル系列は作らず更新前D45 snapshotを保全。
+- [完全NNUE＋optimizer Release](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d50-d45-trained-{RUN}) SHA256 `{TRAIN_SHA}`。[1000局全原棋譜](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d50-d45-1000-selfplay-{RUN}) SHA256 `{GAMES_SHA}`。[200局全原棋譜・比較](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d50-d45-before-after-200games-{RUN}) SHA256 `{AUDIT_SHA}`。いずれも元D50 ActionsでRelease再取得SHAを照合。
+- 正式推論用 `{MODEL_PATH}` SHA256 `{weights_sha}`。旧D45推論用 `models/fukaji-d45.nnue.npz` と完全optimizerは不変更で復元可能。
 
 ## 認可範囲・検査
-本人委任の範囲はNNUE重み更新まで。PVS＋詰み探索C++ SHA256 \`{CPP}\` とFUKAJI v0.4.1は不変。D51 Actionsで契約整合、回帰、実USI、1手詰み、隔離配布物、Release資産のSHA再取得を通して初めて現行化完了とする。CI失敗なら旧D45が現行のまま。学習後の159勝41敗はこの評価分布での強さの証拠であって未知の相手や時間制御で同じ勝率を保証しない。
+本人委任の範囲はNNUE重み更新まで。PVS＋詰み探索C++ SHA256 `{CPP}` とFUKAJI v0.4.1は不変。D51 Actionsで契約整合、回帰、実USI、1手詰み、隔離配布物、Release資産のSHA再取得を通して初めて現行化完了とする。CI失敗なら旧D45が現行のまま。学習後の159勝41敗はこの評価分布での強さの証拠であって未知の相手や時間制御で同じ勝率を保証しない。
 """)
 
     specdoc="docs/現行エンジン仕様.md"
     modify(specdoc,
        "更新：2026-11-07。**現行のNNUE重みはD45（941598f2、Adam3794）**。D43から第2周の1000局自己対局で追加学習し、200ms＋長考1秒10回の200局直接比較で**155勝44敗・未決着1局**。D49でPVS＋詰み探索を正式採用し、USI versionはFUKAJI v0.4.1。NNUE重み不変。",
        "更新：2026-11-07。**現行のNNUE重みはD50（641f3667、Adam4702）**。現行D45からPVS＋詰み探索で第3周1000局を自己対局し、標準200局比較で**159勝41敗・引分/未決着0局**。USI version FUKAJI v0.4.1・D49正式PVS＋詰み探索は不変。")
-    modify(specdoc,f"\`{OLD}\`",f"\`{NEW}\`")
-    modify(specdoc,"\`models/fukaji-d45.nnue.npz\`",f"\`{MODEL_PATH}\`")
-    modify(specdoc,f"\`{OLD_WEIGHTS}\`",f"\`{weights_sha}\`")
+    modify(specdoc,f"`{OLD}`",f"`{NEW}`")
+    modify(specdoc,"`models/fukaji-d45.nnue.npz`",f"`{MODEL_PATH}`")
+    modify(specdoc,f"`{OLD_WEIGHTS}`",f"`{weights_sha}`")
     change_section(specdoc,"## 現行モデルの採用判断と強さの不確実性",
                    "## 復元・研究との境界",
                    f"""## 現行モデルの採用判断と強さの不確実性
@@ -238,13 +238,13 @@ F00/F20の既存本人指示：「現行NNUEを直接学習し、同条件200局
     modify(specdoc,"失敗・悪化時は更新前D45へ戻す。","失敗・悪化時は更新前D50へ戻す。")
     append(specdoc,f"""## D51：正式D50 NNUEを採用し探索は不変
 
-- 現行NNUE snapshot \`{NEW}\`、推論 \`{MODEL_PATH}\` SHA256 \`{weights_sha}\`、Adam4702。追加学習の完全stateはD50学習Release。正式NNUE差替え以外のUSI v0.4.1、PVS＋詰み探索、時計・機能・仕様は変更しない。
+- 現行NNUE snapshot `{NEW}`、推論 `{MODEL_PATH}` SHA256 `{weights_sha}`、Adam4702。追加学習の完全stateはD50学習Release。正式NNUE差替え以外のUSI v0.4.1、PVS＋詰み探索、時計・機能・仕様は変更しない。
 - [D51正式採用記録](decisions/2026-11-07_D51_D50学習後重みを現行採用.md)、CIの正式配布・実USI・SHA読戻しの検証結果を最終根拠にする。旧D45 v0.4.1配布を復元用に保持。""")
     # Update authoritative current section; historical D49 notes remain as history.
     change_section("docs/00_開発ルーター.md","## 現行モデル","## 現在の研究・保存再開点",
         f"""## 現行モデル
 
-**現行NNUE D50（\`{NEW}\`、Adam4702）**。D45から新規1000局自己対局・直接学習し、同一正式PVS＋詰み探索を用いる200局標準比較でD50が159勝41敗、未決着0で採用。**正式 USI FUKAJI v0.4.1、探索はD49採用仕様のまま**。[D51採用判断](decisions/2026-11-07_D51_D50学習後重みを現行採用.md)、[D50完全学習state](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d50-d45-trained-{RUN})、[現行仕様](現行エンジン仕様.md)、[manifest](../formal/model.json)を正本とする。次周はD50/Adam4702が唯一の学習親。旧D45・D43は不変snapshotと復元専用。
+**現行NNUE D50（`{NEW}`、Adam4702）**。D45から新規1000局自己対局・直接学習し、同一正式PVS＋詰み探索を用いる200局標準比較でD50が159勝41敗、未決着0で採用。**正式 USI FUKAJI v0.4.1、探索はD49採用仕様のまま**。[D51採用判断](decisions/2026-11-07_D51_D50学習後重みを現行採用.md)、[D50完全学習state](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d50-d45-trained-{RUN})、[現行仕様](現行エンジン仕様.md)、[manifest](../formal/model.json)を正本とする。次周はD50/Adam4702が唯一の学習親。旧D45・D43は不変snapshotと復元専用。
 
 """)
     append("docs/00_開発ルーター.md",
@@ -254,18 +254,18 @@ F00/F20の既存本人指示：「現行NNUEを直接学習し、同条件200局
     append("AGENTS.md",
        f"""## 最新現行NNUE（D51、2026-11-07）
 
-**現行はD50/Adam4702、snapshot \`{NEW}\`。** 現行NNUE D45（Adam3794）から自己対局1000局＋比較200局で159勝41敗となり、F00/F20の本人委任に従ってNNUE重みのみ正式反映。**FUKAJI v0.4.1、D49のPVS＋1/3/5手詰み探索はそのまま**。上部のD45/旧版表示はその時点の歴史的記述。次周は[D50完全学習state](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d50-d45-trained-{RUN})のAdam4702を唯一の学習親とする。[判断](docs/decisions/2026-11-07_D51_D50学習後重みを現行採用.md)。""")
+**現行はD50/Adam4702、snapshot `{NEW}`。** 現行NNUE D45（Adam3794）から自己対局1000局＋比較200局で159勝41敗となり、F00/F20の本人委任に従ってNNUE重みのみ正式反映。**FUKAJI v0.4.1、D49のPVS＋1/3/5手詰み探索はそのまま**。上部のD45/旧版表示はその時点の歴史的記述。次周は[D50完全学習state](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d50-d45-trained-{RUN})のAdam4702を唯一の学習親とする。[判断](docs/decisions/2026-11-07_D51_D50学習後重みを現行採用.md)。""")
     change_section("docs/ROADMAP.md","## 現行モデル","## 現在の研究",
         f"""## 現行モデル
 
-**現行D50 NNUE（\`{NEW}\`、Adam4702）、USI FUKAJI v0.4.1・PVS＋詰み探索は継続。** 旧D45/Adam3794の1000局自己対局から追加学習し、新規100序盤×先後200局でD50が**159勝41敗、未決着0**。[D51採用判断](decisions/2026-11-07_D51_D50学習後重みを現行採用.md)／[D50実行](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/{RUN})／[D50完全学習state](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d50-d45-trained-{RUN})／[manifest](../formal/model.json)／[現行仕様](現行エンジン仕様.md)。次周の学習親は**D50/Adam4702のみ**。旧D45・D43は復元用に保持。
+**現行D50 NNUE（`{NEW}`、Adam4702）、USI FUKAJI v0.4.1・PVS＋詰み探索は継続。** 旧D45/Adam3794の1000局自己対局から追加学習し、新規100序盤×先後200局でD50が**159勝41敗、未決着0**。[D51採用判断](decisions/2026-11-07_D51_D50学習後重みを現行採用.md)／[D50実行](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/{RUN})／[D50完全学習state](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d50-d45-trained-{RUN})／[manifest](../formal/model.json)／[現行仕様](現行エンジン仕様.md)。次周の学習親は**D50/Adam4702のみ**。旧D45・D43は復元用に保持。
 
 """)
     append("docs/ROADMAP.md",
         f"""## D51：D50の正式採用（2026-11-07）
 
 - [D50学習・200局直接比較](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/{RUN})：1000局全決着、58,077学習局面、Adam3794→4702、**D50 159勝D45 41勝、未決着0**。事前基準通過。
-- 正式NNUEを \`{NEW}\` へ更新（推論SHA \`{weights_sha}\`）。D49のPVS＋詰み探索とUSI v0.4.1は維持。[採用判断](decisions/2026-11-07_D51_D50学習後重みを現行採用.md)。契約・回帰・実USI・隔離bundle・Release SHAの通過をD51 Actionsで必須とし、正式配布の読戻しを検証する。""")
+- 正式NNUEを `{NEW}` へ更新（推論SHA `{weights_sha}`）。D49のPVS＋詰み探索とUSI v0.4.1は維持。[採用判断](decisions/2026-11-07_D51_D50学習後重みを現行採用.md)。契約・回帰・実USI・隔離bundle・Release SHAの通過をD51 Actionsで必須とし、正式配布の読戻しを検証する。""")
     # Only change hash locks that actually need to change.
     for name in ("formal/model.json",specdoc):
         contract[name]=sha((ROOT/name).read_bytes())
@@ -285,7 +285,7 @@ F00/F20の既存本人指示：「現行NNUEを直接学習し、同条件200局
         "audit_games":200,"validated_plies":20331,
         "contract_sha256":sha((ROOT/contract_path).read_bytes())
     }
-    write_json(out.relative_to(ROOT)/"receipt.json",receipt)
+    write_json(str(out/"receipt.json"),receipt)
     print(json.dumps(receipt))
 
 if __name__=="__main__":
