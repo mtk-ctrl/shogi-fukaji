@@ -1,0 +1,233 @@
+name: D47 PVS search vs current D45 NNUE paired300 on 20 runners
+on:
+  workflow_dispatch:
+    inputs:
+      execute:
+        type: boolean
+        required: true
+        default: false
+  push:
+    branches: [main]
+    paths:
+      - research/d47/START.json
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-d47-pvs-d45-300-search-only
+  cancel-in-progress: false
+jobs:
+  prepare:
+    if: github.repository == 'mtk-ctrl/shogi-fukaji' && (github.event_name == 'push' || inputs.execute)
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - name: Verify owner request, pinned D45 NNUE and source boundary
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json,subprocess
+          q=json.load(open('research/d47/START.json'))
+          expected={'enabled':True,'request_id':'d47-20261107-pvs-d45-300-paired-20',
+            'baseline':'941598f2a9ec926d5f67dadf03582ccef718a56a843070dc1f576cc7eeca44e8',
+            'search_variant':'nonpruning-pvs','games':300,'opening_pairs':150,'runners':20,
+            'native_source_blob_sha1':'06e0bf8c7e9508a400b58955312f277289830c94',
+            'research_script_blob_sha1':'d7b30d5f58e9cfc021838e3a5c2c36a0c7e81a62',
+            'owner_authorized':'exploration and 300 game comparison, not formal engine adoption'}
+          if q!=expected:raise SystemExit('D47 request parameters drift')
+          spec=json.load(open('formal/model.json'))
+          if (spec['research_snapshot_sha256']!=q['baseline'] or
+              spec['weights_sha256']!='9faf66a9d1fee9d282e35835628377ab7951bb94335a5d0498384bf88f4d2c26' or
+              spec['optimizer_step']!=3794):raise SystemExit('current D45 changed')
+          for path,sha in [('native/nnue_search_ffi.cpp',q['native_source_blob_sha1']),
+                           ('scripts/d47_search_compare.py',q['research_script_blob_sha1'])]:
+            actual=subprocess.check_output(['git','hash-object',path],text=True).strip()
+            if actual!=sha:raise SystemExit('D47 source changed: '+path)
+          print('D45 fixed; official engine unchanged; one research search block')
+          PY
+      - name: Contract and regression tests plus fixed-depth PVS equivalence
+        run: |
+          set -euo pipefail
+          python scripts/check_fukaji_contracts.py
+          python -m py_compile scripts/d47_search_compare.py
+          python -m unittest discover -s tests -q
+          python scripts/d47_search_compare.py preflight --out preflight
+          git diff --check
+      - name: Download historical training and audit openings
+        run: |
+          set -euo pipefail
+          mkdir -p input
+          gh release download fukaji-d43-d37-1000-selfplay-42292240321 --pattern D43-D37-1000games.tar.gz --dir input
+          gh release download fukaji-d43-d37-before-after-200games-42292240321 --pattern D43-D37-before-after-200games.tar.gz --dir input
+          gh release download fukaji-d45-d43-1000-selfplay-42326260509 --pattern D45-D43-1000games.tar.gz --dir input
+          gh release download fukaji-d45-d43-before-after-200games-42326260509 --pattern D45-D43-before-after-200games.tar.gz --dir input
+          echo 'fe0a4eaec246a7e2e32c911c4327232eef83f8a87897e7a3a96538220ced6bbd  input/D43-D37-1000games.tar.gz' | sha256sum -c -
+          echo 'c08ccab3f5e9ef90c288e8ccfc5f3951eb188dfc30876af775c2ba3cfb03f510  input/D43-D37-before-after-200games.tar.gz' | sha256sum -c -
+          echo 'be22c4e92eff0b684f06502dcdf9be52071ab60beab5a4a91edd8605f4d873c4  input/D45-D43-1000games.tar.gz' | sha256sum -c -
+          echo '6531747f10d015bec7817186f6fbed149aa6ac1822d94fbcce7858a7ceae211b  input/D45-D43-before-after-200games.tar.gz' | sha256sum -c -
+      - name: Freeze 150 new independent openings
+        run: |
+          python scripts/d47_search_compare.py prepare \
+            --history input/D43-D37-1000games.tar.gz \
+                      input/D43-D37-before-after-200games.tar.gz \
+                      input/D45-D43-1000games.tar.gz \
+                      input/D45-D43-before-after-200games.tar.gz \
+            --out prepared
+      - name: Play a real candidate native search segment before fan-out
+        run: |
+          python scripts/d47_search_compare.py segment \
+            --work prepared/runtime --index 0 --side 1 --out smoke
+          python - <<'PY'
+          from pathlib import Path
+          assert (Path('smoke')/'family-000-candidate-black1.partial.json').exists() or (Path('smoke')/'family-000-candidate-black1.json').exists()
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d47-runtime-${{ github.run_id }}
+          path: prepared/runtime.tar.gz
+          if-no-files-found: error
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: d47-preflight-${{ github.run_id }}
+          path: |
+            preflight/preflight.json
+            prepared/receipt.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  compare:
+    name: D47 paired lane ${{ matrix.lane }}
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        lane: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: d47-runtime-${{ github.run_id }}
+          path: input
+      - name: Play complete paired games on this independent Actions runner
+        env:
+          LANE: ${{ matrix.lane }}
+        run: |
+          python scripts/d47_search_compare.py worker \
+            --runtime input/runtime.tar.gz --lane "$LANE" --out output
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: d47-lane-${{ matrix.lane }}
+          path: output/lane-*.tar.gz
+          if-no-files-found: warn
+          retention-days: 30
+
+  collect:
+    needs: compare
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: d47-runtime-${{ github.run_id }}
+          path: input
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: d47-lane-*
+          merge-multiple: true
+          path: input/lanes
+      - name: Audit 20 actual job IDs, clocks, and observed simultaneous runners
+        run: |
+          python - <<'PY'
+          import datetime,json,subprocess
+          from pathlib import Path
+          from os import environ
+          repo=environ['GITHUB_REPOSITORY'];run=environ['GITHUB_RUN_ID']
+          data=json.loads(subprocess.check_output(
+              ['gh','api',f'repos/{repo}/actions/runs/{run}/jobs?per_page=100'],text=True))
+          jobs=[x for x in data['jobs'] if x['name'].startswith('D47 paired lane ')]
+          expected={f'D47 paired lane {i}' for i in range(20)}
+          if len(jobs)!=20 or {x['name'] for x in jobs}!=expected or any(x['conclusion']!='success' for x in jobs):
+              raise SystemExit('20 real successful runner jobs not confirmed')
+          stamps=[]
+          for x in jobs:
+              if not x['started_at'] or not x['completed_at']:raise ValueError('missing job clock')
+              def dt(t):return datetime.datetime.fromisoformat(t.replace('Z','+00:00'))
+              stamps.extend([(dt(x['started_at']),1),(dt(x['completed_at']),-1)])
+          current=maximum=0
+          for _,change in sorted(stamps,key=lambda item:(item[0],item[1])):
+              current+=change;maximum=max(maximum,current)
+          payload={'run_id':int(run),'verified_independent_jobs':20,
+                   'max_observed_simultaneous_jobs':maximum,
+                   'jobs':[{'id':x['id'],'name':x['name'],'runner_name':x.get('runner_name'),
+                            'started_at':x['started_at'],'completed_at':x['completed_at'],
+                            'conclusion':x['conclusion']} for x in jobs]}
+          Path('runner-audit.json').write_text(json.dumps(payload,indent=2)+'\n')
+          print(json.dumps({'jobs':20,'simultaneous':maximum}))
+          PY
+      - name: Audit all 300 legal full games and immutable comparison source
+        run: |
+          python scripts/d47_search_compare.py collect \
+            --runtime input/runtime.tar.gz --downloads input/lanes --out collected
+          cp runner-audit.json collected/publication/runner-audit.json
+          tar -czf collected/D47-PVS-vs-D45-300games-with-runner-audit.tar.gz -C collected/publication .
+      - name: Publish complete 300 games and verify GitHub Release read-back SHA
+        env:
+          TAG: fukaji-d47-pvs-d45-300games-${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          file=collected/D47-PVS-vs-D45-300games-with-runner-audit.tar.gz
+          expected="$(sha256sum "$file" | cut -d ' ' -f1)"
+          gh release create "$TAG" "$file" collected/receipt.json runner-audit.json \
+            --target "$GITHUB_SHA" \
+            --title 'D47: 300 paired games with fixed current D45 NNUE and PVS search' \
+            --notes 'Research-only, not adopted. 150 opening pairs, 20 separate Actions runner jobs, game-by-game SHA and legal checks, clock and concurrency audit, current NNUE/USI untouched.'
+          mkdir -p readback
+          gh release download "$TAG" --pattern D47-PVS-vs-D45-300games-with-runner-audit.tar.gz --dir readback
+          test "$expected" = "$(sha256sum readback/D47-PVS-vs-D45-300games-with-runner-audit.tar.gz | cut -d ' ' -f1)"
+          cat collected/receipt.json >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: d47-final-${{ github.run_id }}
+          path: |
+            collected/publication/report.json
+            collected/receipt.json
+            runner-audit.json
+          if-no-files-found: warn
+          retention-days: 30
