@@ -1,0 +1,15 @@
+{
+  "schema": "fukaji-d52-shogidroid-sample-v1",
+  "original_run": 42401026786,
+  "source_release_tag": "fukaji-d52-d50-before-after-200games-42401026786",
+  "source_archive_sha256": "5f05369e2ad7edec6aa4098a9393889c989697e83a607cdc062967049630a542",
+  "source_game": "family-061-candidate-black0.json",
+  "source_game_json_sha256": "82eca728dc42d53c5eb3a399d5c4bc9c447127a5ee928d3bd3973c748cacc97f",
+  "d52_snapshot_sha256": "55ccc97db6c2d4ce9ff7c75f5e81d543fb6f12d169639c3ea6d24c89e95342ae",
+  "d50_snapshot_sha256": "641f36677b8d93c3237cfc4f0b6329a6beee55cff692302f529b3899ea74afd0",
+  "winner": "FUKAJI D52",
+  "d52_side": "gote",
+  "plies": 90,
+  "last_status": "checkmate",
+  "csa_sha256": "66b7872e5ff26d60632b9c08bf6a25914d2138b7ad8be4b0a2958753135f8976"
+}
