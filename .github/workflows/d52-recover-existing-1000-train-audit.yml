@@ -85,6 +85,23 @@ jobs:
           github-token: ${{ github.token }}
           merge-multiple: true
           path: input/lanes
+      - name: Fetch last selfplay artifact omitted by GitHub first-page limit (101 total)
+        uses: actions/download-artifact@v4
+        with:
+          name: d52-r0-lane-7
+          run-id: 42350699929
+          github-token: ${{ github.token }}
+          path: input/lanes
+      - name: Reject missing archives before costly replay (100/100 from original run)
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          expected={f'r{r}-lane-{lane:02d}.tar.gz' for r in range(5) for lane in range(20)}
+          actual={x.name for x in Path('input/lanes').glob('r*-lane-*.tar.gz')}
+          if actual!=expected:
+            raise SystemExit('Incomplete original D52 100 runner archives: missing='+str(sorted(expected-actual))+' extras='+str(sorted(actual-expected)))
+          print('D52 recovery: all 100 original runner archives fetched (incl. page2 artifact)')
+          PY
       - name: Independently replay and verify all 1000 legal training games
         run: python scripts/d52_games.py collect --runtime input/runtime.tar.gz --downloads input/lanes --out collected
       - name: Publish full selfplay training SHA-verified release
