@@ -55,6 +55,7 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           import json,hashlib,shogi
+          import shogi.CSA
           p=Path('research/d52-example/D52_win_vs_D50.csa')
           content=p.read_text('ascii')
           receipt=json.loads(Path('research/d52-example/provenance.json').read_text())
