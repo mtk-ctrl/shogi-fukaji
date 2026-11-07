@@ -94,7 +94,7 @@ def prepare(state,baseline_archive,old_selfplay,old_audit,trained,trained_archiv
         exclude.update(x["parent_id"] for x in plan["families"])
     for file,label,count,schema in (
         (d45_selfplay,"D45 train",1000,"d45-d43-1000-v1"),
-        (d45_audit,"D45 audit",100,"d50-paired200-v1"),
+        (d45_audit,"D45 audit",100,"d45-paired200-v1"),
         (d47_audit,"D47 audit",150,"d47-pvs-paired300-v1"),
         (d48_audit,"D48 audit",50,"d48-pvs-mate-paired100-v1")):
         with tarfile.open(file,"r:gz") as z:
