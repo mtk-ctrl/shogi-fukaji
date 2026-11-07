@@ -65,8 +65,7 @@ def verified_members(source: Path):
                     plan["families"][game["family_index"]]["parent_id"]):
                 raise ValueError("Wrong D43 original winner/model/role or parent provenance")
             winner = game["winner"]
-            if game["models"][winner] !=
-                    (AFTER if winner == game["candidate_side"] else BEFORE)):
+            if game["models"][winner] != (AFTER if winner == game["candidate_side"] else BEFORE):
                 raise ValueError("Winner and trained candidate side do not match")
             if game["status"] not in ("checkmate", "perpetual_check"):
                 raise ValueError("Nonstandard decisive game, review before export")
