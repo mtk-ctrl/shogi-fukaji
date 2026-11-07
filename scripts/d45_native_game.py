@@ -2,7 +2,7 @@
 Only the inherited D43 optimizer step differs. This module does not publish or adopt.
 """
 from __future__ import annotations
-import json, random
+import json, random, tarfile
 from pathlib import Path
 import shogi
 from fukaji.online_learning import atomic_json,load_snapshot,validate_game
@@ -39,7 +39,7 @@ def segment(runtime: Path, lane: int, game_side: int, out: Path, search_limit: i
     family = plan["families"][lane]["openings"][game_side]
     model, opt, _ = load_snapshot(runtime / "models", D37)
     if opt["step"] != 2882:
-        raise ValueError("D37 optimizer changed")
+        raise ValueError("D43 Adam2882 optimizer changed")
     out.mkdir(parents=True, exist_ok=True)
     complete = out / f"game-{game_side}.json"
     partial = out / f"game-{game_side}.partial.json"
