@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "request_id": "d48-20261107-pvs-mate-d45-100-paired-20",
+  "baseline": "941598f2a9ec926d5f67dadf03582ccef718a56a843070dc1f576cc7eeca44e8",
+  "search_variant": "pvs-plus-1-3-5-mate-proof",
+  "games": 100,
+  "opening_pairs": 50,
+  "runners": 20,
+  "native_source_blob_sha1": "06e0bf8c7e9508a400b58955312f277289830c94",
+  "research_script_blob_sha1": "354b038c7d9247f691e11c46c996e66157ff5977",
+  "mate_source_blob_sha1": "2ad3d9fdeb6126434f5e2c72cd5e9647742382ca",
+  "owner_authorized": "PVS plus mate search 100 paired games, no formal adoption"
+}
