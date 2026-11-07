@@ -1,0 +1,12 @@
+{
+  "enabled": true,
+  "former": "bf8c26f9f8f6adff8a87c46ab04fcf5cd76a7915be241da11b99bb4ae2ac8b9f",
+  "next": "941598f2a9ec926d5f67dadf03582ccef718a56a843070dc1f576cc7eeca44e8",
+  "source_run": 42326260509,
+  "games_trained": 1000,
+  "audit_games": 200,
+  "after_wins": 155,
+  "before_wins": 44,
+  "unresolved": 1,
+  "request_id": "d46-20261107-owner-adopt-d45"
+}
