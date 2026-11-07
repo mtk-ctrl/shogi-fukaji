@@ -57,6 +57,17 @@ def main():
             try:c=n.select(board,m,max_depth=2,fixed_depth=True,cancel=token)
             finally:token.close()
             for key in ('move','score','nodes','evaluations','depth'):assert a[key]==c[key],(key,a,c)
+    # D49 formal contract: the deployed C++ must actually execute the D48
+    # proof path, not merely advertise a new version string.
+    mate_probe_verified=False
+    if spec.get('search_backend_variant')=='d48_pvs_mate':
+        mate_board=shogi.Board('8k/9/7R1/7L1/9/9/9/9/8K b - 1')
+        with NativeSelector() as native:
+            proof=native.select(mate_board,m,movetime_ms=1000)
+        assert proof.get('research_mate_proven') is True,proof
+        assert proof.get('research_mate_plies')==1,proof
+        assert proof['move'] in {'2c1c','2c1c+','2c2a+','2c2b+'},proof
+        mate_probe_verified=True
     c=Client();plies=0;elapsed=[]
     try:
         c.send('usi');c.until('usiok');c.send('isready');c.until('readyok',90)
@@ -71,6 +82,12 @@ def main():
                 board.push(move);moves.append(word);plies+=1
                 if board.is_fourfold_repetition() or board.is_game_over():break
             c.send('gameover draw')
+        if spec.get('search_backend_variant')=='d48_pvs_mate':
+            c.send('usinewgame')
+            c.send('position sfen 8k/9/7R1/7L1/9/9/9/9/8K b - 1')
+            c.send('go movetime 1000')
+            mate_line=c.until('bestmove ',20)
+            assert mate_line.split()[1] in {'2c1c','2c1c+','2c2a+','2c2b+'},mate_line
         c.send('usinewgame');c.send('position startpos');c.send('go infinite');time.sleep(.03)
         start=time.monotonic();c.send('isready');c.until('readyok');c.send('stop');line=c.until('bestmove ')
         stop_ms=(time.monotonic()-start)*1000
@@ -88,7 +105,10 @@ def main():
     result=dict(version=spec['version'],weights_sha256=spec['weights_sha256'],
                 identical_depth2_positions=len(boards),usi_games=2,legal_usi_plies=plies,
                 movetime_ms=20,observed_max_ms=max(elapsed),stop_ms=stop_ms,
-                bundle_member_hashes_verified=bundle.exists(),purpose='deployment correctness, not strength')
+                bundle_member_hashes_verified=bundle.exists(),
+                research_mate_proof_verified=mate_probe_verified,
+                search_backend_variant=spec.get('search_backend_variant','basic_alpha_beta'),
+                purpose='deployment correctness, not strength')
     args.out.parent.mkdir(parents=True,exist_ok=True);args.out.write_text(json.dumps(result,indent=2)+'\n')
     print(json.dumps(result))
 
