@@ -1,0 +1,63 @@
+name: D46 diagnose D43 sample 282-ply game tactical competence
+on:
+  push:
+    branches: [research/d46-tactical-quality-20261107]
+    paths: [research/d46/START.json]
+permissions:
+  contents: write
+concurrency:
+  group: fukaji-d46-sample-diagnostic
+  cancel-in-progress: false
+jobs:
+  diagnose:
+    if: github.repository == 'mtk-ctrl/shogi-fukaji'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - name: Audit one ShogiDroid sample against actual 200-game Release
+        run: |
+          set -euo pipefail
+          python -m py_compile scripts/d46_d43_game_tactical_diagnostic.py
+          python - <<'PY'
+          import json
+          req=json.load(open('research/d46/START.json'))
+          assert req == {"run":"42292240321","game":"family-000-candidate-black0.json",
+                         "model":"D43","goal":"diagnose tactical weakness",
+                         "requested_after":"user observed severe tactics and king-attack problems"}
+          PY
+          mkdir -p input
+          gh release download fukaji-d43-d37-before-after-200games-42292240321 \
+            --pattern D43-D37-before-after-200games.tar.gz --dir input
+          echo 'c08ccab3f5e9ef90c288e8ccfc5f3951eb188dfc30876af775c2ba3cfb03f510  input/D43-D37-before-after-200games.tar.gz' | sha256sum -c -
+          python scripts/d46_d43_game_tactical_diagnostic.py \
+            --source input/D43-D37-before-after-200games.tar.gz \
+            --out research/d46/282ply-d43-depth-mate-drops.json
+      - name: Preserve diagnosis on separate research branch without altering D45 or formal
+        run: |
+          set -euo pipefail
+          git fetch origin research/d46-tactical-quality-20261107
+          test "$(git rev-parse origin/research/d46-tactical-quality-20261107)" = "$GITHUB_SHA"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add research/d46/282ply-d43-depth-mate-drops.json
+          git diff --cached --check
+          git commit -m "research(D46): verified 282-ply D43 tactical weakness stats and exact missed mate-in-one examples"
+          git push origin HEAD:refs/heads/research/d46-tactical-quality-20261107
+          git fetch origin research/d46-tactical-quality-20261107
+          test "$(git rev-parse origin/research/d46-tactical-quality-20261107)" = "$(git rev-parse HEAD)"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: d46-d43-282ply-tactical-diagnostic
+          path: research/d46/282ply-d43-depth-mate-drops.json
+          if-no-files-found: warn
+          retention-days: 30
