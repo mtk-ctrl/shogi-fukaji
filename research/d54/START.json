@@ -1,0 +1,15 @@
+{
+  "enabled": true,
+  "request_id": "d54-20261108-d52-v041-selfplay1000-20runner",
+  "baseline": "55ccc97db6c2d4ce9ff7c75f5e81d543fb6f12d169639c3ea6d24c89e95342ae",
+  "weights_sha256": "c0bfe9640e8fc8d6750d263f367581d33c428c7c05cea99f384afaeabfbb569f",
+  "optimizer_step": 5606,
+  "search_variant": "d48_pvs_mate",
+  "search_sha256": "c9340af265368547c37cbecc311d8d3982900885b433d1b4ccdc27fbdd7d041a",
+  "version": "FUKAJI v0.4.1",
+  "games": 1000,
+  "runners": 20,
+  "rounds": 5,
+  "compare_games": 200,
+  "formal_weights_adopt_after_verified_win": true
+}
