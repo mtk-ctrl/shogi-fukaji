@@ -11,7 +11,8 @@ on:
         required: true
         default: false
 permissions:
-  contents: read
+  contents: write
+  actions: read
 concurrency:
   group: fukaji-d52-recover-original-42350699929
   cancel-in-progress: false
@@ -160,6 +161,21 @@ jobs:
       - name: Continue current D45 Adam4702 from verified D50 selfplay
         run: |
           python scripts/d52_train.py --state research/d41-public/D37-Adam2106-training-state.tar.gz --baseline-trained input/D50-D45-1000trained-unadopted.tar.gz --old-selfplay input/D50-D45-1000games.tar.gz --source input/D52-D50-1000games.tar.gz --source-sha "${{ needs.aggregate.outputs.source_sha }}" --out trained
+      - name: Persist complete trained archive as Actions artifact BEFORE Release attempt
+        uses: actions/upload-artifact@v4
+        with:
+          name: d52-trained-fullstate-${{ github.run_id }}
+          path: |
+            trained/D52-D50-1000trained-unadopted.tar.gz
+            trained/report.json
+            trained/receipt.json
+          retention-days: 30
+          if-no-files-found: error
+      - name: Check release token access before publishing full optimizer
+        run: |
+          set -euo pipefail
+          gh auth status
+          gh release list --limit 2
       - name: Release complete NNUE + optimizer and verify SHA readback
         id: publish
         env:
@@ -169,7 +185,16 @@ jobs:
           file=trained/D52-D50-1000trained-unadopted.tar.gz
           expected="$(sha256sum "$file" | cut -d ' ' -f1)"
           model_sha="$(python -c 'import json;print(json.load(open("trained/report.json"))["trained_sha256"])')"
-          gh release create "$TAG" "$file" --target "$GITHUB_SHA" --title 'D52: v0.4.1 D50 NNUE Adam continuation before audit' --notes 'Learn current D45 from 1000 new PVS+mate games, plus permitted prior train replay. Full optimizer and NNUE preserved, not yet formally adopted.'
+          for attempt in 1 2 3; do
+            if gh release create "$TAG" "$file" --target "$GITHUB_SHA" --title 'D52: v0.4.1 D50 NNUE Adam continuation before audit' --notes 'Train current D50 from 1000 new PVS+mate games, plus permitted prior train replay. Full optimizer and NNUE preserved, not yet formally adopted.'; then
+              break
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              echo 'D52 full trained archive retained in Actions artifact; Release permissions need investigation'
+              exit 1
+            fi
+            sleep 5
+          done
           mkdir -p readback
           gh release download "$TAG" --pattern D52-D50-1000trained-unadopted.tar.gz --dir readback
           test "$expected" = "$(sha256sum readback/D52-D50-1000trained-unadopted.tar.gz | cut -d ' ' -f1)"
