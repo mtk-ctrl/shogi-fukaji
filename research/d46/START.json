@@ -1,0 +1,7 @@
+{
+  "run": "42292240321",
+  "game": "family-000-candidate-black0.json",
+  "model": "D43",
+  "goal": "diagnose tactical weakness",
+  "requested_after": "user observed severe tactics and king-attack problems"
+}
