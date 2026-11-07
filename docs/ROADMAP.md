@@ -4,7 +4,7 @@
 
 ## 現行モデル
 
-**D43（NNUE `bf8c26f9f8f6…`、Adam2882）を現行採用。USIのversion表示はFUKAJI v0.4.0を維持。** 旧D37（Adam2106）を直接追加学習：新規1000自己対局・決着994局、合法train＋過去665局、学習49,613局面。学習前D37との**200局標準比較で150勝50敗・引分0・未決着0**。[採用判断](decisions/2026-11-07_D43学習後モデルを現行に採用.md)、[200局の全棋譜Release](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d43-d37-before-after-200games-42292240321)、[D43学習stateとAdam2882](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d43-d37-trained-42292240321)。正式[manifest](../formal/model.json)と[仕様](現行エンジン仕様.md)を正本とする。次回の自己学習は必ずD43が唯一の親。旧D37・e0などは履歴・復元用として保護。
+**D45 NNUE（`941598f2a9ec926d5f67dadf03582ccef718a56a843070dc1f576cc7eeca44e8`、Adam3794）を現行採用。USI表示 FUKAJI v0.4.0は不変。** D43（`bf8c26f9f8f6adff8a87c46ab04fcf5cd76a7915be241da11b99bb4ae2ac8b9f`、Adam2882）から自己対局1000局と58,334局面追加学習し、独立100序盤×先後200局で**155勝44敗・引分0・未決着1**。[採用決定](decisions/2026-11-07_D45学習後モデルを現行に採用.md)、[比較結果](D45_D43_SECOND_ROUND_1000_GAMES_RESULT_20261107.md)、[完全state](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d45-d43-trained-42326260509)、[manifest](../formal/model.json)・[現行仕様](現行エンジン仕様.md)。次周は必ずD45/Adam3794から。旧D43/D37は復元専用として残す。
 
 ## 現在の研究
 - [D31](D31_TWO_BATCH_RETENTION_20261103.md)：400局/65,551手完了。c8対当時の正式NNUEは119勝76敗1分4未決着、対新経験のみ候補は97勝97敗4分2未決着。保持方式の候補間優位は未確定。
@@ -92,3 +92,9 @@
 - 新100序盤×先後交替200局：**学習後155勝、学習前44勝、引分0、未決着1、差+111**。事前閾値差12・未決着10以下を通過。全125ジョブ成功、棋譜・学習state・比較の3 Release保存／CI内SHA読戻し完了。
 - [D45詳細・3件のSHA](D45_D43_SECOND_ROUND_1000_GAMES_RESULT_20261107.md)、[採用ゲート判断](decisions/2026-11-07_D45第2周200局比較と採用ゲート.md)。
 - **現行NNUEは依然D43 `bf8c26f9`／Adam2882**。D45比較は採用条件の棋力部分だけ通過。次はD44相当の契約・713件回帰・実USI・配布Release検査とmainの原子的反映。未検証のまま現行化しない。旧D43を保全する。USIと探索仕様は変えない。
+
+## 2026-11-07：D46によるD45現行化
+
+- 本人指定D45 `941598f2a9ec926d5f67dadf03582ccef718a56a843070dc1f576cc7eeca44e8`/Adam3794。200局155勝44敗・未決着1。強化後推論 `models/fukaji-d45.nnue.npz` SHA256 `9faf66a9d1fee9d282e35835628377ab7951bb94335a5d0498384bf88f4d2c26`。
+- 変更はNNUE推論重みと現行モデル参照のみ。FUKAJI v0.4.0・探索不変。GitHub Actions D46の全契約・実USI・配布/読戻し完了とmain反映が採用完了条件。
+- 完全重み・optimizerはD45学習Release、旧D43推論と完全stateは保持。次周唯一の親はD45/Adam3794。
