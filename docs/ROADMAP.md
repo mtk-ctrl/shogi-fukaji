@@ -126,3 +126,9 @@
 
 - [D50学習・200局直接比較](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/42343709475)：1000局全決着、58,077学習局面、Adam3794→4702、**D50 159勝D45 41勝、未決着0**。事前基準通過。
 - 正式NNUEを `641f36677b8d93c3237cfc4f0b6329a6beee55cff692302f529b3899ea74afd0` へ更新（推論SHA `fbabd6b98de1d03ff8755733bb6a5a5daac7a0fd1f2f2c11ff2b21c26836c599`）。D49のPVS＋詰み探索とUSI v0.4.1は維持。[採用判断](decisions/2026-11-07_D51_D50学習後重みを現行採用.md)。契約・回帰・実USI・隔離bundle・Release SHAの通過をD51 Actionsで必須とし、正式配布の読戻しを検証する。
+
+## D51正式採用・配布検証完了（2026-11-07）
+
+- [D51 Actions run 42349125449](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/42349125449) **success**（07:00:48 UTC、全16ステップ成功）。正式採用source commit `cd31eb382bb6bb283991cc88d9da660f20dc8b45`。main `formal/model.json` の読戻しで**現行NNUE D50、Adam4702**を確認。
+- 正式推論 `models/fukaji-d50.nnue.npz` SHA256 `fbabd6b98de1d03ff8755733bb6a5a5daac7a0fd1f2f2c11ff2b21c26836c599`。正式C++ PVS＋1/3/5手詰み探索SHA `c9340af265368547c37cbecc311d8d3982900885b433d1b4ccdc27fbdd7d041a`、USI v0.4.1は**不変**。旧D45重み・optimizerも復元用に保持。
+- [正式配布Release](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-current-d50-d51-pvs-mate-20261107)：bundle SHA256 `6af46533ae99cef0011b277899aacade90f77f18571735e2f1c1ec6b234a1495`。実USI合法60手、1手詰み、隔離159ファイル整合、4資産再取得SHA一致を検証。[D50詳細結果](D50_CURRENT_D45_V041_1000GAMES_PLAN_20261107.md)、[採用判断](decisions/2026-11-07_D51_D50学習後重みを現行採用.md)。次周はD50完全state/Adam4702からのみ継続。
