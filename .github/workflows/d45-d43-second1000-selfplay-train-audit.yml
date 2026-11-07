@@ -1,4 +1,4 @@
-name: D45 D45 1000 selfplay 20 runner training and 200 game audit
+name: D45 D43 1000 selfplay 20 runner training and 200 game audit
 on:
   workflow_dispatch:
     inputs:
@@ -12,7 +12,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: fukaji-d45-d45-1000games-training-audit
+  group: fukaji-d45-d43-1000games-training-audit
   cancel-in-progress: false
 jobs:
   prepare:
@@ -296,12 +296,12 @@ jobs:
       - name: Publish full training games to GitHub Release and SHA readback
         id: publish
         env:
-          TAG: fukaji-d45-d45-1000-selfplay-${{ github.run_id }}
+          TAG: fukaji-d45-d43-1000-selfplay-${{ github.run_id }}
         run: |
           set -euo pipefail
           file=collected/D45-D43-1000games.tar.gz
           expected="$(sha256sum "$file" | cut -d ' ' -f1)"
-          gh release create "$TAG" "$file" --target "$GITHUB_SHA" --title 'D45 D45: 1000 games in five rounds of 20 runners' --notes 'One thousand new, independently replayed D37 vs D37 train games. Original game records; training follows.'
+          gh release create "$TAG" "$file" --target "$GITHUB_SHA" --title 'D45 D43: 1000 games in five rounds of 20 runners' --notes 'One thousand new, independently replayed D43 vs D43 train games. Original game records; training follows.'
           mkdir -p readback
           gh release download "$TAG" --pattern D45-D43-1000games.tar.gz --dir readback
           test "$expected" = "$(sha256sum readback/D45-D43-1000games.tar.gz | cut -d ' ' -f1)"
@@ -353,7 +353,7 @@ jobs:
       - name: Publish new NNUE and optimizer Release, verify readback
         id: publish
         env:
-          TAG: fukaji-d45-d45-trained-${{ github.run_id }}
+          TAG: fukaji-d45-d43-trained-${{ github.run_id }}
         run: |
           set -euo pipefail
           file=trained/D45-D43-1000trained-unadopted.tar.gz
@@ -437,7 +437,7 @@ jobs:
         with:
           name: d45-audit-runtime-${{ github.run_id }}
           path: input
-      - name: Compare D37 and D45 NNUE 5 paired openings 10 games
+      - name: Compare D43 before and D45 after NNUE 5 paired openings 10 games
         env:
           LANE: ${{ matrix.lane }}
         run: |
@@ -481,12 +481,12 @@ jobs:
           python scripts/d45_arena.py collect --runtime input/runtime.tar.gz --downloads input/lanes --out results
       - name: Publish final 200-game audit to GitHub Release with readback SHA
         env:
-          TAG: fukaji-d45-d45-before-after-200games-${{ github.run_id }}
+          TAG: fukaji-d45-d43-before-after-200games-${{ github.run_id }}
         run: |
           set -euo pipefail
           file=results/D45-D43-before-after-200games.tar.gz
           expected="$(sha256sum "$file" | cut -d ' ' -f1)"
-          gh release create "$TAG" "$file" --target "$GITHUB_SHA" --title 'D45: after 1000 selfplay, D45 vs learned NNUE paired 200 games' --notes '100 new opening pairs, both colors, NNUE only; full original games and predefined comparison decision. Formal model unchanged by audit.'
+          gh release create "$TAG" "$file" --target "$GITHUB_SHA" --title 'D45: after 1000 selfplay, D43 vs trained NNUE paired 200 games' --notes '100 new opening pairs, both colors, NNUE only; full original games and predefined comparison decision. Formal model unchanged by audit.'
           mkdir -p readback
           gh release download "$TAG" --pattern D45-D43-before-after-200games.tar.gz --dir readback
           test "$expected" = "$(sha256sum readback/D45-D43-before-after-200games.tar.gz | cut -d ' ' -f1)"
