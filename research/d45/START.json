@@ -1,0 +1,9 @@
+{
+  "enabled": true,
+  "baseline": "bf8c26f9f8f6adff8a87c46ab04fcf5cd76a7915be241da11b99bb4ae2ac8b9f",
+  "games": 1000,
+  "runners": 20,
+  "rounds": 5,
+  "compare_games": 200,
+  "request_id": "d45-20261107-second-round-1000-20runner"
+}
