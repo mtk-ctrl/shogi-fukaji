@@ -151,3 +151,8 @@
 - [D53 run 42424484457](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/42424484457) **success**。現行NNUEはD52 snapshot `55ccc97db...`／Adam5606、推論重み `models/fukaji-d52.nnue.npz` SHA256 `c0bfe9640e8fc8d6750d263f367581d33c428c7c05cea99f384afaeabfbb569f`。正式USI v0.4.1とPVS＋1/3/5手詰み探索SHA `c9340af2...` は不変。
 - [正式配布4資産](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-current-d52-d53-pvs-mate-20261108) は公開後に4件SHA再取得照合成功。bundle SHA256 `beb57882ea49744e46b45142303a0741cb6220138a912d9c461af9efd099cc1d`。隔離bundleで実USI 2局60合法手・32局面depth2同一・詰み証明通過。旧D50保全。
 - [検証判断と全資産SHA](decisions/2026-11-08_D53_D52学習後重みを現行採用.md)。次の強化は採用済みD52/Adam5606の完全学習stateから進める。D53採用の再実行は不要。
+
+## D54：現行D52/Adam5606から第5周 自己対局1,000局（2026-11-08）
+
+- 本人明示指示。D53正式採用のD52 NNUE（snapshot 55ccc97d...、Adam5606）を唯一の学習親とし、5波×20ランナー×10局＝新規1,000局、旧trainの許可済みreplay、未見100序盤の先後200局を同じv0.4.1 PVS+詰み探索で直接比較。事前基準勝数差12以上/未決着10以下。
+- [固定実験計画](D54_CURRENT_D52_V041_1000GAMES_PLAN_20261108.md)、[判断と境界](decisions/2026-11-08_D54第5周1000局の実行判断.md)、[workflow](../.github/workflows/d54-d52-v041-1000-selfplay-train-audit.yml)。前回の101artifact欠損、Release403をコードで防止。研究run完了/対局結果は開始後の実ログでのみ判定し、正式D52は検証後の別採用手続まで不変。
