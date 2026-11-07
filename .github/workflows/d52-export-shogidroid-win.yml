@@ -1,0 +1,95 @@
+name: Export real D52 winning game to ShogiDroid CSA
+on:
+  push:
+    branches: [main]
+    paths:
+      - research/d52-example/START.json
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: fukaji-d52-example-csa-one-shot
+  cancel-in-progress: false
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: \${{ github.token }}
+      OPENBLAS_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - name: Verify exact user request and frozen source before extracting
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          request=json.loads(Path('research/d52-example/START.json').read_text())
+          assert request=={
+            "enabled":True,"request_id":"d52-shogidroid-real-win-20261108",
+            "release":"fukaji-d52-d50-before-after-200games-42401026786",
+            "sha256":"5f05369e2ad7edec6aa4098a9393889c989697e83a607cdc062967049630a542",
+            "format":"CSA","winner":"D52",
+            "preserve_original":True}
+          PY
+      - name: Download complete audit and check immutable archive SHA
+        run: |
+          set -euo pipefail
+          mkdir -p input
+          gh release download fukaji-d52-d50-before-after-200games-42401026786 --pattern D52-D50-before-after-200games.tar.gz --dir input
+          echo '5f05369e2ad7edec6aa4098a9393889c989697e83a607cdc062967049630a542  input/D52-D50-before-after-200games.tar.gz' | sha256sum -c -
+      - name: Export one checkmated D50 game; validate all moves and original game hash
+        run: |
+          set -euo pipefail
+          python scripts/export_d52_win_csa.py \
+            --archive input/D52-D50-before-after-200games.tar.gz \
+            --output research/d52-example/D52_win_vs_D50.csa \
+            --receipt research/d52-example/provenance.json
+          python - <<'PY'
+          from pathlib import Path
+          import json,hashlib,shogi
+          p=Path('research/d52-example/D52_win_vs_D50.csa')
+          content=p.read_text('ascii')
+          receipt=json.loads(Path('research/d52-example/provenance.json').read_text())
+          assert receipt['winner']=='FUKAJI D52'
+          assert receipt['last_status']=='checkmate'
+          assert content.splitlines()[-1]=='%TSUMI'
+          assert sum(line.startswith(('+','-')) and len(line)==7 for line in content.splitlines())==receipt['plies']
+          assert hashlib.sha256(p.read_bytes()).hexdigest()==receipt['csa_sha256']
+          records=shogi.CSA.Parser.parse_str(content)
+          assert len(records)==1,records
+          assert len(records[0]['moves'])==receipt['plies'],len(records[0]['moves'])
+          print('ShogiDroid CSA parsed correctly:', receipt['plies'], 'legally replayed plies', receipt['source_game'])
+          PY
+      - name: Persist provenance and ShogiDroid CSA to Github (source of truth)
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$GITHUB_SHA" || {
+            echo "Another writer updated main, preserving CSA as Actions artifact instead of overwriting"; exit 1;
+          }
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f research/d52-example/D52_win_vs_D50.csa research/d52-example/provenance.json
+          git diff --cached --check
+          git diff --cached --quiet && { echo 'Nothing to commit'; exit 1; }
+          git commit -m "data(D52): save authentic comparison win for ShogiDroid CSA with original SHA"
+          git push origin HEAD:refs/heads/main
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: d52-shogidroid-verified-csa-\${{ github.run_id }}
+          path: |
+            research/d52-example/D52_win_vs_D50.csa
+            research/d52-example/provenance.json
+          if-no-files-found: warn
+          retention-days: 30
