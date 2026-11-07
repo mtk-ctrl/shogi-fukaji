@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      GH_TOKEN: \${{ github.token }}
+      GH_TOKEN: ${{ github.token }}
       OPENBLAS_NUM_THREADS: '1'
     steps:
       - uses: actions/checkout@v4
@@ -87,7 +87,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: d52-shogidroid-verified-csa-\${{ github.run_id }}
+          name: d52-shogidroid-verified-csa-${{ github.run_id }}
           path: |
             research/d52-example/D52_win_vs_D50.csa
             research/d52-example/provenance.json
