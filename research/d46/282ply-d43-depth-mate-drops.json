@@ -1,0 +1,216 @@
+{
+  "schema": "d46-real-d43-282ply-tactical-diagnostics-v1",
+  "source_release_sha256": "c08ccab3f5e9ef90c288e8ccfc5f3951eb188dfc30876af775c2ba3cfb03f510",
+  "source_game": "family-000-candidate-black0.json",
+  "game_plies": 282,
+  "winner": "D43",
+  "loser": "D37",
+  "opening_first_six_moves_source": "six uniform-random legal moves from fukaji/arena.py opening()",
+  "stats": {
+    "D37": {
+      "random_prefix_moves": 3,
+      "searched_moves": 138,
+      "depth_total": 417,
+      "depth_zero": 0,
+      "depth_le1": 0,
+      "depth_le2": 31,
+      "depth_4": 28,
+      "depth_5": 3,
+      "drops": 38,
+      "drops_on_attacked_squares": 29,
+      "drops_immediately_capturable": 28,
+      "depth_3": 76,
+      "in_check_to_move": 28,
+      "depth_2": 31,
+      "avg_depth": 3.022
+    },
+    "D43": {
+      "random_prefix_moves": 3,
+      "searched_moves": 138,
+      "depth_total": 396,
+      "depth_zero": 0,
+      "depth_le1": 1,
+      "depth_le2": 63,
+      "depth_4": 38,
+      "depth_3": 33,
+      "drops": 40,
+      "depth_5": 4,
+      "drops_on_attacked_squares": 25,
+      "drops_immediately_capturable": 19,
+      "in_check_to_move": 28,
+      "depth_2": 62,
+      "depth_1": 1,
+      "mate1_opportunities": 1,
+      "mate1_found": 1,
+      "avg_depth": 2.87
+    }
+  },
+  "examples": {
+    "mate1_missed": [],
+    "drop_attacked": [
+      {
+        "ply": 31,
+        "who": "D37",
+        "move": "P*2c",
+        "capturable_next": true
+      },
+      {
+        "ply": 70,
+        "who": "D43",
+        "move": "L*5h",
+        "capturable_next": true
+      },
+      {
+        "ply": 73,
+        "who": "D37",
+        "move": "S*6b",
+        "capturable_next": true
+      },
+      {
+        "ply": 79,
+        "who": "D37",
+        "move": "L*6c",
+        "capturable_next": false
+      },
+      {
+        "ply": 84,
+        "who": "D43",
+        "move": "B*1e",
+        "capturable_next": true
+      },
+      {
+        "ply": 87,
+        "who": "D37",
+        "move": "P*5c",
+        "capturable_next": true
+      },
+      {
+        "ply": 88,
+        "who": "D43",
+        "move": "L*6c",
+        "capturable_next": true
+      },
+      {
+        "ply": 92,
+        "who": "D43",
+        "move": "S*3i",
+        "capturable_next": true
+      },
+      {
+        "ply": 95,
+        "who": "D37",
+        "move": "S*6b",
+        "capturable_next": true
+      },
+      {
+        "ply": 99,
+        "who": "D37",
+        "move": "G*7a",
+        "capturable_next": true
+      },
+      {
+        "ply": 101,
+        "who": "D37",
+        "move": "L*5b",
+        "capturable_next": true
+      },
+      {
+        "ply": 114,
+        "who": "D43",
+        "move": "S*2i",
+        "capturable_next": false
+      },
+      {
+        "ply": 117,
+        "who": "D37",
+        "move": "R*7a",
+        "capturable_next": true
+      },
+      {
+        "ply": 123,
+        "who": "D37",
+        "move": "S*7a",
+        "capturable_next": true
+      }
+    ],
+    "drop_capturable_next": [
+      {
+        "ply": 31,
+        "who": "D37",
+        "move": "P*2c"
+      },
+      {
+        "ply": 70,
+        "who": "D43",
+        "move": "L*5h"
+      },
+      {
+        "ply": 73,
+        "who": "D37",
+        "move": "S*6b"
+      },
+      {
+        "ply": 84,
+        "who": "D43",
+        "move": "B*1e"
+      },
+      {
+        "ply": 87,
+        "who": "D37",
+        "move": "P*5c"
+      },
+      {
+        "ply": 88,
+        "who": "D43",
+        "move": "L*6c"
+      },
+      {
+        "ply": 92,
+        "who": "D43",
+        "move": "S*3i"
+      },
+      {
+        "ply": 95,
+        "who": "D37",
+        "move": "S*6b"
+      },
+      {
+        "ply": 99,
+        "who": "D37",
+        "move": "G*7a"
+      },
+      {
+        "ply": 101,
+        "who": "D37",
+        "move": "L*5b"
+      },
+      {
+        "ply": 117,
+        "who": "D37",
+        "move": "R*7a"
+      },
+      {
+        "ply": 123,
+        "who": "D37",
+        "move": "S*7a"
+      },
+      {
+        "ply": 134,
+        "who": "D43",
+        "move": "S*2i"
+      },
+      {
+        "ply": 136,
+        "who": "D43",
+        "move": "N*5f"
+      }
+    ],
+    "depth0": []
+  },
+  "interpretation_limitations": [
+    "Mate-in-one counting does not detect mate-in-two or deep forced mates",
+    "Drops on attacked squares can be purposeful sacrifices; counts alone do not prove blunders",
+    "Original game starts with 6 random legal moves, even though 200-game audit has no exploration thereafter",
+    "This is one sample game, not a representative strength estimate"
+  ]
+}
