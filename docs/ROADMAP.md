@@ -81,3 +81,7 @@
 ## 2026-11-07：D44現行化の動作検証完了
 
 [D44 GitHub Actions #42309719933](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/42309719933)は成功。**713回帰テスト、正式契約、実C++ NNUEとUSIの動作、推論ファイルの再読込、別領域での配布パッケージ実起動、Release SHA再取得照合を完了。** 現行SHA `bf8c26f9f8f6adff8a87c46ab04fcf5cd76a7915be241da11b99bb4ae2ac8b9f`、Adam2882、[現行化の検証記録](D44_D43_CURRENT_ADOPTION_VERIFIED_20261107.md)、[公開モデル起動パッケージ](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-current-d43-20261107)、[採用コミット](https://github.com/mtk-ctrl/shogi-fukaji/commit/28f9d7ef0f3b77ac9086adae50e5b1f1162667e4)。将来の失敗時は更新前の**D43**に戻す。上記D37が現行だった記載は当時の記録。
+
+## 2026-11-07：独創性のコンセプトと詰み探索を最優先
+
+本人の最新判断：「**定跡は覚えさせない。AlphaGo Zero / AlphaZeroのように、自己対局と先読みで人間の常識にない手を発見する。ただし詰みは正確に読めるようにする。**」を深路の不変指針として採用。[決定の全文](decisions/2026-11-07_深路の独創性と詰み探索の原則.md)、規範[F00](rules/F00_深路の目的と権限.md)、学習境界[F10](rules/F10_NNUE学習とデータ境界.md)、検証[F20](rules/F20_研究更新と棋力検証.md)。現行D43/Adam2882と稼働中[D45第2周](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/42326260509)は一切変えない。将来の改善は「合法手を全探索する詰み検出」と「自己対局からの自発的な方策・価値の向上」を優先し、人間の定跡や駒得などを正解教師として注入しない。勝率と詰みの見逃しを別々に実測する。研究ブランチ[D46](https://github.com/mtk-ctrl/shogi-fukaji/tree/research/d46-tactical-quality-20261107)の旧提案は本方針の制約下で再評価する。
