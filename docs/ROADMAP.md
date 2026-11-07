@@ -132,3 +132,9 @@
 - [D51 Actions run 42349125449](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/42349125449) **success**（07:00:48 UTC、全16ステップ成功）。正式採用source commit `cd31eb382bb6bb283991cc88d9da660f20dc8b45`。main `formal/model.json` の読戻しで**現行NNUE D50、Adam4702**を確認。
 - 正式推論 `models/fukaji-d50.nnue.npz` SHA256 `fbabd6b98de1d03ff8755733bb6a5a5daac7a0fd1f2f2c11ff2b21c26836c599`。正式C++ PVS＋1/3/5手詰み探索SHA `c9340af265368547c37cbecc311d8d3982900885b433d1b4ccdc27fbdd7d041a`、USI v0.4.1は**不変**。旧D45重み・optimizerも復元用に保持。
 - [正式配布Release](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-current-d50-d51-pvs-mate-20261107)：bundle SHA256 `6af46533ae99cef0011b277899aacade90f77f18571735e2f1c1ec6b234a1495`。実USI合法60手、1手詰み、隔離159ファイル整合、4資産再取得SHA一致を検証。[D50詳細結果](D50_CURRENT_D45_V041_1000GAMES_PLAN_20261107.md)、[採用判断](decisions/2026-11-07_D51_D50学習後重みを現行採用.md)。次周はD50完全state/Adam4702からのみ継続。
+
+## D52：D51正式採用後の現行D50/Adam4702から第4周1000局（2026-11-07）
+
+- 本人の条件付き指示「正式採用できたら、また1000局」に対し、D51正式採用成功を検証してD52を実行。D50 NNUE（641f3667…）/Adam4702 と FUKAJI v0.4.1、PVS＋詰み1/3/5手探索は維持。
+- 5波×20独立ランナー×10局＝1,000新局、学習後の200局標準比較を通じてさらに棋力を上げる。**過去D50の訓練1,000局と評価200局を明示除外**し、学習は正式D50完全optimizerから直接再開。
+- [D52計画](D52_CURRENT_D50_V041_1000GAMES_PLAN_20261107.md)／[本人判断](decisions/2026-11-07_D52第4周1000局開始判断.md)／[起動workflow](../.github/workflows/d52-d50-v041-1000-selfplay-train-audit.yml)。正式重みの更新は200局勝率と契約・実USI・SHAを検証した後の別工程に限定。
