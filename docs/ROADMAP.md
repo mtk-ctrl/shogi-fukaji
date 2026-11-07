@@ -145,3 +145,9 @@
 
 - [実行run](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/42401026786)：1000局全局決着、57,755局面・Adam4702→5606、200局比較で新D52が156勝44敗、未決着0、19,104手合法検証。学習・比較の全3 ReleaseのSHA再取得成功。
 - 正式NNUE 55ccc97db6c2d4ce9ff7c75f5e81d543fb6f12d169639c3ea6d24c89e95342ae、推論SHA c0bfe9640e8fc8d6750d263f367581d33c428c7c05cea99f384afaeabfbb569f。PVS＋詰み探索・USI v0.4.1不変。契約・回帰・実USI・隔離配布を別D53 CIで検証。[判断](decisions/2026-11-08_D53_D52学習後重みを現行採用.md)。
+
+## D53正式採用・配布検証完了（2026-11-08）
+
+- [D53 run 42424484457](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/42424484457) **success**。現行NNUEはD52 snapshot `55ccc97db...`／Adam5606、推論重み `models/fukaji-d52.nnue.npz` SHA256 `c0bfe9640e8fc8d6750d263f367581d33c428c7c05cea99f384afaeabfbb569f`。正式USI v0.4.1とPVS＋1/3/5手詰み探索SHA `c9340af2...` は不変。
+- [正式配布4資産](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-current-d52-d53-pvs-mate-20261108) は公開後に4件SHA再取得照合成功。bundle SHA256 `beb57882ea49744e46b45142303a0741cb6220138a912d9c461af9efd099cc1d`。隔離bundleで実USI 2局60合法手・32局面depth2同一・詰み証明通過。旧D50保全。
+- [検証判断と全資産SHA](decisions/2026-11-08_D53_D52学習後重みを現行採用.md)。次の強化は採用済みD52/Adam5606の完全学習stateから進める。D53採用の再実行は不要。
