@@ -223,9 +223,9 @@ F00/F20にある「現行モデルの学習前後を同条件で比較し、棋�
     modify(specdoc,"**現行のNNUE重みはD50（641f3667、Adam4702）**","**現行のNNUE重みはD52（55ccc97d、Adam5606）**")
     modify(specdoc,"現行D45からPVS＋詰み探索で第3周1000局を自己対局し、標準200局比較で**159勝41敗・引分/未決着0局**。",
                   "現行D50からPVS＋詰み探索で第4周1000局を自己対局し、標準200局比較で**156勝44敗・引分/未決着0局**。")
-    modify(specdoc,f"{chr(96)}{OLD}{chr(96)}",f"{chr(96)}{NEW}{chr(96)}")
-    modify(specdoc,"models/fukaji-d50.nnue.npz","models/fukaji-d52.nnue.npz")
-    modify(specdoc,f"{chr(96)}{OLD_WEIGHTS}{chr(96)}",f"{chr(96)}{weights_sha}{chr(96)}")
+    modify(specdoc,f"| 研究snapshot SHA256 | {chr(96)}{OLD}{chr(96)} |",f"| 研究snapshot SHA256 | {chr(96)}{NEW}{chr(96)} |")
+    modify(specdoc,"| 推論用ファイル | `models/fukaji-d50.nnue.npz` |","| 推論用ファイル | `models/fukaji-d52.nnue.npz` |")
+    modify(specdoc,f"| 推論用SHA256 | {chr(96)}{OLD_WEIGHTS}{chr(96)} |",f"| 推論用SHA256 | {chr(96)}{weights_sha}{chr(96)} |")
     change_section(specdoc,"## 現行モデルの採用判断と強さの不確実性","## 復元・研究との境界",
         f"""## 現行モデルの採用判断と強さの不確実性
 
