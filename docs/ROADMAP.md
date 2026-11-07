@@ -115,3 +115,9 @@
 
 - 正式source commit **408dc2994d6fc3d2cc69d9ce9a257cd157ae75c8**、[実GitHub Actions run 42341751230](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/42341751230) **success**（713件回帰、5スキップ、実USI・詰み証明、隔離配布159ファイルSHA、Release4資産再取得SHA）。
 - 現行は**FUKAJI v0.4.1、D45 NNUE不変、探索PVS＋詰み1/3/5手・相手の1手詰みガード**。[現行配布](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-current-d45-d49-pvs-mate-20261107)。採用理由と初回失敗の再発防止は[判断記録](decisions/2026-11-07_D49_D48探索を正式採用.md)。
+
+## D50：D45/Adam3794・FUKAJI v0.4.1による1,000局強化（2026-11-07起動準備）
+
+- 本人指示の第3周。現行NNUE D45（snapshot `941598f2...`・Adam3794）を唯一の親として、正式PVS＋詰み1/3/5手探索による1000局生成、継続学習、同じ探索での学習前後200局比較を一つの有限GitHub Actionsで実施。
+- 5波×20独立ジョブ×各10局と比較20ジョブ。旧train/audit・D47/D48評価の局面を分離し、GitHub Releaseの原棋譜/完全学習stateをSHA再取得検証。性能を確認するまで正式重みは変更しない。強化が認められた後は別検証ワークフローでNNUEのみ採用し、探索／USI v0.4.1は維持。
+- [固定計画](D50_CURRENT_D45_V041_1000GAMES_PLAN_20261107.md)／[本人判断](decisions/2026-11-07_D50第3周1000局の実行判断.md)／[workflow](../.github/workflows/d50-d45-v041-1000-selfplay-train-audit.yml)。
