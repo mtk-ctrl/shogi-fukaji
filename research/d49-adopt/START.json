@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "request_id": "d49-20261107-owner-adopt-d48-pvs-mate",
+  "research_run": 42339652079,
+  "source": "06e0bf8c7e9508a400b58955312f277289830c94",
+  "research_script": "354b038c7d9247f691e11c46c996e66157ff5977",
+  "mate_source": "2ad3d9fdeb6126434f5e2c72cd5e9647742382ca",
+  "research_release_sha256": "427ebf9a8671d56b3f3b0fef24a62a2242e293a559e4307027747d30eb3a2f65",
+  "model_snapshot_sha256": "941598f2a9ec926d5f67dadf03582ccef718a56a843070dc1f576cc7eeca44e8",
+  "weights_sha256": "9faf66a9d1fee9d282e35835628377ab7951bb94335a5d0498384bf88f4d2c26",
+  "owner_authorized": "formally adopt the completed D48 PVS plus mate search",
+  "new_usi_version": "FUKAJI v0.4.1"
+}
