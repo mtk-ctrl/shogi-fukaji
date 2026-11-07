@@ -99,15 +99,15 @@ jobs:
           echo '6531747f10d015bec7817186f6fbed149aa6ac1822d94fbcce7858a7ceae211b  input/D45-D43-before-after-200games.tar.gz' | sha256sum -c -
           echo '7acd4abaed27f1598520228987067c459f677c2985544e8cf532d0eb7381e5a7  input/D47-PVS-vs-D45-300games-with-runner-audit.tar.gz' | sha256sum -c -
           echo '427ebf9a8671d56b3f3b0fef24a62a2242e293a559e4307027747d30eb3a2f65  input/D48-PVS-Mate-vs-D45-100games-with-runner-audit.tar.gz' | sha256sum -c -
-      - name: Verify worker artifact name agrees with collector before running 100 jobs
+      - name: Verify producer consumer naming before long selfplay
         run: |
           python - <<'PY'
           from pathlib import Path
-          raw=Path('.github/workflows/d52-d50-v041-1000-selfplay-train-audit.yml').read_text()
-          assert 'pattern: d52-r*-lane-*' in raw
-          assert 'name: d52-r0-lane-'+' in raw
-          assert 'name: d52-r4-lane-'+' in raw
-          print('D52 worker artifact names match the collector')
+          s=Path('.github/workflows/d52-d50-v041-1000-selfplay-train-audit.yml').read_text()
+          assert 'pattern: d52-r*-lane-*' in s
+          assert 'name: d52-r0-lane-' in s
+          assert 'name: d52-r4-lane-' in s
+          print('producer/consumer names consistent')
           PY
       - name: Freeze 1000 entirely new PVS plus mate selfplay families
         run: |
