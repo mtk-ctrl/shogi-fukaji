@@ -1,0 +1,111 @@
+name: Export D43 post-training 150 winning games for ShogiDroid
+on:
+  push:
+    branches:
+      - export/d43-after-wins-shogidroid-20261107
+    paths:
+      - research/d43-exports/START.json
+permissions:
+  contents: write
+concurrency:
+  group: fukaji-d43-after-wins-shogidroid-export
+  cancel-in-progress: false
+jobs:
+  export:
+    if: github.repository == 'mtk-ctrl/shogi-fukaji'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BRANCH: export/d43-after-wins-shogidroid-20261107
+      TAG: fukaji-d43-shogidroid-150-20261107
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - name: Confirm request, locked D43 source, no interference with main D45
+        run: |
+          python - <<'PY'
+          import json
+          request=json.load(open('research/d43-exports/START.json'))
+          if request != {'approved':True,'source_run':42292240321,
+              'source_tag':'fukaji-d43-d37-before-after-200games-42292240321',
+              'expected_winners':150,'target':'ShogiDroid','request_id':'d43-after-win-kif-20261107'}:
+              raise SystemExit('unexpected export request')
+          PY
+          git fetch origin main
+          echo "This export operates on a separate branch; not modifying the active D45."
+      - name: Download original full 200-game D43 paired audit
+        run: |
+          mkdir -p input
+          gh release download fukaji-d43-d37-before-after-200games-42292240321 --pattern D43-D37-before-after-200games.tar.gz --dir input
+          echo 'c08ccab3f5e9ef90c288e8ccfc5f3951eb188dfc30876af775c2ba3cfb03f510  input/D43-D37-before-after-200games.tar.gz' | sha256sum -c -
+      - name: Convert all D43 winners to KIF and CSA, round-trip parser every game
+        run: |
+          python scripts/export_d43_wins_shogidroid.py --source input/D43-D37-before-after-200games.tar.gz --out build
+          python - <<'PY'
+          import json,zipfile
+          z=json.load(open('build/D43_after_wins_manifest.json'))
+          assert z['exported_games']==150 and z['kif_parser_roundtrips']==150
+          assert z['csa_parser_roundtrips']==150
+          assert len(z['entries'])==150
+          with zipfile.ZipFile('build/D43_after_wins_150_ShogiDroid.zip') as archive:
+              assert len(archive.namelist())==302
+          print('All 150 trained-model winning games exported and verified')
+          PY
+      - name: Preserve readable example and index in export branch only
+        id: commit
+        run: |
+          set -euo pipefail
+          git fetch origin "$BRANCH"
+          test "$(git rev-parse origin/$BRANCH)" = "$GITHUB_SHA" || {
+            echo "export branch changed concurrently"; exit 1;
+          }
+          mkdir -p research/d43-exports
+          cp build/D43_after_win_example_utf8.kif research/d43-exports/example_after_win_utf8.kif
+          cp build/D43_after_wins_manifest.json research/d43-exports/manifest.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add research/d43-exports/example_after_win_utf8.kif research/d43-exports/manifest.json
+          git diff --cached --check
+          git commit -m "export(D43): 150 winning KIF and CSA proof, specimen and per-game SHA manifest"
+          commit="$(git rev-parse HEAD)"
+          git push origin HEAD:refs/heads/"$BRANCH"
+          git fetch origin "$BRANCH"
+          test "$(git rev-parse origin/$BRANCH)" = "$commit"
+          echo "sha=$commit" >> "$GITHUB_OUTPUT"
+      - name: Publish ShogiDroid ZIP with 150 KIF and CSA, plus directly openable example
+        env:
+          PUBLISH_SHA: ${{ steps.commit.outputs.sha }}
+        run: |
+          set -euo pipefail
+          zip=build/D43_after_wins_150_ShogiDroid.zip
+          sha256sum "$zip"
+          gh release create "$TAG" \
+            "$zip" \
+            build/D43_after_win_example.kif \
+            build/D43_after_wins_manifest.json \
+            --target "$PUBLISH_SHA" \
+            --title "深路D43学習後が勝った150局 / ShogiDroid用KIF・CSA" \
+            --notes "D43（学習後）がD37（学習前）に勝った150局。200局の元データをSHA再照合し、全指し手の合法性、元の先後・勝敗、KIF/CSA往復読込を検証。ZIPには150個のKIF（Shift_JIS）と150個のCSA、索引CSV。D45第2周は進行中で本Releaseには含まれません。"
+          mkdir -p build/downloaded
+          for file in "$zip" build/D43_after_win_example.kif build/D43_after_wins_manifest.json; do
+            name="$(basename "$file")"
+            gh release download "$TAG" --pattern "$name" --dir build/downloaded
+            test "$(sha256sum "$file"|cut -d' ' -f1)" = "$(sha256sum "build/downloaded/$name"|cut -d' ' -f1)"
+          done
+          echo "ZIP + individual KIF + manifest preserved, GitHub Release readback SHA successful."
+          cat build/D43_after_wins_manifest.json | python -c 'import sys,json;x=json.load(sys.stdin);print("Verified",x["exported_games"],"trained-model wins",x["archive_sha256"])' >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: d43-shogidroid-winners-proof
+          path: |
+            build/D43_after_wins_manifest.json
+            build/D43_after_win_example.kif
+          if-no-files-found: warn
+          retention-days: 30
