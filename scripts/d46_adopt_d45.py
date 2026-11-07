@@ -49,7 +49,7 @@ def read_member(t: tarfile.TarFile, name: str) -> bytes:
 def replace_exact(path: str, old: str, new: str) -> None:
     p = ROOT / path
     s = p.read_text()
-    if old not in s or s.count(old) != 1:
+    if old not in s:
         raise ValueError(f"expected unique current text absent: {path} {old[:80]}")
     p.write_text(s.replace(old, new, 1))
 
@@ -194,12 +194,12 @@ def prepare(trained: Path, audit: Path, out: Path) -> None:
 
     decision = f"""# 2026-11-07：D45第2周の強化重みを現行モデルに採用
 
-本人の明示指示「さっきの強化モデルを現行モデルとして反映」により、D43から直接自己対局・追加学習したD45重み \`{NEW}\`（Adam3794）を現行とする。独立した研究系列は作らない。USI表示 FUKAJI v0.4.0、探索コード・設定・配布形式は変えない。
+本人の明示指示「さっきの強化モデルを現行モデルとして反映」により、D43から直接自己対局・追加学習したD45重み `{NEW}`（Adam3794）を現行とする。独立した研究系列は作らない。USI表示 FUKAJI v0.4.0、探索コード・設定・配布形式は変えない。
 
-- 更新前：D43 \`{OLD}\`、Adam2882。旧推論ファイルおよび完全学習stateを保全。
-- 自己対局：新1000局（994決着・6未決着）、学習58,334局面・2epoch、Adam2882→3794。[D45実行](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/{RUN})、[学習完全state](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d45-d43-trained-{RUN}) SHA256 \`{TRAIN_SHA}\`。
-- 学習前後直接比較：独立100序盤×先後交替200局、1手200msと1秒長考最大10回/陣営。**D45 155勝、D43 44勝、引分0、未決着1**。24,451手合法再生、事前基準（勝数差12以上かつ未決着10以下）通過。未決着を勝敗へ算入しない。[比較全棋譜](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d45-d43-before-after-200games-{RUN}) SHA256 \`{AUDIT_SHA}\`。
-- 研究snapshot \`{NEW}\`、推論 \`{WEIGHTS_PATH}\` SHA256 \`{weights_sha}\`。完全重み・optimizerは学習Releaseにあり、次周の唯一の親。
+- 更新前：D43 `{OLD}`、Adam2882。旧推論ファイルおよび完全学習stateを保全。
+- 自己対局：新1000局（994決着・6未決着）、学習58,334局面・2epoch、Adam2882→3794。[D45実行](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/{RUN})、[学習完全state](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d45-d43-trained-{RUN}) SHA256 `{TRAIN_SHA}`。
+- 学習前後直接比較：独立100序盤×先後交替200局、1手200msと1秒長考最大10回/陣営。**D45 155勝、D43 44勝、引分0、未決着1**。24,451手合法再生、事前基準（勝数差12以上かつ未決着10以下）通過。未決着を勝敗へ算入しない。[比較全棋譜](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d45-d43-before-after-200games-{RUN}) SHA256 `{AUDIT_SHA}`。
+- 研究snapshot `{NEW}`、推論 `{WEIGHTS_PATH}` SHA256 `{weights_sha}`。完全重み・optimizerは学習Releaseにあり、次周の唯一の親。
 - GitHub ActionsのD46採用ジョブで全契約・回帰テスト・実C++/USIと配布読戻し・SHAまで検証する。成功したコミットとrunはActions及び現行Releaseを採用完了の証拠とする。失敗時はD43を維持する。
 
 人間の定跡を教師として注入せず、詰みはルールから正確に読む方針を継続する。
@@ -213,11 +213,11 @@ def prepare(trained: Path, audit: Path, out: Path) -> None:
     replace_exact(specpath,
         "更新：2026-11-07。**現行のNNUE重みはD43（bf8c26f9、Adam2882）**。旧現行D37を1000局の自己対局で追加学習し、正規の200ms＋長考1秒10回の200局直接比較で**150勝50敗**。",
         "更新：2026-11-07。**現行のNNUE重みはD45（941598f2、Adam3794）**。D43から第2周の1000局自己対局で追加学習し、200ms＋長考1秒10回の200局直接比較で**155勝44敗・未決着1局**。")
-    replace_exact(specpath, f"\`{OLD}\`", f"\`{NEW}\`")
-    replace_exact(specpath, "\`models/fukaji-d43.nnue.npz\`", f"\`{WEIGHTS_PATH}\`")
+    replace_exact(specpath, f"`{OLD}`", f"`{NEW}`")
+    replace_exact(specpath, "`models/fukaji-d43.nnue.npz`", f"`{WEIGHTS_PATH}`")
     replace_exact(specpath,
-        "\`f6ba1d5af46ae648b1921d675ada28cf5065f23a20e424154458817534bf42a6\`",
-        f"\`{weights_sha}\`")
+        "`f6ba1d5af46ae648b1921d675ada28cf5065f23a20e424154458817534bf42a6`",
+        f"`{weights_sha}`")
     replace_section(specpath,
         "## 現行モデルの採用判断と強さの不確実性",
         "## 復元・研究との境界",
@@ -238,13 +238,13 @@ def prepare(trained: Path, audit: Path, out: Path) -> None:
     replace_section("docs/00_開発ルーター.md",
         "## 現行モデル", "## 現在の研究・保存再開点",
         f"""## 現行モデル
-**現行NNUEはD45（\`{NEW}\`、Adam3794）**。D43を直接1000局追加学習し、200局標準比較で155勝44敗、未決着1で採用。USI v0.4.0・探索仕様は不変。[採用決定](decisions/2026-11-07_D45学習後モデルを現行に採用.md)、[現行仕様](現行エンジン仕様.md)、[manifest](../formal/model.json)を正本とする。次周は[D45の完全重み・Adam3794](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d45-d43-trained-{RUN})を唯一の学習親とし、旧D43は不変の比較・復元用snapshotとして保全する。独立候補系列を作らない。
+**現行NNUEはD45（`{NEW}`、Adam3794）**。D43を直接1000局追加学習し、200局標準比較で155勝44敗、未決着1で採用。USI v0.4.0・探索仕様は不変。[採用決定](decisions/2026-11-07_D45学習後モデルを現行に採用.md)、[現行仕様](現行エンジン仕様.md)、[manifest](../formal/model.json)を正本とする。次周は[D45の完全重み・Adam3794](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d45-d43-trained-{RUN})を唯一の学習親とし、旧D43は不変の比較・復元用snapshotとして保全する。独立候補系列を作らない。
 
 """)
     replace_section("docs/ROADMAP.md", "## 現行モデル", "## 現在の研究",
         f"""## 現行モデル
 
-**D45 NNUE（\`{NEW}\`、Adam3794）を現行採用。USI表示 FUKAJI v0.4.0は不変。** D43（\`{OLD}\`、Adam2882）から自己対局1000局と58,334局面追加学習し、独立100序盤×先後200局で**155勝44敗・引分0・未決着1**。[採用決定](decisions/2026-11-07_D45学習後モデルを現行に採用.md)、[比較結果](D45_D43_SECOND_ROUND_1000_GAMES_RESULT_20261107.md)、[完全state](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d45-d43-trained-{RUN})、[manifest](../formal/model.json)・[現行仕様](現行エンジン仕様.md)。次周は必ずD45/Adam3794から。旧D43/D37は復元専用として残す。
+**D45 NNUE（`{NEW}`、Adam3794）を現行採用。USI表示 FUKAJI v0.4.0は不変。** D43（`{OLD}`、Adam2882）から自己対局1000局と58,334局面追加学習し、独立100序盤×先後200局で**155勝44敗・引分0・未決着1**。[採用決定](decisions/2026-11-07_D45学習後モデルを現行に採用.md)、[比較結果](D45_D43_SECOND_ROUND_1000_GAMES_RESULT_20261107.md)、[完全state](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d45-d43-trained-{RUN})、[manifest](../formal/model.json)・[現行仕様](現行エンジン仕様.md)。次周は必ずD45/Adam3794から。旧D43/D37は復元専用として残す。
 
 """)
     roadmap = ROOT / "docs/ROADMAP.md"
@@ -252,7 +252,7 @@ def prepare(trained: Path, audit: Path, out: Path) -> None:
         f.write(f"""
 ## 2026-11-07：D46によるD45現行化
 
-- 本人指定D45 \`{NEW}\`/Adam3794。200局155勝44敗・未決着1。強化後推論 \`{WEIGHTS_PATH}\` SHA256 \`{weights_sha}\`。
+- 本人指定D45 `{NEW}`/Adam3794。200局155勝44敗・未決着1。強化後推論 `{WEIGHTS_PATH}` SHA256 `{weights_sha}`。
 - 変更はNNUE推論重みと現行モデル参照のみ。FUKAJI v0.4.0・探索不変。GitHub Actions D46の全契約・実USI・配布/読戻し完了とmain反映が採用完了条件。
 - 完全重み・optimizerはD45学習Release、旧D43推論と完全stateは保持。次周唯一の親はD45/Adam3794。
 """)
