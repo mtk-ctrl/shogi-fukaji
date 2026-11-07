@@ -21,3 +21,7 @@ ChatGPT・Claude等は同じRuleと同じGitHub正本を使う。まず[開発�
 長時間の自律実行・予約実行・通知は[F01](docs/rules/F01_継続実行とタイマー.md)、保存・再開は[F30](docs/rules/F30_実行保存と再開.md)。同等機能がないAIは有限のGitHub Actions、GitHub結果記録と本人限定Drive保存、次回対話での再開を使い、自動実行済みと偽らない。
 
 作業前・push直前に最新main commit・Actions・他AIの研究writer・対象ファイルを確認。競合時は別ブランチ/PRで提案し、旧版で上書きしない。文書変更もworkflow起動条件と研究保存を確認。D27/D30のChatGPT Work/Automations障害の記録は事実として保全する。
+
+## 最新の正式探索（2026-11-07 D49）
+
+本人はD48のPVS＋詰み探索を正式採用と明示。現行は FUKAJI v0.4.1、D48と同じPVS＋1/3/5手詰み証明＋相手1手詰みガード。NNUEはD45/Adam3794を維持。上部のv0.4.0はD49以前の履歴。判断記録：docs/decisions/2026-11-07_D49_D48探索を正式採用.md。

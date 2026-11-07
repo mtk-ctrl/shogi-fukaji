@@ -49,3 +49,7 @@
 - [原棋譜・plan・report・runner監査のGitHub Release](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d48-pvs-mate-d45-100games-42339652079)に永続保存、完全アーカイブSHA256 `427ebf9a8671d56b3f3b0fef24a62a2242e293a559e4307027747d30eb3a2f65`。ActionsのRelease再ダウンロードとSHA一致検査が成功。先行[D47 PVS単独300局](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d47-pvs-d45-300games-42336055212)はPVS 148勝・現行151勝・未決着1。**D47とD48は別の序盤集合**なので、この2件だけから「Mate部だけの純粋効果」を統計的に断定しない。
 - **結論：研究版は有望、しかし正式採用なし**。本人が依頼したのは実装・100局比較であり、F00の探索正式採用権限は満たしていない。現行D45 NNUE／USIを維持する。
 - **次工程**：新しい未見の1/3/5/7手詰み専用問題で正答率・UNKNOWN率・誤詰み報告を独立監査。実戦結果は200〜300局の新規先後ペア追加比較で再現確認。詰み探索のタイムアウト2,589回の原因と配分を測り、PVS単独・Mate単独・両方の要因別比較も検討する。
+
+## 後続D49正式採用
+
+本人がD48比較のあと「正式に採用してください。」と明示。D48研究記録は当時の未採用状態のまま保存。D49により、NNUE D45を変えずにD48のC++探索を正式USIへ採用する。判断記録：decisions/2026-11-07_D49_D48探索を正式採用.md。

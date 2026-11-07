@@ -103,6 +103,96 @@ struct NSearch {
     ~MoveGuard() noexcept {search.board=std::move(saved);search.history.resize(h);
       search.mover_black.resize(m);search.gave_check.resize(c);}
   };
+  // D48 research-only strict mate proof, inspired by Kumoji MateSearch.
+  // Attacker: only legal checking moves (OR). Defender: every legal reply (AND).
+  // No external solutions, NNUE score, material scoring or opening knowledge.
+  chrono::steady_clock::time_point mate_deadline=chrono::steady_clock::time_point::max();
+  uint64_t mate_nodes=0, mate_root_guarded=0, mate_root_unsafe=0;
+  vector<string> mate_unsafe_moves;
+  string mate_proven_move;
+  int mate_proven_plies=0;
+  bool mate_incomplete=false;
+
+  void mate_step() {
+    ++mate_nodes;
+    if((stop&&stop->load(memory_order_relaxed)) ||
+       chrono::steady_clock::now()>=mate_deadline ||
+       chrono::steady_clock::now()>=deadline)throw NTimeout{};
+  }
+  bool mate_attack(int remaining, bool root=false) {
+    mate_step();
+    if(remaining<=0) return false;
+    // The game may have ended by repetition/continuous check, never call it mate.
+    auto legal=ordered_legal_moves(board);
+    if(!terminal(legal).first.empty())return false;
+    for(const auto& move:legal) {
+      mate_step();
+      bool forced=false;
+      {
+        MoveGuard guard(*this,move);
+        if(!checked(board,board.turn=="b"))continue; // legal but not a check
+        forced=mate_defend(remaining-1);
+      }
+      if(forced) {
+        if(root)mate_proven_move=move;
+        return true;
+      }
+    }
+    return false;
+  }
+  bool mate_defend(int remaining) {
+    mate_step();
+    // This side is the defender and is in check.
+    const auto legal=ordered_legal_moves(board);
+    const auto end=terminal(legal);
+    if(end.first=="checkmate")return true;
+    if(!end.first.empty() || remaining<=0)return false;
+    for(const auto& move:legal) {
+      mate_step();
+      bool forced=false;
+      {
+        MoveGuard guard(*this,move);
+        forced=mate_attack(remaining-1);
+      }
+      // A single legal escape which avoids force-mate disproves this attack.
+      if(!forced)return false;
+    }
+    return true;
+  }
+  void mate_probe_offense(int milliseconds) {
+    if(milliseconds<=0)return;
+    const auto slice=chrono::steady_clock::now()+chrono::milliseconds(milliseconds);
+    mate_deadline=min(deadline,slice);
+    for(const int depth:{1,3,5}) {
+      try {
+        mate_proven_move.clear();
+        if(mate_attack(depth,true)) {
+          mate_proven_plies=depth;break;
+        }
+      }catch(const NTimeout&) {mate_incomplete=true;break;}
+    }
+    mate_deadline=chrono::steady_clock::time_point::max();
+  }
+  void mate_probe_defense_one(const vector<string>& root,int milliseconds) {
+    if(milliseconds<=0 || mate_proven_plies>0 || root.size()<2)return;
+    mate_deadline=min(deadline,chrono::steady_clock::now()+chrono::milliseconds(milliseconds));
+    try {
+      for(const auto& word:root) {
+        mate_step();
+        bool opponent_mate_one=false;
+        {
+          MoveGuard guard(*this,word);
+          opponent_mate_one=mate_attack(1);
+        }
+        ++mate_root_guarded;
+        if(opponent_mate_one) {
+          mate_unsafe_moves.push_back(word);++mate_root_unsafe;
+        }
+      }
+    }catch(const NTimeout&) {mate_incomplete=true;}
+    mate_deadline=chrono::steady_clock::time_point::max();
+  }
+
   double search(int depth,double alpha,double beta,int ply) {
     ++nodes;time_check();
     // Static leaves need only legal existence, not a complete sorted list.
@@ -111,9 +201,25 @@ struct NSearch {
     if(!end.first.empty())return end.second<0?0.:(kNMate-ply)*(end.second==(board.turn=="b"?0:1)?1.:-1.);
     if(depth==0) {++evals;return clamp(nnue_value(board,model,board.turn=="b"?0:1),-20.,20.)*1000.;}
     double best=-2*kNMate;string word;
+    bool first_move=true;
     for(const auto& move:legal) {
       double score;
-      {MoveGuard guard(*this,move);score=-search(depth-1,-beta,-alpha,ply+1);}
+      {
+        MoveGuard guard(*this,move);
+        if(first_move) {
+          score=-search(depth-1,-beta,-alpha,ply+1);
+        } else {
+          // Null-window probe is only a preliminary bound, never a skipped move.
+          // The smallest representable positive window works for NNUE doubles.
+          const double probe=std::nextafter(alpha,std::numeric_limits<double>::infinity());
+          score=-search(depth-1,-probe,-alpha,ply+1);
+          if(score>alpha && score<beta) {
+            // A potentially best quiet/sacrifice move receives a full search.
+            score=-search(depth-1,-beta,-alpha,ply+1);
+          }
+        }
+      }
+      first_move=false;
       if(score>best){best=score;word=move;}alpha=max(alpha,best);if(alpha>=beta)break;
     }
     if(!word.empty())hints[history.back()]=word;
@@ -155,7 +261,27 @@ static int nnue_search_impl(uint64_t model,uint64_t state,int milliseconds,int m
     auto moves=search.moves(false);const auto end=search.terminal(moves);
     string best=moves.empty()||!end.first.empty()?"":moves[0];
     int completed=0,partial=0;double score=0.;bool has_score=false;
-    for(int depth=1;depth<=max_depth&&!best.empty();++depth) {
+    bool research_mate_proven=false;
+    if(!fixed_depth && !best.empty() && end.first.empty()) {
+      search.mate_probe_offense(milliseconds>=1000?70:max(1,milliseconds/9));
+      if(search.mate_proven_plies>0 && !search.mate_proven_move.empty()) {
+        best=search.mate_proven_move;
+        completed=search.mate_proven_plies;
+        score=kNMate-completed;
+        has_score=true;
+        research_mate_proven=true;
+      } else {
+        search.mate_probe_defense_one(moves,milliseconds>=1000?24:max(1,milliseconds/25));
+        if(!search.mate_unsafe_moves.empty() && search.mate_unsafe_moves.size()<moves.size()) {
+          moves.erase(remove_if(moves.begin(),moves.end(),[&](const string& word) {
+            return find(search.mate_unsafe_moves.begin(),search.mate_unsafe_moves.end(),word)!=
+                   search.mate_unsafe_moves.end();
+          }),moves.end());
+          best=moves.front();
+        }
+      }
+    }
+    if(!research_mate_proven)for(int depth=1;depth<=max_depth&&!best.empty();++depth) {
       string current=best;double value=-2*kNMate,alpha=-2*kNMate;int searched=0;
       try {
         for(const auto& move:moves) {
@@ -179,6 +305,12 @@ static int nnue_search_impl(uint64_t model,uint64_t state,int milliseconds,int m
     out<<",\"elapsed_ms\":"<<elapsed<<",\"quiescence_depth\":0,\"quiescence_nodes\":0,\"terminal\":";
     if(end.first.empty())out<<"null";else {out<<"{\"status\":\""<<end.first<<"\",\"winner\":";
       if(end.second<0)out<<"null";else out<<end.second;out<<'}';}
+    out<<",\"research_mate_proven\":"<<(research_mate_proven?"true":"false")
+       <<",\"research_mate_plies\":"<<search.mate_proven_plies
+       <<",\"research_mate_nodes\":"<<search.mate_nodes
+       <<",\"research_mate_incomplete\":"<<(search.mate_incomplete?"true":"false")
+       <<",\"research_defense_checked\":"<<search.mate_root_guarded
+       <<",\"research_proven_unsafe\":"<<search.mate_root_unsafe;
     out<<'}';return copy_text(out.str(),output,capacity);
   }catch(...){return -3;}
 }

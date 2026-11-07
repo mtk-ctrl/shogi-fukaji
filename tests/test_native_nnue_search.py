@@ -47,7 +47,7 @@ class NativeNNUEOnlineTests(unittest.TestCase):
                 ref=select(b,self.model,max_depth=2,fixed_depth=True)
                 got=native.select(b,self.model,max_depth=2,fixed_depth=True)
                 self.assertEqual(ref['move'],got['move'])
-                self.assertEqual(ref['nodes'],got['nodes'])
+                self.assertGreater(got['nodes'],0)  # PVS intentionally changes nodes
                 self.assertAlmostEqual(ref['score'],got['score'],places=7)
                 self.assertEqual(b.sfen(),sfen);self.assertEqual(+b.transpositions,counts)
                 native.state.assert_equal(b,full=True)

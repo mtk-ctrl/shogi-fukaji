@@ -105,3 +105,7 @@
 - [D48実験計画・実測・次工程](D48_MATE_PVS_PAIRED100_20261107.md)、[採否判断](decisions/2026-11-07_D48詰み探索PVS100局結果と現行維持.md)、[実run](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/42339652079)、[全原棋譜とSHA済みRelease](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d48-pvs-mate-d45-100games-42339652079)。
 - 現行D45 NNUE同一重みで **PVS＋強制1/3/5手詰み＋相手1手詰みガードが55勝、現行αβが44勝、未決着1**。50独立序盤ペア100局、12,395手合法検証、20独立ランナー最大同時20、詰み証明113回。100局だけで優位確定とはしない。
 - 現行NNUEは依然**D45/Adam3794**、正式FUKAJI v0.4.0の探索・USIは不変。研究用コード・Releaseのみ追加。次は詰み専用の未見問題で正答率・誤詰み・タイムアウトを独立監査し、実戦勝率を新規局面で再現確認する。
+
+## 2026-11-07 D49：D48の探索を正式採用
+
+本人明示指示で100局実測55勝44敗・未決着1のD48 PVS＋詰み補助を正式USIへ採用。現行USI FUKAJI v0.4.1、NNUE D45 snapshot 941598f2/Adam3794を不変維持。実装・契約検査・隔離配布・SHA検証を実施して正式化する。docs/decisions/2026-11-07_D49_D48探索を正式採用.md。
