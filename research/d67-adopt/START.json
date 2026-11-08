@@ -1,0 +1,18 @@
+{
+  "after_wins": 118,
+  "audit_sha256": "0c98b8bc5f1d6bbabfd3702bdea373bcf4c27ef23be7a22f9336d2bb33475726",
+  "before_wins": 81,
+  "draws": 0,
+  "enabled": true,
+  "former": "545dba627046621ec53b681d485978b9054776c717d894dcb0de55bec731d4a2",
+  "games_sha256": "9e711baf83563827f777dd8c43ddb1ec85dacec5b10255caff2ad48fc194e6ef",
+  "next": "c29b5ba1ed9264ba298ffdef2ab0deb71f37b327a32c3a1f8505061f67401ac3",
+  "optimizer_after": 11864,
+  "optimizer_before": 10974,
+  "positions": 56860,
+  "request_id": "d67-d66-after-success",
+  "source_run": 42471868758,
+  "train_sha256": "9a046de9a40ee7375f0219db55ca89f4dfb901486affdaa1da819f9fafaedccf",
+  "unresolved": 1,
+  "validated_plies": 18666
+}
