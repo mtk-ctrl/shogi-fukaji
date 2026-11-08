@@ -76,7 +76,7 @@ jobs:
           echo '6b9f2c432481d19caded577858d118fb99a028142d25d6dd239f1c75bb16ed11  input/D60-D58-before-after-200games.tar.gz' | sha256sum -c -
       - name: Prepare formal D60 with fully checked optimizer, 200 game SHAs and unchanged mate search
         run: |
-          python scripts/d61_adopt_d58.py \
+          python scripts/d61_adopt_d60.py \
             --trained input/D60-D58-1000trained-unadopted.tar.gz \
             --audit input/D60-D58-before-after-200games.tar.gz \
             --out build/d61-prepare
@@ -136,7 +136,7 @@ jobs:
           git fetch origin main
           test "$(git rev-parse origin/main)" = "$new_sha"
           echo "source_sha=$new_sha" >> "$GITHUB_OUTPUT"
-      - name: Build independent bundle of formal D58 without search changes; execute USI
+      - name: Build independent bundle of formal D60 without search changes; execute USI
         env:
           SOURCE_SHA: ${{ steps.adoption.outputs.source_sha }}
         run: |
@@ -160,7 +160,7 @@ jobs:
           assert d['weights_sha256']==m['weights_sha256'],d
           print('D61 isolated official bundle actual USI and mate passed')
           PY
-      - name: Publish D58 formal release and SHA-compare four downloaded assets
+      - name: Publish D60 formal release and SHA-compare four downloaded assets
         env:
           SOURCE_SHA: ${{ steps.adoption.outputs.source_sha }}
           TAG: fukaji-current-d60-d61-pvs-mate-20261108
