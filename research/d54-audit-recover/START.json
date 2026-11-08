@@ -1,0 +1,11 @@
+{
+  "enabled": true,
+  "request_id": "d54-20261108-restore-200-audit-no-new-1000",
+  "source_run": 42426372939,
+  "trained_sha256": "19a0f06427d68e4b98f9b4af67722f909937b272134837af79315a25c7e401a1",
+  "selfplay_sha256": "6eb7db54ccea6fa9da9a70f9d7aef25709dd13f97ba9b94f0d81f764f54c44ac",
+  "current": "55ccc97db6c2d4ce9ff7c75f5e81d543fb6f12d169639c3ea6d24c89e95342ae",
+  "after": "1cb833c18be57d4881388bb6947f17493cca4974faac4023a4550ea47463f3f5",
+  "audit_games": 200,
+  "allow_regenerate_train": false
+}
