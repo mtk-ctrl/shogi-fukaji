@@ -1,0 +1,21 @@
+{
+  "enabled": true,
+  "request_id": "d65-d64-20261108-verified-audit-adopt",
+  "source_run": 42465412656,
+  "audit_run": 42465412656,
+  "former": "e04e85dfebb507131df591bf0206e27771afe6944f3249124dfaf6eab5de51fb",
+  "next": "545dba627046621ec53b681d485978b9054776c717d894dcb0de55bec731d4a2",
+  "games_trained": 1000,
+  "audit_games": 200,
+  "after_wins": 114,
+  "before_wins": 86,
+  "draws": 0,
+  "unresolved": 0,
+  "optimizer_before": 10080,
+  "optimizer_after": 10974,
+  "train_sha256": "ae93fbe93c2de9dde16ba84945e13aca62f1c122a5edb99cd3796795f6fce2ea",
+  "audit_sha256": "3a4b96fcf7d56975124704b6296734c912ff065dad2dbdb853004d051e7cb88e",
+  "search_sha256": "c9340af265368547c37cbecc311d8d3982900885b433d1b4ccdc27fbdd7d041a",
+  "version": "FUKAJI v0.4.1",
+  "authority": "F00/F20 preauthorized direct current NNUE continuation when stronger"
+}
