@@ -1,0 +1,6 @@
+{
+  "enabled": true,
+  "request_id": "d67-preflight-20261108",
+  "mode": "read-only",
+  "source": "guarded-native-event-handoff"
+}
