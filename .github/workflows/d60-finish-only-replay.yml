@@ -1,0 +1,116 @@
+name: D60 FINISH only collect 200 saved paired games into SHA release
+on:
+  workflow_dispatch:
+    inputs:
+      execute:
+        type: boolean
+        required: true
+        default: false
+  push:
+    branches: [main]
+    paths:
+      - research/d60-finish/START.json
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: fukaji-d60-20261108-finish-only
+  cancel-in-progress: false
+jobs:
+  finish:
+    if: github.repository == 'mtk-ctrl/shogi-fukaji' && (github.event_name == 'push' || inputs.execute)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - name: Fail-closed recovery request and model checks
+        run: |
+          python - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          q=json.load(open('research/d60-finish/START.json'))
+          expected={"enabled":True,
+                    "request_id":"d60-finish-only-20261108",
+                    "audit_run":42455966713,
+                    "source_run":42447988443,
+                    "model_before":"d190c1a1b8d5a44b3fe4791588306fb493f1b9534cca268fcbb656ba8604265c",
+                    "model_after":"1f4ef9f32dfff7a94ad3ddb1c57f64f123ca8b6f6caa422cb9c86ace06c57654",
+                    "optimizer_step_after":9190,
+                    "game_count":200,
+                    "audit_lanes":20,
+                    "search_sha256":"c9340af265368547c37cbecc311d8d3982900885b433d1b4ccdc27fbdd7d041a",
+                    "version":"FUKAJI v0.4.1"}
+          if q!=expected:raise SystemExit('Unapproved finish-only request changed')
+          m=json.loads(Path('formal/model.json').read_text())
+          for k,v in [('research_snapshot_sha256',q['model_before']),
+                      ('optimizer_step',8296),('version',q['version']),
+                      ('search_implementation_sha256',q['search_sha256']),
+                      ('search_backend_variant','d48_pvs_mate')]:
+              if m.get(k)!=v:raise SystemExit('formal model drift '+k)
+          if hashlib.sha256(Path('native/nnue_search_ffi.cpp').read_bytes()).hexdigest()!=q['search_sha256']:
+              raise SystemExit('engine changed')
+          source=Path('scripts/d60_arena.py').read_text()
+          if 'if plan["schema"]!="d60-paired200-v1"' not in source:
+              raise SystemExit('collector plan schema regression')
+          if 'plan={"schema":"d60-paired200-v1"' not in source:
+              raise SystemExit('producer plan schema regression')
+          if 'else "inconclusive_keep_D58"' not in source:
+              raise SystemExit('unsafe failure verdict')
+          print('D60 producer and consumer schema verified; no selfplay or audit game regeneration')
+          PY
+          python scripts/check_fukaji_contracts.py
+      - uses: actions/download-artifact@v4
+        with:
+          name: d60-audit-runtime-42455966713
+          run-id: 42455966713
+          github-token: ${{ github.token }}
+          path: input
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: d60-audit-lane-*
+          merge-multiple: true
+          run-id: 42455966713
+          github-token: ${{ github.token }}
+          path: input/lanes
+      - name: Verify every original upload arrived before collecting
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          names={p.name for p in Path('input/lanes').glob('lane-*.tar.gz')}
+          expected={f'lane-{i:02d}.tar.gz' for i in range(20)}
+          assert names==expected,(sorted(expected-names),sorted(names-expected))
+          print('All 20 preserved runner archives present')
+          PY
+      - name: Replay all 200 legal paired games, check NNUE and clock and decide
+        run: python scripts/d60_arena.py collect --runtime input/runtime.tar.gz --downloads input/lanes --out results
+      - name: Publish complete audited 200 games as SHA-verified release
+        env:
+          TAG: fukaji-d60-d58-before-after-200games-42455966713
+        run: |
+          set -euo pipefail
+          file=results/D60-D58-before-after-200games.tar.gz
+          expected="$(sha256sum "$file" | cut -d ' ' -f1)"
+          gh release create "$TAG" "$file" --target "$GITHUB_SHA" --title 'D60 audit recovery: formal D58 vs D60 trained Adam9190 paired200' --notes 'Frozen identical PVS+mate v0.4.1 on both sides. 100 paired openings, 200 original game artifacts recovered intact from run 42455966713. No games replayed. Formal current model unchanged before post-audit admission.'
+          mkdir -p readback
+          gh release download "$TAG" --pattern D60-D58-before-after-200games.tar.gz --dir readback
+          test "$expected" = "$(sha256sum readback/D60-D58-before-after-200games.tar.gz | cut -d ' ' -f1)"
+          cat results/publication/report.json >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: d60-finish-recovered-${{ github.run_id }}
+          path: |
+            results/publication/report.json
+            results/receipt.json
+          retention-days: 30
