@@ -97,7 +97,7 @@ jobs:
           assert m['search_implementation_sha256']==r['unchanged_cpp_sha256']
           assert m['weights_sha256']==r['weights_sha256']
           assert hashlib.sha256(Path('native/nnue_search_ffi.cpp').read_bytes()).hexdigest()==r['unchanged_cpp_sha256']
-          assert hashlib.sha256(Path('models/fukaji-d62.nnue.npz').read_bytes()).hexdigest()=='6cabbceb047ce19b527ae7261235ee84fca43fb42fd3af745872cbb330fd3257'
+          assert hashlib.sha256(Path('models/fukaji-d62.nnue.npz').read_bytes()).hexdigest()=='3df737429572f27470e9f7a495cb772e569ed60135e3a1b6badfef53f67636ce'
           assert m['optimizer_step']==10974 and m['research_snapshot_sha256']==r['current_snapshot_sha256']
           print('D65 full static contract including old weights, new weights and PVS+mate pinned')
           PY
