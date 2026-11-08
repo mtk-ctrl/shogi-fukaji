@@ -108,7 +108,7 @@ jobs:
           echo '427ebf9a8671d56b3f3b0fef24a62a2242e293a559e4307027747d30eb3a2f65  input/D48-PVS-Mate-vs-D45-100games-with-runner-audit.tar.gz' | sha256sum -c -
           echo '65acb35edd7e19a29b86c9cd321e245ad98cfa78f471f53e5e083f3ee473f793  input/D52-D50-1000trained-unadopted.tar.gz' | sha256sum -c -
           echo 'd8adb89bff7d3cd2dc83c994f6664ce73ef7798e6326cc6a893a2ef2ca1d2134  input/D52-D50-1000games.tar.gz' | sha256sum -c -
-          echo '5f05369e2ad7edec6a9393889c989697e83a607cdc062967049630a542  input/D52-D50-before-after-200games.tar.gz' | sha256sum -c -
+          echo '5f05369e2ad7edec6aa4098a9393889c989697e83a607cdc062967049630a542  input/D52-D50-before-after-200games.tar.gz' | sha256sum -c -
           echo '19a0f06427d68e4b98f9b4af67722f909937b272134837af79315a25c7e401a1  input/D54-D52-1000trained-unadopted.tar.gz' | sha256sum -c -
           echo '6eb7db54ccea6fa9da9a70f9d7aef25709dd13f97ba9b94f0d81f764f54c44ac  input/D54-D52-1000games.tar.gz' | sha256sum -c -
           echo '2506e8a17f9c3d775f774adefda5d7da1cf1355d4b1f0449fe41dc6c25c846bf  input/D54-D52-before-after-200games.tar.gz' | sha256sum -c -
