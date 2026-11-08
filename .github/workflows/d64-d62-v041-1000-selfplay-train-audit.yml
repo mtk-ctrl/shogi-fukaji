@@ -14,7 +14,7 @@ permissions:
   contents: write
   actions: read
 concurrency:
-  group: fukaji-d64-v041-d60-1000-selfplay-audit
+  group: fukaji-d64-v041-d62-1000-selfplay-audit
   cancel-in-progress: false
 
 jobs:
@@ -51,7 +51,7 @@ jobs:
           for k,v in [('research_snapshot_sha256',q['baseline']),('weights_sha256',q['weights_sha256']),('optimizer_step',10080),('version',q['version']),('search_implementation_sha256',q['search_sha256']),('search_backend_variant',q['search_variant'])]:
             if f.get(k)!=v:raise SystemExit('D64 formal version changed: '+k)
           if hashlib.sha256(Path('native/nnue_search_ffi.cpp').read_bytes()).hexdigest()!=q['search_sha256']:raise SystemExit('D49 official CPP changed')
-          if hashlib.sha256(Path(f['weights_file']).read_bytes()).hexdigest()!=q['weights_sha256']:raise SystemExit('D56 inference changed')
+          if hashlib.sha256(Path(f['weights_file']).read_bytes()).hexdigest()!=q['weights_sha256']:raise SystemExit('D62 inference changed')
           print('D64 verified formal current NNUE D62/Adam10080, v0.4.1 mate plus PVS')
           PY
       - name: Source contracts, syntax, and known one-ply mate
@@ -85,7 +85,7 @@ jobs:
           assert result.get('research_mate_proven') is True and result.get('research_mate_plies')==1,result
           print('D54 PVS+mate preflight proven')
           PY
-      - name: Restore D56 Adam7402 and all protected historical parent families
+      - name: Restore D62 Adam10080 and all protected historical parent families
         run: |
           set -euo pipefail
           mkdir -p input
