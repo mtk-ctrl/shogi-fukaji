@@ -278,7 +278,7 @@ def main():
     for flag in ("runtime","downloads","out"):p.add_argument("--"+flag,type=Path,required=True)
     z=a.parse_args()
     if z.cmd=="prepare":
-        prepare(z.state,z.baseline_archive,z.old_selfplay,z.old_audit,z.trained,z.trained_sha,z.source,z.source_sha,z.d41,z.d42,z.d45_selfplay,z.d45_audit,z.d47_audit,z.d48_audit,z.d50_selfplay,z.d50_audit,z.d52_selfplay,z.d52_audit,z.d54_selfplay,z.d54_audit,z.d56_selfplay,z.d56_audit,z.d58_selfplay,z.d58_audit,z.d60_selfplay,z.d60_audit,z.d62_selfplay,z.d62_audit,z.d64_selfplay,z.d64_audit,z.out
+        prepare(z.state,z.baseline_archive,z.old_selfplay,z.old_audit,z.trained,z.trained_sha,z.source,z.source_sha,z.d41,z.d42,z.d45_selfplay,z.d45_audit,z.d47_audit,z.d48_audit,z.d50_selfplay,z.d50_audit,z.d52_selfplay,z.d52_audit,z.d54_selfplay,z.d54_audit,z.d56_selfplay,z.d56_audit,z.d58_selfplay,z.d58_audit,z.d60_selfplay,z.d60_audit,z.d62_selfplay,z.d62_audit,z.d64_selfplay,z.d64_audit,z.out)
     elif z.cmd=="segment":segment(z.work,z.index,z.side,z.out)
     elif z.cmd=="worker":worker(z.runtime,z.lane,z.out)
     else:collect(z.runtime,z.downloads,z.out)
