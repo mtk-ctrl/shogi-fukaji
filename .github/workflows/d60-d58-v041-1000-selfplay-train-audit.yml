@@ -41,7 +41,7 @@ jobs:
           q=json.load(open('research/d60/START.json'))
           expected={'enabled':True,'request_id':'d60-20261108-d58-v041-selfplay1000-20runner',
             'baseline':'d190c1a1b8d5a44b3fe4791588306fb493f1b9534cca268fcbb656ba8604265c',
-            'weights_sha256':'__D59_FORMAL_WEIGHT_SHA__',
+            'weights_sha256':'d856765813508a29cb2f35e2aceba8b67dc7797798eb114ae23d826424baf30d',
             'optimizer_step':8296,'search_variant':'d48_pvs_mate',
             'search_sha256':'c9340af265368547c37cbecc311d8d3982900885b433d1b4ccdc27fbdd7d041a',
             'version':'FUKAJI v0.4.1','games':1000,'runners':20,'rounds':5,'compare_games':200,
