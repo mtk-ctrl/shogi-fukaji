@@ -62,8 +62,8 @@ def prepare(state,baseline_archive,old_selfplay,old_audit,trained,trained_archiv
     models=out/"runtime"/"models";models.mkdir(parents=True,exist_ok=True)
     with tarfile.open(baseline_archive,"r:gz") as t:
         parent_report=json.load(t.extractfile("report.json"))
-        if parent_report["trained_sha256"]!=BASE or parent_report["optimizer_step_after"]!=9190 or parent_report["schema"]!="d62-learned1000-v1":
-            raise ValueError("baseline must be the current adopted D58/Adam8296")
+        if parent_report["trained_sha256"]!=BASE or parent_report["optimizer_step_after"]!=9190 or parent_report["schema"]!="d60-learned1000-v1":
+            raise ValueError("baseline must be adopted D60/Adam9190")
         for ext in ("npz","json"):
             name=f"{BASE}.{ext}"
             (models/name).write_bytes(t.extractfile(name).read())
