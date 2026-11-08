@@ -40,7 +40,7 @@ def configure(work):
 
 def prepare(state,baseline_archive,old_selfplay,old_audit,trained,trained_archive_sha,
             source,source_sha,d41,d42_source,d45_selfplay,d45_audit,d47_audit,d48_audit,d50_selfplay,d50_audit,d52_selfplay,d52_audit,out):
-    for path,sha in ((state,games.STATE_SHA),(baseline_archive,games.D50_TRAIN_SHA),
+    for path,sha in ((state,games.STATE_SHA),(baseline_archive,games.D52_TRAIN_SHA),
                      (old_selfplay,games.D43_SELFPLAY_SHA),
                      (old_audit,games.D43_AUDIT_SHA),(trained,trained_archive_sha),
                      (source,source_sha),(d41,games.D41_SHA),(d42_source,games.D42_SHA),
@@ -59,7 +59,7 @@ def prepare(state,baseline_archive,old_selfplay,old_audit,trained,trained_archiv
     with tarfile.open(baseline_archive,"r:gz") as t:
         parent_report=json.load(t.extractfile("report.json"))
         if parent_report["trained_sha256"]!=BASE or parent_report["optimizer_step_after"]!=5606 or parent_report["schema"]!="d52-learned1000-v1":
-            raise ValueError("baseline is not current adopted D43")
+            raise ValueError("baseline must be the current adopted D52/Adam5606")
         for ext in ("npz","json"):
             name=f"{BASE}.{ext}"
             (models/name).write_bytes(t.extractfile(name).read())
@@ -219,7 +219,7 @@ def collect(runtime,downloads,out):
     score_low=sum(sum(0 if v is None else v for v in pairs[i])/2 for i in range(100))/100
     score_high=sum(sum(1 if v is None else v for v in pairs[i])/2 for i in range(100))/100
     eps=math.sqrt(math.log(40)/(2*100))
-    verdict=("after_better" if diff>0 else "before_better") if abs(diff)>=THRESHOLD and unresolved<=10 else "inconclusive_keep_D50"
+    verdict=("after_better" if diff>0 else "before_better") if abs(diff)>=THRESHOLD and unresolved<=10 else "inconclusive_keep_D52"
     times={}
     for budget in (200,1000):
         vals=[float(z["elapsed_ms"]) for z in telemetry if z["budget_ms"]==budget]
