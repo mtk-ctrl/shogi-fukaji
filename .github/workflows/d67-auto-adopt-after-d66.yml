@@ -4,6 +4,10 @@ on:
     workflows:
       - D66 v0.4.1 D64 PVS+mate 1000 selfplay training paired200 audit
     types: [completed]
+  push:
+    branches: [main]
+    paths:
+      - research/d67-recovery/START.json
 permissions:
   contents: write
   actions: write
@@ -12,7 +16,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   adopt:
-    if: github.repository == 'mtk-ctrl/shogi-fukaji' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.event == 'push' && github.event.workflow_run.repository.full_name == github.repository
+    if: github.repository == 'mtk-ctrl/shogi-fukaji' && ((github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.event == 'push' && github.event.workflow_run.repository.full_name == github.repository) || (github.event_name == 'push' && github.ref == 'refs/heads/main'))
     runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
@@ -28,6 +32,24 @@ jobs:
           ref: main
           fetch-depth: 0
           persist-credentials: true
+      - name: Resolve exact D66 source for one-time recovery push
+        if: github.event_name == 'push'
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          q=json.loads(Path('research/d67-recovery/START.json').read_text())
+          expected={
+            "schema":"fukaji-d67-recovery-v1",
+            "run_id":42471868758,
+            "source_sha":"c06562e5d03c539a47d1d8da2951f10772f70dfb"
+          }
+          if q != expected:
+            raise SystemExit("D67 recovery request does not match the exact audited D66 run")
+          with open(os.environ["GITHUB_ENV"],"a") as f:
+            f.write("SRC_RUN="+str(q["run_id"])+"\\n")
+            f.write("SRC_SHA="+q["source_sha"]+"\\n")
+          PY
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
