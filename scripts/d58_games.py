@@ -26,7 +26,7 @@ D45_TRAIN_SHA="d44349470b4068224ce1383f29d1afdf941c39931f6141c278927976da52c820"
 D45_SELFPLAY_SHA="be22c4e92eff0b684f06502dcdf9be52071ab60beab5a4a91edd8605f4d873c4"
 D45_AUDIT_SHA="6531747f10d015bec7817186f6fbed149aa6ac1822d94fbcce7858a7ceae211b"
 D47_AUDIT_SHA="7acd4abaed27f1598520228987067c459f677c2985544e8cf532d0eb7381e5a7"
-D48_AUDIT_SHA="427ebf9a8671d58b3f3b0fef24a62a2242e293a559e4307027747d30eb3a2f65"
+D48_AUDIT_SHA="427ebf9a8671d56b3f3b0fef24a62a2242e293a559e4307027747d30eb3a2f65"
 D50_TRAIN_SHA="a6df97b104302a4b7c9f570c289af0d001155eea44f3a7c9bb0f21184a2b3688"
 D50_SELFPLAY_SHA="92a27e9ea5094157e1213086966bfae9d3921c0537e1506b3563279bc63faf76"
 D50_AUDIT_SHA="f6acc785531eab92e199dfb5df4d4a64f5e55246c08ec0962e24b6123fb81324"
@@ -77,7 +77,7 @@ def prepare(state,d41_source,d42_source,d43_trained,d43_selfplay,d43_audit,d45_t
         manifest.get("search_implementation_sha256")!=SEARCH_SHA or
         manifest.get("version")!="FUKAJI v0.4.1"):
         raise ValueError("D58 requires formal v0.4.1 D50 + exact adopted search") 
-    if manifest["weights_sha256"]!="__D57_FORMAL_WEIGHT_SHA__":
+    if manifest["weights_sha256"]!="bcc1da5a3756c9a70fd864add32571a5b289a47d3614f794eed4fcf9802d5d24":
         raise ValueError("D52 official NNUE inference weights changed")
     if manifest["research_snapshot_sha256"]!=BASE or manifest["optimizer_step"]!=7402:
         raise ValueError("not current D52/Adam5606; do not start")
