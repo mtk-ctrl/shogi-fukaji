@@ -204,7 +204,7 @@ D58/Adam8296を親として新自己対局1000局（997決着）、Adam9190ま�
 外部相手への強さは未検証。PVS＋1/3/5手詰み／USI v0.4.1は不変更。
 
 ## 保存・戻し
-- D60 [Actions run 42447988443](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/42447988443)全125job成功
+- D60 1000局+完全学習：[run 42447988443](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/42447988443)の100独立自己対局ジョブ・集約・学習成功（後続の監査準備失敗は別工程）\n- D60独立200局： [run 42455966713](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/42455966713)の20評価ジョブ成功、最終集約のみ[run 42456661212](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/42456661212)でSHA再読戻し・保存成功
 - 原1000局 SHA256 {GAMES_SHA}
 - D60 NNUE＋完全Adam9190 Release SHA256 {TRAIN_SHA}
 - D60独立200局 Release SHA256 {AUDIT_SHA}
