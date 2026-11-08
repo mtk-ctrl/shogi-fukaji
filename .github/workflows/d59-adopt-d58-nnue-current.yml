@@ -14,7 +14,7 @@ permissions:
   contents: write
   actions: read
 concurrency:
-  group: fukaji-d57-single-writer-current-nnue
+  group: fukaji-d59-single-writer-current-nnue
   cancel-in-progress: false
 jobs:
   adopt:
