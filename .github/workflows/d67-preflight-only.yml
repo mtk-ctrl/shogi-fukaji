@@ -62,3 +62,29 @@ jobs:
             raise AssertionError('must reject lowered promotion gate')
           print('D67 verified pass, non-promotion, and inconsistent evidence fail-closed')
           PY
+          python -m py_compile scripts/d68_codegen.py
+          python scripts/d68_codegen.py --preview \
+            --new aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \
+            --step 11868 \
+            --weights-sha bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb \
+            --source-run 42471868758 \
+            --training-sha cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc \
+            --selfplay-sha dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd \
+            --audit-sha eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee \
+            --out build/d68-mock
+          python -m py_compile build/d68-mock/scripts/d68_*.py
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          p=Path('build/d68-mock')
+          q=json.loads((p/'research/d68/START.json').read_text())
+          assert q['baseline']=='a'*64 and q['optimizer_step']==11868
+          w=(p/'.github/workflows/d68-d66-v041-1000-selfplay-train-audit.yml').read_text()
+          assert "scripts/d68_games.py" in w and 'research/d68/START.json' in w
+          assert "parent_report[\"schema\"]!=\"d66-learned1000-v1\"" in w
+          assert "fukaji-d66-d64-trained-42471868758" in w
+          assert "d68-r0-lane-" in w and "D68-D66-1000games.tar.gz" in w
+          assert "D66_TRAIN_SHA" in (p/'scripts/d68_games.py').read_text()
+          assert "inconclusive_keep_D66" in (p/'scripts/d68_arena.py').read_text()
+          print('D68 generator mock compiled, all 20x5 future jobs retained, no new training started')
+          PY
