@@ -52,7 +52,7 @@ jobs:
             if f.get(k)!=v:raise SystemExit('D56 formal version changed: '+k)
           if hashlib.sha256(Path('native/nnue_search_ffi.cpp').read_bytes()).hexdigest()!=q['search_sha256']:raise SystemExit('D49 official CPP changed')
           if hashlib.sha256(Path(f['weights_file']).read_bytes()).hexdigest()!=q['weights_sha256']:raise SystemExit('D52 inference changed')
-          print('D56 verified formal current NNUE D52/Adam5606, v0.4.1 mate plus PVS')
+          print('D56 verified formal current NNUE D54/Adam6508, v0.4.1 mate plus PVS')
           PY
       - name: Source contracts, syntax, and known one-ply mate
         run: |
@@ -70,9 +70,9 @@ jobs:
           with NativeSelector() as n:
               result=n.select(shogi.Board('8k/9/7R1/7L1/9/9/9/9/8K b - 1'),m,movetime_ms=1000)
           assert result.get('research_mate_proven') is True and result.get('research_mate_plies')==1,result
-          print('D52 PVS+mate preflight proven')
+          print('D54 PVS+mate preflight proven')
           PY
-      - name: Restore D52 Adam5606 and protected parent families
+      - name: Restore D54 Adam6508 and all protected historical parent families
         run: |
           set -euo pipefail
           mkdir -p input
@@ -89,8 +89,8 @@ jobs:
           gh release download fukaji-d50-d45-trained-42343709475 --pattern D50-D45-1000trained-unadopted.tar.gz --dir input
           gh release download fukaji-d50-d45-1000-selfplay-42343709475 --pattern D50-D45-1000games.tar.gz --dir input
           gh release download fukaji-d50-d45-before-after-200games-42343709475 --pattern D50-D45-before-after-200games.tar.gz --dir input
-          gh release download fukaji-d54-d52-trained-42426372939 --pattern D54-D52-1000trained-unadopted.tar.gz --dir input
-          gh release download fukaji-d54-d52-1000-selfplay-42426372939 --pattern D54-D52-1000games.tar.gz --dir input
+          gh release download fukaji-d52-d50-trained-42401026786 --pattern D52-D50-1000trained-unadopted.tar.gz --dir input
+          gh release download fukaji-d52-d50-1000-selfplay-42401026786 --pattern D52-D50-1000games.tar.gz --dir input
           gh release download fukaji-d52-d50-before-after-200games-42401026786 --pattern D52-D50-before-after-200games.tar.gz --dir input
           gh release download fukaji-d54-d52-trained-42426372939 --pattern D54-D52-1000trained-unadopted.tar.gz --dir input
           gh release download fukaji-d54-d52-1000-selfplay-42426372939 --pattern D54-D52-1000games.tar.gz --dir input
@@ -106,9 +106,9 @@ jobs:
           echo '6531747f10d015bec7817186f6fbed149aa6ac1822d94fbcce7858a7ceae211b  input/D45-D43-before-after-200games.tar.gz' | sha256sum -c -
           echo '7acd4abaed27f1598520228987067c459f677c2985544e8cf532d0eb7381e5a7  input/D47-PVS-vs-D45-300games-with-runner-audit.tar.gz' | sha256sum -c -
           echo '427ebf9a8671d56b3f3b0fef24a62a2242e293a559e4307027747d30eb3a2f65  input/D48-PVS-Mate-vs-D45-100games-with-runner-audit.tar.gz' | sha256sum -c -
-          echo '19a0f06427d68e4b98f9b4af67722f909937b272134837af79315a25c7e401a1  input/D54-D52-1000trained-unadopted.tar.gz' | sha256sum -c -
-          echo '6eb7db54ccea6fa9da9a70f9d7aef25709dd13f97ba9b94f0d81f764f54c44ac  input/D54-D52-1000games.tar.gz' | sha256sum -c -
-          echo '5f05369e2ad7edec6aa4098a9393889c989697e83a607cdc062967049630a542  input/D52-D50-before-after-200games.tar.gz' | sha256sum -c -
+          echo '65acb35edd7e19a29b86c9cd321e245ad98cfa78f471f53e5e083f3ee473f793  input/D52-D50-1000trained-unadopted.tar.gz' | sha256sum -c -
+          echo 'd8adb89bff7d3cd2dc83c994f6664ce73ef7798e6326cc6a893a2ef2ca1d2134  input/D52-D50-1000games.tar.gz' | sha256sum -c -
+          echo '5f05369e2ad7edec6a9393889c989697e83a607cdc062967049630a542  input/D52-D50-before-after-200games.tar.gz' | sha256sum -c -
           echo '19a0f06427d68e4b98f9b4af67722f909937b272134837af79315a25c7e401a1  input/D54-D52-1000trained-unadopted.tar.gz' | sha256sum -c -
           echo '6eb7db54ccea6fa9da9a70f9d7aef25709dd13f97ba9b94f0d81f764f54c44ac  input/D54-D52-1000games.tar.gz' | sha256sum -c -
           echo '2506e8a17f9c3d775f774adefda5d7da1cf1355d4b1f0449fe41dc6c25c846bf  input/D54-D52-before-after-200games.tar.gz' | sha256sum -c -
@@ -427,17 +427,17 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install -r requirements.txt
-      - name: Restore D52 Adam5606 full state, D45 history and 1000 new selfplay
+      - name: Restore D54 Adam6508 full state and 1000 new selfplay
         run: |
           set -euo pipefail
           mkdir -p input
           gh release download fukaji-d56-d54-1000-selfplay-${{ github.run_id }} --pattern D56-D54-1000games.tar.gz --dir input
-          gh release download fukaji-d52-d50-trained-42401026786 --pattern D52-D50-1000trained-unadopted.tar.gz --dir input
-          gh release download fukaji-d52-d50-1000-selfplay-42401026786 --pattern D52-D50-1000games.tar.gz --dir input
+          gh release download fukaji-d54-d52-trained-42426372939 --pattern D54-D52-1000trained-unadopted.tar.gz --dir input
+          gh release download fukaji-d54-d52-1000-selfplay-42426372939 --pattern D54-D52-1000games.tar.gz --dir input
           echo '${{ needs.aggregate.outputs.source_sha }}  input/D56-D54-1000games.tar.gz' | sha256sum -c -
-          echo '65acb35edd7e19a29b86c9cd321e245ad98cfa78f471f53e5e083f3ee473f793  input/D52-D50-1000trained-unadopted.tar.gz' | sha256sum -c -
-          echo 'd8adb89bff7d3cd2dc83c994f6664ce73ef7798e6326cc6a893a2ef2ca1d2134  input/D52-D50-1000games.tar.gz' | sha256sum -c -
-      - name: Continue current D52 Adam5606 from verified D50 selfplay
+          echo '19a0f06427d68e4b98f9b4af67722f909937b272134837af79315a25c7e401a1  input/D54-D52-1000trained-unadopted.tar.gz' | sha256sum -c -
+          echo '6eb7db54ccea6fa9da9a70f9d7aef25709dd13f97ba9b94f0d81f764f54c44ac  input/D54-D52-1000games.tar.gz' | sha256sum -c -
+      - name: Continue current D54 Adam6508 from verified D54 selfplay
         run: |
           python scripts/d56_train.py --state research/d41-public/D37-Adam2106-training-state.tar.gz --baseline-trained input/D54-D52-1000trained-unadopted.tar.gz --old-selfplay input/D54-D52-1000games.tar.gz --source input/D56-D54-1000games.tar.gz --source-sha "${{ needs.aggregate.outputs.source_sha }}" --out trained
       - name: Preserve full NNUE and optimizer before Release attempt
