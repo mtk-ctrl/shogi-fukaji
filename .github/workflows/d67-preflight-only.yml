@@ -1,0 +1,64 @@
+name: D67 guarded timer-chain preflight only
+on:
+  push:
+    branches: [main]
+    paths:
+      - research/d67-preflight/START.json
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - name: Compile actual event-driven adoption before D66 finishes
+        run: |
+          set -euo pipefail
+          python -m py_compile scripts/d67_source_gate.py scripts/d67_adopt_d66.py
+          python scripts/check_fukaji_contracts.py
+          python - <<'PY'
+          from scripts.d67_source_gate import evaluate,OLD
+          old='545dba627046621ec53b681d485978b9054776c717d894dcb0de55bec731d4a2'
+          new='a'*64
+          train={'schema':'d66-learned1000-v1','baseline':old,'trained_sha256':new,
+                 'optimizer_step_before':10974,'optimizer_step_after':11868,
+                 'new_games':1000,'resolved_new_games':998,
+                 'formal_model_changed':False,'formal_search_variant':'d48_pvs_mate',
+                 'fit':{'positions':50000}}
+          games={'schema':'d66-selfplay1000-result-v1','games':1000}
+          plan={'schema':'d66-paired200-v1','before':old,'after':new,'games':200,'pairs':100,
+                'families':[{'parent_id':str(i)} for i in range(100)],
+                'decision':{'margin_win_count':12,'max_unresolved':10},
+                'conditions':{'backend':'cpp_nnue','normal_ms':200,
+                              'long_ms':1000,'max_long_per_side':10,'quiescence':0}}
+          score={'schema':'d66-paired200-result-v1','before':old,'after':new,
+                 'games':200,'opening_pairs':100,'formal_changed':False,
+                 'validated_plies':18000,'game_sha256':{str(i):'0'*64 for i in range(200)},
+                 'after_wins':115,'before_wins':85,'draws':0,'unresolved':0,
+                 'difference':30,'predeclared_verdict':'after_better'}
+          assert evaluate(train,games,score,plan) is True
+          score.update(after_wins=104,before_wins=96,difference=8,
+                       predeclared_verdict='inconclusive_keep_D64')
+          assert evaluate(train,games,score,plan) is False
+          score['predeclared_verdict']='after_better'
+          try:
+            evaluate(train,games,score,plan)
+          except ValueError:
+            pass
+          else:
+            raise AssertionError('must reject inconsistent verdict')
+          score.update(after_wins=115,before_wins=85,difference=30,predeclared_verdict='after_better')
+          plan['decision']['margin_win_count']=0
+          try:
+            evaluate(train,games,score,plan)
+          except ValueError:
+            pass
+          else:
+            raise AssertionError('must reject lowered promotion gate')
+          print('D67 verified pass, non-promotion, and inconsistent evidence fail-closed')
+          PY
