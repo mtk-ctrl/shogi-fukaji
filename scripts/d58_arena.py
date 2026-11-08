@@ -16,7 +16,7 @@ from scripts import d58_games as games
 from scripts import d41_public_20 as core
 
 BASE=games.BASE
-SEED=202611083151
+SEED=202611083181
 PAIRS=100
 LANES=20
 THRESHOLD=12
