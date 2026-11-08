@@ -4,7 +4,7 @@
 
 ## 現行モデル
 
-**正式D52 NNUE（55ccc97db6c2d4ce9ff7c75f5e81d543fb6f12d169639c3ea6d24c89e95342ae、Adam5606）、FUKAJI v0.4.1・PVS＋詰み探索維持**。前正式D50/Adam4702から1000局自己対局で追加学習、新100序盤×先後入替200局で **D52 156勝、D50 44勝、引分/未決着0**、事前基準通過。[D53採用判断](decisions/2026-11-08_D53_D52学習後重みを現行採用.md)／[D52実験](https://github.com/mtk-ctrl/shogi-fukaji/actions/runs/42401026786)／[完全state](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d52-d50-trained-42401026786)／[正式manifest](../formal/model.json)／[現行仕様](現行エンジン仕様.md)。今後はD52/Adam5606から継続。旧D50/Adam4702は不変で保護。
+**正式D54 NNUE（1cb833c18be57d4881388bb6947f17493cca4974faac4023a4550ea47463f3f5、Adam6508）**。旧正式D52/Adam5606から新1000局を学習、200局比較でD54 137勝、D52 62勝、引分0・未決着1。USI FUKAJI v0.4.1・PVS＋詰み探索は変更なし。[D55判断](decisions/2026-11-08_D55_D54学習後重みを現行採用.md)、[全200局](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d54-d52-before-after-200games-42429671383)、[完全state](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d54-d52-trained-42426372939)、[manifest](../formal/model.json)。次周学習の唯一の親は正式D54/Adam6508、旧D52保護。
 
 ## 現在の研究
 - [D31](D31_TWO_BATCH_RETENTION_20261103.md)：400局/65,551手完了。c8対当時の正式NNUEは119勝76敗1分4未決着、対新経験のみ候補は97勝97敗4分2未決着。保持方式の候補間優位は未確定。
@@ -156,3 +156,8 @@
 
 - 本人明示指示。D53正式採用のD52 NNUE（snapshot 55ccc97d...、Adam5606）を唯一の学習親とし、5波×20ランナー×10局＝新規1,000局、旧trainの許可済みreplay、未見100序盤の先後200局を同じv0.4.1 PVS+詰み探索で直接比較。事前基準勝数差12以上/未決着10以下。
 - [固定実験計画](D54_CURRENT_D52_V041_1000GAMES_PLAN_20261108.md)、[判断と境界](decisions/2026-11-08_D54第5周1000局の実行判断.md)、[workflow](../.github/workflows/d54-d52-v041-1000-selfplay-train-audit.yml)。前回の101artifact欠損、Release403をコードで防止。研究run完了/対局結果は開始後の実ログでのみ判定し、正式D52は検証後の別採用手続まで不変。
+
+## D55：D54 NNUE正式採用（2026-11-08）
+
+- 1000局全局決着、57615局面でAdam5606→6508、別の200局比較では新D54 137勝、D52 62勝、未決着1。合計20,297手合法検証。3件のReleaseのSHA再取得確認。
+- 正式NNUE 1cb833c18be57d4881388bb6947f17493cca4974faac4023a4550ea47463f3f5、推論SHA 5c2e011225e914d95b36afaecf56fd267db273a325de47bf371eaa93e8dc36a2。USI v0.4.1・PVS＋詰み探索維持。[判断](decisions/2026-11-08_D55_D54学習後重みを現行採用.md)。

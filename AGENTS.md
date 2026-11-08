@@ -33,3 +33,7 @@ ChatGPT・Claude等は同じRuleと同じGitHub正本を使う。まず[開発�
 ## 最新正式NNUE（D53、2026-11-08）
 
 **正式D52/Adam5606、snapshot 55ccc97db6c2d4ce9ff7c75f5e81d543fb6f12d169639c3ea6d24c89e95342ae。** D50/Adam4702から自己対局1000局→学習、比較200局でD52 156勝44敗、引分0・未決着0。F00/F20に従いNNUE重みのみ更新。FUKAJI v0.4.1と正式PVS＋詰み探索は不変。次周唯一の親は[D52完全state](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d52-d50-trained-42401026786)。旧D50系の記述はその時点の履歴。[D53判断](docs/decisions/2026-11-08_D53_D52学習後重みを現行採用.md)。
+
+## 最新正式NNUE（D55、2026-11-08）
+
+**正式D54/Adam6508、snapshot 1cb833c18be57d4881388bb6947f17493cca4974faac4023a4550ea47463f3f5。** 旧正式D52/Adam5606から1000局→学習、200局で137勝62敗、未決着1。NNUE重みのみ更新、PVS＋詰み探索・v0.4.1不変。次周唯一の親は[D54完全state](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d54-d52-trained-42426372939)。旧モデル説明はその当時の履歴。[D55判断](docs/decisions/2026-11-08_D55_D54学習後重みを現行採用.md)。
