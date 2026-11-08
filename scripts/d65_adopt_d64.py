@@ -167,22 +167,22 @@ def prepare(trained,audit,out):
     current=dict(spec)
     current.update({
         "approved_on":"2026-11-08",
-        "approved_by":"owner-delegated F00/F20 D64 125-74 paired200 with no unresolved",
+        "approved_by":"owner-delegated F00/F20 D64 114-86 paired200 with no unresolved",
         "research_snapshot_sha256":NEW,"research_parent_sha256":OLD,
         "weights_file":MODEL_PATH,"weights_sha256":weights_sha,
         "optimizer_step":10974,
         "training_source_sha256":GAMES_SHA,"training_release_sha256":TRAIN_SHA,
         "comparison_release_sha256":AUDIT_SHA,
-        "model_distribution":"GitHub models/fukaji-d64.nnue.npz and D65 current release; full Adam10080 remains in D64 training Release.",
+        "model_distribution":"GitHub models/fukaji-d64.nnue.npz and D65 current release; full Adam10974 remains in D64 training Release.",
         "validation":{
-            "opponent":"D62/Adam9190 before D64 1000 new selfplay; 100 unseen paired openings",
-            "wins":125,"losses":74,"draws":0,"unresolved":0,
+            "opponent":"D62/Adam10080 before D64 1000 new selfplay; 100 unseen paired openings",
+            "wins":114,"losses":86,"draws":0,"unresolved":0,
             "opening_families":100,"games":200,
             "planned_opening_families":100,"planned_games":200,
             "normal_move_time_ms":200,"longthink_ms":1000,
             "longthink_max_per_side":10,"quiescence":0,
             "search_backend_variant":"d48_pvs_mate",
-            "strength_conclusion":"D64 won 125-74 against D62 in independent paired200; difference +51 passes frozen threshold +12"
+            "strength_conclusion":"D64 won 114-86 against D62 in independent paired200; difference +28 passes frozen threshold +12"
         }
     })
     for k in ("version","architecture","backend","quiescence","default_move_time_ms",
