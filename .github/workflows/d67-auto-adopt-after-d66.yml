@@ -6,7 +6,7 @@ on:
     types: [completed]
 permissions:
   contents: write
-  actions: read
+  actions: write
 concurrency:
   group: fukaji-d67-auto-after-d66
   cancel-in-progress: false
@@ -178,7 +178,7 @@ jobs:
             build/d67-isolated-usi.json \
             build/D67-adoption-receipt.json \
             --target "$SOURCE_SHA" \
-            --title 'FUKAJI v0.4.1 current D66 Adam10974 NNUE with D49 PVS plus mate' \
+            --title 'FUKAJI v0.4.1 current D66 newly trained NNUE with D49 PVS plus mate' \
             --notes 'F00/F20: D66 win in independent paired200 after selfplay1000. Exact existing PVS/mate and USI v0.4.1 kept. D64 original immutable.'
           mkdir -p build/d67-readback
           for file in \
@@ -192,6 +192,62 @@ jobs:
                  "$(sha256sum "build/d67-readback/$name"|cut -d ' ' -f1)"
           done
           echo "D67 current D66 source $SOURCE_SHA; four release SHA readback checks passed" >> "$GITHUB_STEP_SUMMARY"
+      - name: Queue exactly one D68 successor from the newly adopted D66 state
+        if: steps.gate.outputs.adopt == 'true'
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json,subprocess
+          from pathlib import Path
+          q=json.loads(Path('build/d67-gate.json').read_text())
+          r=json.loads(Path('build/d67-prepare/receipt.json').read_text())
+          m=json.loads(Path('formal/model.json').read_text())
+          assert q['source_run']==r['source_run'] and q['adopt'] is True
+          assert r['current_snapshot_sha256']==m['research_snapshot_sha256']
+          assert r['weights_sha256']==m['weights_sha256']
+          assert r['optimizer_step']==m['optimizer_step']>10974
+          args=['python','scripts/d68_codegen.py','--new',r['current_snapshot_sha256'],
+                '--step',str(r['optimizer_step']),'--weights-sha',r['weights_sha256'],
+                '--source-run',str(q['source_run']),
+                '--training-sha',q['train_sha256'],
+                '--selfplay-sha',q['selfplay_sha256'],
+                '--audit-sha',q['audit_sha256']]
+          subprocess.run(args,check=True)
+          PY
+          python -m py_compile scripts/d68_native_game.py scripts/d68_games.py scripts/d68_train.py scripts/d68_arena.py
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$(git rev-parse HEAD)" || {
+            echo 'D68 CAS: other main writer changed after D67 adoption';exit 1;
+          }
+          git add scripts/d68_native_game.py scripts/d68_games.py scripts/d68_train.py scripts/d68_arena.py
+          git add .github/workflows/d68-d66-v041-1000-selfplay-train-audit.yml research/d68/START.json
+          git diff --cached --check
+          test "$(git diff --cached --name-only | wc -l)" -eq 6
+          git commit -m "feat(D68): one finite 1000-game successor from formally adopted D66 state"
+          successor_sha="$(git rev-parse HEAD)"
+          git push origin HEAD:refs/heads/main
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$successor_sha"
+          # GITHUB_TOKEN push does not recursively trigger push workflows.
+          # GitHub workflow_dispatch is explicitly allowed and is a bounded one-time event.
+          sent=0
+          for attempt in 1 2 3 4 5; do
+            if gh workflow run d68-d66-v041-1000-selfplay-train-audit.yml --ref main -f execute=true; then
+              sent=1
+              break
+            fi
+            sleep 5
+          done
+          test "$sent" -eq 1 || { echo 'D68 dispatch was not accepted'; exit 1; }
+          successor_run=""
+          for attempt in 1 2 3 4 5 6 7 8 9 10; do
+            successor_run="$(gh api -X GET "repos/$GITHUB_REPOSITORY/actions/workflows/d68-d66-v041-1000-selfplay-train-audit.yml/runs?event=workflow_dispatch&per_page=20" --jq '.workflow_runs[] | select(.head_sha == "'"$successor_sha"'" and .event == "workflow_dispatch") | .id' | head -n 1)"
+            if [ -n "$successor_run" ]; then break; fi
+            sleep 5
+          done
+          test -n "$successor_run" || { echo 'D68 dispatch accepted but new real run not yet verified'; exit 1; }
+          printf 'D67→D68 native chain PROVEN: D68 run %s, head SHA %s\n' "$successor_run" "$successor_sha" >> "$GITHUB_STEP_SUMMARY"
+          printf '{"schema":"d67-to-d68-finite-chain-v1","D68_run":%s,"commit":"%s"}\n' "$successor_run" "$successor_sha" > build/d67-d68-chain-receipt.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -201,5 +257,6 @@ jobs:
             build/d67-usi-validation.json
             build/d67-isolated-usi.json
             build/d67-adopted-files.txt
+            build/d67-d68-chain-receipt.json
           if-no-files-found: warn
           retention-days: 30
