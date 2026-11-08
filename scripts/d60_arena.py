@@ -178,7 +178,7 @@ def collect(runtime,downloads,out):
     configure(work)
     before,after=get_models(work)
     plan=json.loads((work/"plan.json").read_text())
-    if plan["schema"]!="d58-paired200-v1" or len(plan["families"])!=100:
+    if plan["schema"]!="d60-paired200-v1" or len(plan["families"])!=100:
         raise ValueError("bad frozen paired comparison")
     lane_files=sorted(downloads.glob("lane-*.tar.gz"))
     if [p.name for p in lane_files]!=[f"lane-{i:02d}.tar.gz" for i in range(LANES)]:
@@ -227,7 +227,7 @@ def collect(runtime,downloads,out):
     score_low=sum(sum(0 if v is None else v for v in pairs[i])/2 for i in range(100))/100
     score_high=sum(sum(1 if v is None else v for v in pairs[i])/2 for i in range(100))/100
     eps=math.sqrt(math.log(40)/(2*100))
-    verdict=("after_better" if diff>0 else "before_better") if abs(diff)>=THRESHOLD and unresolved<=10 else "inconclusive_keep_D52"
+    verdict=("after_better" if diff>0 else "before_better") if abs(diff)>=THRESHOLD and unresolved<=10 else "inconclusive_keep_D58"
     times={}
     for budget in (200,1000):
         vals=[float(z["elapsed_ms"]) for z in telemetry if z["budget_ms"]==budget]
