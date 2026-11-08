@@ -4,7 +4,7 @@
 
 ## 現行モデル
 
-**正式D54 NNUE（1cb833c18be57d4881388bb6947f17493cca4974faac4023a4550ea47463f3f5、Adam6508）**。旧正式D52/Adam5606から新1000局を学習、200局比較でD54 137勝、D52 62勝、引分0・未決着1。USI FUKAJI v0.4.1・PVS＋詰み探索は変更なし。[D55判断](decisions/2026-11-08_D55_D54学習後重みを現行採用.md)、[全200局](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d54-d52-before-after-200games-42429671383)、[完全state](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d54-d52-trained-42426372939)、[manifest](../formal/model.json)。次周学習の唯一の親は正式D54/Adam6508、旧D52保護。
+**正式D56（89562fd4fed556f4a883dba465add35c532cc2c7ccdae9efd24d685270246363、Adam7402）**。旧D54から新1000局学習、200局比較D56 135勝・D54 65勝・未決着0。USI v0.4.1、PVS＋詰み探索不変。[D57判断](decisions/2026-11-08_D57_D56学習後重みを現行採用.md)、[200局Release](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d56-d54-before-after-200games-42433340061)、[完全state](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d56-d54-trained-42433340061)。次周唯一の親はD56/Adam7402。
 
 ## 現在の研究
 - [D31](D31_TWO_BATCH_RETENTION_20261103.md)：400局/65,551手完了。c8対当時の正式NNUEは119勝76敗1分4未決着、対新経験のみ候補は97勝97敗4分2未決着。保持方式の候補間優位は未確定。
@@ -161,3 +161,8 @@
 
 - 1000局全局決着、57615局面でAdam5606→6508、別の200局比較では新D54 137勝、D52 62勝、未決着1。合計20,297手合法検証。3件のReleaseのSHA再取得確認。
 - 正式NNUE 1cb833c18be57d4881388bb6947f17493cca4974faac4023a4550ea47463f3f5、推論SHA 5c2e011225e914d95b36afaecf56fd267db273a325de47bf371eaa93e8dc36a2。USI v0.4.1・PVS＋詰み探索維持。[判断](decisions/2026-11-08_D55_D54学習後重みを現行採用.md)。
+
+## D57正式採用（2026-11-08）
+
+- D56 1000局中997決着、Adam6508→7402、独立200局135勝65敗・未決着0。正式NNUE 89562fd4fed556f4a883dba465add35c532cc2c7ccdae9efd24d685270246363、推論SHA bcc1da5a3756c9a70fd864add32571a5b289a47d3614f794eed4fcf9802d5d24。v0.4.1とPVS＋詰み探索不変。
+- [判断記録](decisions/2026-11-08_D57_D56学習後重みを現行採用.md)。
