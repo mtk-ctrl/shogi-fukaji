@@ -19,7 +19,7 @@ from fukaji.online_learning import load_snapshot
 from fukaji.formal_model import load as formal_load
 
 OLD="1cb833c18be57d4881388bb6947f17493cca4974faac4023a4550ea47463f3f5"
-NEW="89562fd4fed576f4a883dba465add35c532cc2c7ccdae9efd24d685270246363"
+NEW="89562fd4fed556f4a883dba465add35c532cc2c7ccdae9efd24d685270246363"
 OLD_WEIGHTS="5c2e011225e914d95b36afaecf56fd267db273a325de47bf371eaa93e8dc36a2"
 CPP="c9340af265368547c37cbecc311d8d3982900885b433d1b4ccdc27fbdd7d041a"
 GAMES_SHA="94a6cd1fae005ad3bf31d50cdd32a75413b946269a0b4875b9ee9d86dde2c21c"
