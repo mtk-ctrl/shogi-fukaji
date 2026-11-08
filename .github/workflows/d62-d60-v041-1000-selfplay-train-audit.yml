@@ -68,7 +68,7 @@ jobs:
           assert 'if plan["schema"]!="d62-paired200-v1"' in p
           assert 'inconclusive_keep_D60' in p
           g=Path('scripts/d62_games.py').read_text()
-          assert '__D61_FORMAL_WEIGHT_SHA__' not in g
+          assert '6cabbceb047ce19b527ae7261235ee84fca43fb42fd3af745872cbb330fd3257' not in g
           assert 'D60_TRAIN_SHA' in g and 'D60_AUDIT_SHA' in g
           print('D62 parent/child schema, collector and frozen SHA checks OK')
           PY
