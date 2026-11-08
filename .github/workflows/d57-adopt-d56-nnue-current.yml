@@ -1,4 +1,4 @@
-name: D57 adopt D54 Adam7402 NNUE on approved PVS mate v0.4.1
+name: D57 adopt D56 Adam7402 NNUE on approved PVS mate v0.4.1
 on:
   workflow_dispatch:
     inputs:
@@ -35,7 +35,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install -r requirements.txt
-      - name: Confirm F00 F20 owner mandate, D54 135-65 and pinned D49 native version
+      - name: Confirm F00 F20 owner mandate, D56 135-65 and pinned D49 native version
         run: |
           set -euo pipefail
           python - <<'PY'
@@ -55,7 +55,7 @@ jobs:
             "search_sha256":"c9340af265368547c37cbecc311d8d3982900885b433d1b4ccdc27fbdd7d041a",
             "version":"FUKAJI v0.4.1",
             "authority":"F00/F20 preauthorized direct current NNUE continuation when stronger"}
-          if request!=expected:raise ValueError("D57 request is not pinned to owner-authorized D52 audit")
+          if request!=expected:raise ValueError("D57 request differs from frozen D56 paired200")
           m=json.load(open('formal/model.json'))
           for k,value in [('research_snapshot_sha256',request['former']),('optimizer_step',6508),
                           ('weights_file','models/fukaji-d54.nnue.npz'),
@@ -66,7 +66,7 @@ jobs:
           PY
           git fetch origin main
           test "$(git rev-parse origin/main)" = "$GITHUB_SHA"
-      - name: Download D50 optimizer+NNUE and complete paired200 audit; SHA verify
+      - name: Download D56 NNUE plus Adam7402 and frozen paired200 audit; SHA verify
         run: |
           set -euo pipefail
           mkdir -p input
@@ -74,7 +74,7 @@ jobs:
           gh release download fukaji-d56-d54-before-after-200games-42433340061 --pattern D56-D54-before-after-200games.tar.gz --dir input
           echo '4aa33cbc6991cb69008bb3b586ca089e36ed3a79f2c80340fc53dd8198c8bb87  input/D56-D54-1000trained-unadopted.tar.gz' | sha256sum -c -
           echo 'df4806113e4d1b07218172bc6464233783a6c10bec1c636a0d0c9bab9ef500dd  input/D56-D54-before-after-200games.tar.gz' | sha256sum -c -
-      - name: Prepare formal D54 with fully checked optimizer, 200 game SHAs and unchanged mate search
+      - name: Prepare formal D56 with fully checked optimizer, 200 game SHAs and unchanged mate search
         run: |
           python scripts/d57_adopt_d56.py \
             --trained input/D56-D54-1000trained-unadopted.tar.gz \
@@ -111,9 +111,9 @@ jobs:
           assert d['search_backend_variant']=='d48_pvs_mate' and d['research_mate_proof_verified'] is True,d
           assert d['identical_depth2_positions']>=30 and d['usi_games']==2 and d['legal_usi_plies']>=30,d
           assert d['weights_sha256']==json.load(open('formal/model.json'))['weights_sha256'],d
-          print('D57 real USI plays with exactly current search and D54 weights')
+          print('D57 real USI plays with exactly current search and D56 weights')
           PY
-      - name: Atomically commit D52 official NNUE only after complete tests and main CAS
+      - name: Atomically commit D56 official NNUE only after complete tests and main CAS
         id: adoption
         run: |
           set -euo pipefail
@@ -126,17 +126,17 @@ jobs:
           git add -f models/fukaji-d56.nnue.npz
           git add formal/model.json research/d17-fast-self-learning/formal-contract.json
           git add docs/現行エンジン仕様.md docs/00_開発ルーター.md docs/ROADMAP.md
-          git add AGENTS.md docs/decisions/2026-11-08_D57_D54学習後重みを現行採用.md
+          git add AGENTS.md docs/decisions/2026-11-08_D57_D56学習後重みを現行採用.md
           git diff --cached --check
           git diff --cached --name-only | tee build/d57-adopted-files.txt
           test "$(git diff --cached --name-only | wc -l)" -eq 8
-          git commit -m "adopt(D57): current NNUE D54 Adam7402 after 135-65 paired200; preserve PVS mate v0.4.1"
+          git commit -m "adopt(D57): current NNUE D56 Adam7402 after 135-65 paired200; preserve PVS mate v0.4.1"
           new_sha="$(git rev-parse HEAD)"
           git push origin HEAD:refs/heads/main
           git fetch origin main
           test "$(git rev-parse origin/main)" = "$new_sha"
           echo "source_sha=$new_sha" >> "$GITHUB_OUTPUT"
-      - name: Build independent bundle of formal D54 without search changes; execute USI
+      - name: Build independent bundle of formal D56 without search changes; execute USI
         env:
           SOURCE_SHA: ${{ steps.adoption.outputs.source_sha }}
         run: |
@@ -160,7 +160,7 @@ jobs:
           assert d['weights_sha256']==m['weights_sha256'],d
           print('D57 isolated official bundle actual USI and mate passed')
           PY
-      - name: Publish D50 formal release and SHA-compare four downloaded assets
+      - name: Publish D56 formal release and SHA-compare four downloaded assets
         env:
           SOURCE_SHA: ${{ steps.adoption.outputs.source_sha }}
           TAG: fukaji-current-d56-d57-pvs-mate-20261108
@@ -173,8 +173,8 @@ jobs:
             build/d57-isolated-usi.json \
             build/D57-adoption-receipt.json \
             --target "$SOURCE_SHA" \
-            --title 'FUKAJI v0.4.1 current D54 Adam7402 NNUE with D49 PVS plus mate' \
-            --notes 'Owner-delegated F00/F20: 1000 new D52 v0.4.1 selfplay, D54 wins paired200 135-65 with 1 unresolved. NNUE only changes; v0.4.1 C++ PVS and forced mate search unchanged. Existing D52 full optimizer and old release preserved.'
+            --title 'FUKAJI v0.4.1 current D56 Adam7402 NNUE with D49 PVS plus mate' \
+            --notes 'Owner-delegated F00/F20: 1000 new D54 v0.4.1 selfplay, D56 wins paired200 135-65 with 0 unresolved. NNUE only changes; v0.4.1 C++ PVS and mate search unchanged. Existing D54 full optimizer and old release preserved.'
           mkdir -p build/d57-readback
           for file in \
             build/D57-FUKAJI-current-D56-PVS-Mate.tar.gz \
@@ -186,7 +186,7 @@ jobs:
             test "$(sha256sum "$file"|cut -d ' ' -f1)" = \
                  "$(sha256sum "build/d57-readback/$name"|cut -d ' ' -f1)"
           done
-          echo "D57 current D52 source $SOURCE_SHA; four release SHA readback checks passed" >> "$GITHUB_STEP_SUMMARY"
+          echo "D57 current D56 source $SOURCE_SHA; four release SHA readback checks passed" >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
