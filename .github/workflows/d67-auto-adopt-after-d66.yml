@@ -1,0 +1,205 @@
+name: D67 automatic NNUE adoption after D66 completed
+on:
+  workflow_run:
+    workflows:
+      - D66 v0.4.1 D64 PVS+mate 1000 selfplay training paired200 audit
+    types: [completed]
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: fukaji-d67-auto-after-d66
+  cancel-in-progress: false
+jobs:
+  adopt:
+    if: github.repository == 'mtk-ctrl/shogi-fukaji' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.event == 'push' && github.event.workflow_run.repository.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ github.token }}
+      SRC_RUN: ${{ github.event.workflow_run.id }}
+      SRC_SHA: ${{ github.event.workflow_run.head_sha }}
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - name: Check D67 source syntax and official D64 before the automatic handoff
+        run: |
+          set -euo pipefail
+          python -m py_compile scripts/d67_source_gate.py scripts/d67_adopt_d66.py
+          python scripts/check_fukaji_contracts.py
+          python - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          m=json.loads(Path('formal/model.json').read_text())
+          frozen={'research_snapshot_sha256':'545dba627046621ec53b681d485978b9054776c717d894dcb0de55bec731d4a2',
+                  'optimizer_step':10974,'version':'FUKAJI v0.4.1',
+                  'weights_file':'models/fukaji-d64.nnue.npz',
+                  'weights_sha256':'fd5f832e0ded9519c23ad7469eee7a79f70d78f41bc0dab87c5f7bc57c8d478a',
+                  'search_backend_variant':'d48_pvs_mate',
+                  'search_implementation_sha256':'c9340af265368547c37cbecc311d8d3982900885b433d1b4ccdc27fbdd7d041a'}
+          for k,v in frozen.items():
+            if m.get(k)!=v:raise SystemExit('D67 former model drift '+k)
+          for file,sha in [('native/nnue_search_ffi.cpp',frozen['search_implementation_sha256']),
+                           (m['weights_file'],frozen['weights_sha256'])]:
+            if hashlib.sha256(Path(file).read_bytes()).hexdigest()!=sha:raise SystemExit('changed original '+file)
+          PY
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$(git rev-parse HEAD)"
+      - name: Download the exact three D66 result Releases
+        run: |
+          set -euo pipefail
+          mkdir -p input
+          gh release download "fukaji-d66-d64-trained-$SRC_RUN" --pattern D66-D64-1000trained-unadopted.tar.gz --dir input
+          gh release download "fukaji-d66-d64-1000-selfplay-$SRC_RUN" --pattern D66-D64-1000games.tar.gz --dir input
+          gh release download "fukaji-d66-d64-before-after-200games-$SRC_RUN" --pattern D66-D64-before-after-200games.tar.gz --dir input
+      - name: Verify all Release digests and calculate actual admission gate
+        id: gate
+        run: |
+          set -euo pipefail
+          python scripts/d67_source_gate.py --run-id "$SRC_RUN" --source-sha "$SRC_SHA" \
+            --inputs input --out build/d67-gate.json --adopt-output "$GITHUB_OUTPUT"
+          cat build/d67-gate.json >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve D64 when actual paired200 does not show improvement
+        if: steps.gate.outputs.adopt != 'true'
+        run: echo "Frozen D66 comparison gate not met. Formal D64 is unchanged; no next cycle." >> "$GITHUB_STEP_SUMMARY"
+      - name: Prepare formal D66 with fully checked optimizer, 200 game SHAs and unchanged mate search
+        if: steps.gate.outputs.adopt == 'true'
+        run: |
+          python scripts/d67_adopt_d66.py \
+            --trained input/D66-D64-1000trained-unadopted.tar.gz \
+            --audit input/D66-D64-before-after-200games.tar.gz \
+            --out build/d67-prepare
+          cat build/d67-prepare/receipt.json >> "$GITHUB_STEP_SUMMARY"
+      - name: Validate source contracts and full regression with frozen search
+        if: steps.gate.outputs.adopt == 'true'
+        run: |
+          set -euo pipefail
+          python scripts/check_fukaji_contracts.py
+          python -m unittest discover -s tests -q
+          python -m compileall -q fukaji scripts
+          git diff --check
+          python - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          r=json.load(open('build/d67-prepare/receipt.json'))
+          m=json.load(open('formal/model.json'))
+          assert m['version']=='FUKAJI v0.4.1' and m['search_backend_variant']=='d48_pvs_mate'
+          assert m['search_implementation_sha256']==r['unchanged_cpp_sha256']
+          assert m['weights_sha256']==r['weights_sha256']
+          assert hashlib.sha256(Path('native/nnue_search_ffi.cpp').read_bytes()).hexdigest()==r['unchanged_cpp_sha256']
+          assert hashlib.sha256(Path('models/fukaji-d64.nnue.npz').read_bytes()).hexdigest()=='fd5f832e0ded9519c23ad7469eee7a79f70d78f41bc0dab87c5f7bc57c8d478a'
+          assert m['optimizer_step']==r['optimizer_step'] and m['research_snapshot_sha256']==r['current_snapshot_sha256']
+          print('D67 full static contract including old weights, new weights and PVS+mate pinned')
+          PY
+      - name: Real C++ NNUE, 1-ply mate proof and current USI legal play
+        if: steps.gate.outputs.adopt == 'true'
+        run: |
+          python scripts/verify_formal_release.py --out build/d67-usi-validation.json
+          python - <<'PY'
+          import json
+          d=json.load(open('build/d67-usi-validation.json'))
+          assert d['version']=='FUKAJI v0.4.1',d
+          assert d['search_backend_variant']=='d48_pvs_mate' and d['research_mate_proof_verified'] is True,d
+          assert d['identical_depth2_positions']>=30 and d['usi_games']==2 and d['legal_usi_plies']>=30,d
+          assert d['weights_sha256']==json.load(open('formal/model.json'))['weights_sha256'],d
+          print('D67 real USI plays with exactly current search and D66 weights')
+          PY
+      - name: Atomically commit D66 official NNUE only after complete tests and main CAS
+        if: steps.gate.outputs.adopt == 'true'
+        id: adoption
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$GITHUB_SHA" || {
+            echo "main changed during D67; aborting without overwriting";exit 1;
+          }
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f models/fukaji-d66.nnue.npz
+          git add formal/model.json research/d17-fast-self-learning/formal-contract.json
+          git add docs/現行エンジン仕様.md docs/00_開発ルーター.md docs/ROADMAP.md
+          git add AGENTS.md docs/decisions/2026-11-08_D67_D66学習後NNUEを正式採用.md
+          git add research/d67-adopt/START.json
+          git diff --cached --check
+          git diff --cached --name-only | tee build/d67-adopted-files.txt
+          test "$(git diff --cached --name-only | wc -l)" -eq 9
+          git commit -m "adopt(D67): promote better D66 NNUE after independently verified paired200"
+          new_sha="$(git rev-parse HEAD)"
+          git push origin HEAD:refs/heads/main
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$new_sha"
+          echo "source_sha=$new_sha" >> "$GITHUB_OUTPUT"
+      - name: Build independent bundle of formal D66 without search changes; execute USI
+        if: steps.gate.outputs.adopt == 'true'
+        env:
+          SOURCE_SHA: ${{ steps.adoption.outputs.source_sha }}
+        run: |
+          set -euo pipefail
+          python scripts/build_formal_bundle.py --out build/D67-FUKAJI-current-D66-PVS-Mate.tar.gz --source-commit "$SOURCE_SHA"
+          mkdir -p build/d67-isolated
+          tar -xzf build/D67-FUKAJI-current-D66-PVS-Mate.tar.gz -C build/d67-isolated
+          (
+            cd build/d67-isolated/fukaji-v0.4.1
+            python scripts/verify_formal_release.py --out d67-isolated-usi.json
+          )
+          cp build/d67-isolated/fukaji-v0.4.1/d67-isolated-usi.json build/d67-isolated-usi.json
+          python - <<'PY'
+          import json
+          d=json.load(open('build/d67-isolated-usi.json'))
+          m=json.load(open('formal/model.json'))
+          assert d['bundle_member_hashes_verified'] is True,d
+          assert d['research_mate_proof_verified'] is True,d
+          assert d['search_backend_variant']=='d48_pvs_mate' and d['version']=='FUKAJI v0.4.1',d
+          assert d['identical_depth2_positions']>=30 and d['legal_usi_plies']>=30,d
+          assert d['weights_sha256']==m['weights_sha256'],d
+          print('D67 isolated official bundle actual USI and mate passed')
+          PY
+      - name: Publish D66 formal release and SHA-compare four downloaded assets
+        if: steps.gate.outputs.adopt == 'true'
+        env:
+          SOURCE_SHA: ${{ steps.adoption.outputs.source_sha }}
+          TAG: fukaji-current-d66-d67-pvs-mate-20261108
+        run: |
+          set -euo pipefail
+          cp build/d67-prepare/receipt.json build/D67-adoption-receipt.json
+          gh release create "$TAG" \
+            build/D67-FUKAJI-current-D66-PVS-Mate.tar.gz \
+            build/d67-usi-validation.json \
+            build/d67-isolated-usi.json \
+            build/D67-adoption-receipt.json \
+            --target "$SOURCE_SHA" \
+            --title 'FUKAJI v0.4.1 current D66 Adam10974 NNUE with D49 PVS plus mate' \
+            --notes 'F00/F20: D66 win in independent paired200 after selfplay1000. Exact existing PVS/mate and USI v0.4.1 kept. D64 original immutable.'
+          mkdir -p build/d67-readback
+          for file in \
+            build/D67-FUKAJI-current-D66-PVS-Mate.tar.gz \
+            build/d67-usi-validation.json \
+            build/d67-isolated-usi.json \
+            build/D67-adoption-receipt.json; do
+            name="$(basename "$file")"
+            gh release download "$TAG" --pattern "$name" --dir build/d67-readback
+            test "$(sha256sum "$file"|cut -d ' ' -f1)" = \
+                 "$(sha256sum "build/d67-readback/$name"|cut -d ' ' -f1)"
+          done
+          echo "D67 current D66 source $SOURCE_SHA; four release SHA readback checks passed" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: d67-adopt-nnue-verification-${{ github.run_id }}
+          path: |
+            build/d67-prepare/receipt.json
+            build/d67-usi-validation.json
+            build/d67-isolated-usi.json
+            build/d67-adopted-files.txt
+          if-no-files-found: warn
+          retention-days: 30
