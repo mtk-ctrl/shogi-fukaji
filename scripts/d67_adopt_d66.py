@@ -5,6 +5,8 @@ Release data rather than guessed and prefilled in an LLM timer prompt.
 from __future__ import annotations
 import hashlib, io, json, tarfile
 from pathlib import Path
+import sys
+sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 import numpy as np
 from fukaji.online_learning import load_snapshot
 from fukaji.formal_model import load as formal_load
