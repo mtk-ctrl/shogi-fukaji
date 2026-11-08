@@ -81,7 +81,7 @@ def prepare(state,d41_source,d42_source,d43_trained,d43_selfplay,d43_audit,d45_t
         manifest.get("search_implementation_sha256")!=SEARCH_SHA or
         manifest.get("version")!="FUKAJI v0.4.1"):
         raise ValueError("D58 requires formal v0.4.1 D50 + exact adopted search") 
-    if manifest["weights_sha256"]!="__D59_FORMAL_WEIGHT_SHA__":
+    if manifest["weights_sha256"]!="d856765813508a29cb2f35e2aceba8b67dc7797798eb114ae23d826424baf30d":
         raise ValueError("D52 official NNUE inference weights changed")
     if manifest["research_snapshot_sha256"]!=BASE or manifest["optimizer_step"]!=8296:
         raise ValueError("not current D52/Adam5606; do not start")
