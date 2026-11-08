@@ -47,8 +47,8 @@ jobs:
           if q != expected:
             raise SystemExit("D67 recovery request does not match the exact audited D66 run")
           with open(os.environ["GITHUB_ENV"],"a") as f:
-            f.write("SRC_RUN="+str(q["run_id"])+"\\n")
-            f.write("SRC_SHA="+q["source_sha"]+"\\n")
+            f.write("SRC_RUN="+str(q["run_id"])+"\n")
+            f.write("SRC_SHA="+q["source_sha"]+"\n")
           PY
       - uses: actions/setup-python@v5
         with:
