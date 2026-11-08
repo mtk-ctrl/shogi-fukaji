@@ -53,3 +53,7 @@ ChatGPT・Claude等は同じRuleと同じGitHub正本を使う。まず[開発�
 ## 最新正式NNUE（D63、2026-11-08）
 
 正式D62/Adam10080、snapshot e04e85dfebb507131df591bf0206e27771afe6944f3249124dfaf6eab5de51fb。D60/Adam9190から新1000局学習、独立200局125勝74敗、引分1、未決着0。NNUEのみ変更、USI v0.4.1とPVS＋詰み探索は不変更。次周は[D62完全state](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d62-d60-trained-42458207248)を唯一の親とする。[D63採用判断](docs/decisions/2026-11-08_D63_D62学習後重みを現行採用.md)。
+
+## 最新正式NNUE（D65、2026-11-08）
+
+正式D64/Adam10974、snapshot 545dba627046621ec53b681d485978b9054776c717d894dcb0de55bec731d4a2。旧D62/Adam10080から1000局学習、200局114勝86敗、未決着0。NNUEのみ変更、USI v0.4.1・PVS+詰み探索不変。次周は[D64完全state](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d64-d62-trained-42465412656)を唯一親とする。[D65判断](docs/decisions/2026-11-08_D65_D64学習後重みを現行採用.md)。
