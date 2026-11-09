@@ -58,6 +58,7 @@ def main():
     p.add_argument("--epochs", type=int, default=1)
     p.add_argument("--lr", type=float, default=.0001)
     p.add_argument("--seed", type=int, default=20261110)
+    p.add_argument("--selfplay-tol", type=float, default=.003, help="自己対局の評価用損失の許容悪化幅(ゲート)")
     p.add_argument("--kumoji-share", type=float, default=0.0, help="学習混合に占める雲路戦局面の割合(0=全局面を使う)")
     a = p.parse_args()
     formal = json.loads(Path("formal/model.json").read_text())
@@ -114,7 +115,7 @@ def main():
     before = {"kumoji": heldout_loss(parent, hkx, hky), "selfplay": heldout_loss(parent, hsx, hsy)}
     cand, opt2, fs = fit(parent, opt, ix, y, epochs=a.epochs, lr=a.lr, seed=a.seed)
     after = {"kumoji": heldout_loss(cand, hkx, hky), "selfplay": heldout_loss(cand, hsx, hsy)}
-    gate = after["kumoji"] < before["kumoji"] and after["selfplay"] <= before["selfplay"] + .003
+    gate = after["kumoji"] < before["kumoji"] and after["selfplay"] <= before["selfplay"] + a.selfplay_tol
     print("heldout before", before, "after", after, "gate", "pass" if gate else "fail", flush=True)
     key = save_snapshot(md, cand, opt2, {"parent": BASE, "purpose": "E3 kumoji-sparring hard positions + selfplay mix",
                                          "epochs": a.epochs, "learning_rate": a.lr, "training": fs})
@@ -124,7 +125,7 @@ def main():
               "weights_file_sha256": hashlib.sha256((a.out / "e3-weights.npz").read_bytes()).hexdigest(),
               "kumoji_games": len(kg), "kumoji_usable": len(uniq),
               "kumoji_positions_used": int(len(ky)), "kumoji_share": a.kumoji_share, "selfplay_positions_train": int(len(sy)),
-              "heldout_before": before, "heldout_after": after, "gate": "pass" if gate else "fail",
+              "heldout_before": before, "heldout_after": after, "gate": "pass" if gate else "fail", "selfplay_tol": a.selfplay_tol,
               "epochs": a.epochs, "lr": a.lr, "optimizer_step_after": opt2["step"],
               "strength_proven": False, "formal_model_changed": False}
     atomic_json(a.out / "report.json", report)

@@ -35,6 +35,11 @@ on:
         required: false
         default: ""
         type: string
+      selfplay_tol:
+        description: "ゲート：自己対局の評価用損失の許容悪化幅(TD目標が親自身の予測なので、親から動くだけで悪化しうる。最終判定は対局)"
+        required: true
+        default: "0.003"
+        type: string
       share:
         description: "学習混合に占める雲路戦局面の割合(0=全部)"
         required: true
@@ -129,7 +134,7 @@ jobs:
         run: |
           python -u scripts/e3_train.py --state research/d41-public/D37-Adam2106-training-state.tar.gz \
             --baseline-trained input/D66-D64-1000trained-unadopted.tar.gz --selfplay input/archives/D66-D64-1000games.tar.gz input/archives/D68-D66-1000games.tar.gz \
-            --parts input/parts --out trained --epochs ${{ inputs.epochs }} --lr ${{ inputs.lr }} --kumoji-share ${{ inputs.share }} | tee train.log
+            --parts input/parts --out trained --epochs ${{ inputs.epochs }} --lr ${{ inputs.lr }} --kumoji-share ${{ inputs.share }} --selfplay-tol ${{ inputs.selfplay_tol }} | tee train.log
           echo "gate=$(python -c "import json;print(json.load(open('trained/report.json'))['gate'])")" >> "$GITHUB_OUTPUT"
           python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
           import json
