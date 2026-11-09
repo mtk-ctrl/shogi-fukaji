@@ -1,4 +1,4 @@
-name: NNUE sparring round (parent=current formal): spar vs KUMOJI -> update -> paired audit vs parent
+name: NNUE sparring round (parent = current formal) - spar vs KUMOJI, update, paired audit vs parent
 # 研究専用(深路=NNUE主軸)。雲路は練習相手として対局するだけ。雲路の指し手・評価値・知識は教師にしない。
 # 学習に使うのは対局の勝敗と深路NNUE自身の予測のみ。深路の手番の局面だけ使い、現行の自己対局を同数混ぜる。
 # 事前宣言: (1)評価用損失ゲート(自己対局が悪化せず雲路戦が改善)を通ること (2)親(現行正式)との200局で候補が12勝以上多いこと。
