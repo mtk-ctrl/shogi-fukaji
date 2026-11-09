@@ -30,6 +30,16 @@ on:
         required: true
         default: "202611094"
         type: string
+      reuse_run_id:
+        description: "練習対局を再利用する過去のrun ID(空なら新規に対局)"
+        required: false
+        default: ""
+        type: string
+      share:
+        description: "学習混合に占める雲路戦局面の割合(0=全部)"
+        required: true
+        default: "0"
+        type: string
       kumoji_ref:
         description: "雲路のコミットSHA(練習相手・通信部品)"
         required: true
@@ -42,6 +52,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   sparring:
+    if: inputs.reuse_run_id == ''
     runs-on: ubuntu-latest
     timeout-minutes: 150
     strategy:
@@ -80,6 +91,7 @@ jobs:
           if-no-files-found: warn
   train:
     needs: sparring
+    if: ${{ !cancelled() && (needs.sparring.result == 'success' || needs.sparring.result == 'skipped') }}
     runs-on: ubuntu-latest
     timeout-minutes: 120
     outputs:
@@ -97,8 +109,10 @@ jobs:
       - run: python scripts/check_fukaji_contracts.py
       - uses: actions/download-artifact@v4
         with:
-          pattern: e3-sparring-*-${{ github.run_id }}
+          pattern: e3-sparring-*-${{ inputs.reuse_run_id != '' && inputs.reuse_run_id || github.run_id }}
           path: input/parts
+          run-id: ${{ inputs.reuse_run_id != '' && inputs.reuse_run_id || github.run_id }}
+          github-token: ${{ github.token }}
       - name: Download current-generation selfplay and verify SHA256
         run: |
           set -euo pipefail
@@ -115,7 +129,7 @@ jobs:
         run: |
           python -u scripts/e3_train.py --state research/d41-public/D37-Adam2106-training-state.tar.gz \
             --baseline-trained input/D66-D64-1000trained-unadopted.tar.gz --selfplay input/archives/D66-D64-1000games.tar.gz input/archives/D68-D66-1000games.tar.gz \
-            --parts input/parts --out trained --epochs ${{ inputs.epochs }} --lr ${{ inputs.lr }} | tee train.log
+            --parts input/parts --out trained --epochs ${{ inputs.epochs }} --lr ${{ inputs.lr }} --kumoji-share ${{ inputs.share }} | tee train.log
           echo "gate=$(python -c "import json;print(json.load(open('trained/report.json'))['gate'])")" >> "$GITHUB_OUTPUT"
           python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
           import json

@@ -58,6 +58,7 @@ def main():
     p.add_argument("--epochs", type=int, default=1)
     p.add_argument("--lr", type=float, default=.0001)
     p.add_argument("--seed", type=int, default=20261110)
+    p.add_argument("--kumoji-share", type=float, default=0.0, help="学習混合に占める雲路戦局面の割合(0=全局面を使う)")
     a = p.parse_args()
     formal = json.loads(Path("formal/model.json").read_text())
     if formal["research_snapshot_sha256"] != BASE or formal["optimizer_step"] != 11864:
@@ -104,6 +105,11 @@ def main():
           f"selfplay train={len(sy)} hold={len(hsy)}", flush=True)
     if len(ky) < 5000 or len(hky) < 200:
         raise SystemExit("not enough 雲路 positions")
+    if a.kumoji_share > 0:
+        keep = int(len(sy) * a.kumoji_share / (1 - a.kumoji_share))
+        if keep < len(ky):
+            pick = np.sort(np.random.default_rng(a.seed + 2).choice(len(ky), keep, replace=False))
+            kx, ky = kx[pick], ky[pick]
     ix = pad([kx, sx], parent.inputs); y = np.concatenate([ky, sy])
     before = {"kumoji": heldout_loss(parent, hkx, hky), "selfplay": heldout_loss(parent, hsx, hsy)}
     cand, opt2, fs = fit(parent, opt, ix, y, epochs=a.epochs, lr=a.lr, seed=a.seed)
@@ -117,7 +123,7 @@ def main():
     report = {"schema": "e3-kumoji-sparring-v1", "parent": BASE, "snapshot": key,
               "weights_file_sha256": hashlib.sha256((a.out / "e3-weights.npz").read_bytes()).hexdigest(),
               "kumoji_games": len(kg), "kumoji_usable": len(uniq),
-              "kumoji_positions_train": int(len(ky)), "selfplay_positions_train": int(len(sy)),
+              "kumoji_positions_used": int(len(ky)), "kumoji_share": a.kumoji_share, "selfplay_positions_train": int(len(sy)),
               "heldout_before": before, "heldout_after": after, "gate": "pass" if gate else "fail",
               "epochs": a.epochs, "lr": a.lr, "optimizer_step_after": opt2["step"],
               "strength_proven": False, "formal_model_changed": False}
