@@ -4,7 +4,7 @@ import argparse, json, multiprocessing as mp, sys, time
 import shogi
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from fukaji.formal_model import load
-from fukaji.native_nnue import NativeSelector
+from fukaji.native_nnue import NativeSelector, build_native
 from scripts.e2_data import load_games, pick_plies
 
 _MODEL = None
@@ -44,6 +44,7 @@ def main():
     p.add_argument("--workers", type=int, default=4)
     p.add_argument("--out", type=Path, required=True)
     a = p.parse_args()
+    build_native()  # 並列workerが同時にコンパイルしないよう、fork前に1回だけ作る
     items = load_games(a.parts, a.archives, a.state)
     mine = [x for i, x in enumerate(items) if i % a.shards == a.shard]
     print(f"shard {a.shard}: games {len(mine)}/{len(items)} planned positions {sum(len(pick_plies(x)) for x in mine)}", flush=True)
