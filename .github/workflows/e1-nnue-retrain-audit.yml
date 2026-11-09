@@ -1,0 +1,190 @@
+name: E1 NNUE retrain on all selfplay positions, then paired audit vs D66
+# 研究専用(深路=NNUE主軸)。D66のNNUEを過去の全自己対局の全局面で学習し直し、D66と同条件で対局して比べる。
+# 探索・評価の人手ヒューリスティクスは使わない。正式版(formal/)・USI既定は変更しない。
+# 事前宣言: 候補の勝ち数がD66の勝ち数を12以上(200局中)上回った場合のみ「採用候補」。それ以外はD66維持。
+on:
+  workflow_dispatch:
+    inputs:
+      epochs:
+        description: "学習エポック数"
+        required: true
+        default: "3"
+        type: string
+      lr:
+        description: "学習率"
+        required: true
+        default: "0.0002"
+        type: string
+      pairs:
+        description: "開局ペア数(局数は2倍)"
+        required: true
+        default: "100"
+        type: string
+      seed:
+        description: "開局の乱数シード"
+        required: true
+        default: "202611092"
+        type: string
+      arena_ref:
+        description: "arena.py部品の雲路コミット(通信と勝敗判定のみ)"
+        required: true
+        default: "b59ee6a72bcdfc9f706110626844f979c80a8ed0"
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: fukaji-e1
+  cancel-in-progress: false
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - name: Check formal contract
+        run: python scripts/check_fukaji_contracts.py
+      - name: Download every historical selfplay archive and verify SHA256
+        run: |
+          set -euo pipefail
+          mkdir -p input/archives
+          gh release download fukaji-d43-d37-1000-selfplay-42292240321 --pattern D43-D37-1000games.tar.gz --dir input/archives
+          gh release download fukaji-d45-d43-1000-selfplay-42326260509 --pattern D45-D43-1000games.tar.gz --dir input/archives
+          gh release download fukaji-d50-d45-1000-selfplay-42343709475 --pattern D50-D45-1000games.tar.gz --dir input/archives
+          gh release download fukaji-d52-d50-1000-selfplay-42401026786 --pattern D52-D50-1000games.tar.gz --dir input/archives
+          gh release download fukaji-d54-d52-1000-selfplay-42426372939 --pattern D54-D52-1000games.tar.gz --dir input/archives
+          gh release download fukaji-d56-d54-1000-selfplay-42433340061 --pattern D56-D54-1000games.tar.gz --dir input/archives
+          gh release download fukaji-d58-d56-1000-selfplay-42439684313 --pattern D58-D56-1000games.tar.gz --dir input/archives
+          gh release download fukaji-d60-d58-1000-selfplay-42447988443 --pattern D60-D58-1000games.tar.gz --dir input/archives
+          gh release download fukaji-d62-d60-1000-selfplay-42458207248 --pattern D62-D60-1000games.tar.gz --dir input/archives
+          gh release download fukaji-d64-d62-1000-selfplay-42465412656 --pattern D64-D62-1000games.tar.gz --dir input/archives
+          gh release download fukaji-d66-d64-1000-selfplay-42471868758 --pattern D66-D64-1000games.tar.gz --dir input/archives
+          gh release download fukaji-d68-d66-1000-selfplay-42540661474 --pattern D68-D66-1000games.tar.gz --dir input/archives
+          gh release download fukaji-d66-d64-trained-42471868758 --pattern D66-D64-1000trained-unadopted.tar.gz --dir input
+          echo 'fe0a4eaec246a7e2e32c911c4327232eef83f8a87897e7a3a96538220ced6bbd  input/archives/D43-D37-1000games.tar.gz' | sha256sum -c -
+          echo 'be22c4e92eff0b684f06502dcdf9be52071ab60beab5a4a91edd8605f4d873c4  input/archives/D45-D43-1000games.tar.gz' | sha256sum -c -
+          echo '92a27e9ea5094157e1213086966bfae9d3921c0537e1506b3563279bc63faf76  input/archives/D50-D45-1000games.tar.gz' | sha256sum -c -
+          echo 'd8adb89bff7d3cd2dc83c994f6664ce73ef7798e6326cc6a893a2ef2ca1d2134  input/archives/D52-D50-1000games.tar.gz' | sha256sum -c -
+          echo '6eb7db54ccea6fa9da9a70f9d7aef25709dd13f97ba9b94f0d81f764f54c44ac  input/archives/D54-D52-1000games.tar.gz' | sha256sum -c -
+          echo '94a6cd1fae005ad3bf31d50cdd32a75413b946269a0b4875b9ee9d86dde2c21c  input/archives/D56-D54-1000games.tar.gz' | sha256sum -c -
+          echo 'a03be0ea93e62a1cefa2b40c6de2096a23f620690fb58603e346edd7062a86d1  input/archives/D58-D56-1000games.tar.gz' | sha256sum -c -
+          echo '1db4cdb8ba016479b67ab5c46ec111031bbdda11892433c30c5c12fe306e3b7e  input/archives/D60-D58-1000games.tar.gz' | sha256sum -c -
+          echo '6df13f22c5826837d2456238fd999a9c45092503addd5f0aaf8563b2f89a495b  input/archives/D62-D60-1000games.tar.gz' | sha256sum -c -
+          echo '5def465bc811824d380001f40360055171b26e2c3202710717d1b2509391e56d  input/archives/D64-D62-1000games.tar.gz' | sha256sum -c -
+          echo '9e711baf83563827f777dd8c43ddb1ec85dacec5b10255caff2ad48fc194e6ef  input/archives/D66-D64-1000games.tar.gz' | sha256sum -c -
+          echo 'd902a6ef591643129cef9e53c1dc322b7778f011473e66fb2380a4f388250585  input/archives/D68-D66-1000games.tar.gz' | sha256sum -c -
+          echo '9a046de9a40ee7375f0219db55ca89f4dfb901486affdaa1da819f9fafaedccf  input/D66-D64-1000trained-unadopted.tar.gz' | sha256sum -c -
+          echo '41c8f56b76cd5d7aa87bff9131d553b304fa4134bf7448c05d3309458f66760e  research/d41-public/D37-Adam2106-training-state.tar.gz' | sha256sum -c -
+      - name: Retrain from D66 Adam11864 on all positions
+        run: |
+          python -u scripts/e1_train.py --state research/d41-public/D37-Adam2106-training-state.tar.gz \
+            --baseline-trained input/D66-D64-1000trained-unadopted.tar.gz --archives input/archives --out trained \
+            --epochs ${{ inputs.epochs }} --lr ${{ inputs.lr }} --workers 4 | tee train.log
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          d=json.load(open('trained/report.json')); d.pop('fit',None)
+          print('### E1 train'); print('```json'); print(json.dumps(d,indent=1,ensure_ascii=False)); print('```')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: e1-trained-${{ github.run_id }}
+          path: |
+            trained/e1-weights.npz
+            trained/report.json
+            trained/models
+          retention-days: 60
+  play:
+    needs: train
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        shard: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: mtk-ctrl/shogi-ai
+          ref: ${{ inputs.arena_ref }}
+          path: arena-src
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: e1-trained-${{ github.run_id }}
+          path: cand
+      - name: Engine wrappers (BASE=formal D66, CAND=E1 weights, identical search)
+        run: |
+          chmod +x run-fukaji.sh
+          printf '#!/bin/sh\nexec "%s/run-fukaji.sh" "$@"\n' "$PWD" > /tmp/base.sh
+          printf '#!/bin/sh\nexport FUKAJI_CAND_NPZ="%s/cand/e1-weights.npz"\nexec python3 "%s/scripts/fukaji_cand_engine.py" "$@"\n' "$PWD" "$PWD" > /tmp/cand.sh
+          chmod +x /tmp/base.sh /tmp/cand.sh
+          printf 'usi\nisready\nquit\n' | /tmp/base.sh | tail -2
+          printf 'usi\nisready\nquit\n' | /tmp/cand.sh | tail -2
+      - name: Play paired games (200 ms, same search)
+        run: |
+          python scripts/usi_match.py pair --engine-a /tmp/base.sh --engine-b /tmp/cand.sh \
+            --label-a D66 --label-b E1 --kumoji-src arena-src \
+            --shard ${{ matrix.shard }} --shards 20 --pairs ${{ inputs.pairs }} \
+            --movetime-ms 200 --seed ${{ inputs.seed }} --out build/part
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e1-part-${{ matrix.shard }}-${{ github.run_id }}
+          path: build/part/
+          retention-days: 30
+          if-no-files-found: warn
+  aggregate:
+    needs: play
+    if: needs.play.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: mtk-ctrl/shogi-ai
+          ref: ${{ inputs.arena_ref }}
+          path: arena-src
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: e1-part-*-${{ github.run_id }}
+          path: build/parts
+      - name: Replay-verify, summarize, apply pre-declared margin
+        env:
+          PAIRS: ${{ inputs.pairs }}
+        run: |
+          python scripts/usi_match.py aggregate --parts build/parts --out build/result.json \
+            --label-a D66 --label-b E1 --expect-games $((PAIRS*2))
+          python - <<'PY' | tee /tmp/summary.md >> "$GITHUB_STEP_SUMMARY"
+          import json
+          r=json.load(open('build/result.json'))
+          # aggregate の fukaji_wins=label-a(D66), kumoji_wins=label-b(E1)
+          d=r['kumoji_wins']-r['fukaji_wins']
+          r['d66_wins']=r['fukaji_wins'];r['e1_wins']=r['kumoji_wins'];r['win_diff_e1_minus_d66']=d
+          r['verdict']='adoption_candidate_E1' if d>=12 else 'keep_D66'
+          json.dump(r,open('build/result.json','w'),ensure_ascii=False,indent=2)
+          print('### E1 vs D66');print('```json');print(json.dumps(r,ensure_ascii=False,indent=1));print('```')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: e1-result-${{ github.run_id }}
+          path: build/result.json
+          retention-days: 90
