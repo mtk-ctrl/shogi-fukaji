@@ -1,0 +1,114 @@
+name: FUKAJI (formal) versus KUMOJI USI match, 50 pairs / 100 games
+# 研究専用。深路・雲路のコード、重み、既定値、正式版は変更しない。
+# 雲路の知識・評価・研究手を深路の教師にしない。結果は集計artifactのみ。
+on:
+  workflow_dispatch:
+    inputs:
+      kumoji_ref:
+        description: "雲路(mtk-ctrl/shogi-ai)のコミットSHA"
+        required: true
+        default: "b59ee6a72bcdfc9f706110626844f979c80a8ed0"
+        type: string
+      shards:
+        description: "並列ジョブ数（1〜20。D68などが動いている間は小さくする）"
+        required: true
+        default: "10"
+        type: string
+      movetime_ms:
+        description: "両エンジン共通の1手時間(ms)"
+        required: true
+        default: "200"
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: fukaji-kumoji-usi-match100
+  cancel-in-progress: false
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      matrix: ${{ steps.p.outputs.matrix }}
+    steps:
+      - id: p
+        env:
+          SHARDS: ${{ inputs.shards }}
+          MOVETIME: ${{ inputs.movetime_ms }}
+          REF: ${{ inputs.kumoji_ref }}
+        run: |
+          python3 - <<'PY'
+          import json,os,re
+          s=int(os.environ["SHARDS"]); t=int(os.environ["MOVETIME"])
+          assert 1<=s<=20 and 50<=t<=1000
+          assert re.fullmatch(r"[0-9a-f]{40}",os.environ["REF"])
+          open(os.environ["GITHUB_OUTPUT"],"a").write("matrix="+json.dumps(list(range(s)))+"\n")
+          PY
+  play:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        shard: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: mtk-ctrl/shogi-ai
+          ref: ${{ inputs.kumoji_ref }}
+          path: kumoji-src
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - name: Build KUMOJI from the pinned commit
+        run: |
+          (cd kumoji-src && python3 scripts/build.py --output build/kumoji)
+          test -x kumoji-src/build/kumoji
+          sha256sum kumoji-src/build/kumoji
+      - name: Play paired games (equal movetime, no pondering, no long think)
+        run: |
+          chmod +x run-fukaji.sh
+          python scripts/usi_match.py play \
+            --kumoji kumoji-src/build/kumoji --kumoji-src kumoji-src \
+            --fukaji ./run-fukaji.sh \
+            --shard ${{ matrix.shard }} --shards ${{ inputs.shards }} \
+            --pairs 50 --movetime-ms ${{ inputs.movetime_ms }} --out build/part
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kumoji-usi-match-part-${{ matrix.shard }}-${{ github.run_id }}
+          path: build/part/
+          retention-days: 30
+          if-no-files-found: warn
+  aggregate:
+    needs: play
+    if: needs.play.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: kumoji-usi-match-part-*-${{ github.run_id }}
+          path: build/parts
+      - name: Replay-verify all games and summarize
+        run: |
+          python scripts/usi_match.py aggregate --parts build/parts \
+            --out build/result.json --expect-games 100
+          { echo '### 深路(formal) vs 雲路 100局'; echo '```json'; cat build/result.json; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kumoji-usi-match-result-${{ github.run_id }}
+          path: |
+            build/result.json
+            build/parts
+          retention-days: 90
