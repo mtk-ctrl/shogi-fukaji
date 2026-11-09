@@ -122,9 +122,12 @@ def arena_script(step):
        f'opt["step"]!={step} or after_opt["step"]<={step}'),
       ("games.D64_TRAIN_SHA","games.D66_TRAIN_SHA"),
       ('formal["optimizer_step"]!=10974',f'formal["optimizer_step"]!={step}'),
+      # 順序が重要：先に子側(d66→d68)を置換する。親側を先に d66 にすると、
+      # 後続の置換が "parent_report[...]" の部分文字列にも一致して親検査まで d68 に壊れる
+      # （D68初回起動 run 42540495634 の事前検査失敗の原因）。
+      ('report["schema"]!="d66-learned1000-v1"','report["schema"]!="d68-learned1000-v1"'),
       ('parent_report["optimizer_step_after"]!=10974 or parent_report["schema"]!="d64-learned1000-v1"',
        f'parent_report["optimizer_step_after"]!={step} or parent_report["schema"]!="d66-learned1000-v1"'),
-      ('report["schema"]!="d66-learned1000-v1"','report["schema"]!="d68-learned1000-v1"'),
       ('report["optimizer_step_before"]!=10974 or report["optimizer_step_after"]<=10974',
        f'report["optimizer_step_before"]!={step} or report["optimizer_step_after"]<={step}'),
       ('train_plan["schema"]!="d66-d64-1000-v1"','train_plan["schema"]!="d68-d66-1000-v1"'),
