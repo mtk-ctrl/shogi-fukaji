@@ -1,0 +1,165 @@
+name: E4 NNUE formal adoption (owner-approved 2026-11-10)
+# ユーザー承認済み(2026-11-10 08:30)。実runのartifact(200局・確認400局・学習報告)を検証してから正式採用する。
+# commit=false は検証のみ(dry run)。NNUE重み以外(探索・USI v0.4.1・C++)は変更しない。
+on:
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: "true=mainへ反映して公開 / false=検証のみ"
+        required: true
+        default: "false"
+        type: string
+      run200:
+        description: "200局監査のrun ID"
+        required: true
+        default: "42700282217"
+        type: string
+      run400:
+        description: "確認400局のrun ID(学習も同run)"
+        required: true
+        default: "42716135186"
+        type: string
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: fukaji-e4-adopt
+  cancel-in-progress: false
+jobs:
+  adopt:
+    if: github.repository == 'mtk-ctrl/shogi-fukaji'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - name: Contract and formal D66 baseline check
+        run: |
+          python scripts/check_fukaji_contracts.py
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$(git rev-parse HEAD)"
+      - uses: actions/download-artifact@v4
+        with:
+          name: e2-trained-${{ inputs.run400 }}
+          path: in/trained400
+          run-id: ${{ inputs.run400 }}
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: e2-trained-${{ inputs.run200 }}
+          path: in/trained200
+          run-id: ${{ inputs.run200 }}
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: e2-result-${{ inputs.run200 }}
+          path: in/result200
+          run-id: ${{ inputs.run200 }}
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: e2-result-${{ inputs.run400 }}
+          path: in/result400
+          run-id: ${{ inputs.run400 }}
+          github-token: ${{ github.token }}
+      - name: Verify results, weights identity and Adam state (and prepare when commit=true)
+        run: |
+          set -euo pipefail
+          mkdir -p build
+          FLAG=""; if [ "${{ inputs.commit }}" = "true" ]; then FLAG="--commit"; fi
+          python scripts/e4_adopt.py --trained in/trained400 in/trained200 \
+            --result200 in/result200/result.json --result400 in/result400/result.json \
+            --out build/e4-prepare $FLAG | tee build/e4-adopt.log
+          { echo '### E4 adoption'; echo '```json'; cat build/e4-prepare/receipt.json; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - name: Full regression and real USI play with the E4 weights
+        if: inputs.commit == 'true'
+        run: |
+          set -euo pipefail
+          python scripts/check_fukaji_contracts.py
+          python -m unittest discover -s tests -q
+          python -m compileall -q fukaji scripts
+          git diff --check
+          python scripts/verify_formal_release.py --out build/e4-usi-validation.json
+          python - <<'PY'
+          import json
+          d=json.load(open('build/e4-usi-validation.json'))
+          m=json.load(open('formal/model.json'))
+          assert d['version']=='FUKAJI v0.4.1' and d['search_backend_variant']=='d48_pvs_mate',d
+          assert d['research_mate_proof_verified'] is True and d['legal_usi_plies']>=30 and d['usi_games']==2,d
+          assert d['weights_sha256']==m['weights_sha256'],d
+          print('E4 real USI ok')
+          PY
+      - name: Commit to main with CAS
+        if: inputs.commit == 'true'
+        id: adoption
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$GITHUB_SHA" || { echo "main changed; abort"; exit 1; }
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f models/fukaji-e4.nnue.npz
+          git add formal/model.json research/d17-fast-self-learning/formal-contract.json
+          git add docs/現行エンジン仕様.md docs/00_開発ルーター.md docs/ROADMAP.md AGENTS.md
+          git add docs/decisions/2026-11-10_E4_規模拡大蒸留NNUEを正式採用.md
+          git diff --cached --check
+          git diff --cached --name-only | tee build/e4-adopted-files.txt
+          test "$(git diff --cached --name-only | wc -l)" -eq 8
+          git commit -m "adopt(E4): promote scaled search-distilled NNUE after paired 200 and confirmation 400 (owner-approved)"
+          sha="$(git rev-parse HEAD)"
+          git push origin HEAD:refs/heads/main
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$sha"
+          echo "source_sha=$sha" >> "$GITHUB_OUTPUT"
+      - name: Isolated bundle, USI check and release (with complete Adam state)
+        if: inputs.commit == 'true'
+        env:
+          SOURCE_SHA: ${{ steps.adoption.outputs.source_sha }}
+          TAG: fukaji-current-e4-pvs-mate-20261110
+        run: |
+          set -euo pipefail
+          python scripts/build_formal_bundle.py --out build/E4-FUKAJI-current-PVS-Mate.tar.gz --source-commit "$SOURCE_SHA"
+          mkdir -p build/iso && tar -xzf build/E4-FUKAJI-current-PVS-Mate.tar.gz -C build/iso
+          (cd build/iso/fukaji-v0.4.1 && python scripts/verify_formal_release.py --out e4-isolated-usi.json)
+          cp build/iso/fukaji-v0.4.1/e4-isolated-usi.json build/e4-isolated-usi.json
+          python - <<'PY'
+          import json
+          d=json.load(open('build/e4-isolated-usi.json')); m=json.load(open('formal/model.json'))
+          assert d['bundle_member_hashes_verified'] is True and d['research_mate_proof_verified'] is True,d
+          assert d['weights_sha256']==m['weights_sha256'] and d['legal_usi_plies']>=30,d
+          print('E4 isolated bundle ok')
+          PY
+          tar -czf build/E4-trained-state-Adam.tar.gz -C in/trained400 report.json cand-weights.npz models
+          cp build/e4-prepare/receipt.json build/E4-adoption-receipt.json
+          gh release create "$TAG" build/E4-FUKAJI-current-PVS-Mate.tar.gz build/E4-trained-state-Adam.tar.gz \
+            build/e4-usi-validation.json build/e4-isolated-usi.json build/E4-adoption-receipt.json \
+            --target "$SOURCE_SHA" --title 'FUKAJI v0.4.1 current E4 NNUE (scaled search-value distillation) with PVS plus mate' \
+            --notes 'E4 NNUE adopted by owner approval 2026-11-10. Search and USI unchanged. Previous E2, E3 and D66 weights preserved in models/.'
+          mkdir -p build/rb
+          for f in E4-FUKAJI-current-PVS-Mate.tar.gz E4-trained-state-Adam.tar.gz e4-usi-validation.json e4-isolated-usi.json E4-adoption-receipt.json; do
+            src="build/$f"; gh release download "$TAG" --pattern "$f" --dir build/rb
+            test "$(sha256sum "$src"|cut -d' ' -f1)" = "$(sha256sum "build/rb/$f"|cut -d' ' -f1)"
+          done
+          echo "E4 adopted at $SOURCE_SHA; release readback OK" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e4-adopt-verification-${{ github.run_id }}
+          path: |
+            build/e4-prepare/receipt.json
+            build/e4-adopt.log
+            build/e4-usi-validation.json
+            build/e4-adopted-files.txt
+          if-no-files-found: warn
+          retention-days: 30
