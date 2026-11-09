@@ -1,0 +1,64 @@
+name: E5 sparring only (current formal vs KUMOJI, positions supply)
+# 研究専用。雲路は練習相手としてのみ使い、指し手・評価値は教師にしない。
+# 現行正式(E4)の深路 vs 雲路を対局させ、局面供給用の棋譜(round-sparring-*)だけを作る。
+on:
+  workflow_dispatch:
+    inputs:
+      pairs:
+        description: "開局ペア数(局数は2倍、20並列)"
+        required: true
+        default: "1000"
+        type: string
+      seed:
+        description: "開局シード"
+        required: true
+        default: "202611101"
+        type: string
+      kumoji_ref:
+        description: "雲路のコミットSHA(練習相手・通信部品)"
+        required: true
+        default: "b59ee6a72bcdfc9f706110626844f979c80a8ed0"
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: fukaji-round
+  cancel-in-progress: false
+jobs:
+  sparring:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        shard: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: mtk-ctrl/shogi-ai
+          ref: ${{ inputs.kumoji_ref }}
+          path: kumoji-src
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - name: Build KUMOJI from the pinned commit
+        run: |
+          (cd kumoji-src && python3 scripts/build.py --output build/kumoji)
+          test -x kumoji-src/build/kumoji
+      - name: Play FUKAJI(current formal) vs KUMOJI (equal 200 ms)
+        run: |
+          chmod +x run-fukaji.sh
+          python scripts/usi_match.py play --kumoji kumoji-src/build/kumoji --kumoji-src kumoji-src \
+            --fukaji ./run-fukaji.sh --shard ${{ matrix.shard }} --shards 20 \
+            --pairs ${{ inputs.pairs }} --movetime-ms 200 --seed ${{ inputs.seed }} --out build/part
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: round-sparring-${{ matrix.shard }}-${{ github.run_id }}
+          path: build/part/
+          retention-days: 30
+          if-no-files-found: warn
