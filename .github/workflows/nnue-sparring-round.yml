@@ -50,6 +50,11 @@ on:
         required: true
         default: "0.003"
         type: string
+      hard_threshold:
+        description: "難局面マイニング閾値(0=全局面)。親が勝率>=この値と見ていた深路手番局面だけ学習に使う"
+        required: true
+        default: "0"
+        type: string
       share:
         description: "学習混合に占める雲路戦局面の割合(0=全部)"
         required: true
@@ -144,7 +149,7 @@ jobs:
         run: |
           python -u scripts/nnue_round_train.py --state research/d41-public/D37-Adam2106-training-state.tar.gz \
             --parent-models input/parent/models --selfplay input/archives/D66-D64-1000games.tar.gz input/archives/D68-D66-1000games.tar.gz \
-            --parts input/parts --out trained --epochs ${{ inputs.epochs }} --lr ${{ inputs.lr }} --kumoji-share ${{ inputs.share }} --selfplay-tol ${{ inputs.selfplay_tol }} | tee train.log
+            --parts input/parts --out trained --epochs ${{ inputs.epochs }} --lr ${{ inputs.lr }} --kumoji-share ${{ inputs.share }} --hard-threshold ${{ inputs.hard_threshold }} --selfplay-tol ${{ inputs.selfplay_tol }} | tee train.log
           echo "gate=$(python -c "import json;print(json.load(open('trained/report.json'))['gate'])")" >> "$GITHUB_OUTPUT"
           python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
           import json

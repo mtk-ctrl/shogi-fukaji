@@ -28,7 +28,7 @@ def convert(g):
             "learning_start_ply": 6}, int(fk_turn)
 
 
-def kumoji_samples(items, parent):
+def kumoji_samples(items, parent, thr=0.0):
     rows, labs, bad = [], [], 0
     for g, fk in items:
         try:
@@ -36,7 +36,7 @@ def kumoji_samples(items, parent):
         except Exception:
             bad += 1; continue
         y = targets(probs, z, outcome_weight=.75, td_lambda=.8)
-        sel = [i for i in range(6, len(ix)) if (i % 2 == 0) == (fk == shogi.BLACK)]
+        sel = [i for i in range(6, len(ix)) if (i % 2 == 0) == (fk == shogi.BLACK) and probs[i] >= thr]
         if not sel:
             continue
         w = max(len(ix[i]) for i in sel)
@@ -58,6 +58,7 @@ def main():
     p.add_argument("--lr", type=float, default=.0001)
     p.add_argument("--seed", type=int, default=20261110)
     p.add_argument("--selfplay-tol", type=float, default=.003, help="自己対局の評価用損失の許容悪化幅(ゲート)")
+    p.add_argument("--hard-threshold", type=float, default=0.0, help="難局面マイニング：親NNUEが(手番側の)勝率をこの値以上と見ていたのに負けた局面だけ使う(0=全部)")
     p.add_argument("--kumoji-share", type=float, default=0.0, help="学習混合に占める雲路戦局面の割合(0=全局面を使う)")
     a = p.parse_args()
     formal = json.loads(Path("formal/model.json").read_text())
@@ -84,8 +85,8 @@ def main():
             seen.add(k); uniq.append((g, fk))
     hold_k = [c for c in uniq if int(game_key(c[0])[:8], 16) % 20 == 0]
     train_k = [c for c in uniq if int(game_key(c[0])[:8], 16) % 20 != 0]
-    kx, ky, kbad = kumoji_samples(train_k, parent)
-    hkx, hky, hkbad = kumoji_samples(hold_k, parent)
+    kx, ky, kbad = kumoji_samples(train_k, parent, a.hard_threshold)
+    hkx, hky, hkbad = kumoji_samples(hold_k, parent, a.hard_threshold)
     # 現行世代の自己対局
     sp = []
     for f in a.selfplay:
@@ -102,7 +103,7 @@ def main():
     print(f"kumoji games={len(kg)} usable={len(uniq)} train={len(train_k)} hold={len(hold_k)} "
           f"rejected={kbad}/{hkbad} positions train={len(ky)} hold={len(hky)}; "
           f"selfplay train={len(sy)} hold={len(hsy)}", flush=True)
-    if len(ky) < 5000 or len(hky) < 200:
+    if len(ky) < 3000 or len(hky) < 150:
         raise SystemExit("not enough 雲路 positions")
     if a.kumoji_share > 0:
         keep = int(len(sy) * a.kumoji_share / (1 - a.kumoji_share))
@@ -122,7 +123,7 @@ def main():
     report = {"schema": "nnue-sparring-round-v1", "parent": BASE, "snapshot": key,
               "weights_file_sha256": hashlib.sha256((a.out / "cand-weights.npz").read_bytes()).hexdigest(),
               "kumoji_games": len(kg), "kumoji_usable": len(uniq),
-              "kumoji_positions_used": int(len(ky)), "kumoji_share": a.kumoji_share, "selfplay_positions_train": int(len(sy)),
+              "kumoji_positions_used": int(len(ky)), "kumoji_share": a.kumoji_share, "hard_threshold": a.hard_threshold, "selfplay_positions_train": int(len(sy)),
               "heldout_before": before, "heldout_after": after, "gate": "pass" if gate else "fail", "selfplay_tol": a.selfplay_tol,
               "epochs": a.epochs, "lr": a.lr, "optimizer_step_after": opt2["step"],
               "strength_proven": False, "formal_model_changed": False}
