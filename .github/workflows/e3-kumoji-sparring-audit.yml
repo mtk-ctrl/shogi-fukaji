@@ -150,7 +150,7 @@ jobs:
           retention-days: 60
   play:
     needs: train
-    if: needs.train.outputs.gate == 'pass'
+    if: ${{ !cancelled() && needs.train.result == 'success' && needs.train.outputs.gate == 'pass' }}
     runs-on: ubuntu-latest
     timeout-minutes: 120
     strategy:
