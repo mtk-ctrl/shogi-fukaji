@@ -27,6 +27,9 @@ def origin(path):
 def write(out,path,source):
     dest=out/path;dest.parent.mkdir(parents=True,exist_ok=True)
     if dest.exists():raise ValueError("would overwrite D68 source "+path)
+    # 行末空白と末尾空行は、後段の git diff --cached --check を通すために正規化する
+    # （D67 run 42527107929 のD68生成は、この空白だけで終了コード2になった）。
+    source="\n".join(line.rstrip() for line in source.split("\n")).rstrip("\n")+"\n"
     dest.write_text(source)
     if path.endswith(".py"):ast.parse(source,filename=path)
     return path
