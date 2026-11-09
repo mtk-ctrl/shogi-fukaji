@@ -4,7 +4,7 @@
 
 ## 現行モデル
 
-正式D66（c29b5ba1ed9264ba298ffdef2ab0deb71f37b327a32c3a1f8505061f67401ac3、Adam11864）。D66 118勝・D64 81勝・引分0・未決着1。[D67判断](decisions/2026-11-08_D67_D66学習後NNUEを正式採用.md)。次周唯一親は[D66完全state](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d66-d64-trained-42471868758)。USI v0.4.1・PVS＋詰み探索不変。
+正式E3（193bc0e2ce961284958660f8709473551b3e31a42e352a5b88a76ebce41d27ac、Adam12562、D66から雲路練習局面で更新）。E3 114-86(200局)・E3 212-186(確認400局)。[E3採用判断](decisions/2026-11-09_E3_雲路練習局面学習NNUEを正式採用.md)。USI v0.4.1・PVS＋詰み探索不変。
 
 ## 現在の研究
 - [D31](D31_TWO_BATCH_RETENTION_20261103.md)：400局/65,551手完了。c8対当時の正式NNUEは119勝76敗1分4未決着、対新経験のみ候補は97勝97敗4分2未決着。保持方式の候補間優位は未確定。
@@ -186,3 +186,7 @@ D64は新1000局999決着、Adam10080→10974、独立200局114勝86敗・合法
 ## D67：D66正式採用（2026-11-08）
 
 正式D66（c29b5ba1ed9264ba298ffdef2ab0deb71f37b327a32c3a1f8505061f67401ac3、Adam11864）。D66 118勝・D64 81勝・引分0・未決着1。[D67判断](decisions/2026-11-08_D67_D66学習後NNUEを正式採用.md)。次周唯一親は[D66完全state](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d66-d64-trained-42471868758)。USI v0.4.1・PVS＋詰み探索不変。
+
+## E3：雲路練習局面学習NNUE正式採用（2026-11-09）
+
+正式E3（193bc0e2ce961284958660f8709473551b3e31a42e352a5b88a76ebce41d27ac、Adam12562、D66から雲路練習局面で更新）。E3 114-86(200局)・E3 212-186(確認400局)。[E3採用判断](decisions/2026-11-09_E3_雲路練習局面学習NNUEを正式採用.md)。USI v0.4.1・PVS＋詰み探索不変。

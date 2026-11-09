@@ -61,3 +61,7 @@ ChatGPT・Claude等は同じRuleと同じGitHub正本を使う。まず[開発�
 ## 最新正式NNUE（D67、2026-11-08）
 
 正式D66／Adam11864、snapshot c29b5ba1ed9264ba298ffdef2ab0deb71f37b327a32c3a1f8505061f67401ac3。D66 118勝・D64 81勝・引分0・未決着1。学習前D64を保全、NNUEのみ採用。[完全state](https://github.com/mtk-ctrl/shogi-fukaji/releases/tag/fukaji-d66-d64-trained-42471868758)。
+
+## 最新正式NNUE（E3、2026-11-09）
+
+正式E3／Adam12562、snapshot 193bc0e2ce961284958660f8709473551b3e31a42e352a5b88a76ebce41d27ac。E3 114-86(200局)・E3 212-186(確認400局)。NNUEのみ更新、旧D66を保全。

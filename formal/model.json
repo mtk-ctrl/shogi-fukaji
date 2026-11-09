@@ -1,20 +1,20 @@
 {
-  "approved_by": "owner-delegated D67 D66 wins 118-81 on 200 paired",
-  "approved_on": "2026-11-08",
+  "approved_by": "owner-approved E3 (2026-11-09) E3 114-86(200局)・E3 212-186(確認400局)",
+  "approved_on": "2026-11-09",
   "architecture": [
     2548,
     32,
     1
   ],
   "backend": "cpp_nnue",
-  "comparison_release_sha256": "0c98b8bc5f1d6bbabfd3702bdea373bcf4c27ef23be7a22f9336d2bb33475726",
+  "comparison_release_sha256": "5954429eca6b42211f7eeec9fe9ced197a448ecc98ae2ab0191df66b5218bbd8",
   "default_move_time_ms": 100,
   "default_search_depth": 64,
-  "model_distribution": "GitHub models/fukaji-d66.nnue.npz and D67 current release; complete Adam11864 in D66 trained Release.",
-  "optimizer_step": 11864,
+  "model_distribution": "GitHub models/fukaji-e3.nnue.npz; complete Adam12562 in the E3 trained Release.",
+  "optimizer_step": 12562,
   "quiescence": 0,
-  "research_parent_sha256": "545dba627046621ec53b681d485978b9054776c717d894dcb0de55bec731d4a2",
-  "research_snapshot_sha256": "c29b5ba1ed9264ba298ffdef2ab0deb71f37b327a32c3a1f8505061f67401ac3",
+  "research_parent_sha256": "c29b5ba1ed9264ba298ffdef2ab0deb71f37b327a32c3a1f8505061f67401ac3",
+  "research_snapshot_sha256": "193bc0e2ce961284958660f8709473551b3e31a42e352a5b88a76ebce41d27ac",
   "schema": "fukaji-approved-nnue-v1",
   "search_adoption": {
     "baseline_wins": 44,
@@ -36,26 +36,32 @@
   },
   "search_backend_variant": "d48_pvs_mate",
   "search_implementation_sha256": "c9340af265368547c37cbecc311d8d3982900885b433d1b4ccdc27fbdd7d041a",
-  "training_release_sha256": "9a046de9a40ee7375f0219db55ca89f4dfb901486affdaa1da819f9fafaedccf",
-  "training_source_sha256": "9e711baf83563827f777dd8c43ddb1ec85dacec5b10255caff2ad48fc194e6ef",
+  "training_release_sha256": "a219d43b9df5896d740f7e46d12bcf1be34c85ffe7feac0e1212514ed7c88a6e",
+  "training_source_sha256": "c0b031548ec051a389d2c05a666bbadda69412208e090a3147babafe5b30e648",
   "validation": {
-    "draws": 0,
-    "games": 200,
-    "longthink_max_per_side": 10,
-    "longthink_ms": 1000,
-    "losses": 81,
-    "normal_move_time_ms": 200,
-    "opening_families": 100,
-    "opponent": "D64/Adam10974 before D66 selfplay, 100 unseen paired openings",
-    "planned_games": 200,
-    "planned_opening_families": 100,
+    "audit200": {
+      "d66_wins": 86,
+      "draws_or_unresolved": 0,
+      "e3_wins": 114,
+      "games": 200,
+      "pair_sweeps_fukaji": 17,
+      "pair_sweeps_kumoji": 31
+    },
+    "audit400_confirmation": {
+      "d66_wins": 186,
+      "draws_or_unresolved": 2,
+      "e3_wins": 212,
+      "games": 400,
+      "pair_sweeps_fukaji": 41,
+      "pair_sweeps_kumoji": 53
+    },
+    "opponent": "D66/Adam11864 (previous formal), paired unseen openings, same search, 200ms",
     "quiescence": 0,
     "search_backend_variant": "d48_pvs_mate",
-    "strength_conclusion": "D66 118-81 difference +37 passes frozen +12",
-    "unresolved": 1,
-    "wins": 118
+    "strength_conclusion": "E3 114-86(200局)・E3 212-186(確認400局); 事前基準(+12/+24)を満たす",
+    "training": "KUMOJI sparring positions (FUKAJI turns, outcome+own TD-lambda only) mixed with current-generation selfplay"
   },
   "version": "FUKAJI v0.4.1",
-  "weights_file": "models/fukaji-d66.nnue.npz",
-  "weights_sha256": "e8b9eec6246891645d629b70fd3435908d91f0ed5de8de8bac62762599329d8e"
+  "weights_file": "models/fukaji-e3.nnue.npz",
+  "weights_sha256": "95e9add33a60f57ade2d1eb6f44ee091ad7392452bff9e7e34b492dc51cd0355"
 }
