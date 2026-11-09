@@ -26,6 +26,11 @@ on:
         required: true
         default: "200"
         type: string
+      seed:
+        description: "開局の乱数シード（独立な開局で再確認するときは値を変える）"
+        required: true
+        default: "202611091"
+        type: string
       arena_ref:
         description: "arena.py 部品の雲路コミット"
         required: true
@@ -49,6 +54,7 @@ jobs:
           SHARDS: ${{ inputs.shards }}
           PAIRS: ${{ inputs.pairs }}
           MOVETIME: ${{ inputs.movetime_ms }}
+          SEED: ${{ inputs.seed }}
           REF: ${{ inputs.arena_ref }}
         run: |
           python3 - <<'PY'
@@ -58,6 +64,7 @@ jobs:
           assert flags and all(1<=f<=15 for f in flags) and len(set(flags))==len(flags)
           assert 1<=s and len(flags)*s<=20 and 1<=n<=200 and 50<=t<=1000
           assert re.fullmatch(r"[0-9a-f]{40}",os.environ["REF"])
+          assert 0<=int(os.environ["SEED"])<=2000000000
           m=[{"flag":f,"shard":i} for f in flags for i in range(s)]
           open(os.environ["GITHUB_OUTPUT"],"a").write("matrix="+json.dumps(m)+"\n")
           PY
@@ -97,7 +104,8 @@ jobs:
           python scripts/usi_match.py pair --engine-a /tmp/base.sh --engine-b /tmp/exp.sh \
             --label-a BASE --label-b EXP${{ matrix.flag }} --kumoji-src arena-src \
             --shard ${{ matrix.shard }} --shards ${{ inputs.shards }} \
-            --pairs ${{ inputs.pairs }} --movetime-ms ${{ inputs.movetime_ms }} --out build/part
+            --pairs ${{ inputs.pairs }} --movetime-ms ${{ inputs.movetime_ms }} \
+            --seed ${{ inputs.seed }} --out build/part
       - uses: actions/upload-artifact@v4
         if: always()
         with:
