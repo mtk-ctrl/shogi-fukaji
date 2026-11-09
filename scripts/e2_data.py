@@ -10,7 +10,7 @@ from scripts.nnue_round_train import convert
 
 KUMOJI_STRIDE = 3
 SELFPLAY_PER_GAME = 13
-VARIANT = int(os.environ.get("E2_VARIANT", "0"))  # 周回ごとに別の局面を選ぶ(0=初回と同じ)
+VARIANTS = [int(x) for x in os.environ.get("E2_VARIANT", "0").split(",")]  # 周回ごとに別の局面(カンマ区切りで複数周回分)
 
 
 def load_games(parts: Path, archives, protected_state: Path):
@@ -38,16 +38,20 @@ def load_games(parts: Path, archives, protected_state: Path):
 
 
 def pick_plies(item):
-    """この棋譜のどの局面(手を指す前)にラベルを付けるか。決定的。"""
+    """この棋譜のどの局面(手を指す前)にラベルを付けるか。決定的。VARIANTSで複数周回分の和集合。"""
     g = item["game"]; n = len(g["moves"])
     lo = 6
     if n <= lo:
         return []
-    if item["kind"] == "kumoji":
-        fk = item["fk"]
-        return [i for i in range(lo, n) if (i % 2 == 0) == (fk == shogi.BLACK) and (i - lo) % KUMOJI_STRIDE == VARIANT % KUMOJI_STRIDE] + \
-               [i for i in range(lo, n) if (i % 2 == 0) != (fk == shogi.BLACK) and (i - lo) % KUMOJI_STRIDE == (VARIANT + 1) % KUMOJI_STRIDE]
-    rng = random.Random(int(item["key"][:12], 16) + 7919 * VARIANT)
-    pool = list(range(lo, n))
-    rng.shuffle(pool)
-    return sorted(pool[:SELFPLAY_PER_GAME])
+    out = set()
+    for v in VARIANTS:
+        if item["kind"] == "kumoji":
+            fk = item["fk"]
+            own = [i for i in range(lo, n) if (i % 2 == 0) == (fk == shogi.BLACK) and (i - lo) % KUMOJI_STRIDE == v % KUMOJI_STRIDE]
+            opp = [i for i in range(lo, n) if (i % 2 == 0) != (fk == shogi.BLACK) and (i - lo) % KUMOJI_STRIDE == (v + 1) % KUMOJI_STRIDE]
+            out.update(own + opp)
+        else:
+            rng = random.Random(int(item["key"][:12], 16) + 7919 * v)
+            pool = list(range(lo, n)); rng.shuffle(pool)
+            out.update(pool[:SELFPLAY_PER_GAME])
+    return sorted(out)
