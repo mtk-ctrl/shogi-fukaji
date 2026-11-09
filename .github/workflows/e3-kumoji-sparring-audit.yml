@@ -197,7 +197,7 @@ jobs:
           if-no-files-found: warn
   aggregate:
     needs: play
-    if: needs.play.result == 'success'
+    if: ${{ !cancelled() && needs.play.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
