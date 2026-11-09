@@ -76,6 +76,7 @@ jobs:
       - name: Verify results, weights identity and Adam state (and prepare when commit=true)
         run: |
           set -euo pipefail
+          mkdir -p build
           FLAG=""; if [ "${{ inputs.commit }}" = "true" ]; then FLAG="--commit"; fi
           python scripts/e3_adopt.py --trained in/trained400 in/trained200 \
             --result200 in/result200/result.json --result400 in/result400/result.json \
