@@ -2,7 +2,7 @@
 ラベルは現行正式モデルの正式探索(固定深さ4)の評価値。雲路の指し手・評価値は使わない。
 """
 from pathlib import Path
-import hashlib, json, random, sys, tarfile
+import hashlib, json, os, random, sys, tarfile
 import shogi
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from fukaji.online_learning import game_key
@@ -10,6 +10,7 @@ from scripts.nnue_round_train import convert
 
 KUMOJI_STRIDE = 3
 SELFPLAY_PER_GAME = 13
+VARIANT = int(os.environ.get("E2_VARIANT", "0"))  # 周回ごとに別の局面を選ぶ(0=初回と同じ)
 
 
 def load_games(parts: Path, archives, protected_state: Path):
@@ -44,9 +45,9 @@ def pick_plies(item):
         return []
     if item["kind"] == "kumoji":
         fk = item["fk"]
-        return [i for i in range(lo, n) if (i % 2 == 0) == (fk == shogi.BLACK) and (i - lo) % KUMOJI_STRIDE == 0] + \
-               [i for i in range(lo, n) if (i % 2 == 0) != (fk == shogi.BLACK) and (i - lo) % KUMOJI_STRIDE == 1]
-    rng = random.Random(int(item["key"][:12], 16))
+        return [i for i in range(lo, n) if (i % 2 == 0) == (fk == shogi.BLACK) and (i - lo) % KUMOJI_STRIDE == VARIANT % KUMOJI_STRIDE] + \
+               [i for i in range(lo, n) if (i % 2 == 0) != (fk == shogi.BLACK) and (i - lo) % KUMOJI_STRIDE == (VARIANT + 1) % KUMOJI_STRIDE]
+    rng = random.Random(int(item["key"][:12], 16) + 7919 * VARIANT)
     pool = list(range(lo, n))
     rng.shuffle(pool)
     return sorted(pool[:SELFPLAY_PER_GAME])

@@ -25,6 +25,11 @@ on:
         required: false
         default: ""
         type: string
+      variant:
+        description: "局面の選び方の周回番号(0=初回と同じ。周回ごとに変えて別の局面にする)"
+        required: true
+        default: "0"
+        type: string
       epochs:
         description: "学習エポック数"
         required: true
@@ -98,6 +103,8 @@ jobs:
           echo '9e711baf83563827f777dd8c43ddb1ec85dacec5b10255caff2ad48fc194e6ef  input/archives/D66-D64-1000games.tar.gz' | sha256sum -c -
           echo 'd902a6ef591643129cef9e53c1dc322b7778f011473e66fb2380a4f388250585  input/archives/D68-D66-1000games.tar.gz' | sha256sum -c -
       - name: Label positions with the formal search (fixed depth 4)
+        env:
+          E2_VARIANT: ${{ inputs.variant }}
         run: |
           python -u scripts/e2_label.py --parts input/parts --archives input/archives/D66-D64-1000games.tar.gz input/archives/D68-D66-1000games.tar.gz \
             --state research/d41-public/D37-Adam2106-training-state.tar.gz --shard ${{ matrix.shard }} --shards 20 --workers 4 --out labels
