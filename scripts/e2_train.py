@@ -52,7 +52,7 @@ def main():
                 continue
             ps = 1 / (1 + np.exp(-float(np.clip(score / 1000., -8, 8))))
             y = (1 - a.outcome_weight) * ps + a.outcome_weight * z[ply]
-            (rows_h if hold else rows_t).append(ix[ply][None, :]); (y_h if hold else y_t).append(y)
+            (rows_h if hold else rows_t).append(np.asarray(ix[ply], np.int32)[None, :]); (y_h if hold else y_t).append(y)
             stats["search_mean"] += ps; stats["n"] += 1
     tx = pad(rows_t, parent.inputs); ty = np.asarray(y_t, np.float32)
     hx = pad(rows_h, parent.inputs); hy = np.asarray(y_h, np.float32)

@@ -20,6 +20,11 @@ on:
         required: true
         default: "E3-trained-state-Adam.tar.gz"
         type: string
+      labels_run:
+        description: "ラベル付けを再利用する過去のrun ID(空なら新規にラベル付け)"
+        required: false
+        default: ""
+        type: string
       epochs:
         description: "学習エポック数"
         required: true
@@ -59,6 +64,7 @@ env:
   PARTS_RUN: ${{ inputs.parts_run }}
 jobs:
   label:
+    if: inputs.labels_run == ''
     runs-on: ubuntu-latest
     timeout-minutes: 240
     strategy:
@@ -102,6 +108,7 @@ jobs:
           retention-days: 30
   train:
     needs: label
+    if: ${{ !cancelled() && (needs.label.result == 'success' || needs.label.result == 'skipped') }}
     runs-on: ubuntu-latest
     timeout-minutes: 120
     outputs:
@@ -125,8 +132,10 @@ jobs:
           github-token: ${{ github.token }}
       - uses: actions/download-artifact@v4
         with:
-          pattern: e2-labels-*-${{ github.run_id }}
+          pattern: e2-labels-*-${{ inputs.labels_run != '' && inputs.labels_run || github.run_id }}
           path: input/labels
+          run-id: ${{ inputs.labels_run != '' && inputs.labels_run || github.run_id }}
+          github-token: ${{ github.token }}
       - name: Download selfplay archives and parent state, verify SHA256
         run: |
           set -euo pipefail
