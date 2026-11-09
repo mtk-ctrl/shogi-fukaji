@@ -1,0 +1,146 @@
+name: FUKAJI search A/B (same NNUE, research flags versus baseline)
+# 研究専用。同じ正式NNUE(D66)・同じ時間で、正式版(BASE)と実験探索(EXP)を対局させる。
+# 実験探索は native/research の別C++と scripts/fukaji_exp_engine.py。正式版のソース・USI既定・重みは変更しない。
+# 1=置換表 2=killer/履歴の静かな手の並べ替え 4=LMR 8=静止探索。
+# arena.py(雲路リポジトリ)はUSI通信と勝敗判定の部品として使うだけで、雲路の評価・知識・設定は使わない。
+on:
+  workflow_dispatch:
+    inputs:
+      flags:
+        description: "比較する実験フラグ（カンマ区切り、例: 3,7）"
+        required: true
+        default: "3,7"
+        type: string
+      pairs:
+        description: "開局ペア数（局数は2倍）"
+        required: true
+        default: "100"
+        type: string
+      shards:
+        description: "フラグごとの並列数（フラグ数×この値が20以下）"
+        required: true
+        default: "5"
+        type: string
+      movetime_ms:
+        description: "両者共通の1手時間(ms)"
+        required: true
+        default: "200"
+        type: string
+      arena_ref:
+        description: "arena.py 部品の雲路コミット"
+        required: true
+        default: "b59ee6a72bcdfc9f706110626844f979c80a8ed0"
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: fukaji-search-ab
+  cancel-in-progress: false
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      matrix: ${{ steps.p.outputs.matrix }}
+    steps:
+      - id: p
+        env:
+          FLAGS: ${{ inputs.flags }}
+          SHARDS: ${{ inputs.shards }}
+          PAIRS: ${{ inputs.pairs }}
+          MOVETIME: ${{ inputs.movetime_ms }}
+          REF: ${{ inputs.arena_ref }}
+        run: |
+          python3 - <<'PY'
+          import json,os,re
+          flags=[int(x) for x in os.environ["FLAGS"].split(",")]
+          s=int(os.environ["SHARDS"]); n=int(os.environ["PAIRS"]); t=int(os.environ["MOVETIME"])
+          assert flags and all(1<=f<=15 for f in flags) and len(set(flags))==len(flags)
+          assert 1<=s and len(flags)*s<=20 and 1<=n<=200 and 50<=t<=1000
+          assert re.fullmatch(r"[0-9a-f]{40}",os.environ["REF"])
+          m=[{"flag":f,"shard":i} for f in flags for i in range(s)]
+          open(os.environ["GITHUB_OUTPUT"],"a").write("matrix="+json.dumps(m)+"\n")
+          PY
+  play:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: mtk-ctrl/shogi-ai
+          ref: ${{ inputs.arena_ref }}
+          path: arena-src
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - name: Engine wrappers (baseline = flags 0)
+        run: |
+          chmod +x run-fukaji.sh
+          # BASE=正式版そのもの（run-fukaji.sh）。EXP=同じNNUI・同じUSIで実験探索C++を使う別入口。
+          printf '#!/bin/sh\nexec "%s/run-fukaji.sh" "$@"\n' "$PWD" > /tmp/base.sh
+          printf '#!/bin/sh\nexport FUKAJI_SEARCH_EXP=${{ matrix.flag }}\nexec python3 "%s/scripts/fukaji_exp_engine.py" "$@"\n' "$PWD" > /tmp/exp.sh
+          chmod +x /tmp/base.sh /tmp/exp.sh
+          # 初回のC++コンパイルを対局前に済ませる（思考時間へ混ぜない）
+          printf 'usi\nisready\nquit\n' | /tmp/base.sh | tail -1
+          printf 'usi\nisready\nquit\n' | /tmp/exp.sh | tail -1
+      - name: Play paired games
+        run: |
+          python scripts/usi_match.py pair --engine-a /tmp/base.sh --engine-b /tmp/exp.sh \
+            --label-a BASE --label-b EXP${{ matrix.flag }} --kumoji-src arena-src \
+            --shard ${{ matrix.shard }} --shards ${{ inputs.shards }} \
+            --pairs ${{ inputs.pairs }} --movetime-ms ${{ inputs.movetime_ms }} --out build/part
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: search-ab-part-${{ matrix.flag }}-${{ matrix.shard }}-${{ github.run_id }}
+          path: build/part/
+          retention-days: 30
+          if-no-files-found: warn
+  aggregate:
+    needs: [plan, play]
+    if: needs.play.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: mtk-ctrl/shogi-ai
+          ref: ${{ inputs.arena_ref }}
+          path: arena-src
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: search-ab-part-*-${{ github.run_id }}
+          path: build/parts
+      - name: Replay-verify and summarize each flag
+        env:
+          FLAGS: ${{ inputs.flags }}
+          PAIRS: ${{ inputs.pairs }}
+        run: |
+          set -e
+          for f in ${FLAGS//,/ }; do
+            mkdir -p build/f$f
+            cp -r build/parts/search-ab-part-$f-* build/f$f/
+            python scripts/usi_match.py aggregate --parts build/f$f --out build/result-$f.json \
+              --label-a BASE --label-b EXP$f --expect-games $((PAIRS*2)) | tee build/agg-$f.txt
+            { echo "### flags=$f (A=BASE, B=EXP$f)"; echo '```json'; cat build/result-$f.json; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: search-ab-result-${{ github.run_id }}
+          path: build/result-*.json
+          retention-days: 90

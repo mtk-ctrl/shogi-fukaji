@@ -132,16 +132,43 @@ def replay_ok(g):
     return board.sfen() == g["final_sfen"] or g["reason"] in ("declare_win", "resign") or "illegal" in g["reason"] or g["reason"].startswith("invalid")
 
 
+def cmd_pair(a):
+    """同一エンジンの設定違い(A/B)を、同じ独立開局×先後交替ペアで比べる。"""
+    arena = load_arena(Path(a.kumoji_src))
+    ops = openings(a.pairs, a.opening_plies, a.seed)
+    go = f"go movetime {a.movetime_ms}"
+    ea = arena.Engine(a.engine_a, a.label_a, {}, go)
+    eb = arena.Engine(a.engine_b, a.label_b, {}, go)
+    games = []
+    try:
+        for p in range(a.shard, a.pairs, a.shards):
+            for first in (a.label_a, a.label_b):
+                black, white = (ea, eb) if first == a.label_a else (eb, ea)
+                black.configure_game(a.seed + p * 4)
+                white.configure_game(a.seed + p * 4 + 1)
+                g = play_game(arena, black, white, ops[p], a.max_plies)
+                g["pair"] = p
+                games.append(g)
+                print(f"pair {p:02d} black={first}: {g['winner'] or 'draw'} {g['reason']} {g['plies']}", flush=True)
+    finally:
+        ea.close(); eb.close()
+    out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
+    (out / f"shard-{a.shard:02d}.json").write_text(json.dumps({
+        "schema": "fukaji-usi-pair-part-v1", "shard": a.shard, "go": go,
+        "labels": [a.label_a, a.label_b], "games": games}, ensure_ascii=False) + "\n")
+
+
 def cmd_aggregate(a):
     games = []
     for f in sorted(Path(a.parts).rglob("shard-*.json")):
         games += json.loads(f.read_text())["games"]
     n = len(games)
-    wins = {"FUKAJI": 0, "KUMOJI": 0}
+    la, lb = a.label_a, a.label_b
+    wins = {la: 0, lb: 0}
     for g in games:
         if g["winner"] in wins:
             wins[g["winner"]] += 1
-    draws = n - wins["FUKAJI"] - wins["KUMOJI"]
+    draws = n - wins[la] - wins[lb]
     illegal = [g["pair"] for g in games if "illegal_by" in g]
     reasons = {}
     for g in games:
@@ -149,11 +176,11 @@ def cmd_aggregate(a):
     pairs = {}
     for g in games:
         pairs.setdefault(g["pair"], []).append(g)
-    pair_score = [sum((1 if x["winner"] == "FUKAJI" else 0.5 if x["winner"] is None else 0) for x in v)
+    pair_score = [sum((1 if x["winner"] == la else 0.5 if x["winner"] is None else 0) for x in v)
                   for v in pairs.values()]
     summary = {"schema": "fukaji-vs-kumoji-usi-result-v1", "games": n, "pairs": len(pairs),
-               "fukaji_wins": wins["FUKAJI"], "kumoji_wins": wins["KUMOJI"], "draws_or_unresolved": draws,
-               "fukaji_score": (wins["FUKAJI"] + 0.5 * draws) / n if n else None,
+               "fukaji_wins": wins[la], "kumoji_wins": wins[lb], "labels": [la, lb], "draws_or_unresolved": draws,
+               "fukaji_score": (wins[la] + 0.5 * draws) / n if n else None,
                "pair_sweeps_fukaji": sum(s == 2 for s in pair_score),
                "pair_sweeps_kumoji": sum(s == 0 for s in pair_score),
                "illegal_pairs": illegal, "reasons": reasons,
@@ -176,11 +203,21 @@ def main():
     q.add_argument("--movetime-ms", type=int, default=200); q.add_argument("--max-plies", type=int, default=300)
     q.add_argument("--seed", type=int, default=202611091)
     q.add_argument("--out", required=True)
+    t = sub.add_parser("pair")
+    t.add_argument("--engine-a", required=True); t.add_argument("--engine-b", required=True)
+    t.add_argument("--label-a", default="A"); t.add_argument("--label-b", default="B")
+    t.add_argument("--kumoji-src", required=True, help="arena.py の置き場（USI通信・勝敗判定のみ使用）")
+    t.add_argument("--shard", type=int, default=0); t.add_argument("--shards", type=int, default=1)
+    t.add_argument("--pairs", type=int, default=50); t.add_argument("--opening-plies", type=int, default=6)
+    t.add_argument("--movetime-ms", type=int, default=200); t.add_argument("--max-plies", type=int, default=300)
+    t.add_argument("--seed", type=int, default=202611091)
+    t.add_argument("--out", required=True)
     r = sub.add_parser("aggregate")
     r.add_argument("--parts", required=True); r.add_argument("--out", required=True)
+    r.add_argument("--label-a", default="FUKAJI"); r.add_argument("--label-b", default="KUMOJI")
     r.add_argument("--expect-games", type=int, default=100)
     a = p.parse_args()
-    cmd_play(a) if a.mode == "play" else cmd_aggregate(a)
+    {"play": cmd_play, "pair": cmd_pair, "aggregate": cmd_aggregate}[a.mode](a)
 
 
 if __name__ == "__main__":
