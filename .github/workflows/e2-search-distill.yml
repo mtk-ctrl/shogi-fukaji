@@ -1,0 +1,248 @@
+name: E2 search-value distillation (parent = current formal) - label, update, paired audit vs parent
+# 研究専用(深路=NNUE主軸)。現行正式モデルの正式探索(固定深さ4)の評価値を教師にして、NNUEを控えめに更新する。
+# 雲路の指し手・評価値・知識は教師にしない(雲路戦の棋譜は「局面の供給源」としてのみ使用)。
+# 事前宣言: (1)評価用ラベル損失が下がること (2)親との200局で候補が12勝以上多いこと。正式版は変更しない。
+on:
+  workflow_dispatch:
+    inputs:
+      parts_run:
+        description: "局面の供給源にする雲路戦の練習対局run ID(round-sparring-*)"
+        required: true
+        default: "42591748743"
+        type: string
+      parent_tag:
+        description: "親(現行正式)の完全state(Adam)を含むReleaseタグ"
+        required: true
+        default: "fukaji-current-e3-pvs-mate-20261109"
+        type: string
+      parent_asset:
+        description: "親のstate資産名"
+        required: true
+        default: "E3-trained-state-Adam.tar.gz"
+        type: string
+      epochs:
+        description: "学習エポック数"
+        required: true
+        default: "2"
+        type: string
+      lr:
+        description: "学習率"
+        required: true
+        default: "0.00005"
+        type: string
+      outcome_weight:
+        description: "ラベルに混ぜる対局結果の重み(0=探索評価のみ)"
+        required: true
+        default: "0.2"
+        type: string
+      audit_pairs:
+        description: "親との監査の開局ペア数"
+        required: true
+        default: "100"
+        type: string
+      audit_seed:
+        description: "監査の開局シード"
+        required: true
+        default: "202611098"
+        type: string
+      kumoji_ref:
+        description: "arena.py部品の雲路コミット(通信と勝敗判定のみ)"
+        required: true
+        default: "b59ee6a72bcdfc9f706110626844f979c80a8ed0"
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: fukaji-e2
+  cancel-in-progress: false
+env:
+  PARTS_RUN: ${{ inputs.parts_run }}
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        shard: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - run: python scripts/check_fukaji_contracts.py
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: round-sparring-*-${{ inputs.parts_run }}
+          path: input/parts
+          run-id: ${{ inputs.parts_run }}
+          github-token: ${{ github.token }}
+      - name: Download selfplay archives and verify SHA256
+        run: |
+          set -euo pipefail
+          mkdir -p input/archives
+          gh release download fukaji-d66-d64-1000-selfplay-42471868758 --pattern D66-D64-1000games.tar.gz --dir input/archives
+          gh release download fukaji-d68-d66-1000-selfplay-42540661474 --pattern D68-D66-1000games.tar.gz --dir input/archives
+          echo '9e711baf83563827f777dd8c43ddb1ec85dacec5b10255caff2ad48fc194e6ef  input/archives/D66-D64-1000games.tar.gz' | sha256sum -c -
+          echo 'd902a6ef591643129cef9e53c1dc322b7778f011473e66fb2380a4f388250585  input/archives/D68-D66-1000games.tar.gz' | sha256sum -c -
+      - name: Label positions with the formal search (fixed depth 4)
+        run: |
+          python -u scripts/e2_label.py --parts input/parts --archives input/archives/D66-D64-1000games.tar.gz input/archives/D68-D66-1000games.tar.gz \
+            --state research/d41-public/D37-Adam2106-training-state.tar.gz --shard ${{ matrix.shard }} --shards 20 --workers 4 --out labels
+      - uses: actions/upload-artifact@v4
+        with:
+          name: e2-labels-${{ matrix.shard }}-${{ github.run_id }}
+          path: labels/
+          retention-days: 30
+  train:
+    needs: label
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    outputs:
+      gate: ${{ steps.t.outputs.gate }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - run: python scripts/check_fukaji_contracts.py
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: round-sparring-*-${{ inputs.parts_run }}
+          path: input/parts
+          run-id: ${{ inputs.parts_run }}
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: e2-labels-*-${{ github.run_id }}
+          path: input/labels
+      - name: Download selfplay archives and parent state, verify SHA256
+        run: |
+          set -euo pipefail
+          mkdir -p input/archives
+          gh release download fukaji-d66-d64-1000-selfplay-42471868758 --pattern D66-D64-1000games.tar.gz --dir input/archives
+          gh release download fukaji-d68-d66-1000-selfplay-42540661474 --pattern D68-D66-1000games.tar.gz --dir input/archives
+          echo '9e711baf83563827f777dd8c43ddb1ec85dacec5b10255caff2ad48fc194e6ef  input/archives/D66-D64-1000games.tar.gz' | sha256sum -c -
+          echo 'd902a6ef591643129cef9e53c1dc322b7778f011473e66fb2380a4f388250585  input/archives/D68-D66-1000games.tar.gz' | sha256sum -c -
+          gh release download ${{ inputs.parent_tag }} --pattern ${{ inputs.parent_asset }} --dir input
+          mkdir -p input/parent && tar -xzf input/${{ inputs.parent_asset }} -C input/parent models
+      - name: Distill
+        id: t
+        run: |
+          python -u scripts/e2_train.py --state research/d41-public/D37-Adam2106-training-state.tar.gz \
+            --parent-models input/parent/models --parts input/parts \
+            --archives input/archives/D66-D64-1000games.tar.gz input/archives/D68-D66-1000games.tar.gz \
+            --labels input/labels --out trained --epochs ${{ inputs.epochs }} --lr ${{ inputs.lr }} \
+            --outcome-weight ${{ inputs.outcome_weight }} | tee train.log
+          echo "gate=$(python -c "import json;print(json.load(open('trained/report.json'))['gate'])")" >> "$GITHUB_OUTPUT"
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          print('### E2 train');print('```json');print(json.dumps(json.load(open('trained/report.json')),indent=1,ensure_ascii=False));print('```')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: e2-trained-${{ github.run_id }}
+          path: |
+            trained/cand-weights.npz
+            trained/report.json
+            trained/models
+          retention-days: 60
+  play:
+    needs: train
+    if: ${{ !cancelled() && needs.train.result == 'success' && needs.train.outputs.gate == 'pass' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        shard: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: mtk-ctrl/shogi-ai
+          ref: ${{ inputs.kumoji_ref }}
+          path: arena-src
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: e2-trained-${{ github.run_id }}
+          path: cand
+      - name: Engine wrappers (BASE=current formal (parent), CAND=new weights, identical search)
+        run: |
+          chmod +x run-fukaji.sh
+          printf '#!/bin/sh\nexec "%s/run-fukaji.sh" "$@"\n' "$PWD" > /tmp/base.sh
+          printf '#!/bin/sh\nexport FUKAJI_CAND_NPZ="%s/cand/cand-weights.npz"\nexec python3 "%s/scripts/fukaji_cand_engine.py" "$@"\n' "$PWD" "$PWD" > /tmp/cand.sh
+          chmod +x /tmp/base.sh /tmp/cand.sh
+          printf 'usi\nisready\nquit\n' | /tmp/base.sh | tail -2
+          printf 'usi\nisready\nquit\n' | /tmp/cand.sh | tail -2
+      - name: Play paired games (200 ms, same search)
+        run: |
+          python scripts/usi_match.py pair --engine-a /tmp/base.sh --engine-b /tmp/cand.sh \
+            --label-a PREV --label-b NEW --kumoji-src arena-src \
+            --shard ${{ matrix.shard }} --shards 20 --pairs ${{ inputs.audit_pairs }} \
+            --movetime-ms 200 --seed ${{ inputs.audit_seed }} --out build/part
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2-part-${{ matrix.shard }}-${{ github.run_id }}
+          path: build/part/
+          retention-days: 30
+          if-no-files-found: warn
+  aggregate:
+    needs: play
+    if: ${{ !cancelled() && needs.play.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: mtk-ctrl/shogi-ai
+          ref: ${{ inputs.kumoji_ref }}
+          path: arena-src
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: e2-part-*-${{ github.run_id }}
+          path: build/parts
+      - name: Replay-verify, summarize, apply pre-declared margin
+        env:
+          PAIRS: ${{ inputs.audit_pairs }}
+        run: |
+          python scripts/usi_match.py aggregate --parts build/parts --out build/result.json \
+            --label-a PREV --label-b NEW --expect-games $((PAIRS*2))
+          python - <<'PY' | tee /tmp/summary.md >> "$GITHUB_STEP_SUMMARY"
+          import json
+          r=json.load(open('build/result.json'))
+          d=r['kumoji_wins']-r['fukaji_wins']
+          r['prev_wins']=r['fukaji_wins'];r['new_wins']=r['kumoji_wins'];r['win_diff_new_minus_prev']=d
+          r['verdict']='adoption_candidate_NEW' if d>=12 else 'keep_PREV'
+          json.dump(r,open('build/result.json','w'),ensure_ascii=False,indent=2)
+          print('### NEW vs PREV');print('```json');print(json.dumps(r,ensure_ascii=False,indent=1));print('```')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: e2-result-${{ github.run_id }}
+          path: build/result.json
+          retention-days: 90
