@@ -5,6 +5,11 @@ name: E2 search-value distillation (parent = current formal) - label, update, pa
 on:
   workflow_dispatch:
     inputs:
+      depth:
+        description: "教師探索の固定深さ(既定4)"
+        required: true
+        default: "4"
+        type: string
       parts_run:
         description: "局面の供給源にする雲路戦の練習対局run ID(round-sparring-*)"
         required: true
@@ -105,6 +110,7 @@ jobs:
       - name: Label positions with the formal search (fixed depth 4)
         env:
           E2_VARIANT: ${{ inputs.variant }}
+          E2_DEPTH: ${{ inputs.depth }}
         run: |
           python -u scripts/e2_label.py --parts input/parts --archives input/archives/D66-D64-1000games.tar.gz input/archives/D68-D66-1000games.tar.gz \
             --state research/d41-public/D37-Adam2106-training-state.tar.gz --shard ${{ matrix.shard }} --shards 20 --workers 4 --out labels

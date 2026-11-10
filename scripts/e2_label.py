@@ -8,7 +8,8 @@ from fukaji.native_nnue import NativeSelector, build_native
 from scripts.e2_data import load_games, pick_plies
 
 _MODEL = None
-DEPTH = 4
+import os
+DEPTH = int(os.environ.get("E2_DEPTH", "4"))  # 教師探索の固定深さ(既定4)
 
 
 def work(item):
