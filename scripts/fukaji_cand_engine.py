@@ -16,6 +16,12 @@ def load(path=None, *, specification=None):
     with np.load(cand, allow_pickle=False) as d:
         if set(d.files) != {"w", "b", "v", "o"} or d["o"].shape != (1,):
             raise ValueError("inference-only NNUE tensors required")
+        hidden = int(d["w"].shape[1])
+        if hidden != 32:  # 研究専用：隠れ層を広げた候補は専用ネイティブライブラリで動かす
+            from scripts.h_widen_lib import build_wide_native, use_hidden
+            import fukaji.native_nnue as nn
+            lib = build_wide_native(hidden); use_hidden(hidden)
+            nn.build_native = lambda: lib
         model = SmallNNUE(d["w"], d["b"], d["v"], d["o"][0])
     if model.inputs != INPUTS:
         raise ValueError("architecture mismatch")
