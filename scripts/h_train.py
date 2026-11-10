@@ -5,7 +5,7 @@ from pathlib import Path
 import argparse, hashlib, json, sys
 import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from fukaji.online_learning import atomic_json, load_snapshot, fit, validate_game, parameters
+from fukaji.online_learning import atomic_json, load_snapshot, save_snapshot, fit, validate_game, parameters
 from fukaji.nnue_research import SmallNNUE
 from scripts.e1_train import pad, heldout_loss
 from scripts.e2_data import load_games
@@ -87,7 +87,9 @@ def main():
     print(f"heldout label loss {before:.5f} -> {after:.5f} gate {'pass' if gate else 'fail'}", flush=True)
     w, b, v, o = parameters(cand)
     np.savez(a.out / "cand-weights.npz", w=w, b=b, v=v, o=o)
-    report = {"schema": "h-wide-distill-v1", "parent": BASE, "hidden": a.hidden,
+    snap = save_snapshot(a.out / "models", cand, opt2, {"parent": BASE, "purpose": f"H{a.hidden} wide distillation",
+                                                       "epochs": a.epochs, "learning_rate": a.lr, "training": fs})
+    report = {"schema": "h-wide-distill-v1", "parent": BASE, "snapshot": snap, "hidden": a.hidden,
               "weights_file_sha256": hashlib.sha256((a.out / "cand-weights.npz").read_bytes()).hexdigest(),
               "train_positions": int(len(ty)), "heldout_positions": int(len(hy)),
               "outcome_weight": a.outcome_weight, "heldout_before": before, "heldout_after": after,

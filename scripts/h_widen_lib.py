@@ -9,9 +9,10 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def build_wide_native(H):
     src = (ROOT / "native/nnue_search_ffi.cpp").read_text()
-    if src.count("kNHidden=32") != 1:
+    import re
+    if len(re.findall(r"kNHidden=\d+", src)) != 1:
         raise RuntimeError("unexpected native source")
-    text = src.replace("kNHidden=32", f"kNHidden={H}")
+    text = re.sub(r"kNHidden=\d+", f"kNHidden={H}", src)
     key = hashlib.sha256((text + str(H)).encode()).hexdigest()[:16]
     out = ROOT / "build/native-wide"; out.mkdir(parents=True, exist_ok=True)
     cpp = out / f"ffi{H}-{key}.cpp"; so = out / f"libnnue-h{H}-{key}.so"

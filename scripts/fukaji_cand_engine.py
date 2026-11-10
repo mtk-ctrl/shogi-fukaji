@@ -6,7 +6,7 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 import fukaji.formal_model as fm
-from fukaji.nnue_research import SmallNNUE, INPUTS
+from fukaji.nnue_research import SmallNNUE, INPUTS, HIDDEN as FORMAL_HIDDEN
 
 _orig = fm.load
 def load(path=None, *, specification=None):
@@ -17,7 +17,7 @@ def load(path=None, *, specification=None):
         if set(d.files) != {"w", "b", "v", "o"} or d["o"].shape != (1,):
             raise ValueError("inference-only NNUE tensors required")
         hidden = int(d["w"].shape[1])
-        if hidden != 32:  # 研究専用：隠れ層を広げた候補は専用ネイティブライブラリで動かす
+        if hidden != FORMAL_HIDDEN:  # 研究専用：隠れ層を広げた候補は専用ネイティブライブラリで動かす
             from scripts.h_widen_lib import build_wide_native, use_hidden
             import fukaji.native_nnue as nn
             lib = build_wide_native(hidden); use_hidden(hidden)
