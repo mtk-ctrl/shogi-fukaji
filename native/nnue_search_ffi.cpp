@@ -8,7 +8,7 @@
 #include <new>
 
 namespace {
-constexpr size_t kNInputs=2548, kNHidden=32;
+constexpr size_t kNInputs=2548, kNHidden=128;
 constexpr double kNMate=1000000.;
 struct NModel { vector<float> w; array<double,kNHidden> b{},v{}; double o=0.; };
 unordered_map<uint64_t,NModel> nnue_models;

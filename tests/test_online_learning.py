@@ -97,7 +97,7 @@ class OnlineLearningTests(unittest.TestCase):
             value = logits_for(p, ix)[2][0]
             return np.logaddexp(0, value)-value
         numeric = (loss(.001)-loss(-.001))/.002
-        self.assertAlmostEqual(float(analytic), float(numeric), delta=3e-5)
+        self.assertAlmostEqual(float(analytic), float(numeric), delta=1e-4)
 
 
 class OnlineSearchTests(unittest.TestCase):

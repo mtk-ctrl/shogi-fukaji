@@ -4,7 +4,7 @@ import io
 import json
 from pathlib import Path
 import numpy as np
-from .nnue_research import SmallNNUE,INPUTS
+from .nnue_research import SmallNNUE,INPUTS,HIDDEN
 
 ROOT=Path(__file__).resolve().parents[1]
 MANIFEST=ROOT/'formal/model.json'
@@ -25,6 +25,6 @@ def load(path=None, *, specification=None):
         if set(data.files)!={'w','b','v','o'} or data['o'].shape!=(1,):
             raise ValueError('inference-only NNUE tensors required')
         model=SmallNNUE(data['w'],data['b'],data['v'],data['o'][0])
-    if model.inputs!=INPUTS or spec['architecture']!=[INPUTS,32,1]:
+    if model.inputs!=INPUTS or spec['architecture']!=[INPUTS,HIDDEN,1]:
         raise ValueError('approved NNUE architecture mismatch')
     return model,spec

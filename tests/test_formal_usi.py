@@ -20,7 +20,7 @@ def fixture(folder):
     m=SmallNNUE.synthetic_test_model(41);p=Path(folder)/'model.npz'
     np.savez_compressed(p,w=m.hidden_weights,b=m.hidden_bias,v=m.output_weights,o=np.array([m.output_bias]))
     return dict(weights_file=str(p),weights_sha256=hashlib.sha256(p.read_bytes()).hexdigest(),
-                research_snapshot_sha256='a'*64,architecture=[2548,32,1])
+                research_snapshot_sha256='a'*64,architecture=[2548,128,1])
 
 
 class FormalModelTests(unittest.TestCase):

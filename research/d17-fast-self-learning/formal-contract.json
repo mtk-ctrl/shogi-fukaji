@@ -1,10 +1,10 @@
 {
   "benchmarks/baseline_ref.txt": "eae0eac37a9b5822557f3ac337519f62c1bd4491851b720835240bcf065f81c9",
-  "docs/現行エンジン仕様.md": "e0575c9ea03f21a48d6386c152c52e905042a9581a737a640cd783110d8b051c",
-  "formal/model.json": "f3913b9c88a2d7bac95d17eb4d663d7942a0c280f833283dbe8d6052514a30dc",
+  "docs/現行エンジン仕様.md": "72bd75f20830798431a1da606d82076fe2d6dac13ba6efae1299e13ef7f9a2ab",
+  "formal/model.json": "b9003b42392ffae77a96c90e6815b13617f5d951a4126485ca30c97711d9e2fd",
   "fukaji/engine.py": "690ca0f2a783addf0f6405ec1766d6220a7d966826caa0f709f6d683f78c15bc",
-  "fukaji/formal_model.py": "5001bcea51b1d7050a70e0299b57d332838d5fdc973eab6594b77fdbf3887425",
+  "fukaji/formal_model.py": "73f935e22c8dd08e2e4a7c370f65cd83c473a5e39afdf586c366258ed88b40b1",
   "fukaji/formal_usi.py": "d4c83e371658021003584d2b6478d59f96ce77c574489a2db3ce8d44d4347528",
   "fukaji/native_nnue.py": "4f73394986a2ee3df5bdf820b901a0c9b4193fd62168c342ac7260121c9363d4",
-  "native/nnue_search_ffi.cpp": "c9340af265368547c37cbecc311d8d3982900885b433d1b4ccdc27fbdd7d041a"
+  "native/nnue_search_ffi.cpp": "166b0819116364956e94ab47e54eb1891a87f841f8d17d0c59f1adff3f62ecc5"
 }

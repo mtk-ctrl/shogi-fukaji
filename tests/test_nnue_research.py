@@ -19,7 +19,7 @@ class NNUEFoundationTests(unittest.TestCase):
         expected = set(np.flatnonzero(relative_features(board)[:-1]).tolist())
         self.assertEqual(set(active_indices(board, board.turn)), expected)
         self.assertEqual(INPUTS, 2548)
-        self.assertEqual(HIDDEN, 32)
+        self.assertEqual(HIDDEN, 128)
 
     def test_initial_two_perspectives_and_logit(self):
         board = shogi.Board()

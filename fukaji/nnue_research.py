@@ -13,7 +13,7 @@ import shogi
 from .learning import FEATURES, PIECES
 
 INPUTS = FEATURES - 1  # Exclude the existing constant intercept feature.
-HIDDEN = 32
+HIDDEN = 128
 HAND_BASE = 81 * PIECES * 2
 HAND_LIMIT = 20
 KING_RELATIVE_INPUTS = 2 * 2 * (PIECES - 1) * 17 * 17
@@ -81,7 +81,7 @@ def king_relative_indices(board, perspective):
 
 
 class SmallNNUE:
-    """32-unit clipped-ReLU test architecture; no trained model is loaded."""
+    """128-unit clipped-ReLU architecture (hidden width = HIDDEN); no trained model is loaded."""
 
     def __init__(self, hidden_weights, hidden_bias, output_weights, output_bias=0.0):
         w = np.asarray(hidden_weights, dtype=np.float32)
