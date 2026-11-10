@@ -78,9 +78,9 @@ def play_game(arena, black, white, opening, max_plies, longthink_ms=0, normal_go
     for ply in range(len(opening), max_plies):
         engine = black if board.turn == shogi.BLACK else white
         if longthink_ms:
-            attr = [k for k, v in vars(engine).items() if v == normal_go]
-            if len(attr) != 1:
-                raise RuntimeError(f"cannot locate go-command attribute of arena.Engine: {sorted(vars(engine))}")
+            if not hasattr(engine, "go_command"):
+                raise RuntimeError("arena.Engine has no go_command attribute")
+            attr = ["go_command"]
             if need_long(board, len(moves), list(board.legal_moves), used[engine.label]):
                 setattr(engine, attr[0], f"go movetime {longthink_ms}"); used[engine.label] += 1
             else:
