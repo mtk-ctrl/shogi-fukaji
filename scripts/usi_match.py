@@ -45,7 +45,18 @@ def openings(count: int, plies: int, seed: int):
     return out
 
 
-def play_game(arena, black, white, opening, max_plies):
+def need_long(board, ply, legal, used, max_long=10):
+    """本人指示の長考ポリシー(D39/D41と同一)：王手・複数の駒取り・複数の成り・枝の多い中盤。各陣営最大10回。"""
+    if used >= max_long or ply < 12:
+        return False
+    captures = sum(board.piece_type_at(m.to_square) != shogi.NONE for m in legal)
+    promotions = sum(m.promotion for m in legal)
+    return bool(board.is_check() or captures >= 2 or
+                (promotions >= 2 and ply >= 24) or
+                (ply >= 48 and len(legal) >= 32 and ply % 16 == 0))
+
+
+def play_game(arena, black, white, opening, max_plies, longthink_ms=0, normal_go=None):
     """arena.play_game と同じ判定で、開局棋譜から対局する。"""
     board = shogi.Board()
     adjudicator = arena.Adjudicator(board)
@@ -63,8 +74,16 @@ def play_game(arena, black, white, opening, max_plies):
                 "black": black.label, "opening": opening, "moves": moves,
                 "final_sfen": board.sfen(), **extra}
 
+    used = {black.label: 0, white.label: 0}
     for ply in range(len(opening), max_plies):
         engine = black if board.turn == shogi.BLACK else white
+        if longthink_ms:
+            if not hasattr(engine, "go"):
+                raise RuntimeError("arena.Engine has no 'go' attribute; cannot apply long-think")
+            if need_long(board, len(moves), list(board.legal_moves), used[engine.label]):
+                engine.go = f"go movetime {longthink_ms}"; used[engine.label] += 1
+            else:
+                engine.go = normal_go
         token = engine.bestmove(moves)
         if token == "resign":
             return result(win(engine), "resign")
@@ -146,7 +165,7 @@ def cmd_pair(a):
                 black, white = (ea, eb) if first == a.label_a else (eb, ea)
                 black.configure_game(a.seed + p * 4)
                 white.configure_game(a.seed + p * 4 + 1)
-                g = play_game(arena, black, white, ops[p], a.max_plies)
+                g = play_game(arena, black, white, ops[p], a.max_plies, a.longthink_ms, go)
                 g["pair"] = p
                 games.append(g)
                 print(f"pair {p:02d} black={first}: {g['winner'] or 'draw'} {g['reason']} {g['plies']}", flush=True)
@@ -154,7 +173,7 @@ def cmd_pair(a):
         ea.close(); eb.close()
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
     (out / f"shard-{a.shard:02d}.json").write_text(json.dumps({
-        "schema": "fukaji-usi-pair-part-v1", "shard": a.shard, "go": go,
+        "schema": "fukaji-usi-pair-part-v1", "shard": a.shard, "go": go, "longthink_ms": a.longthink_ms,
         "labels": [a.label_a, a.label_b], "games": games}, ensure_ascii=False) + "\n")
 
 
@@ -210,6 +229,7 @@ def main():
     t.add_argument("--shard", type=int, default=0); t.add_argument("--shards", type=int, default=1)
     t.add_argument("--pairs", type=int, default=50); t.add_argument("--opening-plies", type=int, default=6)
     t.add_argument("--movetime-ms", type=int, default=200); t.add_argument("--max-plies", type=int, default=300)
+    t.add_argument("--longthink-ms", type=int, default=0, help="0=なし。>0で本人指示の長考(各陣営最大10回)を適用")
     t.add_argument("--seed", type=int, default=202611091)
     t.add_argument("--out", required=True)
     r = sub.add_parser("aggregate")
