@@ -1,20 +1,20 @@
 {
-  "approved_by": "owner-approved E7 (2026-11-10) E7 117-83(200局)",
-  "approved_on": "2026-11-10",
+  "approved_by": "owner-approved E8 (2026-11-11) E8 222-174(別シード400局・200ms)",
+  "approved_on": "2026-11-11",
   "architecture": [
     2548,
     128,
     1
   ],
   "backend": "cpp_nnue",
-  "comparison_release_sha256": "adaa03e1d3a8edbc6e8e7a3033d1b79d4257f7b2a9c1f6a0b153263bbc2cec86",
+  "comparison_release_sha256": "42a7f22b60e01c4dfee944d9359548a6e1abe4adf97d494efccdfbdba2fb95ec",
   "default_move_time_ms": 100,
   "default_search_depth": 64,
-  "model_distribution": "GitHub models/fukaji-e7.nnue.npz; complete Adam24127 in the E7 trained Release.",
-  "optimizer_step": 24127,
+  "model_distribution": "GitHub models/fukaji-e8.nnue.npz; complete Adam26573 in the E8 trained Release.",
+  "optimizer_step": 26573,
   "quiescence": 0,
-  "research_parent_sha256": "ad6eed6de3c2e86c1ed68c62dfe2d86ea1eba6f7ebd5cc20ffbe5de5ed268e58",
-  "research_snapshot_sha256": "d139753b3c23317255b8e8be9f97e6ed42d8c35312998dc12ebf5443b52385dc",
+  "research_parent_sha256": "d139753b3c23317255b8e8be9f97e6ed42d8c35312998dc12ebf5443b52385dc",
+  "research_snapshot_sha256": "18e6860405caf40c610c21c1b65851505372d6cd1734f720d3f71a271c746d30",
   "schema": "fukaji-approved-nnue-v1",
   "search_adoption": {
     "baseline_wins": 44,
@@ -36,24 +36,24 @@
   },
   "search_backend_variant": "d48_pvs_mate",
   "search_implementation_sha256": "166b0819116364956e94ab47e54eb1891a87f841f8d17d0c59f1adff3f62ecc5",
-  "training_release_sha256": "501ce28e12ed3c4882f511e355971732730d9c14925dbc316f71bf4896739ffb",
-  "training_source_sha256": "d3ad37cb888b6eb0a7cf8e2873a80e363b5c3ffc3bd012b4356622d699410414",
+  "training_release_sha256": "fce2222644f161f4c9e6364f2322bee582923cbb4ff9dc4f6648feaa8461f00d",
+  "training_source_sha256": "5f6c3c09c09f5aad2eb4ae4ec488616ceeaa0f1c305c5b0251b66d249d003cb5",
   "validation": {
     "audit200": {
-      "draws_or_unresolved": 0,
-      "games": 200,
-      "new_wins": 117,
-      "pair_sweeps_fukaji": 15,
-      "pair_sweeps_kumoji": 32,
-      "prev_wins": 83
+      "draws_or_unresolved": 4,
+      "games": 400,
+      "new_wins": 222,
+      "pair_sweeps_fukaji": 32,
+      "pair_sweeps_kumoji": 56,
+      "prev_wins": 174
     },
-    "opponent": "E6/Adam21671 (previous formal, hidden 128), paired unseen openings, same search, 200ms",
+    "opponent": "E7/Adam24127 (previous formal, hidden 128), paired unseen openings, same search, 200ms",
     "quiescence": 0,
     "search_backend_variant": "d48_pvs_mate",
-    "strength_conclusion": "E7 117-83(200局); 事前基準(+12)を満たす",
-    "training": "distillation of the formal fixed-depth-4 search value (labels) mixed 0.2 with game outcome; positions (~15万, 3 variants) from E6-vs-KUMOJI games and selfplay, relabeled by the E6 formal search"
+    "strength_conclusion": "E8 222-174(別シード400局・200ms); 事前基準(+24/400局)を満たす。最初の200局は110-89(+21)",
+    "training": "distillation of the formal fixed-depth-4 search value (labels) mixed 0.2 with game outcome; positions (~15万, 3 variants) from E7-vs-KUMOJI games and selfplay, relabeled by the E7 formal search"
   },
   "version": "FUKAJI v0.4.1",
-  "weights_file": "models/fukaji-e7.nnue.npz",
-  "weights_sha256": "986a09f201d0e776a118e346e59b822b03953730fc6f957044f98876f1c5a9f9"
+  "weights_file": "models/fukaji-e8.nnue.npz",
+  "weights_sha256": "3d1e2fb506b3aa6b47c82f8984fda00df461374f1c2a6a94d6eb32912f2e0ade"
 }

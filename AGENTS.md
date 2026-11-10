@@ -89,3 +89,7 @@ ChatGPT・Claude等は同じRuleと同じGitHub正本を使う。まず[開発�
 ## 最新正式NNUE（E7、2026-11-10）
 
 正式E7／Adam24127、snapshot d139753b3c23317255b8e8be9f97e6ed42d8c35312998dc12ebf5443b52385dc。E7 117-83(200局)。NNUEのみ更新、旧E6・旧E2・旧E3・旧D66を保全。
+
+## 最新正式NNUE（E8、2026-11-11）
+
+正式E8／Adam26573、snapshot 18e6860405caf40c610c21c1b65851505372d6cd1734f720d3f71a271c746d30。E8 222-174(別シード400局・200ms)。NNUEのみ更新、旧E7・旧E2・旧E3・旧D66を保全。
