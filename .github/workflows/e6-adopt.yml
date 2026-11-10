@@ -128,10 +128,10 @@ jobs:
           git add formal/model.json research/d17-fast-self-learning/formal-contract.json
           git add docs/現行エンジン仕様.md docs/00_開発ルーター.md docs/ROADMAP.md AGENTS.md
           git add docs/decisions/2026-11-10_E6_隠れ層128NNUEを正式採用.md docs/モデル名対応表.md
-          git add native/nnue_search_ffi.cpp fukaji/nnue_research.py fukaji/formal_model.py tests/test_formal_usi.py
+          git add native/nnue_search_ffi.cpp fukaji/nnue_research.py fukaji/formal_model.py tests/test_formal_usi.py tests/test_nnue_research.py tests/test_online_learning.py
           git diff --cached --check
           git diff --cached --name-only | tee build/e6-adopted-files.txt
-          test "$(git diff --cached --name-only | wc -l)" -eq 13
+          test "$(git diff --cached --name-only | wc -l)" -eq 15
           git commit -m "adopt(E6): hidden-128 NNUE (structure change) after paired 200 vs E5 and 128/256/512 round-robin (owner-approved)"
           sha="$(git rev-parse HEAD)"
           git push origin HEAD:refs/heads/main

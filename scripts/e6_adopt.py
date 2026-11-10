@@ -120,6 +120,10 @@ def main(trained, result200, out, commit):
     once("fukaji/formal_model.py", "from .nnue_research import SmallNNUE,INPUTS", "from .nnue_research import SmallNNUE,INPUTS,HIDDEN")
     once("fukaji/formal_model.py", "spec['architecture']!=[INPUTS,32,1]", "spec['architecture']!=[INPUTS,HIDDEN,1]")
     once("tests/test_formal_usi.py", "architecture=[2548,32,1]", f"architecture=[2548,{H},1]")
+    once("tests/test_nnue_research.py", "self.assertEqual(HIDDEN, 32)", f"self.assertEqual(HIDDEN, {H})")
+    # 幅が広がると有限差分の数値誤差(float32)が増える。解析勾配との許容差を3e-5→1e-4に緩める(理論式は不変)
+    once("tests/test_online_learning.py", "self.assertAlmostEqual(float(analytic), float(numeric), delta=3e-5)",
+         "self.assertAlmostEqual(float(analytic), float(numeric), delta=1e-4)")
     w200 = f"E6(隠れ層{H}) {r['new_wins']}-{r['prev_wins']}(対E5 200局)"
     nf = dict(formal)
     nf.update({
