@@ -79,7 +79,7 @@ jobs:
           gh release download fukaji-d66-d64-1000-selfplay-42471868758 --pattern D66-D64-1000games.tar.gz --dir input/archives
           gh release download fukaji-d68-d66-1000-selfplay-42540661474 --pattern D68-D66-1000games.tar.gz --dir input/archives
           echo '9e711baf83563827f777dd8c43ddb1ec85dacec5b10255caff2ad48fc194e6ef  input/archives/D66-D64-1000games.tar.gz' | sha256sum -c -
-          echo 'd902a6ef591643129cef9e63c1dc322b7778f011473e66fb2380a4f388250585  input/archives/D68-D66-1000games.tar.gz' | sha256sum -c -
+          echo 'd902a6ef591643129cef9e53c1dc322b7778f011473e66fb2380a4f388250585  input/archives/D68-D66-1000games.tar.gz' | sha256sum -c -
           gh release download fukaji-current-e5-pvs-mate-20261110 --pattern E5-trained-state-Adam.tar.gz --dir input
           mkdir -p input/parent && tar -xzf input/E5-trained-state-Adam.tar.gz -C input/parent models
       - name: Reproduce the audited hidden-128 training (same inputs, same seed) with complete Adam snapshot
