@@ -85,3 +85,7 @@ ChatGPT・Claude等は同じRuleと同じGitHub正本を使う。まず[開発�
 ## 最新正式NNUE（E6、2026-11-10）
 
 正式E6／隠れ層128／Adam21671、snapshot ad6eed6de3c2e86c1ed68c62dfe2d86ea1eba6f7ebd5cc20ffbe5de5ed268e58。E6(隠れ層128) 122-78(対E5 200局)。構造変更あり（kNHidden・契約更新）。旧E5以前はmodels/に保全（隠れ層32）。
+
+## 最新正式NNUE（E7、2026-11-10）
+
+正式E7／Adam24127、snapshot d139753b3c23317255b8e8be9f97e6ed42d8c35312998dc12ebf5443b52385dc。E7 117-83(200局)。NNUEのみ更新、旧E6・旧E2・旧E3・旧D66を保全。
