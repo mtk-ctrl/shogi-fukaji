@@ -26,6 +26,7 @@ inc = '#include "strategy/evaluation_v2_features.h"\n'
 assert t.count(inc) == 1
 t = t.replace(inc, inc + '#include "strategy/nnue_eval.h"\n')
 ev.write_text(t)
+subprocess.run(["git", "init", "-q"], cwd=work, check=True)  # 親リポジトリのgit applyに巻き込まれないよう独立させる
 out = work / "build/kumoji-hybrid"
 subprocess.run([sys.executable, "scripts/build.py", "--output", "build/kumoji-hybrid"], cwd=work, check=True)
 print(out)
