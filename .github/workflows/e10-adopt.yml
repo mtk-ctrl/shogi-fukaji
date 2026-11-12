@@ -77,7 +77,7 @@ jobs:
           set -euo pipefail
           mkdir -p build
           FLAG=""; if [ "${{ inputs.commit }}" = "true" ]; then FLAG="--commit"; fi
-          python scripts/e10_adopt.py --trained in/trained --result-e10 in/res_e10/result.json \
+          python scripts/e10_adopt.py --trained in/trained --result-e9 in/res_e10/result.json \
             --result-kumoji in/res_kumoji/result.json --out build/e10-prepare $FLAG | tee build/e10-adopt.log
           { echo '### E10 adoption'; echo '```json'; cat build/e10-prepare/receipt.json; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
       - name: Full regression and real USI play with the E10 weights
