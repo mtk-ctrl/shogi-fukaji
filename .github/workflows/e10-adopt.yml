@@ -138,7 +138,7 @@ jobs:
           assert d['weights_sha256']==m['weights_sha256'] and d['legal_usi_plies']>=30,d
           print('E10 isolated bundle ok')
           PY
-          tar -czf build/E10-trained-state-Adam.tar.gz -C in/trained200 report.json cand-weights.npz models
+          tar -czf build/E10-trained-state-Adam.tar.gz -C in/trained report.json cand-weights.npz models
           cp build/e10-prepare/receipt.json build/E10-adoption-receipt.json
           gh release create "$TAG" build/E10-FUKAJI-current-PVS-Mate.tar.gz build/E10-trained-state-Adam.tar.gz \
             build/e10-usi-validation.json build/e10-isolated-usi.json build/E10-adoption-receipt.json \

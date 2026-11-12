@@ -1,0 +1,71 @@
+name: E10 release only (E10採用commit済み。リリース作成の再実行)
+on:
+  workflow_dispatch:
+    inputs:
+      run_train:
+        description: "学習run ID"
+        required: true
+        default: "43211652947"
+        type: string
+permissions:
+  contents: write
+  actions: read
+jobs:
+  release:
+    if: github.repository == 'mtk-ctrl/shogi-fukaji'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: e2-trained-${{ inputs.run_train }}
+          path: in/trained
+          run-id: ${{ inputs.run_train }}
+          github-token: ${{ github.token }}
+      - name: Receipt placeholder
+        run: |
+          mkdir -p in/receipt
+          python - <<'PY'
+          import json
+          r=json.load(open('in/trained/report.json')); m=json.load(open('formal/model.json'))
+          assert m['weights_sha256'] and m['weights_file'].endswith('e10.nnue.npz')
+          json.dump({"schema":"e10-release-receipt-v1","report":r,"formal_weights_sha256":m['weights_sha256']},open('in/receipt/receipt.json','w'),ensure_ascii=False,indent=1)
+          PY
+      - name: Isolated bundle, USI check and release (with complete Adam state)
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+          TAG: fukaji-current-e10-pvs-mate-20261113
+        run: |
+          set -euo pipefail
+          python scripts/build_formal_bundle.py --out build/E10-FUKAJI-current-PVS-Mate.tar.gz --source-commit "$SOURCE_SHA"
+          mkdir -p build/iso && tar -xzf build/E10-FUKAJI-current-PVS-Mate.tar.gz -C build/iso
+          (cd build/iso/fukaji-v0.4.1 && python scripts/verify_formal_release.py --out e10-isolated-usi.json)
+          cp build/iso/fukaji-v0.4.1/e10-isolated-usi.json build/e10-isolated-usi.json
+          python - <<'PY'
+          import json
+          d=json.load(open('build/e10-isolated-usi.json')); m=json.load(open('formal/model.json'))
+          assert d['bundle_member_hashes_verified'] is True and d['research_mate_proof_verified'] is True,d
+          assert d['weights_sha256']==m['weights_sha256'] and d['legal_usi_plies']>=30,d
+          print('E10 isolated bundle ok')
+          PY
+          tar -czf build/E10-trained-state-Adam.tar.gz -C in/trained report.json cand-weights.npz models
+          cp in/receipt/receipt.json build/E10-adoption-receipt.json
+          gh release create "$TAG" build/E10-FUKAJI-current-PVS-Mate.tar.gz build/E10-trained-state-Adam.tar.gz \
+            build/e10-isolated-usi.json build/E10-adoption-receipt.json \
+            --target "$SOURCE_SHA" --title 'FUKAJI v0.4.1 current E10 NNUE (hybrid-search-value relabel distillation) with PVS plus mate' \
+            --notes 'E10 NNUE adopted by owner approval. Search and USI unchanged. Previous E9 and earlier weights preserved in models/.'
+          mkdir -p build/rb
+          for f in E10-FUKAJI-current-PVS-Mate.tar.gz E10-trained-state-Adam.tar.gz e10-isolated-usi.json E10-adoption-receipt.json; do
+            src="build/$f"; gh release download "$TAG" --pattern "$f" --dir build/rb
+            test "$(sha256sum "$src"|cut -d' ' -f1)" = "$(sha256sum "build/rb/$f"|cut -d' ' -f1)"
+          done
+          echo "E10 adopted at $SOURCE_SHA; release readback OK" >> "$GITHUB_STEP_SUMMARY"
