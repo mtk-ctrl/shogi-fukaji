@@ -157,8 +157,8 @@ def cmd_pair(a):
     arena = load_arena(Path(a.kumoji_src))
     ops = openings(a.pairs, a.opening_plies, a.seed)
     go = f"go movetime {a.movetime_ms}"
-    ea = arena.Engine(a.engine_a, a.label_a, {}, go)
-    eb = arena.Engine(a.engine_b, a.label_b, {}, go)
+    ea = arena.Engine(a.engine_a, a.label_a, json.loads(a.opts_a), go)
+    eb = arena.Engine(a.engine_b, a.label_b, json.loads(a.opts_b), go)
     games = []
     try:
         for p in range(a.shard, a.pairs, a.shards):
@@ -232,6 +232,7 @@ def main():
     t.add_argument("--movetime-ms", type=int, default=200); t.add_argument("--max-plies", type=int, default=300)
     t.add_argument("--longthink-ms", type=int, default=0, help="0=なし。>0で本人指示の長考(各陣営最大10回)を適用")
     t.add_argument("--seed", type=int, default=202611091)
+    t.add_argument("--opts-a", default="{}", help="Aに送るUSIオプション(JSON)"); t.add_argument("--opts-b", default="{}")
     t.add_argument("--out", required=True)
     r = sub.add_parser("aggregate")
     r.add_argument("--parts", required=True); r.add_argument("--out", required=True)

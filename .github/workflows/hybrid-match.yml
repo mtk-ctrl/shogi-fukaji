@@ -1,0 +1,136 @@
+name: Hybrid match (KUMOJI search + FUKAJI NNUE) vs formal FUKAJI or KUMOJI
+# 研究専用。雲路の探索を借り、評価だけ深路のNNUEにした実験エンジンの対局。雲路・深路の正式版は変更しない。
+on:
+  workflow_dispatch:
+    inputs:
+      opponent:
+        description: "formal(現行正式深路) または kumoji(雲路本体)"
+        required: true
+        default: "kumoji"
+        type: string
+      weights:
+        description: "リポジトリ内のNNUE推論npz"
+        required: true
+        default: "models/fukaji-e9.nnue.npz"
+        type: string
+      scale:
+        description: "NNUE評価のcp換算(1ロジット=何cp)"
+        required: true
+        default: "600"
+        type: string
+      pairs:
+        description: "開局ペア数(局数は2倍、20並列)"
+        required: true
+        default: "50"
+        type: string
+      seed:
+        description: "開局シード"
+        required: true
+        default: "202611990"
+        type: string
+      movetime_ms:
+        description: "1手の時間(ms)"
+        required: true
+        default: "200"
+        type: string
+      kumoji_ref:
+        description: "雲路のコミットSHA(探索の借用元・対戦相手)"
+        required: true
+        default: "1e08de520a02bd72b26a5510fb183c638211765f"
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: fukaji-hybrid
+  cancel-in-progress: false
+jobs:
+  play:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        shard: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: mtk-ctrl/shogi-ai
+          ref: ${{ inputs.kumoji_ref }}
+          path: kumoji-src
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - name: Build hybrid engine and plain KUMOJI
+        run: |
+          set -euo pipefail
+          python scripts/build_hybrid.py --kumoji-src kumoji-src --work build/hybrid
+          (cd kumoji-src && python3 scripts/build.py --output build/kumoji)
+          python scripts/hybrid_export_weights.py "${{ inputs.weights }}" build/hybrid.bin
+      - name: Engine wrappers
+        run: |
+          set -euo pipefail
+          chmod +x run-fukaji.sh
+          printf '#!/bin/sh\nexport FUKAJI_NNUE_FILE="%s/build/hybrid.bin"\nexport FUKAJI_NNUE_SCALE="%s"\ncd "%s/build/hybrid"\nexec "%s/build/hybrid/build/kumoji-hybrid" "$@"\n' "$PWD" "${{ inputs.scale }}" "$PWD" "$PWD" > /tmp/a.sh
+          if [ "${{ inputs.opponent }}" = "kumoji" ]; then
+            printf '#!/bin/sh\ncd "%s/kumoji-src"\nexec "%s/kumoji-src/build/kumoji" "$@"\n' "$PWD" "$PWD" > /tmp/b.sh
+          else
+            printf '#!/bin/sh\nexec "%s/run-fukaji.sh" "$@"\n' "$PWD" > /tmp/b.sh
+          fi
+          chmod +x /tmp/a.sh /tmp/b.sh
+          printf 'usi\nisready\nquit\n' | /tmp/a.sh | tail -2
+          printf 'usi\nisready\nquit\n' | /tmp/b.sh | tail -2
+      - name: Play paired games
+        run: |
+          OPTA='{"PositionKnowledge": false, "AdaptiveLongThink": false, "USI_Ponder": false}'
+          if [ "${{ inputs.opponent }}" = "kumoji" ]; then
+            OPTB='{"AdaptiveLongThink": false, "USI_Ponder": false, "PositionKnowledge": true}'
+          else
+            OPTB='{}'
+          fi
+          python scripts/usi_match.py pair --engine-a /tmp/a.sh --engine-b /tmp/b.sh \
+            --label-a HYBRID --label-b OPP --opts-a "$OPTA" --opts-b "$OPTB" --kumoji-src kumoji-src \
+            --shard ${{ matrix.shard }} --shards 20 --pairs ${{ inputs.pairs }} \
+            --movetime-ms ${{ inputs.movetime_ms }} --seed ${{ inputs.seed }} --out build/part
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hybrid-part-${{ matrix.shard }}-${{ github.run_id }}
+          path: build/part/
+          retention-days: 30
+          if-no-files-found: warn
+  aggregate:
+    needs: play
+    if: ${{ !cancelled() && needs.play.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: mtk-ctrl/shogi-ai
+          ref: ${{ inputs.kumoji_ref }}
+          path: arena-src
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: hybrid-part-*-${{ github.run_id }}
+          path: build/parts
+      - name: Replay-verify and summarize
+        env:
+          PAIRS: ${{ inputs.pairs }}
+        run: |
+          python scripts/usi_match.py aggregate --parts build/parts --out build/result.json \
+            --label-a HYBRID --label-b OPP --expect-games $((PAIRS*2))
+          { echo '```json'; cat build/result.json; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hybrid-result-${{ github.run_id }}
+          path: build/result.json
