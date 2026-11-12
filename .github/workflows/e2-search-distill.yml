@@ -25,6 +25,11 @@ on:
         required: true
         default: "600"
         type: string
+      movetime_ms:
+        description: "labeler=hybridで固定深さの代わりに使う1局面の探索時間(ms)。0=固定深さ(depth)。終盤の詰み絡みで深さ固定が極端に遅い局面があるため2000程度を推奨"
+        required: true
+        default: "0"
+        type: string
       time_limit_min:
         description: "labeler=hybridの時間切れ(分)。0=なし。超えたらそこまでのラベルで先へ進む(job上限240分より前に)"
         required: true
@@ -151,6 +156,7 @@ jobs:
           E2_VARIANT: ${{ inputs.variant }}
           E2_DEPTH: ${{ inputs.depth }}
           E2_TIME_LIMIT_MIN: ${{ inputs.time_limit_min }}
+          E2_MOVETIME_MS: ${{ inputs.movetime_ms }}
           FUKAJI_NNUE_SCALE: ${{ inputs.scale }}
           FUKAJI_NNUE_FILE: ${{ github.workspace }}/build/hybrid.bin
           HYB_ENGINE: ${{ github.workspace }}/build/hybrid/build/kumoji-hybrid

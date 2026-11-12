@@ -8,6 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from scripts.e2_data import load_games, pick_plies
 
 DEPTH = int(os.environ.get("E2_DEPTH", "8"))
+MOVETIME_MS = int(os.environ.get("E2_MOVETIME_MS", "0"))  # >0なら固定深さでなく固定時間(終盤の詰み絡みで深さ固定は数十秒〜分かかる局面があるため)
 SCALE = float(os.environ.get("FUKAJI_NNUE_SCALE", "600"))
 _ENG = None
 
@@ -37,14 +38,14 @@ class Engine:
 
     def score(self, sfen, depth):
         self.send("usinewgame"); self.send(f"position sfen {sfen}")
-        self.send(f"go depth {depth}")
+        self.send(f"go movetime {MOVETIME_MS}" if MOVETIME_MS else f"go depth {depth}")
         lines = []
         self.wait("bestmove", lines)
         best = None
         for line in lines:
             m = re.match(r"info depth (\d+) .*?score (cp|mate) (-?\d+)", line)
-            if m and int(m.group(1)) >= depth:
-                best = (m.group(2), int(m.group(3)))
+            if m and (MOVETIME_MS or int(m.group(1)) >= depth):
+                best = (m.group(2), int(m.group(3)), int(m.group(1)))
         return best
 
     def close(self):
@@ -67,9 +68,9 @@ def work(item):
         if i in plies and not board.is_game_over():
             r = _ENG.score(board.sfen(), DEPTH)
             if r is not None:
-                kind, v = r
+                kind, v, reached = r
                 logit = (20.0 if v > 0 else -20.0) if kind == "mate" else max(-20.0, min(20.0, v / SCALE))
-                rows.append({"key": item["key"], "ply": i, "score": logit * 1000.0, "depth": DEPTH, "mate": kind == "mate"})
+                rows.append({"key": item["key"], "ply": i, "score": logit * 1000.0, "depth": reached, "mate": kind == "mate"})
         board.push(shogi.Move.from_usi(tok))
     return rows
 
