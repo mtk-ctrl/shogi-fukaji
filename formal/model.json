@@ -1,20 +1,20 @@
 {
-  "approved_by": "owner-approved E9 (2026-11-11) E9 321-275(対E8 合算600局: 最初の200局111-88＋別シード400局210-187・200ms)",
-  "approved_on": "2026-11-11",
+  "approved_by": "owner-approved E10 (2026-11-13) E10 ハイブリッド探索下(雲路の探索＋深路NNUE, 1手2秒相当・同一探索)で対E9 83-17(100局)、対雲路最新 16-84(100局。E9は4-96)",
+  "approved_on": "2026-11-13",
   "architecture": [
     2548,
     128,
     1
   ],
   "backend": "cpp_nnue",
-  "comparison_release_sha256": "964ba2d9f7be12508d8ebefb92756459c32f8faf9559ca94fc64929856b7fa04",
+  "comparison_release_sha256": "ddffb25bc9cb7cc8469bc9f3f9f9656c3eb2075d859c18a7767e208711419058",
   "default_move_time_ms": 100,
   "default_search_depth": 64,
-  "model_distribution": "GitHub models/fukaji-e9.nnue.npz; complete Adam27469 in the E9 trained Release.",
-  "optimizer_step": 27469,
+  "model_distribution": "GitHub models/fukaji-e10.nnue.npz; complete Adam29173 in the E10 trained Release.",
+  "optimizer_step": 29173,
   "quiescence": 0,
-  "research_parent_sha256": "18e6860405caf40c610c21c1b65851505372d6cd1734f720d3f71a271c746d30",
-  "research_snapshot_sha256": "c9302b9552d90fdfe88ac38ca54970fa3eceeaf67c024368f13d12b87af2b050",
+  "research_parent_sha256": "c9302b9552d90fdfe88ac38ca54970fa3eceeaf67c024368f13d12b87af2b050",
+  "research_snapshot_sha256": "c7eb865f9800bc75c7067c37d69a750ae9b32a824d1ddeb21f5a3bc9ff60a72f",
   "schema": "fukaji-approved-nnue-v1",
   "search_adoption": {
     "baseline_wins": 44,
@@ -36,24 +36,28 @@
   },
   "search_backend_variant": "d48_pvs_mate",
   "search_implementation_sha256": "166b0819116364956e94ab47e54eb1891a87f841f8d17d0c59f1adff3f62ecc5",
-  "training_release_sha256": "0df44ca7de4ebd4f4d060f9cc0b4634d8e59a7d57ff571a92fe069221a9761e5",
-  "training_source_sha256": "061a5ee87eb33b18b983af3fc95f6be3e9350ba15afb6ab38b74906c965dd575",
+  "training_release_sha256": "5f5f15ede5df4c727d40dd940b289b8237b46926406323102baf64fb0bba4898",
+  "training_source_sha256": "f9c83a3ffa04cffee225aa84b3a3ce21cbc316750c7db2cb3ab3288c96c0ef74",
   "validation": {
-    "audit200": {
-      "draws_or_unresolved": 4,
-      "games": 600,
-      "new_wins": 321,
-      "pair_sweeps_fukaji": 63,
-      "pair_sweeps_kumoji": 84,
-      "prev_wins": 275
+    "hybrid_vs_e9": {
+      "draws_or_unresolved": 0,
+      "fukaji_wins": 83,
+      "games": 100,
+      "kumoji_wins": 17
     },
-    "opponent": "E8/Adam26573 (previous formal, hidden 128), paired unseen openings, same search, 200ms",
+    "hybrid_vs_kumoji": {
+      "draws_or_unresolved": 0,
+      "fukaji_wins": 16,
+      "games": 100,
+      "kumoji_wins": 84
+    },
+    "opponent": "E9 (previous formal, hidden 128), hybrid search (KUMOJI search + FUKAJI NNUE), paired unseen openings, same search",
     "quiescence": 0,
     "search_backend_variant": "d48_pvs_mate",
-    "strength_conclusion": "E9 321-275(対E8 合算600局: 最初の200局111-88＋別シード400局210-187・200ms); 事前基準(400局で+24)に+23で1届かないが、合算+46・held-out損失通過・ユーザー指示により採用",
-    "training": "distillation of the formal fixed-depth-5 search value (labels) mixed 0.2 with game outcome; positions (~5.7万, 1 variant) from E8-vs-KUMOJI games and selfplay, relabeled by the E8 formal search"
+    "strength_conclusion": "E10 ハイブリッド探索下(雲路の探索＋深路NNUE, 1手2秒相当・同一探索)で対E9 83-17(100局)、対雲路最新 16-84(100局。E9は4-96)。正式探索(USI v0.4.1)での強さは未確認(別途確認)",
+    "training": "distillation of the hybrid search value (1 position = 2000ms, KUMOJI search + E9 NNUE eval) mixed 0.2 with game outcome; ~11.5万 positions from past games"
   },
   "version": "FUKAJI v0.4.1",
-  "weights_file": "models/fukaji-e9.nnue.npz",
-  "weights_sha256": "c5b12ff0bf4b0bd3fa0551d1ba1fd5d17cce311b6dd88cadd7106534c0f01173"
+  "weights_file": "models/fukaji-e10.nnue.npz",
+  "weights_sha256": "5ddc922e992e3c71815cd3c707f7a8ce1d654090a607fb1a02d477493df868b2"
 }
