@@ -31,3 +31,7 @@ D33候補の正式採用時点で予定していた200局比較は未実施。�
 `selfplay.py` と `learning.py` のランダム対局・線形value-v0は初期基盤として残る。初期READMEの「モデル未接続」は現在のG8研究経路には当てはまらない。
 
 外部AIの評価値・PV・推奨手は教師にしない。未決着を勝ちや引分の教師にしない。研究実装・学習実行・実戦検証・正式採用を別々に記録する。
+
+## ライセンス
+
+GPL-3.0（[LICENSE](LICENSE)）。python-shogi・雲路など GPL 依存の詳細は [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
