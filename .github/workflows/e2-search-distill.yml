@@ -10,6 +10,26 @@ on:
         required: true
         default: "4"
         type: string
+      labeler:
+        description: "native(従来の深路探索) または hybrid(雲路の探索＋深路NNUE評価。教師=深路の評価、探索のみ借用)"
+        required: true
+        default: "native"
+        type: string
+      teacher_npz:
+        description: "labeler=hybridの教師NNUE(リポジトリ内の推論npz)"
+        required: true
+        default: "models/fukaji-e9.nnue.npz"
+        type: string
+      scale:
+        description: "hybridのNNUE評価cp換算(1ロジット何cp)"
+        required: true
+        default: "600"
+        type: string
+      hybrid_ref:
+        description: "hybridが借りる雲路探索のコミットSHA"
+        required: true
+        default: "1e08de520a02bd72b26a5510fb183c638211765f"
+        type: string
       parts_run:
         description: "局面の供給源にする雲路戦の練習対局run ID(round-sparring-*)"
         required: true
@@ -107,7 +127,33 @@ jobs:
           gh release download fukaji-d68-d66-1000-selfplay-42540661474 --pattern D68-D66-1000games.tar.gz --dir input/archives
           echo '9e711baf83563827f777dd8c43ddb1ec85dacec5b10255caff2ad48fc194e6ef  input/archives/D66-D64-1000games.tar.gz' | sha256sum -c -
           echo 'd902a6ef591643129cef9e53c1dc322b7778f011473e66fb2380a4f388250585  input/archives/D68-D66-1000games.tar.gz' | sha256sum -c -
+      - uses: actions/checkout@v4
+        if: inputs.labeler == 'hybrid'
+        with:
+          repository: mtk-ctrl/shogi-ai
+          ref: ${{ inputs.hybrid_ref }}
+          path: kumoji-src
+          persist-credentials: false
+      - name: Build hybrid teacher engine
+        if: inputs.labeler == 'hybrid'
+        run: |
+          set -euo pipefail
+          python scripts/build_hybrid.py --kumoji-src kumoji-src --work build/hybrid
+          python scripts/hybrid_export_weights.py "${{ inputs.teacher_npz }}" build/hybrid.bin
+      - name: Label positions with the hybrid engine (fixed depth)
+        if: inputs.labeler == 'hybrid'
+        env:
+          E2_VARIANT: ${{ inputs.variant }}
+          E2_DEPTH: ${{ inputs.depth }}
+          FUKAJI_NNUE_SCALE: ${{ inputs.scale }}
+          FUKAJI_NNUE_FILE: ${{ github.workspace }}/build/hybrid.bin
+          HYB_ENGINE: ${{ github.workspace }}/build/hybrid/build/kumoji-hybrid
+          HYB_CWD: ${{ github.workspace }}/build/hybrid
+        run: |
+          python -u scripts/e2_label_hybrid.py --parts input/parts --archives input/archives/D66-D64-1000games.tar.gz input/archives/D68-D66-1000games.tar.gz \
+            --state research/d41-public/D37-Adam2106-training-state.tar.gz --shard ${{ matrix.shard }} --shards 20 --workers 4 --out labels
       - name: Label positions with the formal search (fixed depth 4)
+        if: inputs.labeler == 'native'
         env:
           E2_VARIANT: ${{ inputs.variant }}
           E2_DEPTH: ${{ inputs.depth }}
@@ -182,7 +228,7 @@ jobs:
           retention-days: 60
   play:
     needs: train
-    if: ${{ !cancelled() && needs.train.result == 'success' && needs.train.outputs.gate == 'pass' }}
+    if: ${{ !cancelled() && needs.train.result == 'success' && needs.train.outputs.gate == 'pass' && inputs.labeler == 'native' }}
     runs-on: ubuntu-latest
     timeout-minutes: 120
     strategy:
