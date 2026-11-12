@@ -25,6 +25,11 @@ on:
         required: true
         default: "600"
         type: string
+      time_limit_min:
+        description: "labeler=hybridの時間切れ(分)。0=なし。超えたらそこまでのラベルで先へ進む(job上限240分より前に)"
+        required: true
+        default: "200"
+        type: string
       hybrid_ref:
         description: "hybridが借りる雲路探索のコミットSHA"
         required: true
@@ -145,6 +150,7 @@ jobs:
         env:
           E2_VARIANT: ${{ inputs.variant }}
           E2_DEPTH: ${{ inputs.depth }}
+          E2_TIME_LIMIT_MIN: ${{ inputs.time_limit_min }}
           FUKAJI_NNUE_SCALE: ${{ inputs.scale }}
           FUKAJI_NNUE_FILE: ${{ github.workspace }}/build/hybrid.bin
           HYB_ENGINE: ${{ github.workspace }}/build/hybrid/build/kumoji-hybrid

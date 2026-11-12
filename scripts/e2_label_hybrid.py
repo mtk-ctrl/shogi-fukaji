@@ -92,10 +92,15 @@ def main():
     print(f"shard {a.shard}: games {len(mine)}/{len(items)} planned positions {sum(len(pick_plies(x)) for x in mine)} depth {DEPTH}", flush=True)
     t0 = time.time(); rows = []
     with mp.get_context("fork").Pool(a.workers) as pool:
+        limit = float(os.environ.get("E2_TIME_LIMIT_MIN", "0")) * 60
         for n, r in enumerate(pool.imap_unordered(work, mine, chunksize=1), 1):
             rows += r
             if n % 25 == 0:
                 print(f"  {n}/{len(mine)} games, {len(rows)} labels, {time.time()-t0:.0f}s", flush=True)
+            if limit and time.time() - t0 > limit:  # 時間切れ: そこまでのラベルを出力して終える(部分出力)
+                print(f"time limit {limit/60:.0f} min reached at {n}/{len(mine)} games; writing partial labels", flush=True)
+                pool.terminate()
+                break
     a.out.mkdir(parents=True, exist_ok=True)
     with (a.out / f"labels-{a.shard:02d}.jsonl").open("w") as f:
         for r in rows:
