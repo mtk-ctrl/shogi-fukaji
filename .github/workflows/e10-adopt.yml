@@ -1,0 +1,163 @@
+name: E10 NNUE formal adoption (owner-approved 2026-11-13)
+# ユーザー承認済み(2026-11-13)。実runのartifact(最初200局・追試400局・学習報告)を検証してから正式採用する。
+# commit=false は検証のみ(dry run)。NNUE重み以外(探索・USI v0.4.1・C++)は変更しない。
+on:
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: "true=mainへ反映して公開 / false=検証のみ"
+        required: true
+        default: "false"
+        type: string
+      run_train:
+        description: "ハイブリッドラベル再学習のrun ID"
+        required: true
+        default: "43211652947"
+        type: string
+      run_e10:
+        description: "候補対E10ハイブリッド100局のrun ID"
+        required: true
+        default: "43226736910"
+        type: string
+      run_kumoji:
+        description: "候補対雲路100局のrun ID"
+        required: true
+        default: "43226755534"
+        type: string
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: fukaji-e10-adopt
+  cancel-in-progress: false
+jobs:
+  adopt:
+    if: github.repository == 'mtk-ctrl/shogi-fukaji'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - name: Contract and formal baseline check
+        run: |
+          python scripts/check_fukaji_contracts.py
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$(git rev-parse HEAD)"
+      - uses: actions/download-artifact@v4
+        with:
+          name: e2-trained-${{ inputs.run_train }}
+          path: in/trained
+          run-id: ${{ inputs.run_train }}
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: hybrid-result-${{ inputs.run_e10 }}
+          path: in/res_e10
+          run-id: ${{ inputs.run_e10 }}
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: hybrid-result-${{ inputs.run_kumoji }}
+          path: in/res_kumoji
+          run-id: ${{ inputs.run_kumoji }}
+          github-token: ${{ github.token }}
+      - name: Verify results, weights identity and Adam state (and prepare when commit=true)
+        run: |
+          set -euo pipefail
+          mkdir -p build
+          FLAG=""; if [ "${{ inputs.commit }}" = "true" ]; then FLAG="--commit"; fi
+          python scripts/e10_adopt.py --trained in/trained --result-e10 in/res_e10/result.json \
+            --result-kumoji in/res_kumoji/result.json --out build/e10-prepare $FLAG | tee build/e10-adopt.log
+          { echo '### E10 adoption'; echo '```json'; cat build/e10-prepare/receipt.json; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - name: Full regression and real USI play with the E10 weights
+        if: inputs.commit == 'true'
+        run: |
+          set -euo pipefail
+          python scripts/check_fukaji_contracts.py
+          python -m unittest discover -s tests -q
+          python -m compileall -q fukaji scripts
+          git diff --check
+          python scripts/verify_formal_release.py --out build/e10-usi-validation.json
+          python - <<'PY'
+          import json
+          d=json.load(open('build/e10-usi-validation.json'))
+          m=json.load(open('formal/model.json'))
+          assert d['version']=='FUKAJI v0.4.1' and d['search_backend_variant']=='d48_pvs_mate',d
+          assert d['research_mate_proof_verified'] is True and d['legal_usi_plies']>=30 and d['usi_games']==2,d
+          assert d['weights_sha256']==m['weights_sha256'],d
+          print('E10 real USI ok')
+          PY
+      - name: Commit to main with CAS
+        if: inputs.commit == 'true'
+        id: adoption
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$GITHUB_SHA" || { echo "main changed; abort"; exit 1; }
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f models/fukaji-e10.nnue.npz
+          git add formal/model.json research/d17-fast-self-learning/formal-contract.json
+          git add docs/現行エンジン仕様.md docs/00_開発ルーター.md docs/ROADMAP.md AGENTS.md
+          git add docs/decisions/2026-11-13_E10_ハイブリッド探索ラベル再学習NNUEを正式採用.md docs/モデル名対応表.md
+          git diff --cached --check
+          git diff --cached --name-only | tee build/e10-adopted-files.txt
+          test "$(git diff --cached --name-only | wc -l)" -eq 9
+          git commit -m "adopt(E10): promote hybrid-search-relabeled NNUE (hidden 128) after 83-17 vs E9 under hybrid search (owner-approved)"
+          sha="$(git rev-parse HEAD)"
+          git push origin HEAD:refs/heads/main
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$sha"
+          echo "source_sha=$sha" >> "$GITHUB_OUTPUT"
+      - name: Isolated bundle, USI check and release (with complete Adam state)
+        if: inputs.commit == 'true'
+        env:
+          SOURCE_SHA: ${{ steps.adoption.outputs.source_sha }}
+          TAG: fukaji-current-e10-pvs-mate-20261113
+        run: |
+          set -euo pipefail
+          python scripts/build_formal_bundle.py --out build/E10-FUKAJI-current-PVS-Mate.tar.gz --source-commit "$SOURCE_SHA"
+          mkdir -p build/iso && tar -xzf build/E10-FUKAJI-current-PVS-Mate.tar.gz -C build/iso
+          (cd build/iso/fukaji-v0.4.1 && python scripts/verify_formal_release.py --out e10-isolated-usi.json)
+          cp build/iso/fukaji-v0.4.1/e10-isolated-usi.json build/e10-isolated-usi.json
+          python - <<'PY'
+          import json
+          d=json.load(open('build/e10-isolated-usi.json')); m=json.load(open('formal/model.json'))
+          assert d['bundle_member_hashes_verified'] is True and d['research_mate_proof_verified'] is True,d
+          assert d['weights_sha256']==m['weights_sha256'] and d['legal_usi_plies']>=30,d
+          print('E10 isolated bundle ok')
+          PY
+          tar -czf build/E10-trained-state-Adam.tar.gz -C in/trained200 report.json cand-weights.npz models
+          cp build/e10-prepare/receipt.json build/E10-adoption-receipt.json
+          gh release create "$TAG" build/E10-FUKAJI-current-PVS-Mate.tar.gz build/E10-trained-state-Adam.tar.gz \
+            build/e10-usi-validation.json build/e10-isolated-usi.json build/E10-adoption-receipt.json \
+            --target "$SOURCE_SHA" --title 'FUKAJI v0.4.1 current E10 NNUE (hybrid-search-value relabel distillation) with PVS plus mate' \
+            --notes 'E10 NNUE adopted by owner approval. Search and USI unchanged. Previous E9 and earlier weights preserved in models/.'
+          mkdir -p build/rb
+          for f in E10-FUKAJI-current-PVS-Mate.tar.gz E10-trained-state-Adam.tar.gz e10-usi-validation.json e10-isolated-usi.json E10-adoption-receipt.json; do
+            src="build/$f"; gh release download "$TAG" --pattern "$f" --dir build/rb
+            test "$(sha256sum "$src"|cut -d' ' -f1)" = "$(sha256sum "build/rb/$f"|cut -d' ' -f1)"
+          done
+          echo "E10 adopted at $SOURCE_SHA; release readback OK" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e10-adopt-verification-${{ github.run_id }}
+          path: |
+            build/e10-prepare/receipt.json
+            build/e10-adopt.log
+            build/e10-usi-validation.json
+            build/e10-adopted-files.txt
+          if-no-files-found: warn
+          retention-days: 30
