@@ -69,12 +69,17 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install -r requirements.txt
+      - name: Candidate run id
+        if: startsWith(inputs.weights, 'run:')
+        run: |
+          W="${{ inputs.weights }}"
+          echo "CAND_RUN=${W#run:}" >> "$GITHUB_ENV"
       - uses: actions/download-artifact@v4
         if: startsWith(inputs.weights, 'run:')
         with:
-          name: e2-trained-${{ substr(inputs.weights, 4, 20) }}
+          name: e2-trained-${{ env.CAND_RUN }}
           path: cand
-          run-id: ${{ substr(inputs.weights, 4, 20) }}
+          run-id: ${{ env.CAND_RUN }}
           github-token: ${{ github.token }}
       - name: Build hybrid engine and plain KUMOJI
         run: |
