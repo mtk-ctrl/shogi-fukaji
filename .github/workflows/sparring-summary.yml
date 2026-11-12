@@ -1,0 +1,49 @@
+name: Sparring summary (read-only aggregate of round-sparring parts)
+# 研究専用・読み取りのみ。練習対局(e5-sparring-only)の勝敗を集計して表示する。
+on:
+  workflow_dispatch:
+    inputs:
+      parts_run:
+        description: "e5-sparring-only の run ID"
+        required: true
+        type: string
+      pairs:
+        description: "そのrunの開局ペア数"
+        required: true
+        type: string
+      kumoji_ref:
+        description: "arena.py部品の雲路コミット(そのrunと同じ)"
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+jobs:
+  summary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: mtk-ctrl/shogi-ai
+          ref: ${{ inputs.kumoji_ref }}
+          path: arena-src
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: round-sparring-*-${{ inputs.parts_run }}
+          path: build/parts
+          run-id: ${{ inputs.parts_run }}
+          github-token: ${{ github.token }}
+      - name: Aggregate
+        env:
+          PAIRS: ${{ inputs.pairs }}
+        run: |
+          python scripts/usi_match.py aggregate --parts build/parts --out build/result.json \
+            --label-a FUKAJI --label-b KUMOJI --expect-games $((PAIRS*2)) | tee build/summary.txt
+          { echo '```json'; cat build/result.json; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
