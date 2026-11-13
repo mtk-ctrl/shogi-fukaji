@@ -14,10 +14,11 @@
 
 namespace shogi::strategy {
 namespace nnue_hybrid {
-constexpr int kInputs = 2548, kHidden = 128;
+constexpr int kBaseInputs = 2548, kKingInputs = 17576, kHidden = 128;
 struct Model {
-    bool loaded = false, tried = false;
-    std::vector<float> w;                 // [kInputs][kHidden]
+    bool loaded = false, tried = false, king_relative = false;
+    int inputs = kBaseInputs;
+    std::vector<float> w;                 // [inputs][kHidden] (inputs = 2548, or 17576 with king-relative rows)
     std::array<float, kHidden> b{}, v{};
     float o = 0.f;
     double scale = 600.0;
@@ -35,9 +36,11 @@ inline void load_once() {
     char magic[8];
     std::uint32_t inputs = 0, hidden = 0;
     bool ok = std::fread(magic, 1, 8, f) == 8 && std::fread(&inputs, 4, 1, f) == 1 && std::fread(&hidden, 4, 1, f) == 1 &&
-              std::string(magic, 8) == "FKJNNUE1" && inputs == kInputs && hidden == kHidden;
+              std::string(magic, 8) == "FKJNNUE1" && (inputs == kBaseInputs || inputs == kKingInputs) && hidden == kHidden;
     if (ok) {
-        m.w.resize(std::size_t(kInputs) * kHidden);
+        m.inputs = int(inputs);
+        m.king_relative = inputs == kKingInputs;
+        m.w.resize(std::size_t(m.inputs) * kHidden);
         ok = std::fread(m.w.data(), 4, m.w.size(), f) == m.w.size() &&
              std::fread(m.b.data(), 4, kHidden, f) == kHidden && std::fread(m.v.data(), 4, kHidden, f) == kHidden &&
              std::fread(&m.o, 4, 1, f) == 1;
@@ -64,6 +67,11 @@ inline double logit_side_to_move(const rules::Snapshot& s) {
         const float* row = &m.w[std::size_t(idx) * kHidden];
         for (int h = 0; h < kHidden; ++h) acc[h] += row[h];
     };
+    int kings[2] = {-1, -1};                                  // python-shogi squares of the Black/White king
+    for (int sq = 0; sq < 81; ++sq) {
+        const auto& p = s.board[sq];
+        if (p.kind == 8) kings[p.color == rules::Color::Black ? 0 : 1] = (sq % 9) * 9 + (9 - (sq / 9 + 1));
+    }
     for (int sq = 0; sq < 81; ++sq) {
         const auto& p = s.board[sq];
         if (!p.kind) continue;
@@ -72,6 +80,18 @@ inline double logit_side_to_move(const rules::Snapshot& s) {
         const int owner = (p.color == rules::Color::Black ? 0 : 1) ^ persp;
         const int relative = persp ? 80 - py : py;
         add((owner * 14 + nnue_kind(p.kind, p.promoted) - 1) * 81 + relative);
+        // King-relative rows (fukaji.nnue_research.relative_piece_indices): anchor = own king, then enemy king.
+        if (m.king_relative && p.kind != 8) {
+            const int nk = nnue_kind(p.kind, p.promoted);
+            const int kind = nk - 1 - (nk > 8 ? 1 : 0);
+            const int direction = persp == 0 ? 1 : -1;
+            for (int anchor = 0; anchor < 2; ++anchor) {
+                const int king = kings[anchor == 0 ? persp : 1 - persp];
+                if (king < 0) continue;
+                const int row = direction * (py / 9 - king / 9) + 8, col = direction * (py % 9 - king % 9) + 8;
+                add(kBaseInputs + (((anchor * 2 + owner) * 13 + kind) * 17 + row) * 17 + col);
+            }
+        }
     }
     // KUMOJI hands order: P L N S B R G ; FUKAJI hand kind index: P L N S G B R (0..6).
     static constexpr int map_hand[7] = {0, 1, 2, 3, 5, 6, 4};
