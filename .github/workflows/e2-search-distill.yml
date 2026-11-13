@@ -45,6 +45,16 @@ on:
         required: true
         default: "42591748743"
         type: string
+      parts_prefix:
+        description: "局面の供給源artifactの接頭辞(round-sparring=練習対局 / hybrid-part=ハイブリッド対局)"
+        required: true
+        default: "round-sparring"
+        type: string
+      parts_run2:
+        description: "追加の供給源(hybrid-part-*)のrun ID。空なら無し"
+        required: false
+        default: ""
+        type: string
       parent_tag:
         description: "親(現行正式)の完全state(Adam)を含むReleaseタグ"
         required: true
@@ -125,9 +135,16 @@ jobs:
       - run: python scripts/check_fukaji_contracts.py
       - uses: actions/download-artifact@v4
         with:
-          pattern: round-sparring-*-${{ inputs.parts_run }}
+          pattern: ${{ inputs.parts_prefix }}-*-${{ inputs.parts_run }}
           path: input/parts
           run-id: ${{ inputs.parts_run }}
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@v4
+        if: inputs.parts_run2 != ''
+        with:
+          pattern: hybrid-part-*-${{ inputs.parts_run2 }}
+          path: input/parts
+          run-id: ${{ inputs.parts_run2 }}
           github-token: ${{ github.token }}
       - name: Download selfplay archives and verify SHA256
         run: |
@@ -197,9 +214,16 @@ jobs:
       - run: python scripts/check_fukaji_contracts.py
       - uses: actions/download-artifact@v4
         with:
-          pattern: round-sparring-*-${{ inputs.parts_run }}
+          pattern: ${{ inputs.parts_prefix }}-*-${{ inputs.parts_run }}
           path: input/parts
           run-id: ${{ inputs.parts_run }}
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@v4
+        if: inputs.parts_run2 != ''
+        with:
+          pattern: hybrid-part-*-${{ inputs.parts_run2 }}
+          path: input/parts
+          run-id: ${{ inputs.parts_run2 }}
           github-token: ${{ github.token }}
       - uses: actions/download-artifact@v4
         with:
