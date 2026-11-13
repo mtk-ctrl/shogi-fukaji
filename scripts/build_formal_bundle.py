@@ -22,7 +22,7 @@ def main():
     _,spec=load()
     files={p.relative_to(ROOT).as_posix():p for folder in ('fukaji','native')
            for p in (ROOT/folder).rglob('*') if p.is_file() and p.suffix in ('.py','.cpp','.h','.hpp')}
-    for name in ('requirements.txt','run-fukaji.sh','formal/model.json','docs/現行エンジン仕様.md',
+    for name in ('requirements.txt','run-fukaji.sh','run-fukaji-legacy.sh','scripts/run_hybrid.py','scripts/build_hybrid.py','scripts/hybrid_export_weights.py','research/hybrid/nnue_eval.h','research/hybrid/probe.cpp','THIRD_PARTY_NOTICES.md','LICENSE','formal/model.json','docs/現行エンジン仕様.md',
                  'docs/D34_FORMAL_NNUE_RELEASE_20261103.md','docs/decisions/2026-11-03_D33_NNUE正式採用.md',
                  'scripts/verify_formal_release.py',spec['weights_file']):
         files[name]=ROOT/name

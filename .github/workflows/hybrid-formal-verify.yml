@@ -1,0 +1,29 @@
+name: Hybrid formal engine verify (run-fukaji.sh 実起動検証)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    if: github.repository == 'mtk-ctrl/shogi-fukaji'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - name: Prepare (clone pinned KUMOJI, build hybrid, export weights)
+        run: python3 scripts/run_hybrid.py --prepare
+      - name: Verify
+        run: python3 scripts/verify_hybrid_release.py --out build/hybrid-verify.json | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Legacy engine still starts
+        run: |
+          printf 'usi\nisready\nquit\n' | ./run-fukaji-legacy.sh | tail -2
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hybrid-formal-verify-${{ github.run_id }}
+          path: build/hybrid-verify.json
+          if-no-files-found: warn

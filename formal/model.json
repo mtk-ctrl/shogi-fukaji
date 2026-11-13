@@ -10,6 +10,21 @@
   "comparison_release_sha256": "ddffb25bc9cb7cc8469bc9f3f9f9656c3eb2075d859c18a7767e208711419058",
   "default_move_time_ms": 100,
   "default_search_depth": 64,
+  "hybrid": {
+    "approved_by": "owner-approved hybrid as formal engine (2026-11-13)",
+    "approved_on": "2026-11-13",
+    "engine": "KUMOJI search (pinned commit) + FUKAJI formal NNUE evaluation",
+    "kumoji_ref": "1e08de520a02bd72b26a5510fb183c638211765f",
+    "kumoji_repo": "https://github.com/mtk-ctrl/shogi-ai",
+    "legacy_launcher": "run-fukaji-legacy.sh",
+    "nnue_scale": 600,
+    "recommended_usi_options": {
+      "AdaptiveLongThink": false,
+      "PositionKnowledge": false,
+      "USI_Ponder": false
+    },
+    "validation": "hybrid(E10) vs hybrid(E9) 83-17, vs KUMOJI 16-84 (100 games each, 200ms, same options); hybrid(E9) vs legacy formal E9 94-6; legacy search E10 vs E9 49-50"
+  },
   "model_distribution": "GitHub models/fukaji-e10.nnue.npz; complete Adam29173 in the E10 trained Release.",
   "optimizer_step": 29173,
   "quiescence": 0,

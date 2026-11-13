@@ -98,9 +98,9 @@ jobs:
           test -x kumoji-src/build/kumoji
       - name: Play FUKAJI(current formal) vs KUMOJI (equal 200 ms)
         run: |
-          chmod +x run-fukaji.sh
+          chmod +x run-fukaji-legacy.sh
           python scripts/usi_match.py play --kumoji kumoji-src/build/kumoji --kumoji-src kumoji-src \
-            --fukaji ./run-fukaji.sh --shard ${{ matrix.shard }} --shards 20 \
+            --fukaji ./run-fukaji-legacy.sh --shard ${{ matrix.shard }} --shards 20 \
             --pairs ${{ inputs.pairs }} --movetime-ms 200 --seed 202611093 --out build/part
       - uses: actions/upload-artifact@v4
         if: always()
@@ -191,8 +191,8 @@ jobs:
           path: cand
       - name: Engine wrappers (BASE=current formal (parent), CAND=new weights, identical search)
         run: |
-          chmod +x run-fukaji.sh
-          printf '#!/bin/sh\nexec "%s/run-fukaji.sh" "$@"\n' "$PWD" > /tmp/base.sh
+          chmod +x run-fukaji-legacy.sh
+          printf '#!/bin/sh\nexec "%s/run-fukaji-legacy.sh" "$@"\n' "$PWD" > /tmp/base.sh
           printf '#!/bin/sh\nexport FUKAJI_CAND_NPZ="%s/cand/cand-weights.npz"\nexec python3 "%s/scripts/fukaji_cand_engine.py" "$@"\n' "$PWD" "$PWD" > /tmp/cand.sh
           chmod +x /tmp/base.sh /tmp/cand.sh
           printf 'usi\nisready\nquit\n' | /tmp/base.sh | tail -2

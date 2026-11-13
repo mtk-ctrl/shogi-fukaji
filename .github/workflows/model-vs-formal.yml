@@ -60,9 +60,9 @@ jobs:
         run: |
           set -euo pipefail
           test -f "$WPATH"
-          chmod +x run-fukaji.sh
+          chmod +x run-fukaji-legacy.sh
           printf '#!/bin/sh\nexport FUKAJI_CAND_NPZ="%s/%s"\nexec python3 "%s/scripts/fukaji_cand_engine.py" "$@"\n' "$PWD" "$WPATH" "$PWD" > /tmp/old.sh
-          printf '#!/bin/sh\nexec "%s/run-fukaji.sh" "$@"\n' "$PWD" > /tmp/cur.sh
+          printf '#!/bin/sh\nexec "%s/run-fukaji-legacy.sh" "$@"\n' "$PWD" > /tmp/cur.sh
           chmod +x /tmp/old.sh /tmp/cur.sh
           printf 'usi\nisready\nquit\n' | /tmp/old.sh | tail -2
           printf 'usi\nisready\nquit\n' | /tmp/cur.sh | tail -2

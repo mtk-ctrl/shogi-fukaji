@@ -93,14 +93,14 @@ jobs:
       - name: Engine wrappers
         run: |
           set -euo pipefail
-          chmod +x run-fukaji.sh
+          chmod +x run-fukaji-legacy.sh
           printf '#!/bin/sh\nexport FUKAJI_NNUE_FILE="%s/build/hybrid.bin"\nexport FUKAJI_NNUE_SCALE="%s"\ncd "%s/build/hybrid"\nexec "%s/build/hybrid/build/kumoji-hybrid" "$@"\n' "$PWD" "${{ inputs.scale }}" "$PWD" "$PWD" > /tmp/a.sh
           if [ "${{ inputs.opponent }}" = "kumoji" ]; then
             printf '#!/bin/sh\ncd "%s/kumoji-src"\nexec "%s/kumoji-src/build/kumoji" "$@"\n' "$PWD" "$PWD" > /tmp/b.sh
           elif [ "${{ inputs.opponent }}" = "hybrid" ]; then
             printf '#!/bin/sh\nexport FUKAJI_NNUE_FILE="%s/build/hybrid-opp.bin"\nexport FUKAJI_NNUE_SCALE="%s"\ncd "%s/build/hybrid"\nexec "%s/build/hybrid/build/kumoji-hybrid" "$@"\n' "$PWD" "${{ inputs.scale }}" "$PWD" "$PWD" > /tmp/b.sh
           else
-            printf '#!/bin/sh\nexec "%s/run-fukaji.sh" "$@"\n' "$PWD" > /tmp/b.sh
+            printf '#!/bin/sh\nexec "%s/run-fukaji-legacy.sh" "$@"\n' "$PWD" > /tmp/b.sh
           fi
           chmod +x /tmp/a.sh /tmp/b.sh
           printf 'usi\nisready\nquit\n' | /tmp/a.sh | tail -2

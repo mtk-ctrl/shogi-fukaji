@@ -266,8 +266,8 @@ jobs:
           path: cand
       - name: Engine wrappers (BASE=current formal (parent), CAND=new weights, identical search)
         run: |
-          chmod +x run-fukaji.sh
-          printf '#!/bin/sh\nexec "%s/run-fukaji.sh" "$@"\n' "$PWD" > /tmp/base.sh
+          chmod +x run-fukaji-legacy.sh
+          printf '#!/bin/sh\nexec "%s/run-fukaji-legacy.sh" "$@"\n' "$PWD" > /tmp/base.sh
           printf '#!/bin/sh\nexport FUKAJI_CAND_NPZ="%s/cand/cand-weights.npz"\nexec python3 "%s/scripts/fukaji_cand_engine.py" "$@"\n' "$PWD" "$PWD" > /tmp/cand.sh
           chmod +x /tmp/base.sh /tmp/cand.sh
           printf 'usi\nisready\nquit\n' | /tmp/base.sh | tail -2

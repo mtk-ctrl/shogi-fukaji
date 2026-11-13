@@ -51,9 +51,9 @@ jobs:
           test -x kumoji-src/build/kumoji
       - name: Play FUKAJI(current formal) vs KUMOJI (equal 200 ms)
         run: |
-          chmod +x run-fukaji.sh
+          chmod +x run-fukaji-legacy.sh
           python scripts/usi_match.py play --kumoji kumoji-src/build/kumoji --kumoji-src kumoji-src \
-            --fukaji ./run-fukaji.sh --shard ${{ matrix.shard }} --shards 20 \
+            --fukaji ./run-fukaji-legacy.sh --shard ${{ matrix.shard }} --shards 20 \
             --pairs ${{ inputs.pairs }} --movetime-ms 200 --seed ${{ inputs.seed }} --out build/part
       - uses: actions/upload-artifact@v4
         if: always()

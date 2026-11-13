@@ -1,6 +1,6 @@
 name: Model pair match (two trained candidates or formal, optional long-think)
 # 研究専用。h-wide等の学習runの cand-weights.npz どうしを、同一探索・同一開局(先後交替)で比べる。
-# a_run/b_run が "formal" なら現行正式(run-fukaji.sh)を使う。longthink_ms>0 で本人指示の長考(各陣営最大10回)を適用。
+# a_run/b_run が "formal" なら現行正式(run-fukaji-legacy.sh)を使う。longthink_ms>0 で本人指示の長考(各陣営最大10回)を適用。
 on:
   workflow_dispatch:
     inputs:
@@ -85,10 +85,10 @@ jobs:
           github-token: ${{ github.token }}
       - name: Engine wrappers
         run: |
-          chmod +x run-fukaji.sh
+          chmod +x run-fukaji-legacy.sh
           mk() { # name run dir
             if [ "$2" = "formal" ]; then
-              printf '#!/bin/sh\nexec "%s/run-fukaji.sh" "$@"\n' "$PWD" > /tmp/$1.sh
+              printf '#!/bin/sh\nexec "%s/run-fukaji-legacy.sh" "$@"\n' "$PWD" > /tmp/$1.sh
             elif [ "${2#file:}" != "$2" ]; then  # file:<repo内の推論用npz> (例 file:models/fukaji-d45.nnue.npz)
               printf '#!/bin/sh\nexport FUKAJI_CAND_NPZ="%s/%s"\nexec python3 "%s/scripts/fukaji_cand_engine.py" "$@"\n' "$PWD" "${2#file:}" "$PWD" > /tmp/$1.sh
             else

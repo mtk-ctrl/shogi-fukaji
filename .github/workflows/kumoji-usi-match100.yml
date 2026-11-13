@@ -72,10 +72,10 @@ jobs:
           sha256sum kumoji-src/build/kumoji
       - name: Play paired games (equal movetime, no pondering, no long think)
         run: |
-          chmod +x run-fukaji.sh
+          chmod +x run-fukaji-legacy.sh
           python scripts/usi_match.py play \
             --kumoji kumoji-src/build/kumoji --kumoji-src kumoji-src \
-            --fukaji ./run-fukaji.sh \
+            --fukaji ./run-fukaji-legacy.sh \
             --shard ${{ matrix.shard }} --shards ${{ inputs.shards }} \
             --pairs 50 --movetime-ms ${{ inputs.movetime_ms }} --out build/part
       - uses: actions/upload-artifact@v4
