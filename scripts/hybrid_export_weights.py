@@ -5,7 +5,7 @@ import numpy as np
 p = argparse.ArgumentParser(); p.add_argument("npz"); p.add_argument("out"); a = p.parse_args()
 with np.load(a.npz, allow_pickle=False) as d:
     w, b, v, o = d["w"].astype("<f4"), d["b"].astype("<f4"), d["v"].astype("<f4"), d["o"].astype("<f4")
-assert w.shape in ((2548, 128), (17576, 128)) and b.shape == (128,) and v.shape == (128,) and o.shape == (1,)
+assert w.shape in ((2548, 128), (17576, 128), (3848, 128)) and b.shape == (128,) and v.shape == (128,) and o.shape == (1,)
 with open(a.out, "wb") as f:
     f.write(b"FKJNNUE1" + struct.pack("<II", w.shape[0], 128))
     f.write(w.tobytes()); f.write(b.tobytes()); f.write(v.tobytes()); f.write(o.tobytes())

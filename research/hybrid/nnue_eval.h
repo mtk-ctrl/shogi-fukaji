@@ -14,9 +14,9 @@
 
 namespace shogi::strategy {
 namespace nnue_hybrid {
-constexpr int kBaseInputs = 2548, kKingInputs = 17576, kHidden = 128;
+constexpr int kBaseInputs = 2548, kKingInputs = 17576, kZoneInputs = 3848, kHidden = 128;
 struct Model {
-    bool loaded = false, tried = false, king_relative = false;
+    bool loaded = false, tried = false, king_relative = false, king_zone = false;
     int inputs = kBaseInputs;
     std::vector<float> w;                 // [inputs][kHidden] (inputs = 2548, or 17576 with king-relative rows)
     std::array<float, kHidden> b{}, v{};
@@ -36,10 +36,11 @@ inline void load_once() {
     char magic[8];
     std::uint32_t inputs = 0, hidden = 0;
     bool ok = std::fread(magic, 1, 8, f) == 8 && std::fread(&inputs, 4, 1, f) == 1 && std::fread(&hidden, 4, 1, f) == 1 &&
-              std::string(magic, 8) == "FKJNNUE1" && (inputs == kBaseInputs || inputs == kKingInputs) && hidden == kHidden;
+              std::string(magic, 8) == "FKJNNUE1" && (inputs == kBaseInputs || inputs == kKingInputs || inputs == kZoneInputs) && hidden == kHidden;
     if (ok) {
         m.inputs = int(inputs);
         m.king_relative = inputs == kKingInputs;
+        m.king_zone = inputs == kZoneInputs;
         m.w.resize(std::size_t(m.inputs) * kHidden);
         ok = std::fread(m.w.data(), 4, m.w.size(), f) == m.w.size() &&
              std::fread(m.b.data(), 4, kHidden, f) == kHidden && std::fread(m.v.data(), 4, kHidden, f) == kHidden &&
@@ -81,13 +82,19 @@ inline double logit_side_to_move(const rules::Snapshot& s) {
         const int relative = persp ? 80 - py : py;
         add((owner * 14 + nnue_kind(p.kind, p.promoted) - 1) * 81 + relative);
         // King-relative rows (fukaji.nnue_research.relative_piece_indices): anchor = own king, then enemy king.
-        if (m.king_relative && p.kind != 8) {
+        if ((m.king_relative || m.king_zone) && p.kind != 8) {
             const int nk = nnue_kind(p.kind, p.promoted);
             const int kind = nk - 1 - (nk > 8 ? 1 : 0);
             const int direction = persp == 0 ? 1 : -1;
             for (int anchor = 0; anchor < 2; ++anchor) {
                 const int king = kings[anchor == 0 ? persp : 1 - persp];
                 if (king < 0) continue;
+                if (m.king_zone) {   // 玉周辺±2升(5x5)のみ
+                    const int dr = direction * (py / 9 - king / 9), dc = direction * (py % 9 - king % 9);
+                    if (dr < -2 || dr > 2 || dc < -2 || dc > 2) continue;
+                    add(kBaseInputs + (((anchor * 2 + owner) * 13 + kind) * 5 + dr + 2) * 5 + dc + 2);
+                    continue;
+                }
                 const int row = direction * (py / 9 - king / 9) + 8, col = direction * (py % 9 - king % 9) + 8;
                 add(kBaseInputs + (((anchor * 2 + owner) * 13 + kind) * 17 + row) * 17 + col);
             }

@@ -18,6 +18,10 @@ HAND_BASE = 81 * PIECES * 2
 HAND_LIMIT = 20
 KING_RELATIVE_INPUTS = 2 * 2 * (PIECES - 1) * 17 * 17
 KING_INPUTS = INPUTS + KING_RELATIVE_INPUTS
+ZONE_RADIUS = 2
+ZONE_SIDE = 2 * ZONE_RADIUS + 1
+KING_ZONE_INPUTS = 2 * 2 * (PIECES - 1) * ZONE_SIDE * ZONE_SIDE  # 玉周辺±2升のみ(1300入力)
+ZONE_INPUTS = INPUTS + KING_ZONE_INPUTS
 
 
 def _piece_index(piece, square, perspective):
@@ -71,6 +75,34 @@ def relative_piece_indices(piece, square, perspective, kings):
     return result
 
 
+def zone_piece_indices(piece, square, perspective, kings):
+    """玉周辺(±ZONE_RADIUS升)にある駒だけの小さな玉相対特徴。並びは relative_piece_indices と同じ。"""
+    if piece.piece_type == shogi.KING:
+        return []
+    kind = piece.piece_type - 1 - int(piece.piece_type > shogi.KING)
+    owner = int(piece.color) ^ int(perspective)
+    direction = 1 if perspective == shogi.BLACK else -1
+    result = []
+    for anchor, color in enumerate((perspective, 1-perspective)):
+        king = kings[color]
+        if king is None:
+            continue
+        dr = direction * (square//9 - king//9)
+        dc = direction * (square%9 - king%9)
+        if abs(dr) <= ZONE_RADIUS and abs(dc) <= ZONE_RADIUS:
+            result.append(INPUTS + (((anchor*2 + owner)*(PIECES-1) + kind)*ZONE_SIDE + dr + ZONE_RADIUS)*ZONE_SIDE + dc + ZONE_RADIUS)
+    return result
+
+
+def king_zone_indices(board, perspective):
+    result = []
+    for square in range(81):
+        piece = board.piece_at(square)
+        if piece is not None:
+            result.extend(zone_piece_indices(piece, square, perspective, board.king_squares))
+    return result
+
+
 def king_relative_indices(board, perspective):
     result = []
     for square in range(81):
@@ -88,7 +120,7 @@ class SmallNNUE:
         b = np.asarray(hidden_bias, dtype=np.float32)
         v = np.asarray(output_weights, dtype=np.float32)
         o = float(output_bias)
-        if (w.shape not in ((INPUTS, HIDDEN), (KING_INPUTS, HIDDEN)) or b.shape != (HIDDEN,) or
+        if (w.shape not in ((INPUTS, HIDDEN), (KING_INPUTS, HIDDEN), (ZONE_INPUTS, HIDDEN)) or b.shape != (HIDDEN,) or
                 v.shape != (HIDDEN,) or not np.isfinite(w).all() or
                 not np.isfinite(b).all() or not np.isfinite(v).all() or
                 not np.isfinite(o)):
@@ -99,9 +131,12 @@ class SmallNNUE:
         self.output_bias = o
         self.inputs = w.shape[0]
         self.king_relative = self.inputs == KING_INPUTS
+        self.king_zone = self.inputs == ZONE_INPUTS
 
     def active_indices(self, board, perspective):
         base = active_indices(board, perspective)
+        if self.king_zone:
+            return base + king_zone_indices(board, perspective)
         return base + king_relative_indices(board, perspective) if self.king_relative else base
 
     @classmethod
@@ -118,8 +153,8 @@ class SmallNNUE:
         if indexes:
             result += self.hidden_weights[indexes].astype(np.float64).sum(axis=0)
         # Sum separately: a zero extension preserves the old accumulator exactly.
-        if self.king_relative:
-            relative = king_relative_indices(board, perspective)
+        if self.king_relative or self.king_zone:
+            relative = (king_zone_indices if self.king_zone else king_relative_indices)(board, perspective)
             if relative:
                 result += self.hidden_weights[relative].astype(np.float64).sum(axis=0)
         return result

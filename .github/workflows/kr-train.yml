@@ -17,6 +17,11 @@ on:
         required: true
         default: "0.2"
         type: string
+      feature_set:
+        description: "king=玉相対17x17(+15028入力) / zone=玉周辺±2升(+1300入力)"
+        required: true
+        default: "zone"
+        type: string
       parent_tag:
         description: "親(E10)の完全stateを含むReleaseタグ"
         required: true
@@ -95,7 +100,7 @@ jobs:
             --parent-models input/parent/models --parts input/parts \
             --archives input/archives/D66-D64-1000games.tar.gz input/archives/D68-D66-1000games.tar.gz \
             --labels input/labels1 input/labels2 --out trained --epochs ${{ inputs.epochs }} --lr ${{ inputs.lr }} \
-            --outcome-weight ${{ inputs.outcome_weight }} | tee train.log
+            --outcome-weight ${{ inputs.outcome_weight }} --feature-set ${{ inputs.feature_set }} | tee train.log
           python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
           import json
           print('### E11 king-relative train');print('```json');print(json.dumps(json.load(open('trained/report.json')),indent=1,ensure_ascii=False));print('```')

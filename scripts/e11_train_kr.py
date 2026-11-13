@@ -7,7 +7,7 @@ from pathlib import Path
 import argparse, hashlib, json, sys, tarfile
 import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from fukaji.online_learning import atomic_json, load_snapshot, save_snapshot, fit, validate_game, parameters, expand_king_relative
+from fukaji.online_learning import atomic_json, load_snapshot, save_snapshot, fit, validate_game, parameters, expand_king_relative, expand_king_zone
 from scripts.e1_train import pad, heldout_loss
 from scripts.e2_data import load_games
 
@@ -23,6 +23,7 @@ def main():
     p.add_argument("--epochs", type=int, default=2)
     p.add_argument("--lr", type=float, default=.00005)
     p.add_argument("--outcome-weight", type=float, default=.2)
+    p.add_argument("--feature-set", choices=["king", "zone"], default="king")
     p.add_argument("--seed", type=int, default=20261111)
     a = p.parse_args()
     formal = json.loads(Path("formal/model.json").read_text())
@@ -34,7 +35,7 @@ def main():
     base, base_opt, _ = load_snapshot(md, BASE)
     if base_opt is None or base_opt["step"] != formal["optimizer_step"]:
         raise SystemExit("Adam state missing or step differs from formal")
-    parent, opt = expand_king_relative(base, base_opt)   # 拡張直後の評価は親E10と一致(新規行ゼロ)
+    parent, opt = (expand_king_zone if a.feature_set == "zone" else expand_king_relative)(base, base_opt)   # 拡張直後の評価は親E10と一致(新規行ゼロ)
     labels = {}
     for d in a.labels:  # 後に並べたラベルが同じ局面を上書き(新しい教師を後ろへ)
         for f in sorted(d.rglob("labels-*.jsonl")):
@@ -76,7 +77,7 @@ def main():
               "train_positions": int(len(ty)), "heldout_positions": int(len(hy)),
               "outcome_weight": a.outcome_weight, "heldout_before": before, "heldout_after": after,
               "gate": "pass" if gate else "fail", "epochs": a.epochs, "lr": a.lr,
-              "optimizer_step_after": opt2["step"], "strength_proven": False, "formal_model_changed": False, "inputs": int(parent.inputs)}
+              "optimizer_step_after": opt2["step"], "strength_proven": False, "formal_model_changed": False, "inputs": int(parent.inputs), "feature_set": a.feature_set}
     atomic_json(a.out / "report.json", report)
     print(json.dumps(report, ensure_ascii=False), flush=True)
 
