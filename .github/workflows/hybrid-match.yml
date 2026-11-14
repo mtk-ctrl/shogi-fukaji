@@ -9,7 +9,7 @@ on:
         default: "kumoji"
         type: string
       opp_weights:
-        description: "opponent=hybrid のときの相手NNUE(リポジトリ内の推論npz)"
+        description: "opponent=hybrid のときの相手NNUE(リポジトリ内の推論npz、または run:<学習run ID>)"
         required: true
         default: "models/fukaji-e9.nnue.npz"
         type: string
@@ -81,6 +81,18 @@ jobs:
           path: cand
           run-id: ${{ env.CAND_RUN }}
           github-token: ${{ github.token }}
+      - name: Opponent candidate run id
+        if: startsWith(inputs.opp_weights, 'run:')
+        run: |
+          W="${{ inputs.opp_weights }}"
+          echo "OPP_RUN=${W#run:}" >> "$GITHUB_ENV"
+      - uses: actions/download-artifact@v4
+        if: startsWith(inputs.opp_weights, 'run:')
+        with:
+          name: e2-trained-${{ env.OPP_RUN }}
+          path: opp-cand
+          run-id: ${{ env.OPP_RUN }}
+          github-token: ${{ github.token }}
       - name: Build hybrid engine and plain KUMOJI
         run: |
           set -euo pipefail
@@ -89,7 +101,9 @@ jobs:
           W="${{ inputs.weights }}"
           if [ "${W#run:}" != "$W" ]; then W=cand/cand-weights.npz; fi
           python scripts/hybrid_export_weights.py "$W" build/hybrid.bin
-          python scripts/hybrid_export_weights.py "${{ inputs.opp_weights }}" build/hybrid-opp.bin
+          O="${{ inputs.opp_weights }}"
+          if [ "${O#run:}" != "$O" ]; then O=opp-cand/cand-weights.npz; fi
+          python scripts/hybrid_export_weights.py "$O" build/hybrid-opp.bin
       - name: Engine wrappers
         run: |
           set -euo pipefail
