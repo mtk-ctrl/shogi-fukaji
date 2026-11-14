@@ -101,3 +101,7 @@ ChatGPT・Claude等は同じRuleと同じGitHub正本を使う。まず[開発�
 ## 最新正式NNUE（E10、2026-11-13）
 
 正式E10／Adam29173、snapshot c7eb865f9800bc75c7067c37d69a750ae9b32a824d1ddeb21f5a3bc9ff60a72f。E10 ハイブリッド探索下(雲路の探索＋深路NNUE, 1手2秒相当・同一探索)で対E9 83-17(100局)、対雲路最新 16-84(100局。E9は4-96)。NNUEのみ更新、旧E9以前を保全。
+
+## 最新正式NNUE（E11、2026-11-14）
+
+正式E11／Adam49207、snapshot 9f1b65eb0b98af31400ad05bdff471690121d03ec7ef748e2ee067442c611cd3。E11 ハイブリッド(雲路の探索＋深路NNUE, 200ms・同一探索・各100局)で対E10 84-16、対雲路 36-64(E10は16-84)、同じデータで現行特徴のまま学習した候補に 64-36。正式エンジン(ハイブリッド)の重みは formal/model.json の hybrid節(`models/fukaji-e11.nnue.npz`)。旧エンジン(legacy)はE10のまま。次の学習は g1-gen.yml → g1-train.yml(親E11) → hybrid-match.yml。
