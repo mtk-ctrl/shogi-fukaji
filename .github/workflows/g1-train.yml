@@ -1,0 +1,90 @@
+name: G1 train on mass data (大量自己対局データで親=現行正式NNUEから学習。研究専用・正式版は変更しない)
+on:
+  workflow_dispatch:
+    inputs:
+      data_runs:
+        description: "G1 mass data generation の run ID(空白区切りで複数可)"
+        required: true
+        type: string
+      feature_set:
+        description: "base=現行特徴 / zone=玉周辺±2升 / king=玉相対17x17"
+        required: true
+        default: "base"
+        type: string
+      outcome_weight:
+        description: "対局結果の混合比(0〜1)"
+        required: true
+        default: "0.2"
+        type: string
+      epochs:
+        description: "エポック数"
+        required: true
+        default: "1"
+        type: string
+      lr:
+        description: "学習率"
+        required: true
+        default: "0.0002"
+        type: string
+      batch:
+        description: "バッチサイズ"
+        required: true
+        default: "256"
+        type: string
+      max_games:
+        description: "使う棋譜数の上限(0=全部)"
+        required: true
+        default: "0"
+        type: string
+      parent_tag:
+        description: "親の完全stateを含むReleaseタグ"
+        required: true
+        default: "fukaji-current-e10-pvs-mate-20261113"
+        type: string
+      parent_asset:
+        description: "親のstate資産名"
+        required: true
+        default: "E10-trained-state-Adam.tar.gz"
+        type: string
+permissions:
+  contents: read
+  actions: read
+jobs:
+  train:
+    if: github.repository == 'mtk-ctrl/shogi-fukaji'
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt scipy
+      - name: Download data and parent state
+        run: |
+          set -euo pipefail
+          for r in ${{ inputs.data_runs }}; do
+            gh run download "$r" --pattern 'g1-data-*' --dir "input/data/$r"
+          done
+          gh release download ${{ inputs.parent_tag }} --pattern ${{ inputs.parent_asset }} --dir input
+          mkdir -p input/parent && tar -xzf input/${{ inputs.parent_asset }} -C input/parent models
+      - name: Train
+        run: |
+          set -euo pipefail
+          python -u scripts/g1_train.py --parent-models input/parent/models --data input/data --out trained \
+            --feature-set ${{ inputs.feature_set }} --outcome-weight ${{ inputs.outcome_weight }} --epochs ${{ inputs.epochs }} \
+            --lr ${{ inputs.lr }} --batch ${{ inputs.batch }} --max-games ${{ inputs.max_games }} | tee train.log
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          print('### G1 train');print('```json');print(json.dumps(json.load(open('trained/report.json')),indent=1,ensure_ascii=False));print('```')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: e2-trained-${{ github.run_id }}
+          path: |
+            trained/cand-weights.npz
+            trained/report.json
+            trained/models
+          retention-days: 60

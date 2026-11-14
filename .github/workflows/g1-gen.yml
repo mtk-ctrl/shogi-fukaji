@@ -1,0 +1,76 @@
+name: G1 mass data generation (ハイブリッド短時間自己対局で学習局面を大量生成。研究専用・正式版は変更しない)
+# 教師は深路NNUE＋借用探索の評価値と勝敗のみ。雲路の評価値・定跡・局面知識は使わない。
+on:
+  workflow_dispatch:
+    inputs:
+      weights:
+        description: "自己対局に使うNNUE推論npz(リポジトリ内)"
+        required: true
+        default: "models/fukaji-e10.nnue.npz"
+        type: string
+      minutes:
+        description: "1ランナーあたりの生成時間(分)。20ランナー×全コア"
+        required: true
+        default: "60"
+        type: string
+      movetime_ms:
+        description: "1手の時間(ms)"
+        required: true
+        default: "50"
+        type: string
+      seed:
+        description: "乱数シード(実行ごとに変える)"
+        required: true
+        default: "2026111401"
+        type: string
+      kumoji_ref:
+        description: "雲路のコミットSHA(探索の借用元)"
+        required: true
+        default: "1e08de520a02bd72b26a5510fb183c638211765f"
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: fukaji-g1-gen
+  cancel-in-progress: false
+jobs:
+  gen:
+    if: github.repository == 'mtk-ctrl/shogi-fukaji'
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        shard: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: mtk-ctrl/shogi-ai
+          ref: ${{ inputs.kumoji_ref }}
+          path: kumoji-src
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - name: Build hybrid engine
+        run: |
+          set -euo pipefail
+          python scripts/build_hybrid.py --kumoji-src kumoji-src --work build/hybrid
+          python scripts/hybrid_export_weights.py "${{ inputs.weights }}" build/hybrid.bin
+      - name: Generate
+        env:
+          FUKAJI_NNUE_SCALE: '600'
+        run: |
+          set -euo pipefail
+          export HYB_ENGINE="$PWD/build/hybrid/build/kumoji-hybrid" HYB_CWD="$PWD/build/hybrid" FUKAJI_NNUE_FILE="$PWD/build/hybrid.bin"
+          python -u scripts/g1_gen.py --shard ${{ matrix.shard }} --seed ${{ inputs.seed }} --minutes ${{ inputs.minutes }} \
+            --movetime-ms ${{ inputs.movetime_ms }} --out data
+          cat data/summary-*.json >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: g1-data-${{ matrix.shard }}-${{ github.run_id }}
+          path: data
+          retention-days: 60
