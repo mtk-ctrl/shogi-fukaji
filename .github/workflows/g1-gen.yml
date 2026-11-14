@@ -18,6 +18,11 @@ on:
         required: true
         default: "50"
         type: string
+      opponent:
+        description: "self=自己対局 / kumoji=雲路本体を練習相手にする(雲路の評価値は記録しない。深路の手番の探索値と勝敗だけ)"
+        required: true
+        default: "self"
+        type: string
       seed:
         description: "乱数シード(実行ごとに変える)"
         required: true
@@ -67,7 +72,7 @@ jobs:
           set -euo pipefail
           export HYB_ENGINE="$PWD/build/hybrid/build/kumoji-hybrid" HYB_CWD="$PWD/build/hybrid" FUKAJI_NNUE_FILE="$PWD/build/hybrid.bin"
           python -u scripts/g1_gen.py --shard ${{ matrix.shard }} --seed ${{ inputs.seed }} --minutes ${{ inputs.minutes }} \
-            --movetime-ms ${{ inputs.movetime_ms }} --out data
+            --movetime-ms ${{ inputs.movetime_ms }} --opponent ${{ inputs.opponent }} --out data
           cat data/summary-*.json >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         with:

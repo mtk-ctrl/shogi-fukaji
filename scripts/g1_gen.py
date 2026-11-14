@@ -14,11 +14,15 @@ INFO = re.compile(r"info depth (\d+) .*?score (cp|mate) (-?\d+)")
 
 
 class Engine:
-    def __init__(self):
-        self.p = subprocess.Popen([os.environ["HYB_ENGINE"]], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+    def __init__(self, kumoji=False):
+        """kumoji=True: 同じ実行ファイルをNNUEなしで起動＝雲路本体(練習相手。局面知識は相手本来の設定で有効)。"""
+        env = dict(os.environ)
+        if kumoji:
+            env.pop("FUKAJI_NNUE_FILE", None)
+        self.p = subprocess.Popen([os.environ["HYB_ENGINE"]], stdin=subprocess.PIPE, stdout=subprocess.PIPE, env=env,
                                   stderr=subprocess.DEVNULL, text=True, cwd=os.environ.get("HYB_CWD") or None, bufsize=1)
         self.send("usi"); self.wait("usiok")
-        for name in ("PositionKnowledge", "USI_Ponder", "AdaptiveLongThink"):
+        for name in ("USI_Ponder", "AdaptiveLongThink") + (() if kumoji else ("PositionKnowledge",)):
             self.send(f"setoption name {name} value false")
         self.send("isready"); self.wait("readyok")
 
@@ -52,7 +56,8 @@ def key(board):
     return " ".join(board.sfen().split()[:3])
 
 
-def play(engine, rng, opening_plies, movetime, max_plies):
+def play(engine, rng, opening_plies, movetime, max_plies, opp=None, hybrid_color=None):
+    """opp(雲路本体)があれば hybrid_color 側だけ深路が指す。相手番の評価値は記録しない(雲路の評価を教師にしない)。"""
     while True:   # 定跡なしのランダム開局
         board, moves = shogi.Board(), []
         for _ in range(opening_plies):
@@ -63,12 +68,17 @@ def play(engine, rng, opening_plies, movetime, max_plies):
         if len(moves) == opening_plies and not board.is_check() and any(board.legal_moves):
             break
     engine.send("usinewgame")
+    if opp:
+        opp.send("usinewgame")
     scores = [None] * opening_plies
     seen = {}
     for k in (key(board),):
         seen[k] = 1
     while len(moves) < max_plies:
-        token, score = engine.go(moves, movetime)
+        if opp and int(board.turn) != hybrid_color:
+            token, score = opp.go(moves, movetime)[0], None
+        else:
+            token, score = engine.go(moves, movetime)
         if token == "resign":
             return moves, scores, int(board.turn ^ 1), "resign"
         if token == "win":
@@ -89,10 +99,12 @@ def worker(args):
     wid, a = args
     rng = random.Random(a.seed * 100003 + a.shard * 1009 + wid)
     engine = Engine()
+    opp = Engine(kumoji=True) if a.opponent == "kumoji" else None
     out, t0, positions = [], time.time(), 0
     while time.time() - t0 < a.minutes * 60 and len(out) < a.max_games:
-        moves, scores, winner, reason = play(engine, rng, a.opening_plies, a.movetime_ms, a.max_plies)
-        out.append({"k": a.opening_plies, "m": moves, "s": scores, "w": winner, "r": reason})
+        hc = len(out) % 2 if opp else None
+        moves, scores, winner, reason = play(engine, rng, a.opening_plies, a.movetime_ms, a.max_plies, opp, hc)
+        out.append({"k": a.opening_plies, "m": moves, "s": scores, "w": winner, "r": reason, **({"h": hc} if opp else {})})
         positions += sum(s is not None for s in scores)
         if len(out) % 50 == 0:
             print(f"worker {wid}: games {len(out)} positions {positions} elapsed {time.time()-t0:.0f}s", flush=True)
@@ -112,6 +124,7 @@ def main():
     p.add_argument("--opening-plies", type=int, default=8)
     p.add_argument("--max-plies", type=int, default=320)
     p.add_argument("--max-games", type=int, default=10**9)
+    p.add_argument("--opponent", choices=["self", "kumoji"], default="self")
     p.add_argument("--workers", type=int, default=os.cpu_count() or 2)
     p.add_argument("--out", type=Path, required=True)
     a = p.parse_args()
@@ -126,7 +139,8 @@ def main():
     for g in games:
         reasons[g["r"]] = reasons.get(g["r"], 0) + 1
     summary = {"schema": "g1-gen-part-v1", "shard": a.shard, "seed": a.seed, "movetime_ms": a.movetime_ms, "games": len(games),
-               "positions": sum(sum(s is not None for s in g["s"]) for g in games), "reasons": reasons,
+               "positions": sum(sum(s is not None for s in g["s"]) for g in games), "reasons": reasons, "opponent": a.opponent,
+               "hybrid_wins": sum(g.get("h") is not None and g["w"] == g["h"] for g in games),
                "mean_plies": sum(len(g["m"]) for g in games) / max(1, len(games))}
     (a.out / f"summary-{a.shard:02d}.json").write_text(json.dumps(summary, ensure_ascii=False) + "\n")
     print(json.dumps(summary, ensure_ascii=False), flush=True)
