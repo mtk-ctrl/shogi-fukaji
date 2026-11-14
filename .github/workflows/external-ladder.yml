@@ -112,8 +112,9 @@ jobs:
           from pathlib import Path
           spec=json.loads(Path("formal/model.json").read_text())
           info=dict(kumoji_ref=spec["hybrid"]["kumoji_ref"], nnue_scale=spec["hybrid"]["nnue_scale"],
-                    weights_file=spec["weights_file"], weights_sha256=spec["weights_sha256"],
-                    snapshot_sha256=spec["research_snapshot_sha256"],
+                    weights_file=spec["hybrid"].get("weights_file", spec["weights_file"]),
+                    weights_sha256=spec["hybrid"].get("weights_sha256", spec["weights_sha256"]),
+                    snapshot_sha256=spec["hybrid"].get("research_snapshot_sha256", spec["research_snapshot_sha256"]),
                     engine_sha256=hashlib.sha256(Path("build/hybrid/build/kumoji-hybrid").read_bytes()).hexdigest(),
                     weights_bin_sha256=hashlib.sha256(Path("build/fukaji-hybrid-weights.bin").read_bytes()).hexdigest())
           Path("build/ladder-engine.json").write_text(json.dumps(info,indent=2)+"\n")

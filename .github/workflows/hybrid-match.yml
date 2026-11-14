@@ -11,12 +11,12 @@ on:
       opp_weights:
         description: "opponent=hybrid のときの相手NNUE(リポジトリ内の推論npz、または run:<学習run ID>)"
         required: true
-        default: "models/fukaji-e9.nnue.npz"
+        default: "models/fukaji-e11.nnue.npz"
         type: string
       weights:
         description: "リポジトリ内のNNUE推論npz、または run:<蒸留run ID>(その候補cand-weights.npz)"
         required: true
-        default: "models/fukaji-e9.nnue.npz"
+        default: "models/fukaji-e11.nnue.npz"
         type: string
       scale:
         description: "NNUE評価のcp換算(1ロジット=何cp)"

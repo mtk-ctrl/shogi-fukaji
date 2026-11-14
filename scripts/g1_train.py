@@ -105,24 +105,32 @@ def main():
     p.add_argument("--lr", type=float, default=.0002)
     p.add_argument("--batch", type=int, default=256)
     p.add_argument("--outcome-weight", type=float, default=.2)
-    p.add_argument("--feature-set", choices=["base", "zone", "king"], default="base")
+    p.add_argument("--feature-set", choices=["base", "zone", "king"], default="zone")
     p.add_argument("--scale", type=float, default=600.)
     p.add_argument("--min-ply", type=int, default=8)
     p.add_argument("--max-games", type=int, default=0)
     p.add_argument("--seed", type=int, default=20261114)
     a = p.parse_args()
     formal = json.loads(Path("formal/model.json").read_text())
-    BASE = formal["research_snapshot_sha256"]
+    hyb = formal.get("hybrid", {})
+    BASE = hyb.get("research_snapshot_sha256", formal["research_snapshot_sha256"])     # 親＝正式ハイブリッドのNNUE
+    base_step = hyb.get("optimizer_step", formal["optimizer_step"])
     a.out.mkdir(parents=True, exist_ok=True)
     md = a.out / "models"; md.mkdir(exist_ok=True)
     for ext in ("npz", "json"):
         (md / f"{BASE}.{ext}").write_bytes((a.parent_models / f"{BASE}.{ext}").read_bytes())
     base, base_opt, _ = load_snapshot(md, BASE)
-    if base_opt is None or base_opt["step"] != formal["optimizer_step"]:
+    if base_opt is None or base_opt["step"] != base_step:
         raise SystemExit("Adam state missing or step differs from formal")
-    parent, opt = (base, base_opt) if a.feature_set == "base" else (expand_king_zone if a.feature_set == "zone" else expand_king_relative)(base, base_opt)
     for fs, m in (("base", 2548), ("zone", 3848), ("king", 17576)):
         INPUTS[fs] = m
+    base_fs = {v: k for k, v in INPUTS.items()}[base.inputs]
+    if a.feature_set == base_fs:
+        parent, opt = base, base_opt
+    elif base_fs == "base":
+        parent, opt = (expand_king_zone if a.feature_set == "zone" else expand_king_relative)(base, base_opt)
+    else:
+        raise SystemExit(f"parent is {base_fs}; cannot convert to {a.feature_set}")
     assert parent.inputs == INPUTS[a.feature_set]
     lines = []
     for d in a.data:

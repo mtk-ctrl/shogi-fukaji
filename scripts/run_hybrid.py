@@ -1,5 +1,5 @@
 """正式エンジン(ハイブリッド): 雲路の探索(固定コミット)＋深路の正式NNUE評価。USIで起動する。
-- 重み・設定は formal/model.json (hybrid節) から読む。雲路ソースは固定コミットを取得(env FUKAJI_KUMOJI_SRC で既存チェックアウトを指定可)。
+- 重み・設定は formal/model.json (hybrid節。重みは hybrid.weights_file、無ければ最上位の weights_file) から読む。雲路ソースは固定コミットを取得(env FUKAJI_KUMOJI_SRC で既存チェックアウトを指定可)。
 - 初回は雲路を取得してビルドする(数分)。GUIから使う前に `python3 scripts/run_hybrid.py --prepare` を実行しておくこと。
 - ビルド中の出力はstderrへ(USIのstdoutを汚さない)。
 ライセンス: 雲路はGPL-3.0。ビルドした実行ファイルを配布する場合は対応ソースを併せて提供する(THIRD_PARTY_NOTICES.md)。"""
@@ -19,8 +19,10 @@ def prepare():
     work = ROOT / "build/hybrid"
     binary = work / "build/kumoji-hybrid"
     wbin = ROOT / "build/fukaji-hybrid-weights.bin"
-    npz = ROOT / spec["weights_file"]
-    if sha(npz) != spec["weights_sha256"]:
+    # E11(2026-11-14)以降: ハイブリッド専用の重み(玉周辺特徴つき)は hybrid節に置く。無ければ従来どおり最上位(旧エンジンと共通)。
+    weights_file, weights_sha = h.get("weights_file", spec["weights_file"]), h.get("weights_sha256", spec["weights_sha256"])
+    npz = ROOT / weights_file
+    if sha(npz) != weights_sha:
         raise SystemExit("formal NNUE SHA256 mismatch")
     stamp = json.dumps({"ref": h["kumoji_ref"], "eval_h": sha(ROOT / "research/hybrid/nnue_eval.h"),
                         "build": sha(ROOT / "scripts/build_hybrid.py")}, sort_keys=True)
@@ -40,9 +42,9 @@ def prepare():
                        check=True, stdout=sys.stderr)
         stamp_file.write_text(stamp)
     shaf = wbin.with_suffix(".sha")
-    if not (wbin.exists() and shaf.exists() and shaf.read_text() == spec["weights_sha256"]):
+    if not (wbin.exists() and shaf.exists() and shaf.read_text() == weights_sha):
         subprocess.run([sys.executable, str(ROOT / "scripts/hybrid_export_weights.py"), str(npz), str(wbin)], check=True, stdout=sys.stderr)
-        shaf.write_text(spec["weights_sha256"])
+        shaf.write_text(weights_sha)
     return spec, binary, wbin, work
 
 

@@ -1,0 +1,164 @@
+name: E11 NNUE formal adoption (owner-approved 2026-11-14)
+# ユーザー承認済み(2026-11-14)。実runのartifact(学習報告・対局結果3本)を検証してから、正式エンジン(ハイブリッド)の重みをE11にする。
+# commit=false は検証のみ(dry run)。旧エンジン(USI v0.4.1・自前探索・E10重み)は変更しない。
+on:
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: "true=mainへ反映して公開 / false=検証のみ"
+        required: true
+        default: "false"
+        type: string
+      run_train:
+        description: "G1 train(zone)のrun ID"
+        required: true
+        default: "43543266811"
+        type: string
+      run_e10:
+        description: "候補対E10ハイブリッド100局のrun ID"
+        required: true
+        default: "43603981439"
+        type: string
+      run_g1a:
+        description: "候補対G1a(同データ・現行特徴)100局のrun ID"
+        required: true
+        default: "43543949082"
+        type: string
+      run_kumoji:
+        description: "候補対雲路100局のrun ID"
+        required: true
+        default: "43584131272"
+        type: string
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: fukaji-e11-adopt
+  cancel-in-progress: false
+jobs:
+  adopt:
+    if: github.repository == 'mtk-ctrl/shogi-fukaji'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      TAG: fukaji-current-e11-hybrid-zone-20261114
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - name: Contract and formal baseline check
+        run: |
+          python scripts/check_fukaji_contracts.py
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$(git rev-parse HEAD)"
+      - uses: actions/download-artifact@v4
+        with:
+          name: e2-trained-${{ inputs.run_train }}
+          path: in/trained
+          run-id: ${{ inputs.run_train }}
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: hybrid-result-${{ inputs.run_e10 }}
+          path: in/res_e10
+          run-id: ${{ inputs.run_e10 }}
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: hybrid-result-${{ inputs.run_g1a }}
+          path: in/res_g1a
+          run-id: ${{ inputs.run_g1a }}
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: hybrid-result-${{ inputs.run_kumoji }}
+          path: in/res_kumoji
+          run-id: ${{ inputs.run_kumoji }}
+          github-token: ${{ github.token }}
+      - name: Verify results, weights identity and Adam state (and prepare when commit=true)
+        run: |
+          set -euo pipefail
+          mkdir -p build
+          FLAG=""; if [ "${{ inputs.commit }}" = "true" ]; then FLAG="--commit"; fi
+          python scripts/e11_adopt.py --trained in/trained --result-e10 in/res_e10/result.json --result-g1a in/res_g1a/result.json \
+            --result-kumoji in/res_kumoji/result.json --out build/e11-prepare $FLAG | tee build/e11-adopt.log
+          { echo '### E11 adoption'; echo '```json'; cat build/e11-prepare/receipt.json; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - name: Full regression, real hybrid USI play with the E11 weights, legacy engine unchanged
+        if: inputs.commit == 'true'
+        run: |
+          set -euo pipefail
+          python scripts/check_fukaji_contracts.py
+          python -m unittest discover -s tests -q
+          python -m compileall -q fukaji scripts
+          git diff --check
+          python scripts/run_hybrid.py --prepare
+          python scripts/verify_hybrid_release.py --out build/e11-hybrid-verify.json
+          python - <<'PY'
+          import json
+          d=json.load(open('build/e11-hybrid-verify.json')); m=json.load(open('formal/model.json'))
+          assert d['weights_sha256']==m['hybrid']['weights_sha256'] and m['hybrid']['weights_file']=='models/fukaji-e11.nnue.npz',d
+          assert d['legal_usi_plies']>=30 and d['nnue_active_positions']==d['nnue_checked_positions'],d
+          assert m['weights_file']=='models/fukaji-e10.nnue.npz'
+          print('E11 real hybrid USI ok')
+          PY
+          printf 'usi\nisready\nquit\n' | ./run-fukaji-legacy.sh | tee build/legacy.log | tail -2
+          grep -q readyok build/legacy.log
+      - name: Commit to main with CAS
+        if: inputs.commit == 'true'
+        id: adoption
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$GITHUB_SHA" || { echo "main changed; abort"; exit 1; }
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f models/fukaji-e11.nnue.npz
+          git add formal/model.json research/d17-fast-self-learning/formal-contract.json
+          git add docs/現行エンジン仕様.md docs/00_開発ルーター.md docs/ROADMAP.md AGENTS.md
+          git add docs/decisions/2026-11-14_E11_大量自己対局データと玉周辺特徴のNNUEを正式採用.md docs/モデル名対応表.md
+          git diff --cached --check
+          git diff --cached --name-only | tee build/e11-adopted-files.txt
+          test "$(git diff --cached --name-only | wc -l)" -eq 9
+          git commit -m "adopt(E11): promote mass-self-play + king-zone NNUE (3848x128) for the formal hybrid engine (owner-approved)"
+          sha="$(git rev-parse HEAD)"
+          git push origin HEAD:refs/heads/main
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$sha"
+          echo "source_sha=$sha" >> "$GITHUB_OUTPUT"
+      - name: Release the complete trained state (parent of the next training round)
+        if: inputs.commit == 'true'
+        env:
+          SOURCE_SHA: ${{ steps.adoption.outputs.source_sha }}
+        run: |
+          set -euo pipefail
+          tar -czf build/E11-trained-state-Adam.tar.gz -C in/trained report.json cand-weights.npz models
+          cp build/e11-prepare/receipt.json build/E11-adoption-receipt.json
+          gh release create "$TAG" build/E11-trained-state-Adam.tar.gz build/e11-hybrid-verify.json build/E11-adoption-receipt.json \
+            --target "$SOURCE_SHA" --title 'FUKAJI formal hybrid engine: E11 NNUE (mass self-play data + king-zone features)' \
+            --notes 'E11 NNUE adopted by owner approval for the formal hybrid engine (KUMOJI search + FUKAJI NNUE). Legacy engine stays on E10. Previous weights preserved in models/.'
+          mkdir -p build/rb
+          for f in E11-trained-state-Adam.tar.gz e11-hybrid-verify.json E11-adoption-receipt.json; do
+            gh release download "$TAG" --pattern "$f" --dir build/rb
+            test "$(sha256sum "build/$f"|cut -d' ' -f1)" = "$(sha256sum "build/rb/$f"|cut -d' ' -f1)"
+          done
+          echo "E11 adopted at $SOURCE_SHA; release readback OK" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e11-adopt-verification-${{ github.run_id }}
+          path: |
+            build/e11-prepare/receipt.json
+            build/e11-adopt.log
+            build/e11-hybrid-verify.json
+            build/e11-adopted-files.txt
+          if-no-files-found: warn
+          retention-days: 30

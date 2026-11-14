@@ -39,7 +39,7 @@ def usi_move_ok(board, mv):
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument("--out", type=Path, required=True); a = ap.parse_args()
     spec = json.loads((ROOT / "formal/model.json").read_text())
-    res = {"weights_sha256": spec["weights_sha256"], "kumoji_ref": spec["hybrid"]["kumoji_ref"]}
+    res = {"weights_sha256": spec["hybrid"].get("weights_sha256", spec["weights_sha256"]), "kumoji_ref": spec["hybrid"]["kumoji_ref"]}
     e = Eng([str(ROOT / "run-fukaji.sh")])
     e.send("usi"); res["usi_id"] = [l for l in e.until("usiok") if l.startswith("id name")]
     e.send("isready"); e.until("readyok", 90)

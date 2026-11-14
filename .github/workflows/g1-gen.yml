@@ -6,7 +6,7 @@ on:
       weights:
         description: "自己対局に使うNNUE推論npz(リポジトリ内)"
         required: true
-        default: "models/fukaji-e10.nnue.npz"
+        default: "models/fukaji-e11.nnue.npz"
         type: string
       minutes:
         description: "1ランナーあたりの生成時間(分)。20ランナー×全コア"

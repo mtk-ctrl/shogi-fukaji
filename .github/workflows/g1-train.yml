@@ -7,9 +7,9 @@ on:
         required: true
         type: string
       feature_set:
-        description: "base=現行特徴 / zone=玉周辺±2升 / king=玉相対17x17"
+        description: "zone=玉周辺±2升(現行E11) / base・king は親がE10以前のときだけ"
         required: true
-        default: "base"
+        default: "zone"
         type: string
       outcome_weight:
         description: "対局結果の混合比(0〜1)"
@@ -39,12 +39,12 @@ on:
       parent_tag:
         description: "親の完全stateを含むReleaseタグ"
         required: true
-        default: "fukaji-current-e10-pvs-mate-20261113"
+        default: "fukaji-current-e11-hybrid-zone-20261114"
         type: string
       parent_asset:
         description: "親のstate資産名"
         required: true
-        default: "E10-trained-state-Adam.tar.gz"
+        default: "E11-trained-state-Adam.tar.gz"
         type: string
 permissions:
   contents: read
