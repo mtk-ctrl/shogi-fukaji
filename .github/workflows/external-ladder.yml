@@ -1,0 +1,261 @@
+name: FUKAJI external ladder (YaneuraOu Material)
+run-name: "FUKAJI ladder Lv${{ inputs.level }} / ${{ inputs.series_id || github.run_id }}"
+# 棋力測定専用。正式深路(ハイブリッド＝雲路の探索＋深路の正式NNUE)を、やねうら王Material Lv1-100の固定nodesと対局させる。
+# 相手の評価値・読み筋・指し手は学習に使わない(F00)。正式版・NNUE重みは変更しない。雲路の局面知識は使わない。
+# 条件: 深路 go movetime 200 + AdaptiveLongThink(必要時最大1秒・1局最大10回、F20の標準時間)。相手は定跡OFF・1スレッド・ハッシュ16MB。
+# 各レベル games 局・先後交互。勝率30%以上で次レベルを自動起動、30%未満で停止(雲路の梯子と同じ物差し)。
+on:
+  workflow_dispatch:
+    inputs:
+      level:
+        description: "開始レベル 1-100"
+        required: true
+        default: "40"
+        type: string
+      games:
+        description: "1レベルの局数"
+        required: true
+        default: "100"
+        type: string
+      shards:
+        description: "同時に使う対局ランナー数 1-20"
+        required: true
+        default: "10"
+        type: string
+      series_id:
+        description: "系列の名前"
+        required: false
+        default: ""
+        type: string
+      fukaji_ref:
+        description: "固定する深路のコミットSHA(40桁)。空なら起動時のmain"
+        required: false
+        default: ""
+        type: string
+permissions:
+  contents: read
+  actions: write
+env:
+  YANEURAOU_REF: c1b80eaa09fe13d5f12b1599d1ae4d53c224de30
+  SELF_OPTIONS: '{"AdaptiveLongThink":true,"PositionKnowledge":false,"USI_Ponder":false}'
+jobs:
+  plan:
+    if: github.repository == 'mtk-ctrl/shogi-fukaji'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      level: ${{ steps.plan.outputs.level }}
+      games: ${{ steps.plan.outputs.games }}
+      shards: ${{ steps.plan.outputs.shards }}
+      series_id: ${{ steps.plan.outputs.series_id }}
+      fukaji_ref: ${{ steps.plan.outputs.fukaji_ref }}
+    steps:
+      - name: Validate request and plan balanced shards
+        id: plan
+        env:
+          INPUT_LEVEL: ${{ inputs.level }}
+          INPUT_GAMES: ${{ inputs.games }}
+          INPUT_SHARDS: ${{ inputs.shards }}
+          INPUT_SERIES_ID: ${{ inputs.series_id }}
+          INPUT_FUKAJI_REF: ${{ inputs.fukaji_ref }}
+        run: |
+          python3 - <<'PY'
+          import json, os, re
+          from pathlib import Path
+          level=int(os.environ["INPUT_LEVEL"]); games=int(os.environ["INPUT_GAMES"]); shards=int(os.environ["INPUT_SHARDS"])
+          series=os.environ["INPUT_SERIES_ID"].strip() or "fukaji-ladder-"+os.environ["GITHUB_RUN_ID"]
+          ref=os.environ["INPUT_FUKAJI_REF"].strip() or os.environ["GITHUB_SHA"]
+          if not 1<=level<=100 or games<1 or not 1<=shards<=min(20,games):
+              raise SystemExit("invalid level/games/shards")
+          if not re.fullmatch(r"[a-zA-Z0-9_-]{1,80}",series):
+              raise SystemExit("invalid series_id")
+          if not re.fullmatch(r"[0-9a-fA-F]{40}",ref):
+              raise SystemExit("fukaji_ref must be a 40-digit commit SHA")
+          q,r=divmod(games,shards); include=[]; offset=0
+          for i in range(shards):
+              n=q+int(i<r)
+              include.append(dict(shard=i,games=n,seed=2026100500+i*100000,game_offset=offset)); offset+=n
+          out=dict(matrix=json.dumps(dict(include=include),separators=(",",":")),level=level,games=games,shards=shards,series_id=series,fukaji_ref=ref)
+          with Path(os.environ["GITHUB_OUTPUT"]).open("a") as f:
+              for k,v in out.items(): f.write(f"{k}={v}\n")
+          print(out)
+          PY
+  build-engines:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.plan.outputs.fukaji_ref }}
+      - name: Read pinned KUMOJI commit (search source) from formal/model.json
+        id: pin
+        run: echo "kumoji_ref=$(python3 -c "import json;print(json.load(open('formal/model.json'))['hybrid']['kumoji_ref'])")" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        with:
+          repository: mtk-ctrl/shogi-ai
+          ref: ${{ steps.pin.outputs.kumoji_ref }}
+          path: kumoji-src
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - name: Build formal hybrid engine (formal NNUE SHA is verified by run_hybrid.py)
+        run: |
+          set -euo pipefail
+          FUKAJI_KUMOJI_SRC="$PWD/kumoji-src" python scripts/run_hybrid.py --prepare
+          test -x build/hybrid/build/kumoji-hybrid
+          python3 - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          spec=json.loads(Path("formal/model.json").read_text())
+          info=dict(kumoji_ref=spec["hybrid"]["kumoji_ref"], nnue_scale=spec["hybrid"]["nnue_scale"],
+                    weights_file=spec["weights_file"], weights_sha256=spec["weights_sha256"],
+                    snapshot_sha256=spec["research_snapshot_sha256"],
+                    engine_sha256=hashlib.sha256(Path("build/hybrid/build/kumoji-hybrid").read_bytes()).hexdigest(),
+                    weights_bin_sha256=hashlib.sha256(Path("build/fukaji-hybrid-weights.bin").read_bytes()).hexdigest())
+          Path("build/ladder-engine.json").write_text(json.dumps(info,indent=2)+"\n")
+          print(json.dumps(info,indent=2))
+          PY
+      - name: Fetch and build pinned YaneuraOu material edition
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none https://github.com/yaneurao/YaneuraOu.git external/YaneuraOu
+          git -C external/YaneuraOu checkout "$YANEURAOU_REF"
+          make -C external/YaneuraOu/source clean COMPILER=g++ TARGET_CPU=SSE42 YANEURAOU_EDITION=YANEURAOU_ENGINE_MATERIAL MATERIAL_LEVEL=1
+          make -C external/YaneuraOu/source -j2 tournament COMPILER=g++ TARGET_CPU=SSE42 YANEURAOU_EDITION=YANEURAOU_ENGINE_MATERIAL MATERIAL_LEVEL=1
+          test -x external/YaneuraOu/source/YaneuraOu-by-gcc
+      - name: Package engines
+        run: tar -czf external-engines.tgz --exclude=.git build/hybrid build/fukaji-hybrid-weights.bin build/ladder-engine.json external/YaneuraOu/source/YaneuraOu-by-gcc
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-ladder-engines-${{ github.run_id }}
+          path: external-engines.tgz
+          retention-days: 7
+          if-no-files-found: error
+  match:
+    needs: [plan, build-engines]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    steps:
+      - run: python3 -m pip install python-shogi==1.1.1
+      - uses: actions/download-artifact@v4
+        with:
+          name: fukaji-ladder-engines-${{ github.run_id }}
+      - name: Extract engines and write the FUKAJI launcher
+        run: |
+          set -euo pipefail
+          tar -xzf external-engines.tgz
+          chmod +x build/hybrid/build/kumoji-hybrid external/YaneuraOu/source/YaneuraOu-by-gcc
+          SCALE="$(python3 -c "import json;print(json.load(open('build/ladder-engine.json'))['nnue_scale'])")"
+          printf '#!/bin/sh\nexport FUKAJI_NNUE_FILE="%s/build/fukaji-hybrid-weights.bin"\nexport FUKAJI_NNUE_SCALE="%s"\ncd "%s/build/hybrid"\nexec "%s/build/hybrid/build/kumoji-hybrid" "$@"\n' "$PWD" "$SCALE" "$PWD" "$PWD" > fukaji.sh
+          chmod +x fukaji.sh
+          printf 'usi\nisready\nquit\n' | ./fukaji.sh | tail -2
+      - name: Run ladder games (FUKAJI 200ms plus conditional long think)
+        env:
+          LEVEL: ${{ needs.plan.outputs.level }}
+          SHARD_GAMES: ${{ matrix.games }}
+          SHARD_SEED: ${{ matrix.seed }}
+          GAME_OFFSET: ${{ matrix.game_offset }}
+        run: |
+          set -euo pipefail
+          mkdir -p results
+          NODES="$(python3 build/hybrid/benchmarks/external_levels.py --level "$LEVEL" --nodes-only)"
+          python3 build/hybrid/benchmarks/external_match.py \
+            --self-engine ./fukaji.sh \
+            --opponent-engine external/YaneuraOu/source/YaneuraOu-by-gcc \
+            --self-options "$SELF_OPTIONS" \
+            --opponent-options '{"Threads":1,"USI_Hash":16,"USI_OwnBook":false}' \
+            --self-go "go movetime 200" \
+            --opponent-go "go nodes $NODES" \
+            --games "$SHARD_GAMES" --game-offset "$GAME_OFFSET" --seed "$SHARD_SEED" \
+            --output "results/shard-${{ matrix.shard }}.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-ladder-${{ github.run_id }}-${{ matrix.shard }}
+          path: results/shard-${{ matrix.shard }}.json
+          retention-days: 30
+          if-no-files-found: error
+  aggregate:
+    needs: [plan, match]
+    if: always() && needs.match.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: fukaji-ladder-${{ github.run_id }}-*
+          path: results
+          merge-multiple: true
+      - uses: actions/download-artifact@v4
+        with:
+          name: fukaji-ladder-engines-${{ github.run_id }}
+      - run: tar -xzf external-engines.tgz build/ladder-engine.json
+      - name: Verify all games and decide whether to continue
+        id: decision
+        env:
+          LEVEL: ${{ needs.plan.outputs.level }}
+          EXPECTED_GAMES: ${{ needs.plan.outputs.games }}
+          EXPECTED_SHARDS: ${{ needs.plan.outputs.shards }}
+          SERIES_ID: ${{ needs.plan.outputs.series_id }}
+          FUKAJI_REF: ${{ needs.plan.outputs.fukaji_ref }}
+        run: |
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          rows=[json.loads(p.read_text()) for p in sorted(Path("results").glob("shard-*.json"))]
+          games=sum(int(r["games"]) for r in rows); shards=int(os.environ["EXPECTED_SHARDS"])
+          if games!=int(os.environ["EXPECTED_GAMES"]) or len(rows)!=shards:
+              raise SystemExit("missing games or incomplete shards")
+          expected=json.loads(os.environ["SELF_OPTIONS"])
+          for i,row in enumerate(rows):
+              me=row.get("self_engine") or {}
+              if me.get("go_command")!="go movetime 200":
+                  raise SystemExit(f"shard {i}: thinking time was not 200ms")
+              applied=me.get("options") or {}
+              for k,v in expected.items():
+                  if str(applied.get(k,"")).lower()!=str(v).lower():
+                      raise SystemExit(f"shard {i}: option {k} was not applied as {v}")
+              if not str((row.get("opponent_engine") or {}).get("go_command","")).startswith("go nodes "):
+                  raise SystemExit(f"shard {i}: opponent node limit was not applied")
+          wins=sum(int(r["wins_self"]) for r in rows); draws=sum(int(r["draws"]) for r in rows); losses=sum(int(r["losses_self"]) for r in rows)
+          illegal=sum(int(r.get("illegal_games",0)) for r in rows)
+          if wins+draws+losses!=games: raise SystemExit("totals disagree")
+          if illegal: raise SystemExit(f"illegal moves occurred: {illegal}; cannot advance")
+          level=int(os.environ["LEVEL"]); win_pct=100.0*wins/games; point_pct=100.0*(wins+draws/2)/games
+          cont=win_pct>=30.0 and level<100
+          status="next_level" if cont else ("below_30_percent" if win_pct<30 else "level_100")
+          engine=json.loads(Path("build/ladder-engine.json").read_text())
+          out=dict(series_id=os.environ["SERIES_ID"],fukaji_ref=os.environ["FUKAJI_REF"],engine=engine,level=level,games=games,shards=shards,
+                   wins=wins,draws=draws,losses=losses,win_pct=win_pct,point_pct=point_pct,illegal_games=illegal,
+                   self_go="go movetime 200",self_options=expected,usi_name=(rows[0].get("self_engine") or {}).get("usi_name"),decision=status)
+          Path("ladder-result.json").write_text(json.dumps(out,ensure_ascii=False,indent=2)+"\n")
+          with Path(os.environ["GITHUB_OUTPUT"]).open("a") as f:
+              f.write(f"should_continue={str(cont).lower()}\nnext_level={level+1}\n")
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
+              f.write(f"# FUKAJI vs YaneuraOu Material Lv{level}\n\n- {wins} wins, {draws} draws, {losses} losses; win rate {win_pct:.1f}% (point {point_pct:.1f}%)\n- illegal {illegal}; decision {status}\n")
+          print("LADDER_RESULT "+json.dumps(out,ensure_ascii=False))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fukaji-ladder-summary-${{ github.run_id }}
+          path: ladder-result.json
+          retention-days: 90
+          if-no-files-found: error
+      - name: Dispatch the next level
+        if: steps.decision.outputs.should_continue == 'true' && github.run_attempt == 1
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NEXT: ${{ steps.decision.outputs.next_level }}
+          GAMES: ${{ needs.plan.outputs.games }}
+          SHARDS: ${{ needs.plan.outputs.shards }}
+          SERIES: ${{ needs.plan.outputs.series_id }}
+          REF: ${{ needs.plan.outputs.fukaji_ref }}
+        run: |
+          gh workflow run external-ladder.yml --repo "$GITHUB_REPOSITORY" --ref main \
+            -f "level=$NEXT" -f "games=$GAMES" -f "shards=$SHARDS" -f "series_id=$SERIES" -f "fukaji_ref=$REF"

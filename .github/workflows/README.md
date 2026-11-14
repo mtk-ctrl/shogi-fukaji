@@ -92,3 +92,8 @@ Total output lines: 124
 
 - [d54-d52-v041-1000-selfplay-train-audit.yml](d54-d52-v041-1000-selfplay-train-audit.yml)：明示的な `research/d54/START.json` のpushのみ。5波×20独立ランナー×10局、原棋譜の全合法再生、D52/Adam5606からのNNUE継続学習、独立100序盤×先後交替200局の比較。定期実行・無制限再起動・研究run内正式採用なし。
 - D52以前のtrain/audit/探索研究群と新規train/auditを完全分離。GitHub Actionsの100件/101件artifact列挙差を名前指定補完して全100件を検証。学習state＋optimizerをRelease保存前に一時保全し、永続ReleaseのSHAを再取得。正式採用には別CI/契約/実USI検証が必要。[D54計画](../../docs/D54_CURRENT_D52_V041_1000GAMES_PLAN_20261108.md)。
+
+## 外部ラダー：やねうら王Materialとの棋力測定（2026-11-14）
+
+- Workflow：[`external-ladder.yml`](external-ladder.yml)。**workflow_dispatchのみ**（定期実行なし）。正式深路（ハイブリッド＝雲路の探索＋正式NNUE。`formal/model.json` の固定コミットとSHAを `scripts/run_hybrid.py --prepare` で検証）を、やねうら王Material Lv1〜100の固定nodesと対局させる棋力測定専用。相手の評価値・読み筋・指し手は学習に使わない。正式版・NNUE重みは変更しない。
+- 条件：深路 `go movetime 200`＋AdaptiveLongThink（必要時最大1秒・1局最大10回）、雲路の局面知識OFF、先読みOFF。相手は定跡OFF・1スレッド・ハッシュ16MB。各レベル100局・先後交互、勝率30%以上で次レベルを自動起動、30%未満で停止（雲路の梯子と同じ物差し・同じ対局プログラム）。集計で実際の適用設定・違法手0を照合する。
