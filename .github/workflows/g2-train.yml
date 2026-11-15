@@ -1,0 +1,93 @@
+name: G2 train (研究。両視点入力＋2層目の評価。データ・ラベル・親はG1と同じ。正式版は変更しない)
+on:
+  workflow_dispatch:
+    inputs:
+      data_runs:
+        description: "G1 mass data generation の run ID(空白区切りで複数可)"
+        required: true
+        type: string
+      outcome_weight:
+        description: "対局結果の混合比(0〜1)"
+        required: true
+        default: "0.2"
+        type: string
+      epochs:
+        description: "エポック数"
+        required: true
+        default: "1"
+        type: string
+      lr:
+        description: "学習率"
+        required: true
+        default: "0.0002"
+        type: string
+      batch:
+        description: "バッチサイズ"
+        required: true
+        default: "256"
+        type: string
+      max_games:
+        description: "使う棋譜数の上限(0=全部)"
+        required: true
+        default: "0"
+        type: string
+      h2:
+        description: "2層目の幅"
+        required: true
+        default: "32"
+        type: string
+      parent_tag:
+        description: "親の完全stateを含むReleaseタグ"
+        required: true
+        default: "formal"
+        type: string
+      parent_asset:
+        description: "親のstate資産名"
+        required: true
+        default: "formal"
+        type: string
+permissions:
+  contents: read
+  actions: read
+jobs:
+  train:
+    if: github.repository == 'mtk-ctrl/shogi-fukaji'
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt scipy
+      - name: Download data and parent state
+        run: |
+          set -euo pipefail
+          for r in ${{ inputs.data_runs }}; do
+            gh run download "$r" --pattern 'g1-data-*' --dir "input/data/$r"
+          done
+          TAG="${{ inputs.parent_tag }}"; ASSET="${{ inputs.parent_asset }}"
+          if [ "$TAG" = formal ]; then TAG=$(python -c "import json;print(json.load(open('formal/model.json'))['hybrid']['state_release_tag'])"); fi
+          if [ "$ASSET" = formal ]; then ASSET=$(python -c "import json;print(json.load(open('formal/model.json'))['hybrid']['state_release_asset'])"); fi
+          gh release download "$TAG" --pattern "$ASSET" --dir input
+          mkdir -p input/parent && tar -xzf "input/$ASSET" -C input/parent models
+      - name: Train
+        run: |
+          set -euo pipefail
+          python -u scripts/g2_train.py --parent-models input/parent/models --data input/data --out trained \
+            --outcome-weight ${{ inputs.outcome_weight }} --epochs ${{ inputs.epochs }} --lr ${{ inputs.lr }} \
+            --batch ${{ inputs.batch }} --max-games ${{ inputs.max_games }} --h2 ${{ inputs.h2 }} | tee train.log
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          print('### G2 train');print('```json');print(json.dumps(json.load(open('trained/report.json')),indent=1,ensure_ascii=False));print('```')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: e2-trained-${{ github.run_id }}
+          path: |
+            trained/cand-weights.npz
+            trained/report.json
+            trained/v2-state.npz
+          retention-days: 60

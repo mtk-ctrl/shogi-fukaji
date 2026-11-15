@@ -21,6 +21,10 @@ struct Model {
     std::vector<float> w;                 // [inputs][hidden] (inputs = 2548, or 17576 with king-relative rows)
     std::array<float, kMaxHidden> b{}, v{};
     float o = 0.f;
+    // G2(研究): 両視点＋2層目。評価 = 従来の式 + w3・clip(L2 [自の中間層, 相手の中間層] + b2)。h2 == 0 なら従来どおり。
+    int h2 = 0;
+    std::vector<float> l2;                // [2*hidden][h2]
+    std::array<float, 64> b2{}, w3{};
     double scale = 600.0;
 };
 inline Model& model() { static Model m; return m; }
@@ -34,9 +38,11 @@ inline void load_once() {
     FILE* f = std::fopen(path, "rb");
     if (!f) { std::fprintf(stderr, "FUKAJI_NNUE_FILE unreadable: %s\n", path); std::abort(); }
     char magic[8];
-    std::uint32_t inputs = 0, hidden = 0;
-    bool ok = std::fread(magic, 1, 8, f) == 8 && std::fread(&inputs, 4, 1, f) == 1 && std::fread(&hidden, 4, 1, f) == 1 &&
-              std::string(magic, 8) == "FKJNNUE1" && (inputs == kBaseInputs || inputs == kKingInputs || inputs == kZoneInputs) && (hidden == kHidden || hidden == kMaxHidden);
+    std::uint32_t inputs = 0, hidden = 0, h2 = 0;
+    bool ok = std::fread(magic, 1, 8, f) == 8 && std::fread(&inputs, 4, 1, f) == 1 && std::fread(&hidden, 4, 1, f) == 1;
+    const bool v2 = ok && std::string(magic, 8) == "FKJNNUE2";
+    if (v2) ok = std::fread(&h2, 4, 1, f) == 1 && h2 >= 1 && h2 <= 64 && inputs == kZoneInputs && hidden == kHidden;
+    ok = ok && (v2 || std::string(magic, 8) == "FKJNNUE1") && (inputs == kBaseInputs || inputs == kKingInputs || inputs == kZoneInputs) && (hidden == kHidden || hidden == kMaxHidden);
     if (ok) {
         m.inputs = int(inputs);
         m.king_relative = inputs == kKingInputs;
@@ -46,6 +52,12 @@ inline void load_once() {
         ok = std::fread(m.w.data(), 4, m.w.size(), f) == m.w.size() &&
              std::fread(m.b.data(), 4, hidden, f) == hidden && std::fread(m.v.data(), 4, hidden, f) == hidden &&
              std::fread(&m.o, 4, 1, f) == 1;
+        if (ok && v2) {
+            m.l2.resize(std::size_t(h2) * 2 * hidden);
+            ok = std::fread(m.l2.data(), 4, m.l2.size(), f) == m.l2.size() &&
+                 std::fread(m.b2.data(), 4, h2, f) == h2 && std::fread(m.w3.data(), 4, h2, f) == h2;
+            m.h2 = int(h2);
+        }
     }
     std::fclose(f);
     if (!ok) { std::fprintf(stderr, "FUKAJI_NNUE_FILE format error: %s\n", path); std::abort(); }
@@ -62,11 +74,11 @@ inline int nnue_kind(int kind, bool promoted) {
 }
 // Logit for the side to move (same as fukaji nnue_value with perspective = side to move).
 // H はコンパイル時定数にする(実行時の値にすると内側のループが遅くなる。128で約3〜4割の速度低下を実測)。
+// persp(0=先手,1=後手)から見た特徴を足し込む(中間層の和、バイアス前)。
 template <int H>
-inline double logit_impl(const rules::Snapshot& s) {
+inline void accumulate(const rules::Snapshot& s, const int persp, float* out) {
     const Model& m = model();
-    const int persp = s.turn == rules::Color::Black ? 0 : 1;
-    float acc[H] = {};
+    float acc[H] = {};     // 手元の配列に足し込む(引数のポインタへ直接足すと、重みと重なる可能性を疑って最適化が弱くなり約25%遅くなる)
     auto add = [&](int idx) {
         const float* row = &m.w[std::size_t(idx) * H];
         for (int h = 0; h < H; ++h) acc[h] += row[h];
@@ -111,11 +123,46 @@ inline double logit_impl(const rules::Snapshot& s) {
             const int side = color;                            // 0 black, 1 white (python color)
             for (int j = 0; j < n; ++j) add(2268 + ((side ^ persp) * 7 + map_hand[k]) * 20 + j);
         }
+    for (int h = 0; h < H; ++h) out[h] = acc[h];
+}
+template <int H>
+inline double logit_impl(const rules::Snapshot& s) {
+    const Model& m = model();
+    const int persp = s.turn == rules::Color::Black ? 0 : 1;
+    float acc[H] = {};
+    accumulate<H>(s, persp, acc);
     float value = m.o;
     for (int h = 0; h < H; ++h) value += std::clamp(acc[h] + m.b[h], 0.f, 1.f) * m.v[h];
     return value;
 }
+// G2: 両視点＋2層目(隠れ層128のみ)。
+inline double logit_v2(const rules::Snapshot& s) {
+    constexpr int H = kHidden;
+    const Model& m = model();
+    const int persp = s.turn == rules::Color::Black ? 0 : 1;
+    float c[2 * H] = {};
+    accumulate<H>(s, persp, c);
+    accumulate<H>(s, 1 - persp, c + H);
+    float value = m.o;
+    for (int h = 0; h < H; ++h) {
+        c[h] = std::clamp(c[h] + m.b[h], 0.f, 1.f);
+        c[H + h] = std::clamp(c[H + h] + m.b[h], 0.f, 1.f);
+        value += c[h] * m.v[h];
+    }
+    // 2層目: 入力側から足し込む形(0の入力は飛ばせる。内側は長さh2の単純な足し込みで速い)。
+    float p[64];
+    for (int j = 0; j < 64; ++j) p[j] = m.b2[j];
+    for (int i = 0; i < 2 * H; ++i) {
+        const float ci = c[i];
+        if (ci == 0.f) continue;
+        const float* row = &m.l2[std::size_t(i) * m.h2];
+        for (int j = 0; j < m.h2; ++j) p[j] += ci * row[j];
+    }
+    for (int j = 0; j < m.h2; ++j) value += std::clamp(p[j], 0.f, 1.f) * m.w3[j];
+    return value;
+}
 inline double logit_side_to_move(const rules::Snapshot& s) {
+    if (model().h2) return logit_v2(s);
     return model().hidden == kHidden ? logit_impl<kHidden>(s) : logit_impl<kMaxHidden>(s);
 }
 inline int eval_black(const rules::Snapshot& s) {
