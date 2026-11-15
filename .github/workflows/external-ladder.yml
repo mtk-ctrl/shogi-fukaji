@@ -18,7 +18,7 @@ on:
         default: "100"
         type: string
       shards:
-        description: "同時に使う対局ランナー数 1-20"
+        description: "同時に使う対局ランナー数 1-18 (F30: Floodgate用に2台空ける)"
         required: true
         default: "10"
         type: string
@@ -66,7 +66,7 @@ jobs:
           level=int(os.environ["INPUT_LEVEL"]); games=int(os.environ["INPUT_GAMES"]); shards=int(os.environ["INPUT_SHARDS"])
           series=os.environ["INPUT_SERIES_ID"].strip() or "fukaji-ladder-"+os.environ["GITHUB_RUN_ID"]
           ref=os.environ["INPUT_FUKAJI_REF"].strip() or os.environ["GITHUB_SHA"]
-          if not 1<=level<=100 or games<1 or not 1<=shards<=min(20,games):
+          if not 1<=level<=100 or games<1 or not 1<=shards<=min(18,games):
               raise SystemExit("invalid level/games/shards")
           if not re.fullmatch(r"[a-zA-Z0-9_-]{1,80}",series):
               raise SystemExit("invalid series_id")

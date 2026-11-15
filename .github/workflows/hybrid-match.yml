@@ -24,9 +24,9 @@ on:
         default: "600"
         type: string
       pairs:
-        description: "開局ペア数(局数は2倍、20並列)"
+        description: "開局ペア数(局数は2倍、18並列。F30: 18の倍数にする。54ペア=108局)"
         required: true
-        default: "50"
+        default: "54"
         type: string
       seed:
         description: "開局シード"
@@ -54,9 +54,9 @@ jobs:
     timeout-minutes: 150
     strategy:
       fail-fast: false
-      max-parallel: 20
+      max-parallel: 18
       matrix:
-        shard: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
+        shard: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
@@ -131,7 +131,7 @@ jobs:
           fi
           python scripts/usi_match.py pair --engine-a /tmp/a.sh --engine-b /tmp/b.sh \
             --label-a HYBRID --label-b OPP --opts-a "$OPTA" --opts-b "$OPTB" --kumoji-src kumoji-src \
-            --shard ${{ matrix.shard }} --shards 20 --pairs ${{ inputs.pairs }} \
+            --shard ${{ matrix.shard }} --shards 18 --pairs ${{ inputs.pairs }} \
             --movetime-ms ${{ inputs.movetime_ms }} --seed ${{ inputs.seed }} --out build/part
       - uses: actions/upload-artifact@v4
         if: always()
