@@ -121,3 +121,7 @@ ChatGPT・Claude等は同じRuleと同じGitHub正本を使う。まず[開発�
 ## 雲路の探索を最新版に更新・探索の既定値を調整（2026-11-15）
 
 正式エンジン(ハイブリッド)の探索は雲路 199dbb0(2スレッド・置換表改善)、既定値は QDelta=600・NullMoveReduction=3(formal/model.json の hybrid.search_defaults、build_hybrid.py が当てる)。同じE13・108局で、固定版(1e08de5)に76-32、最新の既定値に74-34。NNUEの重み・評価の差し替えは不変。[判断](docs/decisions/2026-11-15_やり方を変える_周回をやめて探索側の調整と学習データの足し合わせへ.md)。探索の設定を比較するときは hybrid-tune.yml(候補側だけオプションを足して同じNNUEで対局)。
+
+## 最新正式NNUE（E14、2026-11-15）
+
+正式E14／Adam326414、snapshot 04de47d77db5a472e93d2e5261387a97bce366bdc2e13932b668c56373711c47。E14 ハイブリッド(200ms・同一探索・各108局)で対E13 67-40-1、対雲路 77-31。正式エンジン(ハイブリッド)の重みは formal/model.json の hybrid節(`models/fukaji-e14.nnue.npz`)。旧エンジン(legacy)はE10のまま。

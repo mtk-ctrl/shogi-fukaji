@@ -24,45 +24,45 @@
     "kumoji_repo": "https://github.com/mtk-ctrl/shogi-ai",
     "legacy_launcher": "run-fukaji-legacy.sh",
     "legacy_note": "The legacy engine (run-fukaji-legacy.sh, own search v0.4.1, inputs 2548) cannot evaluate the king-zone rows and stays on the top-level E10 weights.",
-    "nnue_approved_by": "owner-approved E13 (2026-11-15) E13 ハイブリッド(200ms・同一探索・各100局)で対E12 63-36-1、対雲路 56-44",
+    "nnue_approved_by": "owner-approved E14 (2026-11-15) E14 ハイブリッド(200ms・同一探索・各108局)で対E13 67-40-1、対雲路 77-31",
     "nnue_approved_on": "2026-11-15",
     "nnue_scale": 2400,
     "nnue_scale_validation": "2026-11-15 owner-instructed: E12 scale2400 vs scale600 66-42, scale4800 vs 2400 45-63, E12 scale2400 vs KUMOJI 53-55 (108 games each, 200ms, same weights; runs 43664203966/43664687284/43665043735). Training data records its own scale (summary nnue_scale); data without it is scale 600.",
     "nnue_validation": {
       "hybrid_vs_kumoji": {
         "draws_or_unresolved": 0,
-        "fukaji_wins": 56,
-        "games": 100,
-        "kumoji_wins": 44
+        "fukaji_wins": 77,
+        "games": 108,
+        "kumoji_wins": 31
       },
       "hybrid_vs_previous": {
         "draws_or_unresolved": 1,
-        "fukaji_wins": 63,
-        "games": 100,
-        "kumoji_wins": 36,
-        "previous": "E12"
+        "fukaji_wins": 67,
+        "games": 108,
+        "kumoji_wins": 40,
+        "previous": "E13"
       },
-      "training": "hybrid(E12) self-play at 50ms/move, 58325 games, 5444748 positions; label = search value mixed 0.2 with game outcome; 1 epoch"
+      "training": "hybrid(E13) self-play at 50ms/move, 161437 games, 15013639 positions; label = search value mixed 0.2 with game outcome; 2 epoch"
     },
-    "optimizer_step": 91824,
+    "optimizer_step": 326414,
     "recommended_usi_options": {
       "AdaptiveLongThink": false,
       "PositionKnowledge": false,
       "USI_Ponder": false
     },
-    "research_parent_sha256": "797277c909a8f2e74521aab049021b5234f3eea21036a9a1b41d4e0b4ce1ebee",
-    "research_snapshot_sha256": "6b91fba9a68cbb74eeacdd7595f2b9d3c9347e994b5a0794bcb6146d75dc0c0f",
+    "research_parent_sha256": "6b91fba9a68cbb74eeacdd7595f2b9d3c9347e994b5a0794bcb6146d75dc0c0f",
+    "research_snapshot_sha256": "04de47d77db5a472e93d2e5261387a97bce366bdc2e13932b668c56373711c47",
     "search_defaults": {
       "NullMoveReduction": 3,
       "QDelta": 600
     },
     "search_validation": "2026-11-15 owner-instructed (strongest to formal): E13 weights, 200ms, 108 games each, same options. KUMOJI search 199dbb0 (2 threads, TT rework) vs pinned 1e08de5: 66-41-1 (run 43687839035). 199dbb0 + QDelta600 + NullMoveReduction3 vs pinned 1e08de5: 76-32 (run 43695741247); vs 199dbb0 default: 74-34 (run 43696753065). Other single options on pinned 1e08de5 (RfpMargin, FutilityMargin, RazorMargin, LmrGrade, LmpDepth, IirMinDepth, LmrAfter) showed no clear gain (runs 43687869678).",
-    "state_release_asset": "E13-trained-state-Adam.tar.gz",
-    "state_release_tag": "fukaji-current-e13-hybrid-zone-20261115",
-    "training_report_sha256": "d5ab8c5a31faba1c737240f0cff2f6c004fd9ba7c3a22937e6fe667c27654307",
-    "validation": "hybrid(E13) vs hybrid(E12) 63-36, vs KUMOJI 56-44 (100 games each, 200ms, same options); hybrid(E12) vs hybrid(E11) 64-35, vs KUMOJI 49-51 (100 games each, 200ms, same options); hybrid(E11) vs hybrid(E10) 84-16, vs KUMOJI 36-64 (100 games each, 200ms, same options); hybrid(E10) vs hybrid(E9) 83-17, vs KUMOJI 16-84 (100 games each, 200ms, same options); hybrid(E9) vs legacy formal E9 94-6; legacy search E10 vs E9 49-50",
-    "weights_file": "models/fukaji-e13.nnue.npz",
-    "weights_sha256": "7f28bf162d78ed1ca11f9a92e2d169d676d1592f914a5184e5c03939eb876ddc"
+    "state_release_asset": "E14-trained-state-Adam.tar.gz",
+    "state_release_tag": "fukaji-current-e14-hybrid-zone-20261115",
+    "training_report_sha256": "bc20691b91f061bf6a378f47538cce48ba272dd69aabe852d457bf7e7547c6e6",
+    "validation": "hybrid(E14) vs hybrid(E13) 67-40, vs KUMOJI 77-31 (108 games each, 200ms, same options); hybrid(E13) vs hybrid(E12) 63-36, vs KUMOJI 56-44 (100 games each, 200ms, same options); hybrid(E12) vs hybrid(E11) 64-35, vs KUMOJI 49-51 (100 games each, 200ms, same options); hybrid(E11) vs hybrid(E10) 84-16, vs KUMOJI 36-64 (100 games each, 200ms, same options); hybrid(E10) vs hybrid(E9) 83-17, vs KUMOJI 16-84 (100 games each, 200ms, same options); hybrid(E9) vs legacy formal E9 94-6; legacy search E10 vs E9 49-50",
+    "weights_file": "models/fukaji-e14.nnue.npz",
+    "weights_sha256": "5df137407deca2277328bc2141f496d6596ba0fe7cc70b4c7a1440a47f3f6a5c"
   },
   "model_distribution": "GitHub models/fukaji-e10.nnue.npz; complete Adam29173 in the E10 trained Release.",
   "optimizer_step": 29173,
