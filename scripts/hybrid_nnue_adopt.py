@@ -1,6 +1,6 @@
 """正式エンジン(ハイブリッド)のNNUEを次の版へ更新する共通の採用手続き(E12以降、周回ごとに使う)。
 - 親は formal/model.json の hybrid節にある現行NNUE。学習報告(g1-train-v1)の parent がそれと一致すること。
-- 事前基準: 同一探索・100局で、対現行正式 +12以上、対雲路が --kumoji-min-wins 以上。
+- 事前基準: 同一探索・100局(F30以降は108局)で、対現行正式 +12以上、対雲路が --kumoji-min-wins 以上。
 - 旧エンジン(最上位の項目、E10)は変更しない。hybrid節・文書・契約ハッシュだけを書き換える。
 実行はCI(hybrid-nnue-adopt.yml)のみ。実runのartifactから再検証してから書き換える。
 """
@@ -42,7 +42,7 @@ def append(path, new):
 
 def result(path, margin=None, min_wins=None):
     r = json.loads(Path(path).read_text())
-    ok = r["games"] == 100 and r["replay_verified"] is True and r["illegal_pairs"] == [] and r["labels"] == ["HYBRID", "OPP"]
+    ok = r["games"] in (100, 108) and r["replay_verified"] is True and r["illegal_pairs"] == [] and r["labels"] == ["HYBRID", "OPP"]
     if margin is not None:
         ok = ok and r["fukaji_wins"] - r["kumoji_wins"] >= margin
     if min_wins is not None:
@@ -113,7 +113,7 @@ def main(a):
                         o=np.array([learned.output_bias], dtype=np.float32))
     raw = buf.getvalue(); dest.write_bytes(raw); wsha = digest(raw); receipt["weights_sha256"] = wsha
     draws = lambda r: f"-{r['draws_or_unresolved']}" if r["draws_or_unresolved"] else ""
-    w = (f"{name} ハイブリッド(200ms・同一探索・各100局)で対{prev} {rp['fukaji_wins']}-{rp['kumoji_wins']}{draws(rp)}、"
+    w = (f"{name} ハイブリッド(200ms・同一探索・各{rp['games']}局)で対{prev} {rp['fukaji_wins']}-{rp['kumoji_wins']}{draws(rp)}、"
          f"対雲路 {rk['fukaji_wins']}-{rk['kumoji_wins']}{draws(rk)}")
     nf = json.loads(json.dumps(formal))
     nf["hybrid"].update({
@@ -125,7 +125,7 @@ def main(a):
                             "training": f"hybrid({prev}) self-play at 50ms/move, {rep['games']} games, {rep['train_positions']} positions; "
                                         f"label = search value mixed {rep['outcome_weight']} with game outcome; {rep['epochs']} epoch"},
         "validation": f"hybrid({name}) vs hybrid({prev}) {rp['fukaji_wins']}-{rp['kumoji_wins']}, vs KUMOJI {rk['fukaji_wins']}-{rk['kumoji_wins']} "
-                      f"(100 games each, 200ms, same options); " + h["validation"]})
+                      f"({rp['games']} games each, 200ms, same options); " + h["validation"]})
     for k in formal:
         if k != "hybrid" and nf[k] != formal[k]:
             raise ValueError("legacy formal field changed " + k)
