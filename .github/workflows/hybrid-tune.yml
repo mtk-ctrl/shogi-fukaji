@@ -1,0 +1,155 @@
+name: Hybrid tune (探索設定・雲路の探索版を、同じNNUEで対局比較。研究専用・正式版は変更しない)
+# 候補側だけに USI オプションを足して、基準(同じNNUE・既定の探索設定)と対局する。variants に複数入れると1回のビルドで順番に対局する。
+# 雲路の評価値・定跡・局面知識は使わない(PositionKnowledge=false)。NNUE重みは formal/model.json の現行正式、cp換算も現行正式。
+on:
+  workflow_dispatch:
+    inputs:
+      variants:
+        description: '候補側に足すUSIオプション。JSON {"名前": {"Opt": 値}, ...}。{} は基準と同じ(ぶれの確認)'
+        required: true
+        default: '{"null": {}}'
+        type: string
+      kumoji_ref:
+        description: "候補側が借りる雲路の探索のコミット"
+        required: true
+        default: "1e08de520a02bd72b26a5510fb183c638211765f"
+        type: string
+      opp_ref:
+        description: "基準側が借りる雲路の探索のコミット(same=候補側と同じ)"
+        required: true
+        default: "same"
+        type: string
+      pairs:
+        description: "開局ペア数(局数は2倍、18並列。F30: 18の倍数にする。54ペア=108局)"
+        required: true
+        default: "54"
+        type: string
+      movetime_ms:
+        description: "1手の時間(ms)"
+        required: true
+        default: "200"
+        type: string
+      seed:
+        description: "開局シード"
+        required: true
+        default: "202611160"
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: fukaji-hybrid-tune
+  cancel-in-progress: false
+jobs:
+  play:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    strategy:
+      fail-fast: false
+      max-parallel: 18
+      matrix:
+        shard: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: mtk-ctrl/shogi-ai
+          ref: ${{ inputs.kumoji_ref }}
+          path: kumoji-src
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        if: inputs.opp_ref != 'same'
+        with:
+          repository: mtk-ctrl/shogi-ai
+          ref: ${{ inputs.opp_ref }}
+          path: kumoji-src-opp
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - name: Build hybrid engines
+        run: |
+          set -euo pipefail
+          python scripts/build_hybrid.py --kumoji-src kumoji-src --work build/hybrid
+          if [ "${{ inputs.opp_ref }}" != same ]; then
+            python scripts/build_hybrid.py --kumoji-src kumoji-src-opp --work build/hybrid-opp
+          fi
+          python scripts/hybrid_export_weights.py formal build/hybrid.bin
+          S="$(python -c "import json;print(json.load(open('formal/model.json'))['hybrid']['nnue_scale'])")"
+          OPPDIR=build/hybrid; if [ "${{ inputs.opp_ref }}" != same ]; then OPPDIR=build/hybrid-opp; fi
+          printf '#!/bin/sh\nexport FUKAJI_NNUE_FILE="%s/build/hybrid.bin"\nexport FUKAJI_NNUE_SCALE="%s"\ncd "%s/build/hybrid"\nexec "%s/build/hybrid/build/kumoji-hybrid" "$@"\n' "$PWD" "$S" "$PWD" "$PWD" > /tmp/a.sh
+          printf '#!/bin/sh\nexport FUKAJI_NNUE_FILE="%s/build/hybrid.bin"\nexport FUKAJI_NNUE_SCALE="%s"\ncd "%s/%s"\nexec "%s/%s/build/kumoji-hybrid" "$@"\n' "$PWD" "$S" "$PWD" "$OPPDIR" "$PWD" "$OPPDIR" > /tmp/b.sh
+          chmod +x /tmp/a.sh /tmp/b.sh
+          printf 'usi\nisready\nquit\n' | /tmp/a.sh | tail -2
+          printf 'usi\nisready\nquit\n' | /tmp/b.sh | tail -2
+      - name: Play paired games for each variant
+        env:
+          VARIANTS: ${{ inputs.variants }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os, subprocess
+          fixed = {"PositionKnowledge": False, "AdaptiveLongThink": False, "USI_Ponder": False}
+          for name, extra in json.loads(os.environ["VARIANTS"]).items():
+              cmd = ["python", "scripts/usi_match.py", "pair", "--engine-a", "/tmp/a.sh", "--engine-b", "/tmp/b.sh",
+                     "--label-a", "HYBRID", "--label-b", "OPP", "--opts-a", json.dumps({**fixed, **extra}), "--opts-b", json.dumps(fixed),
+                     "--kumoji-src", "kumoji-src", "--shard", "${{ matrix.shard }}", "--shards", "18", "--pairs", "${{ inputs.pairs }}",
+                     "--movetime-ms", "${{ inputs.movetime_ms }}", "--seed", "${{ inputs.seed }}", "--out", f"build/part/{name}"]
+              print("== variant", name, extra, flush=True)
+              subprocess.run(cmd, check=True)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tune-part-${{ matrix.shard }}-${{ github.run_id }}
+          path: build/part/
+          retention-days: 30
+          if-no-files-found: warn
+  aggregate:
+    needs: play
+    if: ${{ !cancelled() && needs.play.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: mtk-ctrl/shogi-ai
+          ref: ${{ inputs.kumoji_ref }}
+          path: arena-src
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: tune-part-*-${{ github.run_id }}
+          path: build/all
+          merge-multiple: true
+      - name: Replay-verify and summarize each variant
+        env:
+          VARIANTS: ${{ inputs.variants }}
+          PAIRS: ${{ inputs.pairs }}
+        run: |
+          set -euo pipefail
+          mkdir -p build/results
+          python - <<'PY'
+          import json, os, subprocess
+          rows = []
+          for name in json.loads(os.environ["VARIANTS"]):
+              out = f"build/results/{name}.json"
+              subprocess.run(["python", "scripts/usi_match.py", "aggregate", "--parts", f"build/all/{name}", "--out", out,
+                              "--label-a", "HYBRID", "--label-b", "OPP", "--expect-games", str(int(os.environ["PAIRS"]) * 2)], check=True)
+              r = json.load(open(out))
+              rows.append((name, r.get("fukaji_wins"), r.get("kumoji_wins"), r.get("draws_or_unresolved"), r.get("games")))
+              print("RESULT", name, "wins", r.get("fukaji_wins"), "losses", r.get("kumoji_wins"), "draws", r.get("draws_or_unresolved"), "games", r.get("games"), flush=True)
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as f:
+              f.write("| variant | wins | losses | draws/unresolved | games |\n|---|---|---|---|---|\n")
+              for row in rows:
+                  f.write("| " + " | ".join(str(x) for x in row) + " |\n")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tune-result-${{ github.run_id }}
+          path: build/results/
