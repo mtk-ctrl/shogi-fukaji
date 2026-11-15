@@ -36,6 +36,11 @@ on:
         required: true
         default: "0"
         type: string
+      mirror:
+        description: "true=左右反転した局面も学習に使う(学習局面2倍)"
+        required: true
+        default: "false"
+        type: string
       parent_tag:
         description: "親の完全stateを含むReleaseタグ"
         required: true
@@ -78,7 +83,8 @@ jobs:
           set -euo pipefail
           python -u scripts/g1_train.py --parent-models input/parent/models --data input/data --out trained \
             --feature-set ${{ inputs.feature_set }} --outcome-weight ${{ inputs.outcome_weight }} --epochs ${{ inputs.epochs }} \
-            --lr ${{ inputs.lr }} --batch ${{ inputs.batch }} --max-games ${{ inputs.max_games }} | tee train.log
+            --lr ${{ inputs.lr }} --batch ${{ inputs.batch }} --max-games ${{ inputs.max_games }} \
+            ${{ inputs.mirror == 'true' && '--mirror' || '' }} | tee train.log
           python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
           import json
           print('### G1 train');print('```json');print(json.dumps(json.load(open('trained/report.json')),indent=1,ensure_ascii=False));print('```')

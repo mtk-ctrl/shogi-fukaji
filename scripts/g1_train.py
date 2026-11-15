@@ -1,5 +1,6 @@
 """G1 大量データ学習: g1_gen.py の自己対局データ(数百万局面)で、親(現行正式NNUE)から学習する。
 ラベル = (1-w)*sigmoid(探索cp/scale) + w*対局結果(手番側)。雲路の指し手・評価値は不使用(評価は常に深路NNUE)。
+--mirror: 左右反転した局面も学習に使う(将棋は左右対称なので評価値は同じ。対局を増やさず学習局面が2倍)。
 feature-set: base(現行の絶対特徴2548) / zone(玉周辺±2升, +1300) / king(玉相対17x17, +15028)。拡張直後の評価は親と一致(新規行ゼロ)。
 棋譜の5%を検証用に除き、検証ラベル損失が下がることを確認(gate)。棋力の判定は親との対局(hybrid-match)で行う。
 """
@@ -45,6 +46,20 @@ def featurize(chunk):
     return np.stack(xs), np.asarray(ys, np.float32), np.asarray(hold, bool)
 
 
+def mirror_perm(fs):
+    """特徴番号→左右反転した局面での特徴番号。盤の升は筋を反転、持ち駒は不変、玉相対は横方向の差を反転。末尾は埋め草(不変)。"""
+    n = INPUTS[fs]
+    perm = np.arange(n + 1, dtype=np.int16)
+    for i in range(2268):
+        q, sq = divmod(i, 81); r, c = divmod(sq, 9)
+        perm[i] = q * 81 + r * 9 + 8 - c
+    side = {"zone": 5, "king": 17}.get(fs)
+    for j in range(n - 2548):
+        q, c = divmod(j, side)
+        perm[2548 + j] = 2548 + q * side + side - 1 - c
+    return perm
+
+
 def onehot(ix, inputs):
     n, w = ix.shape
     return sp.csr_matrix((np.ones(n * w, np.float32), ix.reshape(-1).astype(np.int32), np.arange(0, n * w + 1, w)), shape=(n, inputs + 1))
@@ -65,16 +80,19 @@ def loss_of(params, ix, y, inputs):
     return tot / max(1, len(y))
 
 
-def fit(params, opt, ix, y, hx, hy, inputs, *, epochs, lr, batch, seed):
+def fit(params, opt, ix, y, hx, hy, inputs, *, epochs, lr, batch, seed, perm=None):
     """fukaji.online_learning.fit と同じ更新式(Adam, 勾配ノルム上限1, 減衰1e-5)。疎行列で高速化し、バッチを大きくできる。"""
     rng = np.random.default_rng(seed)
     history = [{"epoch": 0, "heldout": loss_of(params, hx, hy, inputs)}]
     t0 = time.time()
     for epoch in range(epochs):
-        order = rng.permutation(len(y))
+        order = rng.permutation(len(y) * (2 if perm is not None else 1))   # 後半の番号は左右反転した同じ局面
         for n, start in enumerate(range(0, len(order), batch)):
             sel = np.sort(order[start:start+batch])
-            X = onehot(ix[sel], inputs); t = y[sel]
+            rows = ix[sel % len(y)]; t = y[sel % len(y)]
+            if perm is not None:
+                flip = sel >= len(y); rows[flip] = perm[rows[flip]]
+            X = onehot(rows, inputs)
             pre, hidden, logits = forward(params, X)
             error = ((1 / (1 + np.exp(-logits)) - t) / len(t)).astype(np.float32)
             dh = (error[:, None] * params[2][None, :] * ((pre > 0) & (pre < 1))).astype(np.float32)
@@ -110,6 +128,7 @@ def main():
     p.add_argument("--min-ply", type=int, default=8)
     p.add_argument("--max-games", type=int, default=0)
     p.add_argument("--seed", type=int, default=20261114)
+    p.add_argument("--mirror", action="store_true")
     a = p.parse_args()
     formal = json.loads(Path("formal/model.json").read_text())
     hyb = formal.get("hybrid", {})
@@ -153,7 +172,8 @@ def main():
         raise SystemExit("not enough positions")
     params = parameters(parent)
     opt2 = {"step": opt["step"], "m": [x.copy() for x in opt["m"]], "s": [x.copy() for x in opt["s"]]}
-    history = fit(params, opt2, ix, y, hx, hy, parent.inputs, epochs=a.epochs, lr=a.lr, batch=a.batch, seed=a.seed)
+    history = fit(params, opt2, ix, y, hx, hy, parent.inputs, epochs=a.epochs, lr=a.lr, batch=a.batch, seed=a.seed,
+                  perm=mirror_perm(a.feature_set) if a.mirror else None)
     before, after = history[0]["heldout"], history[-1]["heldout"]
     gate = after < before
     print(f"heldout label loss {before:.5f} -> {after:.5f} gate {'pass' if gate else 'fail'}", flush=True)
@@ -165,7 +185,7 @@ def main():
     report = {"schema": "g1-train-v1", "parent": BASE, "snapshot": key,
               "weights_file_sha256": hashlib.sha256((a.out / "cand-weights.npz").read_bytes()).hexdigest(),
               "games": len(lines), "train_positions": int(len(y)), "heldout_positions": int(len(hy)),
-              "outcome_weight": a.outcome_weight, "feature_set": a.feature_set, "inputs": int(parent.inputs),
+              "outcome_weight": a.outcome_weight, "feature_set": a.feature_set, "mirror": a.mirror, "inputs": int(parent.inputs),
               "heldout_history": history, "heldout_before": before, "heldout_after": after, "gate": "pass" if gate else "fail",
               "epochs": a.epochs, "lr": a.lr, "batch": a.batch, "optimizer_step_after": opt2["step"],
               "strength_proven": False, "formal_model_changed": False}

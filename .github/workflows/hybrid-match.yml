@@ -23,6 +23,11 @@ on:
         required: true
         default: "600"
         type: string
+      opp_scale:
+        description: "opponent=hybrid のときの相手のcp換算(same=scaleと同じ)"
+        required: true
+        default: "same"
+        type: string
       pairs:
         description: "開局ペア数(局数は2倍、18並列。F30: 18の倍数にする。54ペア=108局)"
         required: true
@@ -112,7 +117,8 @@ jobs:
           if [ "${{ inputs.opponent }}" = "kumoji" ]; then
             printf '#!/bin/sh\ncd "%s/kumoji-src"\nexec "%s/kumoji-src/build/kumoji" "$@"\n' "$PWD" "$PWD" > /tmp/b.sh
           elif [ "${{ inputs.opponent }}" = "hybrid" ]; then
-            printf '#!/bin/sh\nexport FUKAJI_NNUE_FILE="%s/build/hybrid-opp.bin"\nexport FUKAJI_NNUE_SCALE="%s"\ncd "%s/build/hybrid"\nexec "%s/build/hybrid/build/kumoji-hybrid" "$@"\n' "$PWD" "${{ inputs.scale }}" "$PWD" "$PWD" > /tmp/b.sh
+            OS="${{ inputs.opp_scale }}"; if [ "$OS" = same ]; then OS="${{ inputs.scale }}"; fi
+            printf '#!/bin/sh\nexport FUKAJI_NNUE_FILE="%s/build/hybrid-opp.bin"\nexport FUKAJI_NNUE_SCALE="%s"\ncd "%s/build/hybrid"\nexec "%s/build/hybrid/build/kumoji-hybrid" "$@"\n' "$PWD" "$OS" "$PWD" "$PWD" > /tmp/b.sh
           else
             printf '#!/bin/sh\nexec "%s/run-fukaji-legacy.sh" "$@"\n' "$PWD" > /tmp/b.sh
           fi
