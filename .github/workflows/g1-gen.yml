@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       weights:
-        description: "自己対局に使うNNUE推論npz(リポジトリ内)"
+        description: "自己対局に使うNNUE。formal=現行正式、またはリポジトリ内の推論npz"
         required: true
-        default: "models/fukaji-e11.nnue.npz"
+        default: "formal"
         type: string
       minutes:
         description: "1ランナーあたりの生成時間(分)。20ランナー×全コア"

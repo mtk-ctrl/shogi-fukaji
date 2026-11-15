@@ -39,12 +39,12 @@ on:
       parent_tag:
         description: "親の完全stateを含むReleaseタグ"
         required: true
-        default: "fukaji-current-e11-hybrid-zone-20261114"
+        default: "formal"
         type: string
       parent_asset:
         description: "親のstate資産名"
         required: true
-        default: "E11-trained-state-Adam.tar.gz"
+        default: "formal"
         type: string
 permissions:
   contents: read
@@ -68,8 +68,11 @@ jobs:
           for r in ${{ inputs.data_runs }}; do
             gh run download "$r" --pattern 'g1-data-*' --dir "input/data/$r"
           done
-          gh release download ${{ inputs.parent_tag }} --pattern ${{ inputs.parent_asset }} --dir input
-          mkdir -p input/parent && tar -xzf input/${{ inputs.parent_asset }} -C input/parent models
+          TAG="${{ inputs.parent_tag }}"; ASSET="${{ inputs.parent_asset }}"
+          if [ "$TAG" = formal ]; then TAG=$(python -c "import json;print(json.load(open('formal/model.json'))['hybrid']['state_release_tag'])"); fi
+          if [ "$ASSET" = formal ]; then ASSET=$(python -c "import json;print(json.load(open('formal/model.json'))['hybrid']['state_release_asset'])"); fi
+          gh release download "$TAG" --pattern "$ASSET" --dir input
+          mkdir -p input/parent && tar -xzf "input/$ASSET" -C input/parent models
       - name: Train
         run: |
           set -euo pipefail

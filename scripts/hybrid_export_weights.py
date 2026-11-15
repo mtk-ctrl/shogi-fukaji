@@ -3,6 +3,11 @@
 import argparse, struct
 import numpy as np
 p = argparse.ArgumentParser(); p.add_argument("npz"); p.add_argument("out"); a = p.parse_args()
+if a.npz == "formal":   # 現行の正式ハイブリッドNNUE(formal/model.json の hybrid節。無ければ最上位)
+    import json, pathlib
+    root = pathlib.Path(__file__).resolve().parents[1]
+    spec = json.loads((root / "formal/model.json").read_text())
+    a.npz = str(root / spec["hybrid"].get("weights_file", spec["weights_file"]))
 with np.load(a.npz, allow_pickle=False) as d:
     w, b, v, o = d["w"].astype("<f4"), d["b"].astype("<f4"), d["v"].astype("<f4"), d["o"].astype("<f4")
 assert w.shape in ((2548, 128), (17576, 128), (3848, 128)) and b.shape == (128,) and v.shape == (128,) and o.shape == (1,)
