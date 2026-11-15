@@ -140,6 +140,7 @@ def main():
         reasons[g["r"]] = reasons.get(g["r"], 0) + 1
     summary = {"schema": "g1-gen-part-v1", "shard": a.shard, "seed": a.seed, "movetime_ms": a.movetime_ms, "games": len(games),
                "positions": sum(sum(s is not None for s in g["s"]) for g in games), "reasons": reasons, "opponent": a.opponent,
+               "nnue_scale": float(os.environ.get("FUKAJI_NNUE_SCALE", "600")),   # 評価値cpの目盛り(1ロジット=何cp)。学習側がこの値で戻す
                "hybrid_wins": sum(g.get("h") is not None and g["w"] == g["h"] for g in games),
                "mean_plies": sum(len(g["m"]) for g in games) / max(1, len(games))}
     (a.out / f"summary-{a.shard:02d}.json").write_text(json.dumps(summary, ensure_ascii=False) + "\n")

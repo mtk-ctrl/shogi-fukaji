@@ -113,3 +113,7 @@ ChatGPT・Claude等は同じRuleと同じGitHub正本を使う。まず[開発�
 ## 最新正式NNUE（E13、2026-11-15）
 
 正式E13／Adam91824、snapshot 6b91fba9a68cbb74eeacdd7595f2b9d3c9347e994b5a0794bcb6146d75dc0c0f。E13 ハイブリッド(200ms・同一探索・各100局)で対E12 63-36-1、対雲路 56-44。正式エンジン(ハイブリッド)の重みは formal/model.json の hybrid節(`models/fukaji-e13.nnue.npz`)。旧エンジン(legacy)はE10のまま。
+
+## 評価値の目盛り2400・左右反転学習（2026-11-15）
+
+正式エンジン(ハイブリッド)のcp換算は hybrid.nnue_scale=2400(600から変更。同じE12で2400対600＝66-42、対雲路53-55)。学習は左右反転を既定で使う(g1-train.yml mirror=true。反転あり候補は反転なし候補に64-43-1)。生成データは自分の目盛りを summary の nnue_scale に持ち、学習はそれに従う(記録なし＝600)。正式NNUEはE12のまま、反転あり候補(学習run 43664202193)のE13採用は本人承認待ち。[判断](docs/decisions/2026-11-15_評価値の目盛り2400と左右反転学習を採用.md)。

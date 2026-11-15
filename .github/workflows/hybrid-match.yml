@@ -19,9 +19,9 @@ on:
         default: "formal"
         type: string
       scale:
-        description: "NNUE評価のcp換算(1ロジット=何cp)"
+        description: "NNUE評価のcp換算(1ロジット=何cp)。formal=正式設定(formal/model.json の hybrid.nnue_scale)"
         required: true
-        default: "600"
+        default: "formal"
         type: string
       opp_scale:
         description: "opponent=hybrid のときの相手のcp換算(same=scaleと同じ)"
@@ -113,11 +113,12 @@ jobs:
         run: |
           set -euo pipefail
           chmod +x run-fukaji-legacy.sh
-          printf '#!/bin/sh\nexport FUKAJI_NNUE_FILE="%s/build/hybrid.bin"\nexport FUKAJI_NNUE_SCALE="%s"\ncd "%s/build/hybrid"\nexec "%s/build/hybrid/build/kumoji-hybrid" "$@"\n' "$PWD" "${{ inputs.scale }}" "$PWD" "$PWD" > /tmp/a.sh
+          S="${{ inputs.scale }}"; if [ "$S" = formal ]; then S="$(python -c "import json;print(json.load(open('formal/model.json'))['hybrid']['nnue_scale'])")"; fi
+          printf '#!/bin/sh\nexport FUKAJI_NNUE_FILE="%s/build/hybrid.bin"\nexport FUKAJI_NNUE_SCALE="%s"\ncd "%s/build/hybrid"\nexec "%s/build/hybrid/build/kumoji-hybrid" "$@"\n' "$PWD" "$S" "$PWD" "$PWD" > /tmp/a.sh
           if [ "${{ inputs.opponent }}" = "kumoji" ]; then
             printf '#!/bin/sh\ncd "%s/kumoji-src"\nexec "%s/kumoji-src/build/kumoji" "$@"\n' "$PWD" "$PWD" > /tmp/b.sh
           elif [ "${{ inputs.opponent }}" = "hybrid" ]; then
-            OS="${{ inputs.opp_scale }}"; if [ "$OS" = same ]; then OS="${{ inputs.scale }}"; fi
+            OS="${{ inputs.opp_scale }}"; if [ "$OS" = same ]; then OS="$S"; fi
             printf '#!/bin/sh\nexport FUKAJI_NNUE_FILE="%s/build/hybrid-opp.bin"\nexport FUKAJI_NNUE_SCALE="%s"\ncd "%s/build/hybrid"\nexec "%s/build/hybrid/build/kumoji-hybrid" "$@"\n' "$PWD" "$OS" "$PWD" "$PWD" > /tmp/b.sh
           else
             printf '#!/bin/sh\nexec "%s/run-fukaji-legacy.sh" "$@"\n' "$PWD" > /tmp/b.sh

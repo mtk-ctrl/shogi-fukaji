@@ -19,10 +19,10 @@ _CFG = None
 
 
 def featurize(chunk):
-    fs, scale, ow, min_ply, stride_seed = _CFG
+    fs, _, ow, min_ply, stride_seed = _CFG
     pad = INPUTS[fs]
     xs, ys, hold = [], [], []
-    for gi, line in chunk:
+    for gi, (line, scale) in chunk:
         g = json.loads(line)
         if g["r"] == "illegal":
             continue
@@ -165,14 +165,18 @@ def main():
     else:
         raise SystemExit(f"parent is {base_fs}; cannot convert to {a.feature_set}")
     assert parent.inputs == INPUTS[a.feature_set]
-    lines = []
+    lines, scales = [], {}
     for d in a.data:
         for f in sorted(d.rglob("games-*.jsonl.gz")):
+            # 評価値の目盛りは生成時の記録(summary-XX.json の nnue_scale)に従う。記録のない旧データは --scale(600)。
+            sm = f.with_name(f.name.replace("games-", "summary-").replace(".jsonl.gz", ".json"))
+            sc = float(json.loads(sm.read_text()).get("nnue_scale", a.scale)) if sm.exists() else a.scale
+            scales[sc] = scales.get(sc, 0) + 1
             with gzip.open(f, "rt") as fh:
-                lines += fh.read().splitlines()
+                lines += [(x, sc) for x in fh.read().splitlines()]
     if a.max_games:
         lines = lines[:a.max_games]
-    print("games", len(lines), flush=True)
+    print("games", len(lines), "label scales (files)", scales, flush=True)
     _CFG = (a.feature_set, a.scale, a.outcome_weight, a.min_ply, a.seed)
     items = list(enumerate(lines))
     chunks = [items[i:i+200] for i in range(0, len(items), 200)]
@@ -207,7 +211,11 @@ def main():
     report = {"schema": "g1-train-v1", "parent": BASE, "snapshot": key,
               "weights_file_sha256": hashlib.sha256((a.out / "cand-weights.npz").read_bytes()).hexdigest(),
               "games": len(lines), "train_positions": int(len(y)), "heldout_positions": int(len(hy)),
+<<<<<<< Updated upstream
               "outcome_weight": a.outcome_weight, "feature_set": a.feature_set, "mirror": a.mirror, "inputs": int(parent.inputs), "hidden": int(params[0].shape[1]),
+=======
+              "outcome_weight": a.outcome_weight, "label_scales": {str(k): v for k, v in scales.items()}, "feature_set": a.feature_set, "mirror": a.mirror, "inputs": int(parent.inputs),
+>>>>>>> Stashed changes
               "heldout_history": history, "heldout_before": before, "heldout_after": after, "gate": "pass" if gate else "fail",
               "epochs": a.epochs, "lr": a.lr, "batch": a.batch, "optimizer_step_after": opt2["step"],
               "strength_proven": False, "formal_model_changed": False}

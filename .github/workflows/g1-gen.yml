@@ -66,10 +66,9 @@ jobs:
           python scripts/build_hybrid.py --kumoji-src kumoji-src --work build/hybrid
           python scripts/hybrid_export_weights.py "${{ inputs.weights }}" build/hybrid.bin
       - name: Generate
-        env:
-          FUKAJI_NNUE_SCALE: '600'
         run: |
           set -euo pipefail
+          export FUKAJI_NNUE_SCALE="$(python -c "import json;print(json.load(open('formal/model.json'))['hybrid']['nnue_scale'])")"
           export HYB_ENGINE="$PWD/build/hybrid/build/kumoji-hybrid" HYB_CWD="$PWD/build/hybrid" FUKAJI_NNUE_FILE="$PWD/build/hybrid.bin"
           python -u scripts/g1_gen.py --shard ${{ matrix.shard }} --seed ${{ inputs.seed }} --minutes ${{ inputs.minutes }} \
             --movetime-ms ${{ inputs.movetime_ms }} --opponent ${{ inputs.opponent }} --out data

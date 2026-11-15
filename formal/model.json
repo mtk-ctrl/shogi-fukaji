@@ -26,7 +26,8 @@
     "legacy_note": "The legacy engine (run-fukaji-legacy.sh, own search v0.4.1, inputs 2548) cannot evaluate the king-zone rows and stays on the top-level E10 weights.",
     "nnue_approved_by": "owner-approved E13 (2026-11-15) E13 ハイブリッド(200ms・同一探索・各100局)で対E12 63-36-1、対雲路 56-44",
     "nnue_approved_on": "2026-11-15",
-    "nnue_scale": 600,
+    "nnue_scale": 2400,
+    "nnue_scale_validation": "2026-11-15 owner-instructed: E12 scale2400 vs scale600 66-42, scale4800 vs 2400 45-63, E12 scale2400 vs KUMOJI 53-55 (108 games each, 200ms, same weights; runs 43664203966/43664687284/43665043735). Training data records its own scale (summary nnue_scale); data without it is scale 600.",
     "nnue_validation": {
       "hybrid_vs_kumoji": {
         "draws_or_unresolved": 0,

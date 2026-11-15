@@ -39,7 +39,7 @@ on:
       mirror:
         description: "true=左右反転した局面も学習に使う(学習局面2倍)"
         required: true
-        default: "false"
+        default: "true"
         type: string
       hidden:
         description: "隠れ層の幅。128=正式と同じ / 256=研究(親を複製して倍に広げる。採用には専用手続きが必要)"
