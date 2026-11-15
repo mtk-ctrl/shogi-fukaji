@@ -25,7 +25,7 @@ def prepare():
     if sha(npz) != weights_sha:
         raise SystemExit("formal NNUE SHA256 mismatch")
     stamp = json.dumps({"ref": h["kumoji_ref"], "eval_h": sha(ROOT / "research/hybrid/nnue_eval.h"),
-                        "build": sha(ROOT / "scripts/build_hybrid.py")}, sort_keys=True)
+                        "build": sha(ROOT / "scripts/build_hybrid.py"), "search": h.get("search_defaults", {})}, sort_keys=True)
     stamp_file = work / "stamp.json"
     if not (binary.exists() and stamp_file.exists() and stamp_file.read_text() == stamp):
         src = os.environ.get("FUKAJI_KUMOJI_SRC")

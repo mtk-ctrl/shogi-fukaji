@@ -18,9 +18,9 @@
       128,
       1
     ],
-    "engine": "KUMOJI search (pinned commit) + FUKAJI formal NNUE evaluation",
+    "engine": "KUMOJI search (pinned commit, search defaults in search_defaults) + FUKAJI formal NNUE evaluation",
     "feature_set": "base 2548 + king zone 5x5 (1300): fukaji.nnue_research.king_zone_indices / research/hybrid/nnue_eval.h",
-    "kumoji_ref": "1e08de520a02bd72b26a5510fb183c638211765f",
+    "kumoji_ref": "199dbb0b6a760b9341c27f3a0f4aaeaa7dae4e89",
     "kumoji_repo": "https://github.com/mtk-ctrl/shogi-ai",
     "legacy_launcher": "run-fukaji-legacy.sh",
     "legacy_note": "The legacy engine (run-fukaji-legacy.sh, own search v0.4.1, inputs 2548) cannot evaluate the king-zone rows and stays on the top-level E10 weights.",
@@ -52,6 +52,11 @@
     },
     "research_parent_sha256": "797277c909a8f2e74521aab049021b5234f3eea21036a9a1b41d4e0b4ce1ebee",
     "research_snapshot_sha256": "6b91fba9a68cbb74eeacdd7595f2b9d3c9347e994b5a0794bcb6146d75dc0c0f",
+    "search_defaults": {
+      "NullMoveReduction": 3,
+      "QDelta": 600
+    },
+    "search_validation": "2026-11-15 owner-instructed (strongest to formal): E13 weights, 200ms, 108 games each, same options. KUMOJI search 199dbb0 (2 threads, TT rework) vs pinned 1e08de5: 66-41-1 (run 43687839035). 199dbb0 + QDelta600 + NullMoveReduction3 vs pinned 1e08de5: 76-32 (run 43695741247); vs 199dbb0 default: 74-34 (run 43696753065). Other single options on pinned 1e08de5 (RfpMargin, FutilityMargin, RazorMargin, LmrGrade, LmpDepth, IirMinDepth, LmrAfter) showed no clear gain (runs 43687869678).",
     "state_release_asset": "E13-trained-state-Adam.tar.gz",
     "state_release_tag": "fukaji-current-e13-hybrid-zone-20261115",
     "training_report_sha256": "d5ab8c5a31faba1c737240f0cff2f6c004fd9ba7c3a22937e6fe667c27654307",

@@ -12,7 +12,7 @@ on:
       kumoji_ref:
         description: "候補側が借りる雲路の探索のコミット"
         required: true
-        default: "1e08de520a02bd72b26a5510fb183c638211765f"
+        default: "199dbb0b6a760b9341c27f3a0f4aaeaa7dae4e89"
         type: string
       opp_ref:
         description: "基準側が借りる雲路の探索のコミット(same=候補側と同じ)"
@@ -72,7 +72,7 @@ jobs:
           set -euo pipefail
           python scripts/build_hybrid.py --kumoji-src kumoji-src --work build/hybrid
           if [ "${{ inputs.opp_ref }}" != same ]; then
-            python scripts/build_hybrid.py --kumoji-src kumoji-src-opp --work build/hybrid-opp
+            python scripts/build_hybrid.py --kumoji-src kumoji-src-opp --work build/hybrid-opp --search-defaults none
           fi
           python scripts/hybrid_export_weights.py formal build/hybrid.bin
           S="$(python -c "import json;print(json.load(open('formal/model.json'))['hybrid']['nnue_scale'])")"
