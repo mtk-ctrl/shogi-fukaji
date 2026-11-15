@@ -41,6 +41,11 @@ on:
         required: true
         default: "false"
         type: string
+      hidden:
+        description: "隠れ層の幅。128=正式と同じ / 256=研究(親を複製して倍に広げる。採用には専用手続きが必要)"
+        required: true
+        default: "128"
+        type: string
       parent_tag:
         description: "親の完全stateを含むReleaseタグ"
         required: true
@@ -84,7 +89,7 @@ jobs:
           python -u scripts/g1_train.py --parent-models input/parent/models --data input/data --out trained \
             --feature-set ${{ inputs.feature_set }} --outcome-weight ${{ inputs.outcome_weight }} --epochs ${{ inputs.epochs }} \
             --lr ${{ inputs.lr }} --batch ${{ inputs.batch }} --max-games ${{ inputs.max_games }} \
-            ${{ inputs.mirror == 'true' && '--mirror' || '' }} | tee train.log
+            --hidden ${{ inputs.hidden }} ${{ inputs.mirror == 'true' && '--mirror' || '' }} | tee train.log
           python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
           import json
           print('### G1 train');print('```json');print(json.dumps(json.load(open('trained/report.json')),indent=1,ensure_ascii=False));print('```')
@@ -96,4 +101,5 @@ jobs:
             trained/cand-weights.npz
             trained/report.json
             trained/models
+            trained/wide-state.npz
           retention-days: 60

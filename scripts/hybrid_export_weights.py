@@ -10,8 +10,9 @@ if a.npz == "formal":   # 現行の正式ハイブリッドNNUE(formal/model.jso
     a.npz = str(root / spec["hybrid"].get("weights_file", spec["weights_file"]))
 with np.load(a.npz, allow_pickle=False) as d:
     w, b, v, o = d["w"].astype("<f4"), d["b"].astype("<f4"), d["v"].astype("<f4"), d["o"].astype("<f4")
-assert w.shape in ((2548, 128), (17576, 128), (3848, 128)) and b.shape == (128,) and v.shape == (128,) and o.shape == (1,)
+H = w.shape[1]   # 隠れ層: 128(正式) または 256(研究)
+assert H in (128, 256) and w.shape[0] in (2548, 17576, 3848) and b.shape == (H,) and v.shape == (H,) and o.shape == (1,)
 with open(a.out, "wb") as f:
-    f.write(b"FKJNNUE1" + struct.pack("<II", w.shape[0], 128))
+    f.write(b"FKJNNUE1" + struct.pack("<II", w.shape[0], H))
     f.write(w.tobytes()); f.write(b.tobytes()); f.write(v.tobytes()); f.write(o.tobytes())
 print("wrote", a.out)

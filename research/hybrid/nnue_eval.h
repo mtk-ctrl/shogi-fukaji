@@ -14,12 +14,12 @@
 
 namespace shogi::strategy {
 namespace nnue_hybrid {
-constexpr int kBaseInputs = 2548, kKingInputs = 17576, kZoneInputs = 3848, kHidden = 128;
+constexpr int kBaseInputs = 2548, kKingInputs = 17576, kZoneInputs = 3848, kHidden = 128, kMaxHidden = 256;   // hidden: 128(正式) または 256(研究)
 struct Model {
     bool loaded = false, tried = false, king_relative = false, king_zone = false;
-    int inputs = kBaseInputs;
-    std::vector<float> w;                 // [inputs][kHidden] (inputs = 2548, or 17576 with king-relative rows)
-    std::array<float, kHidden> b{}, v{};
+    int inputs = kBaseInputs, hidden = kHidden;
+    std::vector<float> w;                 // [inputs][hidden] (inputs = 2548, or 17576 with king-relative rows)
+    std::array<float, kMaxHidden> b{}, v{};
     float o = 0.f;
     double scale = 600.0;
 };
@@ -36,14 +36,15 @@ inline void load_once() {
     char magic[8];
     std::uint32_t inputs = 0, hidden = 0;
     bool ok = std::fread(magic, 1, 8, f) == 8 && std::fread(&inputs, 4, 1, f) == 1 && std::fread(&hidden, 4, 1, f) == 1 &&
-              std::string(magic, 8) == "FKJNNUE1" && (inputs == kBaseInputs || inputs == kKingInputs || inputs == kZoneInputs) && hidden == kHidden;
+              std::string(magic, 8) == "FKJNNUE1" && (inputs == kBaseInputs || inputs == kKingInputs || inputs == kZoneInputs) && (hidden == kHidden || hidden == kMaxHidden);
     if (ok) {
         m.inputs = int(inputs);
         m.king_relative = inputs == kKingInputs;
         m.king_zone = inputs == kZoneInputs;
-        m.w.resize(std::size_t(m.inputs) * kHidden);
+        m.hidden = int(hidden);
+        m.w.resize(std::size_t(m.inputs) * m.hidden);
         ok = std::fread(m.w.data(), 4, m.w.size(), f) == m.w.size() &&
-             std::fread(m.b.data(), 4, kHidden, f) == kHidden && std::fread(m.v.data(), 4, kHidden, f) == kHidden &&
+             std::fread(m.b.data(), 4, hidden, f) == hidden && std::fread(m.v.data(), 4, hidden, f) == hidden &&
              std::fread(&m.o, 4, 1, f) == 1;
     }
     std::fclose(f);
@@ -60,13 +61,15 @@ inline int nnue_kind(int kind, bool promoted) {
     switch (kind) { case 1: return 1; case 2: return 2; case 3: return 3; case 4: return 4; case 7: return 5; case 5: return 6; case 6: return 7; case 8: return 8; default: return 0; }
 }
 // Logit for the side to move (same as fukaji nnue_value with perspective = side to move).
-inline double logit_side_to_move(const rules::Snapshot& s) {
+// H はコンパイル時定数にする(実行時の値にすると内側のループが遅くなる。128で約3〜4割の速度低下を実測)。
+template <int H>
+inline double logit_impl(const rules::Snapshot& s) {
     const Model& m = model();
     const int persp = s.turn == rules::Color::Black ? 0 : 1;
-    float acc[kHidden] = {};
+    float acc[H] = {};
     auto add = [&](int idx) {
-        const float* row = &m.w[std::size_t(idx) * kHidden];
-        for (int h = 0; h < kHidden; ++h) acc[h] += row[h];
+        const float* row = &m.w[std::size_t(idx) * H];
+        for (int h = 0; h < H; ++h) acc[h] += row[h];
     };
     int kings[2] = {-1, -1};                                  // python-shogi squares of the Black/White king
     for (int sq = 0; sq < 81; ++sq) {
@@ -109,8 +112,11 @@ inline double logit_side_to_move(const rules::Snapshot& s) {
             for (int j = 0; j < n; ++j) add(2268 + ((side ^ persp) * 7 + map_hand[k]) * 20 + j);
         }
     float value = m.o;
-    for (int h = 0; h < kHidden; ++h) value += std::clamp(acc[h] + m.b[h], 0.f, 1.f) * m.v[h];
+    for (int h = 0; h < H; ++h) value += std::clamp(acc[h] + m.b[h], 0.f, 1.f) * m.v[h];
     return value;
+}
+inline double logit_side_to_move(const rules::Snapshot& s) {
+    return model().hidden == kHidden ? logit_impl<kHidden>(s) : logit_impl<kMaxHidden>(s);
 }
 inline int eval_black(const rules::Snapshot& s) {
     const double l = std::clamp(logit_side_to_move(s), -20.0, 20.0);

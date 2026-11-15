@@ -113,6 +113,19 @@ def fit(params, opt, ix, y, hx, hy, inputs, *, epochs, lr, batch, seed, perm=Non
     return history
 
 
+def widen(params, opt, hidden, seed):
+    """隠れ層を倍に広げる(研究)。各ユニットを複製し出力重みを半分ずつにするので、広げた直後の評価は親とほぼ同じ。
+    複製側の入力重みにだけ小さな乱数を足して、2つが別々に育つようにする。Adam状態も同じ形に複製する。"""
+    w, b, v, o = params
+    if hidden != 2 * w.shape[1]:
+        raise SystemExit("widen supports doubling only")
+    rng = np.random.default_rng(seed + 7)
+    noise = rng.normal(0, 0.05 * float(w.std()), w.shape).astype(np.float32)
+    new = [np.concatenate((w, w + noise), axis=1), np.concatenate((b, b)), np.concatenate((v / 2, v / 2)), o.copy()]
+    dup = lambda xs: [np.concatenate((xs[0], xs[0]), axis=1), np.concatenate((xs[1], xs[1])), np.concatenate((xs[2], xs[2])), xs[3].copy()]
+    return [np.ascontiguousarray(x, dtype=p.dtype) for x, p in zip(new, params)], {"step": opt["step"], "m": dup(opt["m"]), "s": dup(opt["s"])}
+
+
 def main():
     global _CFG
     p = argparse.ArgumentParser()
@@ -129,6 +142,7 @@ def main():
     p.add_argument("--max-games", type=int, default=0)
     p.add_argument("--seed", type=int, default=20261114)
     p.add_argument("--mirror", action="store_true")
+    p.add_argument("--hidden", type=int, choices=[128, 256], default=128)
     a = p.parse_args()
     formal = json.loads(Path("formal/model.json").read_text())
     hyb = formal.get("hybrid", {})
@@ -172,20 +186,28 @@ def main():
         raise SystemExit("not enough positions")
     params = parameters(parent)
     opt2 = {"step": opt["step"], "m": [x.copy() for x in opt["m"]], "s": [x.copy() for x in opt["s"]]}
+    if a.hidden != params[0].shape[1]:
+        params, opt2 = widen(params, opt2, a.hidden, a.seed)
     history = fit(params, opt2, ix, y, hx, hy, parent.inputs, epochs=a.epochs, lr=a.lr, batch=a.batch, seed=a.seed,
                   perm=mirror_perm(a.feature_set) if a.mirror else None)
     before, after = history[0]["heldout"], history[-1]["heldout"]
     gate = after < before
     print(f"heldout label loss {before:.5f} -> {after:.5f} gate {'pass' if gate else 'fail'}", flush=True)
-    cand = SmallNNUE(params[0], params[1], params[2], params[3][0])
-    key = save_snapshot(md, cand, opt2, {"parent": BASE, "purpose": "G1 mass self-play data", "epochs": a.epochs,
-                                         "learning_rate": a.lr, "training": {"positions": int(len(y)), "optimizer_step": opt2["step"], "strength_proven": False}})
-    w, b, v, o = parameters(cand)
+    if params[0].shape[1] == HIDDEN:
+        cand = SmallNNUE(params[0], params[1], params[2], params[3][0])
+        key = save_snapshot(md, cand, opt2, {"parent": BASE, "purpose": "G1 mass self-play data", "epochs": a.epochs,
+                                             "learning_rate": a.lr, "training": {"positions": int(len(y)), "optimizer_step": opt2["step"], "strength_proven": False}})
+        w, b, v, o = parameters(cand)
+    else:   # 研究: 隠れ層を広げた候補。正式snapshot形式(隠れ層128固定)には入れず、重みとAdam状態をそのまま保存する
+        w, b, v, o = (np.asarray(x, np.float32) for x in params)
+        np.savez_compressed(a.out / "wide-state.npz", w=w, b=b, v=v, o=o, step=opt2["step"],
+                            **{f"m{i}": x for i, x in enumerate(opt2["m"])}, **{f"s{i}": x for i, x in enumerate(opt2["s"])})
+        key = "wide:" + hashlib.sha256((a.out / "wide-state.npz").read_bytes()).hexdigest()
     np.savez(a.out / "cand-weights.npz", w=w, b=b, v=v, o=o)
     report = {"schema": "g1-train-v1", "parent": BASE, "snapshot": key,
               "weights_file_sha256": hashlib.sha256((a.out / "cand-weights.npz").read_bytes()).hexdigest(),
               "games": len(lines), "train_positions": int(len(y)), "heldout_positions": int(len(hy)),
-              "outcome_weight": a.outcome_weight, "feature_set": a.feature_set, "mirror": a.mirror, "inputs": int(parent.inputs),
+              "outcome_weight": a.outcome_weight, "feature_set": a.feature_set, "mirror": a.mirror, "inputs": int(parent.inputs), "hidden": int(params[0].shape[1]),
               "heldout_history": history, "heldout_before": before, "heldout_after": after, "gate": "pass" if gate else "fail",
               "epochs": a.epochs, "lr": a.lr, "batch": a.batch, "optimizer_step_after": opt2["step"],
               "strength_proven": False, "formal_model_changed": False}
