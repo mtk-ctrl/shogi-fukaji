@@ -135,6 +135,92 @@ inline double logit_impl(const rules::Snapshot& s) {
     for (int h = 0; h < H; ++h) value += std::clamp(acc[h] + m.b[h], 0.f, 1.f) * m.v[h];
     return value;
 }
+// 差分更新(隠れ層128・玉周辺特徴の正式形のみ)。直前に同じ視点で評価した盤面との差だけを足し引きする。
+// 探索の中身には触れず、評価器の中だけで完結する。既定は無効(毎回全計算)。環境変数 FUKAJI_NNUE_INCREMENTAL=1 で有効。
+// 玉が動いたとき・差が多いとき・一定回数ごとには全計算し直す(足し引きの丸め誤差をためない)。全計算との差は最大0.003cp程度(手元実測)。
+struct IncCache {
+    bool valid = false;
+    int updates = 0;
+    int kings[2] = {-1, -1};
+    std::uint8_t code[81] = {};
+    std::uint8_t hand[2][7] = {};
+    float acc[kHidden] = {};
+};
+inline bool incremental_enabled() {
+    static const bool on = [] { const char* e = std::getenv("FUKAJI_NNUE_INCREMENTAL"); return e && e[0] == '1'; }();
+    return on;
+}
+inline double logit_incremental(const rules::Snapshot& s) {
+    constexpr int H = kHidden;
+    const Model& m = model();
+    const int persp = s.turn == rules::Color::Black ? 0 : 1;
+    thread_local IncCache caches[2];
+    IncCache& c = caches[persp];
+    std::uint8_t code[81];
+    int kings[2] = {-1, -1};
+    for (int sq = 0; sq < 81; ++sq) {
+        const auto& p = s.board[sq];
+        code[sq] = p.kind ? std::uint8_t(p.kind | (p.promoted ? 16 : 0) | (p.color == rules::Color::Black ? 0 : 32)) : 0;
+        if (p.kind == 8) kings[p.color == rules::Color::Black ? 0 : 1] = (sq % 9) * 9 + (9 - (sq / 9 + 1));
+    }
+    int diffs[12], nd = 0;
+    bool full = !c.valid || c.updates >= 128 || kings[0] != c.kings[0] || kings[1] != c.kings[1];
+    if (!full)
+        for (int sq = 0; sq < 81; ++sq)
+            if (code[sq] != c.code[sq]) { if (nd == 12) { full = true; break; } diffs[nd++] = sq; }
+    if (full) {
+        accumulate<H>(s, persp, c.acc);
+        c.updates = 0; c.valid = true; c.kings[0] = kings[0]; c.kings[1] = kings[1];
+        for (int sq = 0; sq < 81; ++sq) c.code[sq] = code[sq];
+        for (int color = 0; color < 2; ++color)
+            for (int k = 0; k < 7; ++k) c.hand[color][k] = std::uint8_t(std::min(20, s.hands[color][k]));
+    } else {
+        float* acc = c.acc;
+        auto row = [&](int idx, float sign) {
+            const float* r = &m.w[std::size_t(idx) * H];
+            for (int h = 0; h < H; ++h) acc[h] += sign * r[h];
+        };
+        // accumulate() と同じ特徴番号(駒1枚ぶん)。玉は絶対位置の行だけ(玉が動いたら全計算に回るのでここには来ない)。
+        auto piece = [&](int sq, std::uint8_t cd, float sign) {
+            const int kindk = cd & 15, color = (cd & 32) ? 1 : 0; const bool promoted = (cd & 16) != 0;
+            const int file = sq / 9 + 1, rank = sq % 9;
+            const int py = rank * 9 + (9 - file);
+            const int owner = color ^ persp;
+            const int relative = persp ? 80 - py : py;
+            const int nk = nnue_kind(kindk, promoted);
+            row((owner * 14 + nk - 1) * 81 + relative, sign);
+            if (kindk == 8) return;
+            const int kind = nk - 1 - (nk > 8 ? 1 : 0);
+            const int direction = persp == 0 ? 1 : -1;
+            for (int anchor = 0; anchor < 2; ++anchor) {
+                const int king = kings[anchor == 0 ? persp : 1 - persp];
+                if (king < 0) continue;
+                const int dr = direction * (py / 9 - king / 9), dc = direction * (py % 9 - king % 9);
+                if (dr < -2 || dr > 2 || dc < -2 || dc > 2) continue;
+                row(kBaseInputs + (((anchor * 2 + owner) * 13 + kind) * 5 + dr + 2) * 5 + dc + 2, sign);
+            }
+        };
+        for (int i = 0; i < nd; ++i) {
+            const int sq = diffs[i];
+            if (c.code[sq]) piece(sq, c.code[sq], -1.f);
+            if (code[sq]) piece(sq, code[sq], 1.f);
+            c.code[sq] = code[sq];
+        }
+        static constexpr int map_hand[7] = {0, 1, 2, 3, 5, 6, 4};
+        for (int color = 0; color < 2; ++color)
+            for (int k = 0; k < 7; ++k) {
+                const int n = std::min(20, s.hands[color][k]), old = c.hand[color][k];
+                const int base = 2268 + ((color ^ persp) * 7 + map_hand[k]) * 20;
+                for (int j = old; j < n; ++j) row(base + j, 1.f);
+                for (int j = n; j < old; ++j) row(base + j, -1.f);
+                c.hand[color][k] = std::uint8_t(n);
+            }
+        ++c.updates;
+    }
+    float value = m.o;
+    for (int h = 0; h < H; ++h) value += std::clamp(c.acc[h] + m.b[h], 0.f, 1.f) * m.v[h];
+    return value;
+}
 // G2: 両視点＋2層目(隠れ層128のみ)。
 inline double logit_v2(const rules::Snapshot& s) {
     constexpr int H = kHidden;
@@ -163,6 +249,7 @@ inline double logit_v2(const rules::Snapshot& s) {
 }
 inline double logit_side_to_move(const rules::Snapshot& s) {
     if (model().h2) return logit_v2(s);
+    if (model().king_zone && model().hidden == kHidden && incremental_enabled()) return logit_incremental(s);
     return model().hidden == kHidden ? logit_impl<kHidden>(s) : logit_impl<kMaxHidden>(s);
 }
 inline int eval_black(const rules::Snapshot& s) {

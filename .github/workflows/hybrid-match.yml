@@ -23,6 +23,11 @@ on:
         required: true
         default: "formal"
         type: string
+      incremental:
+        description: "候補側だけ評価の差分更新を使うか(1=使う / 0=使わない)。相手側は常に使わない"
+        required: true
+        default: "0"
+        type: string
       opp_scale:
         description: "opponent=hybrid のときの相手のcp換算(same=scaleと同じ)"
         required: true
@@ -114,7 +119,7 @@ jobs:
           set -euo pipefail
           chmod +x run-fukaji-legacy.sh
           S="${{ inputs.scale }}"; if [ "$S" = formal ]; then S="$(python -c "import json;print(json.load(open('formal/model.json'))['hybrid']['nnue_scale'])")"; fi
-          printf '#!/bin/sh\nexport FUKAJI_NNUE_FILE="%s/build/hybrid.bin"\nexport FUKAJI_NNUE_SCALE="%s"\ncd "%s/build/hybrid"\nexec "%s/build/hybrid/build/kumoji-hybrid" "$@"\n' "$PWD" "$S" "$PWD" "$PWD" > /tmp/a.sh
+          printf '#!/bin/sh\nexport FUKAJI_NNUE_FILE="%s/build/hybrid.bin"\nexport FUKAJI_NNUE_SCALE="%s"\nexport FUKAJI_NNUE_INCREMENTAL="%s"\ncd "%s/build/hybrid"\nexec "%s/build/hybrid/build/kumoji-hybrid" "$@"\n' "$PWD" "$S" "${{ inputs.incremental }}" "$PWD" "$PWD" > /tmp/a.sh
           if [ "${{ inputs.opponent }}" = "kumoji" ]; then
             printf '#!/bin/sh\ncd "%s/kumoji-src"\nexec "%s/kumoji-src/build/kumoji" "$@"\n' "$PWD" "$PWD" > /tmp/b.sh
           elif [ "${{ inputs.opponent }}" = "hybrid" ]; then
