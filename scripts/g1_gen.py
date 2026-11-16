@@ -24,6 +24,7 @@ class Engine:
         self.send("usi"); self.wait("usiok")
         for name in ("USI_Ponder", "AdaptiveLongThink") + (() if kumoji else ("PositionKnowledge",)):
             self.send(f"setoption name {name} value false")
+        self.send("setoption name SearchThreads value 1")  # 全コアで並列に対局するので1スレッド(古い借用元には無いオプション。無視される)
         self.send("isready"); self.wait("readyok")
 
     def send(self, s):

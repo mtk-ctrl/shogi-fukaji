@@ -31,7 +31,7 @@ on:
       kumoji_ref:
         description: "雲路のコミットSHA(探索の借用元)"
         required: true
-        default: "1e08de520a02bd72b26a5510fb183c638211765f"
+        default: "199dbb0b6a760b9341c27f3a0f4aaeaa7dae4e89"
         type: string
 permissions:
   contents: read
