@@ -29,7 +29,9 @@ t = t.replace(inc, inc + '#include "strategy/nnue_eval.h"\n')
 ev.write_text(t)
 # 探索の既定値(2026-11-15、NNUE向けの調整): USIオプションの既定値とコード内の初期値を同じ値にそろえる。GUIが既定値を送り直しても変わらない。
 SEARCH_DEFAULTS = {"QDelta": ("int q_delta_=0;", "int q_delta_=%d;", 'option name QDelta type spin default 0 ', 'option name QDelta type spin default %d '),
-                   "NullMoveReduction": ("int null_reduction_=2;", "int null_reduction_=%d;", 'option name NullMoveReduction type spin default 2 ', 'option name NullMoveReduction type spin default %d ')}
+                   "NullMoveReduction": ("int null_reduction_=2;", "int null_reduction_=%d;", 'option name NullMoveReduction type spin default 2 ', 'option name NullMoveReduction type spin default %d '),
+                   "LmrMinDepth": ("int lmr_min_depth_=3;", "int lmr_min_depth_=%d;", 'option name LmrMinDepth type spin default 3 ', 'option name LmrMinDepth type spin default %d '),
+                   "LmrReduction": ("int lmr_reduction_=1;", "int lmr_reduction_=%d;", 'option name LmrReduction type spin default 1 ', 'option name LmrReduction type spin default %d ')}
 if a.search_defaults == "formal":
     wanted = json.loads((ROOT / "formal/model.json").read_text())["hybrid"].get("search_defaults", {})
     for name, value in wanted.items():
