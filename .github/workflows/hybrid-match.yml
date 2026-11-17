@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       opponent:
-        description: "formal(現行正式深路) / kumoji(雲路本体) / hybrid(opp_weightsのNNUEを載せたハイブリッド)"
+        description: "kumoji(雲路本体) / hybrid(opp_weightsのNNUEを載せたハイブリッド。現行正式との比較は opp_weights=formal)"
         required: true
         default: "kumoji"
         type: string
@@ -117,7 +117,6 @@ jobs:
       - name: Engine wrappers
         run: |
           set -euo pipefail
-          chmod +x run-fukaji-legacy.sh
           S="${{ inputs.scale }}"; if [ "$S" = formal ]; then S="$(python -c "import json;print(json.load(open('formal/model.json'))['hybrid']['nnue_scale'])")"; fi
           printf '#!/bin/sh\nexport FUKAJI_NNUE_FILE="%s/build/hybrid.bin"\nexport FUKAJI_NNUE_SCALE="%s"\nexport FUKAJI_NNUE_INCREMENTAL="%s"\ncd "%s/build/hybrid"\nexec "%s/build/hybrid/build/kumoji-hybrid" "$@"\n' "$PWD" "$S" "${{ inputs.incremental }}" "$PWD" "$PWD" > /tmp/a.sh
           if [ "${{ inputs.opponent }}" = "kumoji" ]; then
@@ -126,7 +125,8 @@ jobs:
             OS="${{ inputs.opp_scale }}"; if [ "$OS" = same ]; then OS="$S"; fi
             printf '#!/bin/sh\nexport FUKAJI_NNUE_FILE="%s/build/hybrid-opp.bin"\nexport FUKAJI_NNUE_SCALE="%s"\ncd "%s/build/hybrid"\nexec "%s/build/hybrid/build/kumoji-hybrid" "$@"\n' "$PWD" "$OS" "$PWD" "$PWD" > /tmp/b.sh
           else
-            printf '#!/bin/sh\nexec "%s/run-fukaji-legacy.sh" "$@"\n' "$PWD" > /tmp/b.sh
+            echo "opponent は kumoji か hybrid を指定する。現行正式との比較は opponent=hybrid, opp_weights=formal(旧エンジンは2026-11-17に廃止)" >&2
+            exit 1
           fi
           chmod +x /tmp/a.sh /tmp/b.sh
           printf 'usi\nisready\nquit\n' | /tmp/a.sh | tail -2

@@ -142,7 +142,7 @@ def main(a):
         f"教師は探索値と対局結果だけで、雲路の評価値・指し手は不使用。\n\n"
         f"- {w}。\n"
         f"- 検証ラベル損失 {rep['heldout_before']:.4f}→{rep['heldout_after']:.4f}。\n"
-        f"- 採用範囲は正式エンジン(ハイブリッド)。旧エンジン(legacy)はE10のまま。\n"
+        f"- 採用範囲は正式エンジン(ハイブリッド)。\n"
         f"- 正式snapshot {new}、推論 {model_path} SHA256 {wsha}、Adam{step}。完全stateは Release `{tag}` の `{asset}`。\n"
         f"- 次の周回(g1-gen.yml → g1-train.yml → hybrid-match.yml)はこの{name}を親にする(各workflowの既定値 formal が自動で指す)。\n")
     spec_doc = "docs/現行エンジン仕様.md"
@@ -152,14 +152,14 @@ def main(a):
     append(spec_doc, f"## {name}：自己対局の周回でNNUEを更新（{date}）\n\n"
            f"- snapshot {new}、推論 `{model_path}` SHA256 {wsha}、Adam{step}。{w}。[判断](decisions/{dec})。")
     common = (f"正式{name}（{new}、Adam{step}、入力{arch[0]}＝現行2548＋玉周辺1300。{prev}の自己対局約{rep['train_positions']}局面で学習）。{w}。"
-              f"[{name}採用判断](decisions/{dec})。採用範囲は正式エンジン(ハイブリッド)。旧エンジン(legacy、USI v0.4.1・PVS＋詰み探索)はE10のまま不変。")
+              f"[{name}採用判断](decisions/{dec})。採用範囲は正式エンジン(ハイブリッド)。")
     section("docs/00_開発ルーター.md", "## 現行モデル", "## 現在の研究・保存再開点", "## 現行モデル\n\n" + common + "\n\n")
     append("docs/00_開発ルーター.md", f"## 最新NNUE（{name}、{date}）\n\n" + common +
            "\n\n強化の進め方は「生成(g1-gen.yml)→学習(g1-train.yml)→対局(hybrid-match.yml)→採用(hybrid-nnue-adopt.yml)」の周回。")
     section("docs/ROADMAP.md", "## 現行モデル", "## 現在の研究", "## 現行モデル\n\n" + common + "\n\n")
     append("docs/ROADMAP.md", f"## {name}：自己対局の周回でNNUEを更新（{date}）\n\n" + common)
     append("AGENTS.md", f"## 最新正式NNUE（{name}、{date}）\n\n正式{name}／Adam{step}、snapshot {new}。{w}。"
-           f"正式エンジン(ハイブリッド)の重みは formal/model.json の hybrid節(`{model_path}`)。旧エンジン(legacy)はE10のまま。")
+           f"正式エンジン(ハイブリッド)の重みは formal/model.json の hybrid節(`{model_path}`)。")
     mt = "docs/モデル名対応表.md"
     resub(mt, r"現行の正式モデルは \*\*E\d+\*\*", f"現行の正式モデルは **{name}**")
     resub(mt, re.escape(f"| **{prev}（現行）** |"), f"| {prev} |")

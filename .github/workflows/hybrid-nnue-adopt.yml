@@ -108,8 +108,6 @@ jobs:
           assert m['weights_file']=='models/fukaji-e10.nnue.npz'
           print('real hybrid USI ok')
           PY
-          printf 'usi\nisready\nquit\n' | ./run-fukaji-legacy.sh | tee build/legacy.log | tail -2
-          grep -q readyok build/legacy.log
       - name: Commit to main with CAS
         if: inputs.commit == 'true'
         id: adoption
