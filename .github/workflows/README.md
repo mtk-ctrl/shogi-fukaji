@@ -97,3 +97,10 @@ Total output lines: 124
 
 - Workflow：[`external-ladder.yml`](external-ladder.yml)。**workflow_dispatchのみ**（定期実行なし）。正式深路（ハイブリッド＝雲路の探索＋正式NNUE。`formal/model.json` の固定コミットとSHAを `scripts/run_hybrid.py --prepare` で検証）を、やねうら王Material Lv1〜100の固定nodesと対局させる棋力測定専用。相手の評価値・読み筋・指し手は学習に使わない。正式版・NNUE重みは変更しない。
 - 条件：深路 `go movetime 200`＋AdaptiveLongThink（必要時最大1秒・1局最大10回）、雲路の局面知識OFF、先読みOFF。相手は定跡OFF・1スレッド・ハッシュ16MB。各レベル100局・先後交互、勝率30%以上で次レベルを自動起動、30%未満で停止（雲路の梯子と同じ物差し・同じ対局プログラム）。集計で実際の適用設定・違法手0を照合する。
+
+- 2026-11-17追記：E15でLv70から測り直し、Lv80通過・Lv81停止（[記録](../../docs/decisions/2026-11-17_外部ラダーE15_Lv70開始・Lv80通過Lv81停止.md)）。
+
+## 外部ラダー：やねうら王NNUE版との棋力測定（2026-11-17）
+
+- Workflow：[`external-nnue-ladder.yml`](external-nnue-ladder.yml)。workflow_dispatchのみ。上のMaterial版と同じ条件・同じレベル→nodes換算で、相手だけをやねうら王NNUE版（公開評価関数 tanuki- halfkp_256x2-32-32 2023-05-08、雲路の試運転と同じ固定commit・同じ評価関数）にした測定専用。**同じレベル番号でもMaterial版とは強さが違う（NNUE版のほうがずっと強い）ので比べない。** 勝率30%以上で次へ自動起動、85%以上なら+5レベル進め、30%未満で停止。
+
