@@ -143,3 +143,7 @@ ChatGPT・Claude等は同じRuleと同じGitHub正本を使う。まず[開発�
 ## 最新正式NNUE（E18、2026-11-18）
 
 正式E18／Adam1425646、snapshot 360c3edba7b60eb631c1748becb7cc2d035bbe67b1349fcbf97f2390d0220b77。E18 ハイブリッド(200ms・同一探索・各108局)で対E17 63-45、対雲路は省略。正式エンジン(ハイブリッド)の重みは formal/model.json の hybrid節(`models/fukaji-e18.nnue.npz`)。
+
+## 最新正式NNUE（E19、2026-11-18）
+
+正式E19／Adam1607295、snapshot 7babf72da6c23cd86804edb16e98f1f62f5d37a472142a0ea8c62b3a3a1d8522。E19 ハイブリッド(200ms・同一探索・各108局)で対E18 60-47-1、対雲路は省略。正式エンジン(ハイブリッド)の重みは formal/model.json の hybrid節(`models/fukaji-e19.nnue.npz`)。
