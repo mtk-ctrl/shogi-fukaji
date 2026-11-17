@@ -1,0 +1,253 @@
+name: Floodgate entry (probe / rehearsal / live / 常時参加)
+run-name: "Floodgate ${{ (inputs.continuous == 'yes' && '常時参加(連鎖)') || inputs.mode }} / ${{ inputs.username || 'FUKAJI' }}"
+# 深路(正式ハイブリッド=雲路の固定コミットの探索＋深路の正式NNUE評価)をFloodgate(wdoor.c.u-tokyo.ac.jp:4081, floodgate-300-10F)へ出すための入口。
+# 雲路の同名workflow(shogi-ai)と同じ接続部品(tools/floodgate)を使う。深路は雲路の局面知識を使わない(PositionKnowledge=false)。
+# probe: TCP到達確認だけ(ログインしない)。rehearsal: 模擬サーバ相手に通しで1局(外部へ接続しない)。
+# live: 実参戦。confirm_live に LIVE と入力し、リポジトリsecret FLOODGATE_TRIP がある場合だけ動く。実参戦はオーナーの指示があるまで行わない。
+# 常時参加: tools/floodgate/continuous.json を読み、enabled のときだけ session_minutes 分のあいだ続けて対局する(組み合わせは毎時0分・30分)。
+#   F30により定期起動(schedule)は付けない。各回の最後に自分で次を起動する(連鎖。tools/floodgate/chain.py)。成功なら次を起動、失敗なら最大3回まで再起動、取り消しでは連鎖しない。
+#   止めるときは continuous.json の enabled を false にする(次の連鎖から止まる)。すぐ止めるなら実行中のrunを取り消す。
+#   手動で連鎖を始める: mode=live, continuous=yes, confirm_live=LIVE。
+# Floodgate専用の読み時間(tools/floodgate/timeplan.py、--time-plan)を使う。自己対局・比較・梯子では使わない。雲路と同じ設定(2026-11-15オーナー指示)。
+# Floodgateでは無作為な初手(OpeningRandomNonLance)を切る。
+# 棋力測定専用。相手の評価値・読み筋・指し手は学習に使わない。エンジン本体は変更しない。
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "probe / rehearsal / live"
+        required: true
+        default: "probe"
+        type: choice
+        options: [probe, rehearsal, live]
+      games:
+        description: "liveの局数 1-6 (1局は待ち時間込みで最大約2時間)"
+        required: true
+        default: "1"
+        type: string
+      username:
+        description: "Floodgateでの名前(英数字・_・-)"
+        required: true
+        default: "FUKAJI"
+        type: string
+      confirm_live:
+        description: "実参戦するときだけ LIVE と入力"
+        required: false
+        default: ""
+        type: string
+      continuous:
+        description: "no=1回だけ / yes=常時参加(continuous.jsonに従い、終わったら次を自分で起動) / selftest=連鎖の配線確認(probeのみ)"
+        required: false
+        default: "no"
+        type: choice
+        options: ["no", "yes", "selftest"]
+      chained:
+        description: "連鎖が起動した回だけ true（リハーサルを省いて待ち時間を短くする）"
+        required: false
+        default: "false"
+        type: string
+      fail_count:
+        description: "連鎖の連続失敗回数（連鎖が自動で入れる。手動では0）"
+        required: false
+        default: "0"
+        type: string
+permissions:
+  contents: read
+  actions: write
+concurrency:
+  # 実参戦(手動live・常時参加)は同じ名前で二重ログインしないよう1本に直列化する。probe/rehearsalは別枠。
+  group: fukaji-floodgate-${{ inputs.mode == 'live' && 'live' || 'check' }}
+  cancel-in-progress: false
+jobs:
+  floodgate:
+    if: github.repository == 'mtk-ctrl/shogi-fukaji'
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+      - name: Validate request
+        id: req
+        env:
+          EVENT: ${{ github.event_name }}
+          MODE: ${{ inputs.mode }}
+          GAMES: ${{ inputs.games }}
+          USERNAME: ${{ inputs.username }}
+          CONFIRM: ${{ inputs.confirm_live }}
+          CONTINUOUS: ${{ inputs.continuous }}
+          CHAINED: ${{ inputs.chained }}
+          FAIL_COUNT: ${{ inputs.fail_count }}
+          HAS_TRIP: ${{ secrets.FLOODGATE_TRIP != '' }}
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          gh api "repos/${{ github.repository }}/actions/workflows/floodgate.yml/runs?status=in_progress&per_page=20" \
+            --jq '[.workflow_runs[].id]' > other-runs.json
+          python3 - <<'PY'
+          import datetime, json, os, re
+          others=[i for i in json.load(open("other-runs.json")) if str(i)!=os.environ["RUN_ID"]]
+          out=dict(mode="skip", games="1", username="FUKAJI", session="0", continuous="no", chained="false", fail_count="0")
+          event=os.environ["EVENT"]; cont=os.environ.get("CONTINUOUS") or "no"
+          if event=="workflow_dispatch" and cont=="yes":
+              # 常時参加。同時に動く実参戦は concurrency(1本)で守られるので、ほかのrun(probe等)が動いていても止めない。
+              if os.environ["CONFIRM"]!="LIVE": raise SystemExit("continuous=yes requires confirm_live=LIVE")
+              cfg=json.load(open("tools/floodgate/continuous.json",encoding="utf-8"))
+              today=(datetime.datetime.utcnow()+datetime.timedelta(hours=9)).strftime("%Y-%m-%d")
+              at_end=(datetime.datetime.utcnow()+datetime.timedelta(hours=9+6)).strftime("%Y-%m-%d")
+              paused={today,at_end} & set(cfg.get("pause_dates_jst",[]))
+              minutes=int(cfg.get("session_minutes",225))
+              if not cfg.get("enabled"): print("continuous participation is disabled")
+              elif paused: print("paused for", sorted(paused))
+              elif os.environ["HAS_TRIP"]!="true": raise SystemExit("repository secret FLOODGATE_TRIP is not set")
+              elif not 30<=minutes<=225: raise SystemExit("session_minutes must be 30-225 (job limit)")
+              else:
+                  out.update(mode="live", username=str(cfg.get("username","FUKAJI")), session=str(minutes), continuous="yes",
+                             chained=os.environ.get("CHAINED") or "false", fail_count=str(int(os.environ.get("FAIL_COUNT") or 0)))
+          elif event=="workflow_dispatch" and cont=="selftest":
+              # 連鎖の配線確認: probe(接続せずTCP確認だけ)を1回連鎖させる。連鎖先は continuous=no で止まる
+              out.update(mode="probe", username="FUKAJI", continuous="selftest")
+          else:
+              g=int(os.environ["GAMES"])
+              if not 1<=g<=6: raise SystemExit("games must be 1-6")
+              out.update(mode=os.environ["MODE"], games=str(g), username=os.environ["USERNAME"])
+              if out["mode"]=="live":
+                  if os.environ["CONFIRM"]!="LIVE": raise SystemExit("live requires confirm_live=LIVE (R50: explicit live participation only)")
+                  if os.environ["HAS_TRIP"]!="true": raise SystemExit("repository secret FLOODGATE_TRIP is not set")
+          if not re.fullmatch(r"[A-Za-z0-9_-]{1,32}", out["username"]): raise SystemExit("invalid username")
+          with open(os.environ["GITHUB_OUTPUT"],"a") as f:
+              for k,v in out.items(): f.write(f"{k}={v}\n")
+          print("request OK", out, "other in-progress runs:", others)
+          PY
+      - name: Read hybrid spec
+        id: hyb
+        run: |
+          python3 -c "import json;h=json.load(open('formal/model.json'))['hybrid'];print('json='+json.dumps({'kumoji_ref':h['kumoji_ref']}))" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v5
+        if: steps.req.outputs.mode != 'skip'
+        with:
+          repository: mtk-ctrl/shogi-ai
+          ref: ${{ fromJSON(steps.hyb.outputs.json).kumoji_ref }}
+          path: kumoji-src
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        if: steps.req.outputs.mode != 'skip'
+        with:
+          python-version: '3.12'
+      - name: Install requirements
+        if: steps.req.outputs.mode != 'skip'
+        run: python -m pip install -r requirements.txt
+      - name: Build the formal hybrid engine (雲路の固定コミットの探索＋深路の正式NNUE評価)
+        if: steps.req.outputs.mode != 'skip'
+        run: |
+          set -euo pipefail
+          python scripts/build_hybrid.py --kumoji-src kumoji-src --work build/hybrid
+          python scripts/hybrid_export_weights.py "$(python -c "import json;h=json.load(open('formal/model.json'))['hybrid'];print(h['weights_file'])")" build/hybrid.bin
+          S="$(python -c "import json;print(json.load(open('formal/model.json'))['hybrid']['nnue_scale'])")"
+          printf '#!/bin/sh\nexport FUKAJI_NNUE_FILE="%s/build/hybrid.bin"\nexport FUKAJI_NNUE_SCALE="%s"\ncd "%s/build/hybrid"\nexec "%s/build/hybrid/build/kumoji-hybrid" "$@"\n' "$PWD" "$S" "$PWD" "$PWD" > build/fukaji-engine.sh
+          chmod +x build/fukaji-engine.sh
+          printf 'usi\nisready\nquit\n' | build/fukaji-engine.sh | tail -3
+          python tests/test_floodgate_client.py
+          python tests/test_floodgate_chain.py
+          python tools/floodgate/client.py --engine build/fukaji-engine.sh --clock-probe \
+            --setoption PositionKnowledge=false --setoption AdaptiveLongThink=false --setoption USI_Ponder=false --setoption OpeningRandomNonLance=false
+          git rev-parse HEAD
+      - name: Probe (TCP reachability only, no login)
+        id: probe
+        if: steps.req.outputs.mode != 'skip'
+        run: |
+          python3 - <<'PY'
+          import socket
+          s=socket.create_connection(("wdoor.c.u-tokyo.ac.jp",4081),timeout=20)
+          print("FLOODGATE_PROBE connected to",s.getpeername()); s.close()
+          PY
+      - name: Rehearsal against the local mock CSA server (no external connection)
+        # 連鎖が起動した回(前の回が成功)は省く。省くと次の対局までの空きが約4分短くなる。ビルド時の単体試験と時計確認は毎回行う。
+        if: (steps.req.outputs.mode == 'rehearsal' || steps.req.outputs.mode == 'live') && !(steps.req.outputs.chained == 'true' && steps.req.outputs.fail_count == '0')
+        env:
+          FLOODGATE_TRIP: rehearsal-trip-1
+        run: |
+          set -euo pipefail
+          for side in + -; do
+            python3 tools/floodgate/mock_server.py --port 14081 --client-side "$side" --total 60 --inc 2 --seed 3 > mock.log 2>&1 &
+            sleep 1
+            python3 tools/floodgate/client.py --engine build/fukaji-engine.sh --username FUKAJI_rehearsal --host 127.0.0.1 --port 14081 --games 1 --live \
+              --setoption PositionKnowledge=false --setoption AdaptiveLongThink=false --setoption USI_Ponder=false --setoption OpeningRandomNonLance=false \
+              --send-eval --time-plan --result-log rehearsal.jsonl
+            wait; cat mock.log; grep -q "MOCK opponent" mock.log
+            grep -Eq "MOCK client move comments [1-9]" mock.log
+          done
+      - name: Live games on Floodgate (floodgate-300-10F)
+        id: live
+        if: steps.req.outputs.mode == 'live'
+        env:
+          FLOODGATE_TRIP: ${{ secrets.FLOODGATE_TRIP }}
+          USERNAME: ${{ steps.req.outputs.username }}
+          GAMES: ${{ steps.req.outputs.games }}
+          SESSION: ${{ steps.req.outputs.session }}
+        run: |
+          set -euo pipefail
+          python3 tools/floodgate/client.py --engine build/fukaji-engine.sh --username "$USERNAME" --games "$GAMES" --session-minutes "$SESSION" --live \
+            --setoption PositionKnowledge=false --setoption AdaptiveLongThink=false --setoption USI_Ponder=false --setoption OpeningRandomNonLance=false \
+            --send-eval --time-plan --result-log floodgate-results.jsonl
+      - name: Summarize live results
+        if: always() && steps.req.outputs.mode == 'live'
+        run: |
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          p=Path("floodgate-results.jsonl")
+          rows=[json.loads(l) for l in p.read_text().splitlines() if l.strip()] if p.exists() else []
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
+              f.write("# Floodgate live results\n\n")
+              for r in rows:
+                  line=f"{r['game_id']} | {r['name_black']} vs {r['name_white']} | we={r['your_turn']} | {r['result']} {r['cause']} | {r['plies']} plies"
+                  f.write("- "+line+"\n"); print("FLOODGATE_RESULT "+line)
+                  # 手ごとの記録（artifactを読めない環境でもログから追えるようにする）
+                  ours={e["ply"]:e for e in r.get("our_search",[])}
+                  for n,mv in enumerate(r.get("moves_csa_timed",[]),1):
+                      e=ours.get(n,{})
+                      print(f"FLOODGATE_MOVE {n} {mv} eval_black={e.get('score_black_view','')} depth={e.get('depth','')} wall_ms={e.get('wall_ms','')} plan={(e.get('time_plan') or {}).get('stage','')}/{(e.get('time_plan') or {}).get('base_ms','')} stop={e.get('stop_reason','')} clock_before={e.get('clock_before_ms','')} pv={' '.join(e.get('pv',[])[:6])}")
+          print(f"FLOODGATE_GAMES {len(rows)}")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always() && (steps.req.outputs.mode == 'rehearsal' || steps.req.outputs.mode == 'live')
+        with:
+          name: floodgate-${{ steps.req.outputs.mode }}-${{ github.run_id }}
+          path: |
+            floodgate-results.jsonl
+            rehearsal.jsonl
+          retention-days: 90
+          if-no-files-found: warn
+      - name: Chain the next session (自分で次を起動する)
+        # 定期起動(schedule)は遅れる・飛ばされることがあるため、各回の最後に自分で次を起動する。取り消し(cancel)では連鎖しない。
+        if: ${{ !cancelled() && steps.req.outputs.continuous != 'no' && steps.req.outputs.continuous != '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MODE: ${{ steps.req.outputs.mode }}
+          CONT: ${{ steps.req.outputs.continuous }}
+          OUTCOME: ${{ steps.req.outputs.mode == 'live' && steps.live.outcome || steps.probe.outcome }}
+          FAIL: ${{ steps.req.outputs.fail_count }}
+        run: |
+          set -euo pipefail
+          # 停止指示(enabled=false)がすぐ効くよう、設定は起動時のコミットではなく最新のmainから読む
+          if ! gh api "repos/${{ github.repository }}/contents/tools/floodgate/continuous.json?ref=main" --jq .content | base64 -d > /tmp/continuous.json; then
+            cp tools/floodgate/continuous.json /tmp/continuous.json
+          fi
+          python3 tools/floodgate/chain.py --config /tmp/continuous.json --mode "$MODE" --continuous "$CONT" --outcome "$OUTCOME" --fail-count "$FAIL" | tee chain.json
+          echo "FLOODGATE_CHAIN $(cat chain.json)"
+          echo "chain: $(cat chain.json)" >> "$GITHUB_STEP_SUMMARY"
+          if python3 -c "import json,sys; sys.exit(0 if json.load(open('chain.json'))['dispatch'] else 1)"; then
+            NEXT=$(python3 -c "import json; print(json.load(open('chain.json'))['next_fail_count'])")
+            ok=0
+            for i in 1 2 3; do
+              if [ "$CONT" = selftest ]; then
+                gh workflow run floodgate.yml --ref main -f mode=probe -f continuous=no && ok=1 && break
+              else
+                gh workflow run floodgate.yml --ref main -f mode=live -f continuous=yes -f confirm_live=LIVE -f chained=true -f fail_count="$NEXT" -f games=1 -f username=FUKAJI && ok=1 && break
+              fi
+              sleep 20
+            done
+            [ "$ok" = 1 ] || { echo "FLOODGATE_CHAIN dispatch failed"; exit 1; }
+            echo "FLOODGATE_CHAIN dispatched next (selftest=$([ "$CONT" = selftest ] && echo yes || echo no), fail_count=$NEXT)"
+          fi

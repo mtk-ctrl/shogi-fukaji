@@ -1,0 +1,653 @@
+#!/usr/bin/env python3
+"""FUKAJI Floodgate client.
+
+The default mode is deliberately offline.  Pass --live explicitly to open a
+TCP connection to Floodgate.  The Floodgate trip is read from an environment
+variable so it never needs to be stored in this repository.
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import os
+from pathlib import Path
+import queue
+import re
+import socket
+import subprocess
+import threading
+import time
+from typing import TextIO
+
+from protocol import Clock, CSA_MOVE_RE, StartposBoard, SummaryParser
+from timeplan import StopController, make_plan
+
+DEFAULT_HOST = "wdoor.c.u-tokyo.ac.jp"
+DEFAULT_PORT = 4081
+DEFAULT_GAME = "floodgate-300-10F"
+DEFAULT_OPTIONS = {}
+RESULT_RE = re.compile(r"^#(WIN|LOSE|DRAW)$")
+CAUSE_RE = re.compile(r"^#")
+
+
+def parse_setoptions(values: list[str]) -> dict[str, str]:
+    out = dict(DEFAULT_OPTIONS)
+    for item in values:
+        if "=" not in item:
+            raise ValueError(f"--setoption requires NAME=VALUE: {item}")
+        name, value = item.split("=", 1)
+        name = name.strip()
+        if not name or "\n" in value or "\r" in value:
+            raise ValueError(f"invalid --setoption: {item}")
+        out[name] = value.strip()
+    return out
+
+
+def validate_identity(username: str, trip: str) -> None:
+    if not re.fullmatch(r"[A-Za-z0-9_-]{1,32}", username):
+        raise ValueError("username must be 1-32 ASCII letters, digits, '_' or '-'")
+    try:
+        encoded = trip.encode("ascii")
+    except UnicodeEncodeError as exc:
+        raise ValueError("Floodgate trip must be ASCII") from exc
+    if not encoded or len(encoded) > 32 or any(c in trip for c in " \t\r\n,"):
+        raise ValueError("Floodgate trip must be 1-32 non-space ASCII characters without comma")
+
+
+MATE_COMMENT_CP = 30000
+
+
+def parse_usi_info(line: str) -> dict | None:
+    """Return depth/score/pv of a USI `info ... score ... pv ...` line, else None.
+
+    The score is KUMOJI's own search result, from the side to move's view.
+    """
+    if not line.startswith("info ") or " score " not in line:
+        return None
+    tok = line.split()
+    out: dict = {}
+    i = 1
+    while i < len(tok):
+        key = tok[i]
+        if key in ("depth", "seldepth", "time", "nodes") and i + 1 < len(tok):
+            try:
+                out[key] = int(tok[i + 1])
+            except ValueError:
+                pass
+            i += 2
+        elif key == "score" and i + 2 < len(tok):
+            out["score_kind"] = tok[i + 1]
+            out["score_raw"] = tok[i + 2]
+            i += 3
+            if i < len(tok) and tok[i] in ("lowerbound", "upperbound"):
+                out["score_bound"] = tok[i]
+                i += 1
+        elif key == "pv":
+            out["pv"] = tok[i + 1:]
+            break
+        elif key == "string":
+            break
+        else:
+            i += 1
+    if out.get("score_kind") not in ("cp", "mate"):
+        return None
+    return out
+
+
+def score_for_black(search: dict, side: str) -> int | None:
+    """Centipawn-like value from Black's (sente) view, as Floodgate records it."""
+    kind, raw = search.get("score_kind"), search.get("score_raw")
+    if kind == "cp":
+        try:
+            own = int(raw)
+        except (TypeError, ValueError):
+            return None
+    elif kind == "mate":
+        own = -MATE_COMMENT_CP if str(raw).startswith("-") else MATE_COMMENT_CP
+    else:
+        return None
+    return own if side == "+" else -own
+
+
+class UsiEngine:
+    def __init__(self, path: str, options: dict[str, str]) -> None:
+        binary = Path(path).resolve()
+        self.path = str(binary)
+        self.working_directory = str(binary.parent)
+        self.proc = subprocess.Popen(
+            [self.path],
+            cwd=self.working_directory,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            bufsize=1,
+        )
+        assert self.proc.stdin is not None and self.proc.stdout is not None
+        self._lines: queue.Queue[str] = queue.Queue()
+        self._reader = threading.Thread(target=self._read_stdout, daemon=True)
+        self._reader.start()
+        self.options: set[str] = set()
+        self.id_name = ""
+        self.id_author = ""
+        self.applied_options: dict[str, str] = {}
+        self.last_search: dict = {}
+        self._handshake(options)
+
+    def _read_stdout(self) -> None:
+        assert self.proc.stdout is not None
+        for raw in self.proc.stdout:
+            self._lines.put(raw.rstrip("\r\n"))
+
+    def send(self, line: str) -> None:
+        if self.proc.poll() is not None:
+            raise RuntimeError(f"engine exited with code {self.proc.returncode}")
+        assert self.proc.stdin is not None
+        self.proc.stdin.write(line + "\n")
+        self.proc.stdin.flush()
+
+    def _next(self, deadline: float, purpose: str) -> str:
+        while True:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise TimeoutError(f"timeout {purpose}")
+            try:
+                return self._lines.get(timeout=min(remaining, 0.5))
+            except queue.Empty:
+                if self.proc.poll() is not None:
+                    raise RuntimeError(f"engine exited while {purpose}: {self.proc.returncode}")
+
+    def _handshake(self, requested: dict[str, str]) -> None:
+        self.send("usi")
+        deadline = time.monotonic() + 10
+        while True:
+            line = self._next(deadline, "waiting for usiok")
+            if line.startswith("id name "):
+                self.id_name = line[len("id name "):].strip()
+            elif line.startswith("id author "):
+                self.id_author = line[len("id author "):].strip()
+            elif line.startswith("option name "):
+                body = line[len("option name "):]
+                name = body.split(" type ", 1)[0].strip()
+                self.options.add(name)
+            if line == "usiok":
+                break
+        missing = [name for name in requested if name not in self.options]
+        if missing:
+            raise ValueError(f"unsupported USI options: {', '.join(missing)}")
+        for name, value in requested.items():
+            self.send(f"setoption name {name} value {value}")
+            self.applied_options[name] = value
+        self.send("isready")
+        deadline = time.monotonic() + 15
+        while self._next(deadline, "waiting for readyok") != "readyok":
+            pass
+
+    def new_game(self) -> None:
+        self.send("usinewgame")
+        self.send("isready")
+        deadline = time.monotonic() + 10
+        while self._next(deadline, "waiting for readyok after usinewgame") != "readyok":
+            pass
+
+    def bestmove(self, moves: list[str], go_command: str, hard_timeout_s: float,
+                 controller=None) -> str:
+        if controller is not None:
+            return self._bestmove_controlled(moves, go_command, hard_timeout_s, controller)
+        position = "position startpos"
+        if moves:
+            position += " moves " + " ".join(moves)
+        self.send(position)
+        self.send(go_command)
+        began = time.monotonic()
+        info: dict = {}
+        self.last_search = {"go": go_command}
+
+        def finish(line: str) -> str:
+            self.last_search.update(info)
+            self.last_search["wall_ms"] = int((time.monotonic() - began) * 1000)
+            return line.split()[1]
+
+        deadline = began + max(1.0, hard_timeout_s)
+        try:
+            while True:
+                line = self._next(deadline, "waiting for bestmove")
+                if line.startswith("bestmove "):
+                    return finish(line)
+                parsed = parse_usi_info(line)
+                if parsed:
+                    info = parsed
+        except TimeoutError:
+            self.send("stop")
+            self.last_search["watchdog_stop"] = True
+            grace = time.monotonic() + 2.0
+            while True:
+                line = self._next(grace, "waiting for bestmove after stop")
+                if line.startswith("bestmove "):
+                    return finish(line)
+                parsed = parse_usi_info(line)
+                if parsed:
+                    info = parsed
+
+    def _bestmove_controlled(self, moves: list[str], go_command: str, hard_timeout_s: float,
+                             controller) -> str:
+        """Floodgate time plan: the bridge sends `stop` when the controller says so."""
+        position = "position startpos"
+        if moves:
+            position += " moves " + " ".join(moves)
+        self.send(position)
+        self.send(go_command)
+        began = time.monotonic()
+        info: dict = {}
+        self.last_search = {"go": go_command}
+        stopped_at = None
+        while True:
+            elapsed = time.monotonic() - began
+            try:
+                line = self._lines.get(timeout=0.05)
+            except queue.Empty:
+                line = None
+                if self.proc.poll() is not None:
+                    raise RuntimeError(f"engine exited while waiting for bestmove: {self.proc.returncode}")
+            if line is not None:
+                if line.startswith("bestmove "):
+                    self.last_search.update(info)
+                    self.last_search["wall_ms"] = int((time.monotonic() - began) * 1000)
+                    self.last_search["stop_reason"] = controller.reason or "engine"
+                    return line.split()[1]
+                parsed = parse_usi_info(line)
+                if parsed:
+                    info = parsed
+                    controller.observe(parsed)
+            if stopped_at is None:
+                if controller.should_stop(int(elapsed * 1000)) or elapsed >= hard_timeout_s:
+                    if not controller.reason:
+                        controller.reason = "watchdog"
+                    self.send("stop")
+                    stopped_at = time.monotonic()
+            elif time.monotonic() - stopped_at > 2.5:
+                raise TimeoutError("timeout waiting for bestmove after stop")
+
+    def metadata(self) -> dict:
+        return {
+            "path": self.path,
+            "working_directory": self.working_directory,
+            "sha256": hashlib.sha256(Path(self.path).read_bytes()).hexdigest(),
+            "usi_name": self.id_name,
+            "usi_author": self.id_author,
+            "supported_options": sorted(self.options),
+            "applied_options": dict(self.applied_options),
+        }
+
+    def close(self) -> None:
+        if self.proc.poll() is not None:
+            return
+        try:
+            self.send("quit")
+            self.proc.wait(timeout=3)
+        except Exception:
+            self.proc.kill()
+            self.proc.wait(timeout=3)
+
+
+KEEPALIVE_SECONDS = 60.0     # サーバのkeep-alive規約: 改行(LF)を送る間隔は30秒より空ける
+LOGIN_LEAD_SECONDS = 180.0   # 常時参加では、次の組み合わせ(毎時0分・30分)のこの秒数前にログインする
+
+
+def seconds_until_login(now_epoch: float, lead: float = LOGIN_LEAD_SECONDS) -> float:
+    """次の:00/:30の組み合わせの lead 秒前までの待ち時間（すでにその範囲内なら0）。
+
+    JSTはUTC+9時間で、30分の倍数だけずれているため、epoch秒の1800秒区切りがそのまま:00/:30になる。
+    2026-11-15、ログインから組み合わせまで20〜30分空けた接続は、組み合わせの通知を受け取れず、
+    0手・結果なしの対局が3局できた。待ち時間中に接続が黙って切れたと見ている。待ちを短くして通信も絶やさない。
+    """
+    to_slot = 1800.0 - (now_epoch % 1800.0)
+    return max(0.0, to_slot - lead)
+
+
+class CsaSocket:
+    def __init__(self, host: str, port: int, keepalive_s: float = KEEPALIVE_SECONDS) -> None:
+        self.sock = socket.create_connection((host, port), timeout=15)
+        # A client may connect shortly after a pairing boundary and wait nearly
+        # 30 minutes for the next :00/:30 Floodgate pairing.
+        self.sock.settimeout(2100)
+        # 待ち時間に通信がないと、実行環境の途中で接続が黙って切られることがある。TCPとアプリの両方で生存を知らせる。
+        try:
+            self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+            for name, value in (("TCP_KEEPIDLE", 60), ("TCP_KEEPINTVL", 20), ("TCP_KEEPCNT", 3)):
+                if hasattr(socket, name):
+                    self.sock.setsockopt(socket.IPPROTO_TCP, getattr(socket, name), value)
+        except OSError:
+            pass
+        self.reader: TextIO = self.sock.makefile("r", encoding="utf-8", errors="replace", newline="\n")
+        self.writer: TextIO = self.sock.makefile("w", encoding="utf-8", newline="\n")
+        self._lock = threading.Lock()
+        self._stop = threading.Event()
+        self._keepalive = None
+        if keepalive_s > 0:
+            self._keepalive = threading.Thread(target=self._keepalive_loop, args=(keepalive_s,), daemon=True)
+            self._keepalive.start()
+
+    def _keepalive_loop(self, interval: float) -> None:
+        # CSAのkeep-alive: 空の1行(LF)を送る。サーバは無視するか、LFを返す（recvは空行を読み飛ばす）。
+        while not self._stop.wait(interval):
+            try:
+                with self._lock:
+                    self.writer.write("\n")
+                    self.writer.flush()
+            except (OSError, ValueError):
+                return
+
+    def send(self, line: str) -> None:
+        with self._lock:
+            self.writer.write(line + "\n")
+            self.writer.flush()
+
+    def recv(self) -> str:
+        while True:
+            raw = self.reader.readline()
+            if raw == "":
+                raise ConnectionError("Floodgate closed the connection")
+            line = raw.rstrip("\r\n")
+            if line.strip() == "":
+                continue  # keep-alive の返事（空行）
+            return line
+
+    def close(self) -> None:
+        self._stop.set()
+        try:
+            self.writer.close()
+        finally:
+            try:
+                self.reader.close()
+            finally:
+                self.sock.close()
+
+
+class FloodgateClient:
+    def __init__(self, engine: UsiEngine, username: str, trip: str,
+                 host: str, port: int, game_name: str, send_eval: bool = False,
+                 time_plan: bool = False) -> None:
+        validate_identity(username, trip)
+        self.send_eval = send_eval
+        self.time_plan = time_plan
+        self.engine = engine
+        self.username = username
+        self.game_name = game_name
+        self.password = f"{game_name},{trip}"
+        self.host = host
+        self.port = port
+
+    @staticmethod
+    def _watchdog_seconds(clock: Clock, side: str) -> float:
+        if not clock.has_total:
+            return max(5.0, clock.byoyomi_ms / 1000.0 + 3.0)
+        # Do not grant an unearned Fischer increment to the local watchdog.
+        own = max(0, clock.remaining[side]) / 1000.0
+        return max(5.0, min(120.0, own + clock.byoyomi_ms / 1000.0 + 3.0))
+
+    def play_one(self) -> dict:
+        conn = CsaSocket(self.host, self.port)
+        summary_parser = SummaryParser()
+        board = StartposBoard()
+        moves: list[str] = []
+        our_search: list[dict] = []
+        server_lines: list[str] = []
+        summary = None
+        cause = ""
+        result = ""
+        started = time.time()
+        try:
+            conn.send(f"LOGIN {self.username} {self.password}")
+            while True:
+                line = conn.recv()
+                if line.startswith("LOGIN:"):
+                    if not line.endswith(" OK"):
+                        raise RuntimeError(f"Floodgate login failed: {line}")
+                    continue
+                parsed = summary_parser.feed(line)
+                if parsed is not None:
+                    summary = parsed
+                    for csa in summary.position_moves:
+                        usi = board.csa_to_usi(csa)
+                        moves.append(usi)
+                        board.apply_csa(csa)
+                    self.engine.new_game()
+                    conn.send(f"AGREE {summary.game_id}")
+                    continue
+                if line.startswith("REJECT:"):
+                    raise RuntimeError(f"game rejected: {line}")
+                if line.startswith("START:"):
+                    if summary is None:
+                        raise RuntimeError("START before Game_Summary")
+                    break
+
+            assert summary is not None
+            clock = Clock(summary)
+            my_side = summary.your_turn
+            to_move = summary.to_move
+            max_moves = summary.max_moves or (512 if self.game_name == DEFAULT_GAME else 0)
+
+            previous_own_score: list = [None]
+
+            def make_our_move() -> None:
+                plan = None
+                if self.time_plan and clock.has_total and clock.increment_ms > 0:
+                    # Floodgate専用の読み時間。接続層が上限を渡し、途中経過を見て stop する。
+                    plan = make_plan(clock.remaining[my_side], clock.increment_ms, len(moves) // 2 + 1)
+                    controller = StopController(plan, previous_score=previous_own_score[0])
+                    token = self.engine.bestmove(
+                        moves, f"go movetime {plan.max_ms}",
+                        min(self._watchdog_seconds(clock, my_side), plan.max_ms / 1000.0 + 1.5),
+                        controller,
+                    )
+                else:
+                    go = clock.usi_go()
+                    token = self.engine.bestmove(
+                        moves, go, self._watchdog_seconds(clock, my_side)
+                    )
+                entry = dict(self.engine.last_search)
+                if plan is not None:
+                    entry["time_plan"] = plan.as_dict()
+                    own = controller.history[-1][2] if controller.history else None
+                    if own is not None:
+                        previous_own_score[0] = own
+                entry["ply"] = len(moves) + 1
+                entry["move_usi"] = token
+                entry["clock_before_ms"] = dict(clock.remaining)
+                black_cp = score_for_black(entry, my_side)
+                entry["score_black_view"] = black_cp
+                our_search.append(entry)
+                if token == "resign":
+                    conn.send("%TORYO")
+                    return
+                if token == "win":
+                    conn.send("%KACHI")
+                    return
+                line_out = board.usi_to_csa(token, my_side)
+                if self.send_eval and black_cp is not None:
+                    # Floodgate's optional move comment: evaluation from Black's view.
+                    line_out += f",'* {black_cp}"
+                conn.send(line_out)
+
+            if to_move == my_side:
+                make_our_move()
+
+            while True:
+                line = conn.recv()
+                if CSA_MOVE_RE.match(line):
+                    server_lines.append(line)
+                    usi = board.csa_to_usi(line)
+                    board.apply_csa(line)
+                    moves.append(usi)
+                    clock.observe(line)
+                    # Floodgate itself adjudicates fourfold repetition and the
+                    # 512-ply limit. If the opponent move just reached either
+                    # condition, do not race the server by sending another move;
+                    # wait for its #DRAW/#LOSE result instead.
+                    if line[0] != my_side and not board.server_terminal_pending(len(moves), max_moves):
+                        make_our_move()
+                    continue
+                m = RESULT_RE.match(line)
+                if m:
+                    result = m.group(1).lower()
+                    break
+                if CAUSE_RE.match(line):
+                    cause = line
+                    continue
+                if line.startswith("LOGOUT:"):
+                    break
+
+            return {
+                "kind": "floodgate_external_match",
+                "learning_eligible": False,
+                "game_id": summary.game_id,
+                "username": self.username,
+                "engine": self.engine.metadata(),
+                "your_turn": summary.your_turn,
+                "name_black": summary.name_black,
+                "name_white": summary.name_white,
+                "time_control": {
+                    "total_time": summary.total_time,
+                    "byoyomi": summary.byoyomi,
+                    "increment": summary.increment,
+                    "max_moves": max_moves,
+                    "time_unit": summary.time_unit,
+                },
+                "result": result or "unknown",
+                "cause": cause,
+                "plies": len(moves),
+                "moves_usi": moves,
+                # Server echo of every move with its consumed seconds (",Tn").
+                "moves_csa_timed": server_lines,
+                # KUMOJI's own search per move (never the opponent's evaluation).
+                "our_search": our_search,
+                "send_eval": self.send_eval,
+                "time_plan": self.time_plan,
+                "started_unix": started,
+                "finished_unix": time.time(),
+            }
+        finally:
+            conn.close()
+
+
+def append_jsonl(path: Path, record: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="FUKAJI Floodgate CSA bridge")
+    parser.add_argument("--engine", required=True)
+    parser.add_argument("--username", default="FUKAJI")
+    parser.add_argument("--trip-env", default="FLOODGATE_TRIP")
+    parser.add_argument("--host", default=DEFAULT_HOST)
+    parser.add_argument("--port", type=int, default=DEFAULT_PORT)
+    parser.add_argument("--game-name", default=DEFAULT_GAME)
+    parser.add_argument("--games", type=int, default=1)
+    parser.add_argument("--reconnect-delay", type=float, default=3.0)
+    parser.add_argument("--setoption", action="append", default=[], metavar="NAME=VALUE")
+    parser.add_argument("--result-log", type=Path, default=Path("floodgate-results.jsonl"))
+    parser.add_argument("--expect-engine-name", default="",
+                        help="fail if the USI id name does not exactly match this generation label")
+    parser.add_argument("--clock-probe", action="store_true",
+                        help="in dry-run mode, verify a short btime/wtime search and legal startpos move")
+    parser.add_argument("--session-minutes", type=float, default=0.0,
+                        help="continuous mode: keep starting games until this many minutes have passed "
+                             "(0 = play exactly --games)")
+    parser.add_argument("--max-consecutive-errors", type=int, default=3)
+    parser.add_argument("--time-plan", action="store_true",
+                        help="Floodgate-only time allocation (tools/floodgate/timeplan.py); never used for self-play")
+    parser.add_argument("--send-eval", action="store_true",
+                        help="attach KUMOJI's own evaluation (Black's view) to each move as a Floodgate comment")
+    parser.add_argument("--live", action="store_true",
+                        help="actually connect to Floodgate; omitted by default for safety")
+    args = parser.parse_args()
+    if args.games < 1:
+        raise SystemExit("--games must be >= 1")
+    try:
+        options = parse_setoptions(args.setoption)
+        engine = UsiEngine(args.engine, options)
+        if args.expect_engine_name and engine.id_name != args.expect_engine_name:
+            engine.close()
+            raise ValueError(
+                f"engine identity mismatch: expected {args.expect_engine_name!r}, got {engine.id_name!r}"
+            )
+    except (ValueError, OSError, RuntimeError, TimeoutError) as exc:
+        raise SystemExit(str(exc)) from exc
+
+    try:
+        if not args.live:
+            print("Floodgate bridge dry-run OK: engine handshake and safe options applied.")
+            print(json.dumps(engine.metadata(), ensure_ascii=False, sort_keys=True))
+            if args.clock_probe:
+                engine.new_game()
+                token = engine.bestmove([], "go btime 3000 wtime 3000", 5.0)
+                StartposBoard().usi_to_csa(token, "+")
+                print(f"Floodgate clock probe OK: bestmove {token}")
+            print("No network connection was opened. Add --live only for an intentional debut.")
+            return
+
+        trip = os.environ.get(args.trip_env, "")
+        try:
+            validate_identity(args.username, trip)
+        except ValueError as exc:
+            raise SystemExit(
+                f"{exc}. Set a unique non-sensitive trip in environment variable {args.trip_env}."
+            ) from exc
+
+        client = FloodgateClient(
+            engine, args.username, trip, args.host, args.port, args.game_name,
+            send_eval=args.send_eval, time_plan=args.time_plan,
+        )
+        session_started = time.monotonic()
+        played = 0
+        errors = 0
+        while True:
+            if args.session_minutes > 0:
+                # Continuous mode: do not start another game once the budget is spent,
+                # so that pairing wait + one full game still fits the job time limit.
+                if (time.monotonic() - session_started) / 60.0 >= args.session_minutes:
+                    break
+            elif played >= args.games:
+                break
+            if played or errors:
+                time.sleep(max(0.0, args.reconnect_delay))
+            if args.session_minutes > 0:
+                # 次の組み合わせの直前にログインする（待ち時間中に接続が切れるのを避ける）
+                wait = seconds_until_login(time.time())
+                if wait > 0:
+                    remaining = args.session_minutes * 60.0 - (time.monotonic() - session_started)
+                    if wait >= remaining:
+                        break  # 次の組み合わせまでに時間切れ。次の回に任せる
+                    print(json.dumps({"floodgate_wait_login_s": round(wait)}), flush=True)
+                    time.sleep(wait)
+            try:
+                record = client.play_one()
+            except (OSError, ConnectionError, RuntimeError, TimeoutError, ValueError) as exc:
+                errors += 1
+                print(json.dumps({"floodgate_error": type(exc).__name__, "detail": str(exc)[:200],
+                                  "consecutive": errors}, ensure_ascii=False), flush=True)
+                if args.session_minutes <= 0 or errors >= args.max_consecutive_errors:
+                    raise
+                time.sleep(60)
+                if engine.proc.poll() is not None:
+                    raise
+                continue
+            errors = 0
+            played += 1
+            append_jsonl(args.result_log, record)
+            print(json.dumps(
+                {k: record[k] for k in ("game_id", "result", "cause", "plies")},
+                ensure_ascii=False,
+            ), flush=True)
+    finally:
+        engine.close()
+
+
+if __name__ == "__main__":
+    main()

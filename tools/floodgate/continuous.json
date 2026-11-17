@@ -1,0 +1,9 @@
+{
+  "enabled": false,
+  "username": "FUKAJI",
+  "session_minutes": 210,
+  "pause_dates_jst": [
+    "2026-12-06"
+  ],
+  "note": "深路のFloodgate常時参加の設定。enabledをtrueにしてmode=live・continuous=yes・confirm_live=LIVEで手動起動すると始まる。falseにすると次の回から止まる。実参戦はオーナーの指示があるまで始めない(R50)。定期起動(schedule)はF30により付けない。"
+}
