@@ -103,4 +103,4 @@ Total output lines: 124
 ## 外部ラダー：やねうら王NNUE版との棋力測定（2026-11-17）
 
 - Workflow：[`external-nnue-ladder.yml`](external-nnue-ladder.yml)。workflow_dispatchのみ。上のMaterial版と同じ条件・同じレベル→nodes換算で、相手だけをやねうら王NNUE版（公開評価関数 tanuki- halfkp_256x2-32-32 2023-05-08、雲路の試運転と同じ固定commit・同じ評価関数）にした測定専用。**同じレベル番号でもMaterial版とは強さが違う（NNUE版のほうがずっと強い）ので比べない。** 勝率30%以上で次へ自動起動、85%以上なら+5レベル進め、30%未満で停止。
-
+- 2026-11-17追記：E15でNNUE版を測定し、Lv47通過・Lv48停止（[記録](../../docs/decisions/2026-11-17_外部ラダーE15_やねうら王NNUE版_Lv47通過Lv48停止.md)）。
