@@ -29,3 +29,6 @@ run 44004822765（mode=rehearsal、commit e4567bc）が成功。
 - Floodgateサーバ（wdoor.c.u-tokyo.ac.jp:4081）へのTCP到達を確認（ログインはしていない）。
 - 模擬サーバで先後各1局に勝ち、評価値コメントが各9件届いた。
 - 実参戦(live)・連鎖は未実施（本人の指示待ち）。ランナーが満員（G1データ生成など）だったため、起動から実行開始まで約15分待った。実参戦のときは、雲路側と同じく1台を空けておく（F30）。
+
+## 追記: 実参戦の指示と開始（2026-11-17 12:12 JST）
+本人指示「次回の12:30のから雲路といっしょに参戦してください」。continuous.json を enabled=true にし、mode=live・continuous=yes・confirm_live=LIVE・chained=true（リハーサルは上で成功済みのため省く）で起動した。名前はFUKAJI、持ち時間300秒＋10秒加算(floodgate-300-10F)。止めるときは enabled=false にする。
