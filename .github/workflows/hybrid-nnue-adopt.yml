@@ -26,12 +26,19 @@ on:
         required: true
         type: string
       run_kumoji:
-        description: "候補対雲路100局の run ID"
+        description: "候補対雲路の run ID(none=対雲路を省略。2026-11-17本人指示)"
         required: true
+        default: "none"
         type: string
       kumoji_min_wins:
-        description: "対雲路で必要な最低勝数(現行正式の勝数以上を目安)"
+        description: "対雲路で必要な最低勝数(run_kumoji=none のときは無視)"
         required: true
+        default: "0"
+        type: string
+      auto:
+        description: "true=2026-11-17本人決定の自動採用(対現行+12以上かつ違法手0)として記録"
+        required: true
+        default: "false"
         type: string
 permissions:
   contents: write
@@ -76,6 +83,7 @@ jobs:
           run-id: ${{ inputs.run_prev }}
           github-token: ${{ github.token }}
       - uses: actions/download-artifact@v4
+        if: inputs.run_kumoji != 'none'
         with:
           name: hybrid-result-${{ inputs.run_kumoji }}
           path: in/res_kumoji
@@ -86,9 +94,11 @@ jobs:
           set -euo pipefail
           mkdir -p build
           FLAG=""; if [ "${{ inputs.commit }}" = "true" ]; then FLAG="--commit"; fi
+          if [ "${{ inputs.auto }}" = "true" ]; then FLAG="$FLAG --auto"; fi
+          KUM=""; if [ "${{ inputs.run_kumoji }}" != "none" ]; then
+            KUM="--result-kumoji in/res_kumoji/result.json --kumoji-min-wins ${{ inputs.kumoji_min_wins }}"; fi
           python scripts/hybrid_nnue_adopt.py --name "${{ inputs.name }}" --date "${{ inputs.date }}" --trained in/trained \
-            --result-prev in/res_prev/result.json --result-kumoji in/res_kumoji/result.json \
-            --kumoji-min-wins "${{ inputs.kumoji_min_wins }}" --out build/adopt $FLAG | tee build/adopt.log
+            --result-prev in/res_prev/result.json $KUM --out build/adopt $FLAG | tee build/adopt.log
           { echo '### NNUE adoption'; echo '```json'; cat build/adopt/receipt.json; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
       - name: Full regression, real hybrid USI play with the new weights, legacy engine unchanged
         if: inputs.commit == 'true'

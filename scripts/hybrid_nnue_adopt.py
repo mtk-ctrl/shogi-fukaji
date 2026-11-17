@@ -73,7 +73,8 @@ def main(a):
     if (rep["schema"] != "g1-train-v1" or rep["parent"] != old or rep["gate"] != "pass" or rep["inputs"] != arch[0] or
             rep["formal_model_changed"] is not False or rep["optimizer_step_after"] <= old_step):
         raise ValueError(f"{name} training report mismatch")
-    rp, rk = result(a.result_prev, margin=12), result(a.result_kumoji, min_wins=a.kumoji_min_wins)
+    rp = result(a.result_prev, margin=12)
+    rk = result(a.result_kumoji, min_wins=a.kumoji_min_wins) if a.result_kumoji else None  # 2026-11-17: 対雲路は省略可
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
     new, step = rep["snapshot"], rep["optimizer_step_after"]
     learned, opt, _ = load_snapshot(trained / "models", new)
@@ -96,7 +97,7 @@ def main(a):
     low = name.lower()
     model_path = f"models/fukaji-{low}.nnue.npz"
     tag, asset = f"fukaji-current-{low}-hybrid-zone-{date.replace('-', '')}", f"{name}-trained-state-Adam.tar.gz"
-    pick = lambda r: {k: r[k] for k in ("games", "fukaji_wins", "kumoji_wins", "draws_or_unresolved")}
+    pick = lambda r: None if r is None else {k: r[k] for k in ("games", "fukaji_wins", "kumoji_wins", "draws_or_unresolved")}
     receipt = {"schema": "hybrid-nnue-adoption-v1", "name": name, "previous": prev, "former_snapshot_sha256": old,
                "current_snapshot_sha256": new, "optimizer_step": step, "weights_path": model_path, "architecture": arch,
                "release_tag": tag, "release_asset": asset, "hybrid_vs_previous": pick(rp), "hybrid_vs_kumoji": pick(rk),
@@ -113,18 +114,22 @@ def main(a):
                         o=np.array([learned.output_bias], dtype=np.float32))
     raw = buf.getvalue(); dest.write_bytes(raw); wsha = digest(raw); receipt["weights_sha256"] = wsha
     draws = lambda r: f"-{r['draws_or_unresolved']}" if r["draws_or_unresolved"] else ""
-    w = (f"{name} ハイブリッド(200ms・同一探索・各{rp['games']}局)で対{prev} {rp['fukaji_wins']}-{rp['kumoji_wins']}{draws(rp)}、"
-         f"対雲路 {rk['fukaji_wins']}-{rk['kumoji_wins']}{draws(rk)}")
+    kv = "対雲路は省略" if rk is None else f"対雲路 {rk['fukaji_wins']}-{rk['kumoji_wins']}{draws(rk)}"
+    kvs = "vs KUMOJI skipped" if rk is None else f"vs KUMOJI {rk['fukaji_wins']}-{rk['kumoji_wins']}"
+    w = (f"{name} ハイブリッド(200ms・同一探索・各{rp['games']}局)で対{prev} {rp['fukaji_wins']}-{rp['kumoji_wins']}{draws(rp)}、{kv}")
+    approval = (f"auto-adopted {name} ({date}; owner rule 2026-11-17: +12 or more vs current and 0 illegal)" if a.auto
+                else f"owner-approved {name} ({date})")
+    approval_ja = (f"自動採用({date}。2026-11-17本人決定の基準：対現行+12以上かつ違法手0)" if a.auto else f"ユーザー承認({date})")
     nf = json.loads(json.dumps(formal))
     nf["hybrid"].update({
         "weights_file": model_path, "weights_sha256": wsha, "research_snapshot_sha256": new, "research_parent_sha256": old,
-        "optimizer_step": step, "nnue_approved_on": date, "nnue_approved_by": f"owner-approved {name} ({date}) {w}",
+        "optimizer_step": step, "nnue_approved_on": date, "nnue_approved_by": f"{approval} {w}",
         "state_release_tag": tag, "state_release_asset": asset,
         "training_report_sha256": digest((trained / "report.json").read_bytes()),
         "nnue_validation": {"hybrid_vs_previous": dict(pick(rp), previous=prev), "hybrid_vs_kumoji": pick(rk),
                             "training": f"hybrid({prev}) self-play at 50ms/move, {rep['games']} games, {rep['train_positions']} positions; "
                                         f"label = search value mixed {rep['outcome_weight']} with game outcome; {rep['epochs']} epoch"},
-        "validation": f"hybrid({name}) vs hybrid({prev}) {rp['fukaji_wins']}-{rp['kumoji_wins']}, vs KUMOJI {rk['fukaji_wins']}-{rk['kumoji_wins']} "
+        "validation": f"hybrid({name}) vs hybrid({prev}) {rp['fukaji_wins']}-{rp['kumoji_wins']}, {kvs} "
                       f"({rp['games']} games each, 200ms, same options); " + h["validation"]})
     for k in formal:
         if k != "hybrid" and nf[k] != formal[k]:
@@ -137,7 +142,7 @@ def main(a):
     dec = decision.split("/")[-1]
     (ROOT / decision).write_text(
         f"# {name}：自己対局の周回でNNUEを更新（正式採用、{date}）\n\n"
-        f"ユーザー承認({date})。親{prev}(Adam{old_step})から、ハイブリッド({prev})の短時間自己対局(1手50ms、{rep['games']}局)で作り直した"
+        f"{approval_ja}。親{prev}(Adam{old_step})から、ハイブリッド({prev})の短時間自己対局(1手50ms、{rep['games']}局)で作り直した"
         f"約{rep['train_positions']}局面で学習(玉周辺特徴つき入力{arch[0]}・隠れ層{arch[1]}、勝敗{rep['outcome_weight']}混合、{rep['epochs']}エポック)。"
         f"教師は探索値と対局結果だけで、雲路の評価値・指し手は不使用。\n\n"
         f"- {w}。\n"
@@ -164,7 +169,7 @@ def main(a):
     resub(mt, r"現行の正式モデルは \*\*E\d+\*\*", f"現行の正式モデルは **{name}**")
     resub(mt, re.escape(f"| **{prev}（現行）** |"), f"| {prev} |")
     row = (f"| **{name}（現行）** | {prev}のハイブリッド自己対局(50ms)約{rep['train_positions']}局面で学習(玉周辺特徴つき) | {prev} | {new[:8]} | {step} | {wsha[:8]} | "
-           f"ハイブリッド下 対{prev} {rp['fukaji_wins']}-{rp['kumoji_wins']}、対雲路 {rk['fukaji_wins']}-{rk['kumoji_wins']}。[記録](decisions/{dec}) |\n")
+           f"ハイブリッド下 対{prev} {rp['fukaji_wins']}-{rp['kumoji_wins']}、{kv}。[記録](decisions/{dec}) |\n")
     p = ROOT / mt; t = p.read_text(); i = t.index("\n通算確認")
     p.write_text(t[:i].rstrip("\n") + "\n" + row + t[i:])
     for p in ("formal/model.json", spec_doc):
@@ -181,8 +186,9 @@ if __name__ == "__main__":
     a.add_argument("--date", required=True)
     a.add_argument("--trained", type=Path, required=True)
     a.add_argument("--result-prev", type=Path, required=True)
-    a.add_argument("--result-kumoji", type=Path, required=True)
-    a.add_argument("--kumoji-min-wins", type=int, required=True)
+    a.add_argument("--result-kumoji", type=Path, default=None)
+    a.add_argument("--kumoji-min-wins", type=int, default=0)
+    a.add_argument("--auto", action="store_true", help="2026-11-17本人決定の自動採用(承認待ちなし)として記録する")
     a.add_argument("--out", type=Path, required=True)
     a.add_argument("--commit", action="store_true")
     main(a.parse_args())
