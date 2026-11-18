@@ -70,10 +70,13 @@ def main(a):
     trained = Path(a.trained)
     rep = json.loads((trained / "report.json").read_text())
     arch = h["architecture"]
-    if (rep["schema"] != "g1-train-v1" or rep["parent"] != old or rep["gate"] != "pass" or rep["inputs"] != arch[0] or
+    rp = result(a.result_prev, margin=12)
+    # 2026-11-18: 損失ゲートは強さの粗い目安。自動採用では、損失の悪化が小さく(0.001未満)、対現行が+30以上の大差なら、ゲート失敗でも採用できる(判断記録 2026-11-18_周回14)。
+    loss_small = rep.get("heldout_after", 9) - rep.get("heldout_before", 0) < 0.001
+    gate_ok = rep["gate"] == "pass" or (a.auto and loss_small and rp["fukaji_wins"] - rp["kumoji_wins"] >= 30)
+    if (rep["schema"] != "g1-train-v1" or rep["parent"] != old or not gate_ok or rep["inputs"] != arch[0] or
             rep["formal_model_changed"] is not False or rep["optimizer_step_after"] <= old_step):
         raise ValueError(f"{name} training report mismatch")
-    rp = result(a.result_prev, margin=12)
     rk = result(a.result_kumoji, min_wins=a.kumoji_min_wins) if a.result_kumoji else None  # 2026-11-17: 対雲路は省略可
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
     new, step = rep["snapshot"], rep["optimizer_step_after"]
