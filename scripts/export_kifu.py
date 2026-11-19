@@ -35,10 +35,17 @@ def main():
             board = shogi.Board()
             for t in g["moves"]:
                 board.push_usi(t)
-            s = {"names": [names[black], names[white]], "sfen": START, "moves": g["moves"]}
-            if win:
-                s["win"] = win
+            n = len(g["moves"])
+            # Exporter は「最後に指した側の勝ち」を前提に投了で終える。終局の行だけ実際の結果に直す
+            s = {"names": [names[black], names[white]], "sfen": START, "moves": g["moves"],
+                 "win": "b" if n % 2 == 1 else "w"}
             kif = K.Exporter.kif(s)
+            lines = kif.split("\r\n")
+            end = {"checkmate": "詰み", "repetition": "千日手"}.get(g["reason"], "中断")
+            lines = [ln for ln in lines if ln != "" and not ln.startswith(f"{n + 1} 投了") and not ln.startswith("まで")]
+            lines.append(f"{n + 1} {end} ")
+            lines.append(f"まで{n}手で" + ({"b": "先手", "w": "後手"}[win] + "の勝ち" if win else "中断"))
+            kif = "\r\n".join(lines) + "\r\n"
             stem = f"pair{g['pair']:02d}_先手{names[black]}_後手{names[white]}"
             z.writestr(f"kif_utf8/{stem}.kif", kif)
             z.writestr(f"kif_sjis/{stem}.kif", kif.encode("cp932", errors="replace"))
