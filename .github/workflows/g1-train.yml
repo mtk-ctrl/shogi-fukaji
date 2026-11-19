@@ -7,9 +7,9 @@ on:
         required: true
         type: string
       feature_set:
-        description: "zone=玉周辺±2升(現行E11) / base・king は親がE10以前のときだけ"
+        description: "band=玉周辺±2升＋距離帯(現行E25から。親の入力数と同じものを指定) / zone=親がE24以前のとき / base・king は親がE10以前のときだけ"
         required: true
-        default: "zone"
+        default: "band"
         type: string
       outcome_weight:
         description: "対局結果の混合比(0〜1)"
