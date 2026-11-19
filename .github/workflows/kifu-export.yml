@@ -1,0 +1,52 @@
+name: Kifu export (指定したhybrid-matchのrunの全局をKIFにして取り出す)
+# 研究・閲覧専用。対局結果・正式版は変更しない。結果は kifu-export-<run_id> ブランチの kifu/<run_id>.zip に置く。
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "hybrid-match のrun ID"
+        required: true
+        type: string
+      name_a:
+        description: "HYBRID側(候補側)の表示名"
+        required: true
+        default: "候補"
+        type: string
+      name_b:
+        description: "OPP側(相手側)の表示名"
+        required: true
+        default: "現行E23"
+        type: string
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: fukaji-kifu-export
+  cancel-in-progress: false
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: hybrid-part-*-${{ inputs.run_id }}
+          path: parts
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ github.token }}
+      - name: Export KIF
+        run: python scripts/export_kifu.py --parts parts --out "kifu/${{ inputs.run_id }}.zip" --name-a "${{ inputs.name_a }}" --name-b "${{ inputs.name_b }}"
+      - name: Push to branch
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "kifu-export-${{ inputs.run_id }}"
+          git add "kifu/${{ inputs.run_id }}.zip"
+          git commit -m "kifu: hybrid-match run ${{ inputs.run_id }} の全局KIF"
+          git push origin HEAD
