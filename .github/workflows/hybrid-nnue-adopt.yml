@@ -25,6 +25,11 @@ on:
         description: "候補対現行正式ハイブリッド100局の run ID"
         required: true
         type: string
+      run_prev2:
+        description: "追試の run ID(none=追試なし。指定すると2回の対局の合算で判定)"
+        required: false
+        default: "none"
+        type: string
       run_kumoji:
         description: "候補対雲路の run ID(none=対雲路を省略。2026-11-17本人指示)"
         required: true
@@ -83,6 +88,13 @@ jobs:
           run-id: ${{ inputs.run_prev }}
           github-token: ${{ github.token }}
       - uses: actions/download-artifact@v4
+        if: inputs.run_prev2 != 'none'
+        with:
+          name: hybrid-result-${{ inputs.run_prev2 }}
+          path: in/res_prev2
+          run-id: ${{ inputs.run_prev2 }}
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@v4
         if: inputs.run_kumoji != 'none'
         with:
           name: hybrid-result-${{ inputs.run_kumoji }}
@@ -97,8 +109,9 @@ jobs:
           if [ "${{ inputs.auto }}" = "true" ]; then FLAG="$FLAG --auto"; fi
           KUM=""; if [ "${{ inputs.run_kumoji }}" != "none" ]; then
             KUM="--result-kumoji in/res_kumoji/result.json --kumoji-min-wins ${{ inputs.kumoji_min_wins }}"; fi
+          P2=""; if [ "${{ inputs.run_prev2 }}" != "none" ]; then P2="--result-prev2 in/res_prev2/result.json"; fi
           python scripts/hybrid_nnue_adopt.py --name "${{ inputs.name }}" --date "${{ inputs.date }}" --trained in/trained \
-            --result-prev in/res_prev/result.json $KUM --out build/adopt $FLAG | tee build/adopt.log
+            --result-prev in/res_prev/result.json $P2 $KUM --out build/adopt $FLAG | tee build/adopt.log
           { echo '### NNUE adoption'; echo '```json'; cat build/adopt/receipt.json; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
       - name: Full regression, real hybrid USI play with the new weights, legacy engine unchanged
         if: inputs.commit == 'true'

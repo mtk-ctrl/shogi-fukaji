@@ -70,10 +70,22 @@ def main(a):
     trained = Path(a.trained)
     rep = json.loads((trained / "report.json").read_text())
     arch = h["architecture"]
-    rp = result(a.result_prev, margin=12)
+    rp = result(a.result_prev, margin=12 if not a.result_prev2 else None)
+    if a.result_prev2:
+        # 2026-11-19本人指示: +6以上は別シードで1回追試し、合算で判定する。両方の対局が個別に検証済みで、合算が(各108局×2で)+24以上、かつ各回とも勝ち越し。
+        r2 = result(a.result_prev2)
+        if rp["fukaji_wins"] <= rp["kumoji_wins"] or r2["fukaji_wins"] <= r2["kumoji_wins"]:
+            raise ValueError("combined adoption needs a win margin in each match")
+        rp = {"games": rp["games"] + r2["games"], "fukaji_wins": rp["fukaji_wins"] + r2["fukaji_wins"],
+              "kumoji_wins": rp["kumoji_wins"] + r2["kumoji_wins"],
+              "draws_or_unresolved": rp["draws_or_unresolved"] + r2["draws_or_unresolved"], "combined": True}
+        if rp["fukaji_wins"] - rp["kumoji_wins"] < 24:
+            raise ValueError("combined margin below +24")
     # 2026-11-18: 損失ゲートは強さの粗い目安。自動採用では、損失の悪化が小さく(0.001未満)、対現行が+30以上の大差なら、ゲート失敗でも採用できる(判断記録 2026-11-18_周回14)。
     loss_small = rep.get("heldout_after", 9) - rep.get("heldout_before", 0) < 0.001
-    gate_ok = rep["gate"] == "pass" or (a.auto and loss_small and rp["fukaji_wins"] - rp["kumoji_wins"] >= 30)
+    # 合算(2回)なら+24以上(108局あたり+12相当)で足りる。単独は+30以上。
+    need = 24 if rp.get("combined") else 30
+    gate_ok = rep["gate"] == "pass" or (a.auto and loss_small and rp["fukaji_wins"] - rp["kumoji_wins"] >= need)
     if (rep["schema"] != "g1-train-v1" or rep["parent"] != old or not gate_ok or rep["inputs"] != arch[0] or
             rep["formal_model_changed"] is not False or rep["optimizer_step_after"] <= old_step):
         raise ValueError(f"{name} training report mismatch")
@@ -119,7 +131,7 @@ def main(a):
     draws = lambda r: f"-{r['draws_or_unresolved']}" if r["draws_or_unresolved"] else ""
     kv = "対雲路は省略" if rk is None else f"対雲路 {rk['fukaji_wins']}-{rk['kumoji_wins']}{draws(rk)}"
     kvs = "vs KUMOJI skipped" if rk is None else f"vs KUMOJI {rk['fukaji_wins']}-{rk['kumoji_wins']}"
-    w = (f"{name} ハイブリッド(200ms・同一探索・各{rp['games']}局)で対{prev} {rp['fukaji_wins']}-{rp['kumoji_wins']}{draws(rp)}、{kv}")
+    w = (f"{name} ハイブリッド(200ms・同一探索・{'合算' if rp.get('combined') else '各'}{rp['games']}局)で対{prev} {rp['fukaji_wins']}-{rp['kumoji_wins']}{draws(rp)}、{kv}")
     approval = (f"auto-adopted {name} ({date}; owner rule 2026-11-17: +12 or more vs current and 0 illegal)" if a.auto
                 else f"owner-approved {name} ({date})")
     approval_ja = (f"自動採用({date}。2026-11-17本人決定の基準：対現行+12以上かつ違法手0)" if a.auto else f"ユーザー承認({date})")
@@ -189,6 +201,7 @@ if __name__ == "__main__":
     a.add_argument("--date", required=True)
     a.add_argument("--trained", type=Path, required=True)
     a.add_argument("--result-prev", type=Path, required=True)
+    a.add_argument("--result-prev2", type=Path, default=None, help="追試の結果(合算で判定)")
     a.add_argument("--result-kumoji", type=Path, default=None)
     a.add_argument("--kumoji-min-wins", type=int, default=0)
     a.add_argument("--auto", action="store_true", help="2026-11-17本人決定の自動採用(承認待ちなし)として記録する")
