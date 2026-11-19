@@ -1,0 +1,22 @@
+name: Band feature parity (距離帯特徴のPythonとC++の評価値一致検査。棋力の実験ではない)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  parity:
+    if: github.repository == 'mtk-ctrl/shogi-fukaji'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - name: Clone pinned KUMOJI
+        run: |
+          REF=$(python3 -c "import json;print(json.load(open('formal/model.json'))['hybrid']['kumoji_ref'])")
+          git clone -q https://github.com/mtk-ctrl/shogi-ai build/kumoji-src
+          git -C build/kumoji-src checkout -q "$REF"
+      - run: python3 scripts/band_parity.py --kumoji-src build/kumoji-src --work build/band-parity | tee -a "$GITHUB_STEP_SUMMARY"

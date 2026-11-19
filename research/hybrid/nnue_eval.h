@@ -14,9 +14,9 @@
 
 namespace shogi::strategy {
 namespace nnue_hybrid {
-constexpr int kBaseInputs = 2548, kKingInputs = 17576, kZoneInputs = 3848, kHidden = 128, kMaxHidden = 256;   // hidden: 128(正式) または 256(研究)
+constexpr int kBaseInputs = 2548, kKingInputs = 17576, kZoneInputs = 3848, kBandInputs = 4784, kHidden = 128, kMaxHidden = 256;   // hidden: 128(正式) または 256(研究)
 struct Model {
-    bool loaded = false, tried = false, king_relative = false, king_zone = false;
+    bool loaded = false, tried = false, king_relative = false, king_zone = false, king_band = false;
     int inputs = kBaseInputs, hidden = kHidden;
     std::vector<float> w;                 // [inputs][hidden] (inputs = 2548, or 17576 with king-relative rows)
     std::array<float, kMaxHidden> b{}, v{};
@@ -42,11 +42,12 @@ inline void load_once() {
     bool ok = std::fread(magic, 1, 8, f) == 8 && std::fread(&inputs, 4, 1, f) == 1 && std::fread(&hidden, 4, 1, f) == 1;
     const bool v2 = ok && std::string(magic, 8) == "FKJNNUE2";
     if (v2) ok = std::fread(&h2, 4, 1, f) == 1 && h2 >= 1 && h2 <= 64 && inputs == kZoneInputs && hidden == kHidden;
-    ok = ok && (v2 || std::string(magic, 8) == "FKJNNUE1") && (inputs == kBaseInputs || inputs == kKingInputs || inputs == kZoneInputs) && (hidden == kHidden || hidden == kMaxHidden);
+    ok = ok && (v2 || std::string(magic, 8) == "FKJNNUE1") && (inputs == kBaseInputs || inputs == kKingInputs || inputs == kZoneInputs || inputs == kBandInputs) && (hidden == kHidden || hidden == kMaxHidden);
     if (ok) {
         m.inputs = int(inputs);
         m.king_relative = inputs == kKingInputs;
         m.king_zone = inputs == kZoneInputs;
+        m.king_band = inputs == kBandInputs;
         m.hidden = int(hidden);
         m.w.resize(std::size_t(m.inputs) * m.hidden);
         ok = std::fread(m.w.data(), 4, m.w.size(), f) == m.w.size() &&
@@ -71,6 +72,13 @@ inline int nnue_kind(int kind, bool promoted) {
         switch (kind) { case 1: return 9; case 2: return 10; case 3: return 11; case 4: return 12; case 5: return 13; case 6: return 14; default: break; }
     }
     switch (kind) { case 1: return 1; case 2: return 2; case 3: return 3; case 4: return 4; case 7: return 5; case 5: return 6; case 6: return 7; case 8: return 8; default: return 0; }
+}
+// 距離帯特徴(fukaji.nnue_research.band_piece_indices): 玉から3升以上離れた駒。距離=升目の差の大きい方(3..8)、前後=dr<0/=0/>0。
+// 返り値は特徴番号、対象外なら -1。
+inline int band_index(int anchor, int owner, int kind, int dr, int dc) {
+    const int d = std::max(std::abs(dr), std::abs(dc));
+    if (d < 3) return -1;
+    return kZoneInputs + ((((anchor * 2 + owner) * 13 + kind) * 6 + (d - 3)) * 3 + (dr < 0 ? 0 : (dr == 0 ? 1 : 2)));
 }
 // Logit for the side to move (same as fukaji nnue_value with perspective = side to move).
 // H はコンパイル時定数にする(実行時の値にすると内側のループが遅くなる。128で約3〜4割の速度低下を実測)。
@@ -97,16 +105,19 @@ inline void accumulate(const rules::Snapshot& s, const int persp, float* out) {
         const int relative = persp ? 80 - py : py;
         add((owner * 14 + nnue_kind(p.kind, p.promoted) - 1) * 81 + relative);
         // King-relative rows (fukaji.nnue_research.relative_piece_indices): anchor = own king, then enemy king.
-        if ((m.king_relative || m.king_zone) && p.kind != 8) {
+        if ((m.king_relative || m.king_zone || m.king_band) && p.kind != 8) {
             const int nk = nnue_kind(p.kind, p.promoted);
             const int kind = nk - 1 - (nk > 8 ? 1 : 0);
             const int direction = persp == 0 ? 1 : -1;
             for (int anchor = 0; anchor < 2; ++anchor) {
                 const int king = kings[anchor == 0 ? persp : 1 - persp];
                 if (king < 0) continue;
-                if (m.king_zone) {   // 玉周辺±2升(5x5)のみ
+                if (m.king_zone || m.king_band) {   // 玉周辺±2升(5x5) ＋ 距離帯(3升以上)
                     const int dr = direction * (py / 9 - king / 9), dc = direction * (py % 9 - king % 9);
-                    if (dr < -2 || dr > 2 || dc < -2 || dc > 2) continue;
+                    if (dr < -2 || dr > 2 || dc < -2 || dc > 2) {
+                        if (m.king_band) { const int bi = band_index(anchor, owner, kind, dr, dc); if (bi >= 0) add(bi); }
+                        continue;
+                    }
                     add(kBaseInputs + (((anchor * 2 + owner) * 13 + kind) * 5 + dr + 2) * 5 + dc + 2);
                     continue;
                 }
@@ -196,7 +207,10 @@ inline double logit_incremental(const rules::Snapshot& s) {
                 const int king = kings[anchor == 0 ? persp : 1 - persp];
                 if (king < 0) continue;
                 const int dr = direction * (py / 9 - king / 9), dc = direction * (py % 9 - king % 9);
-                if (dr < -2 || dr > 2 || dc < -2 || dc > 2) continue;
+                if (dr < -2 || dr > 2 || dc < -2 || dc > 2) {
+                    if (m.king_band) { const int bi = band_index(anchor, owner, kind, dr, dc); if (bi >= 0) row(bi, sign); }
+                    continue;
+                }
                 row(kBaseInputs + (((anchor * 2 + owner) * 13 + kind) * 5 + dr + 2) * 5 + dc + 2, sign);
             }
         };
@@ -249,7 +263,7 @@ inline double logit_v2(const rules::Snapshot& s) {
 }
 inline double logit_side_to_move(const rules::Snapshot& s) {
     if (model().h2) return logit_v2(s);
-    if (model().king_zone && model().hidden == kHidden && incremental_enabled()) return logit_incremental(s);
+    if ((model().king_zone || model().king_band) && model().hidden == kHidden && incremental_enabled()) return logit_incremental(s);
     return model().hidden == kHidden ? logit_impl<kHidden>(s) : logit_impl<kMaxHidden>(s);
 }
 inline int eval_black(const rules::Snapshot& s) {

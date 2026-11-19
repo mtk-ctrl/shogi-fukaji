@@ -12,7 +12,7 @@ with np.load(a.npz, allow_pickle=False) as d:
     w, b, v, o = d["w"].astype("<f4"), d["b"].astype("<f4"), d["v"].astype("<f4"), d["o"].astype("<f4")
     v2 = [d[k].astype("<f4") for k in ("l2", "b2", "w3")] if "l2" in d.files else None   # G2(研究): 両視点＋2層目
 H = w.shape[1]   # 隠れ層: 128(正式) または 256(研究)
-assert H in (128, 256) and w.shape[0] in (2548, 17576, 3848) and b.shape == (H,) and v.shape == (H,) and o.shape == (1,)
+assert H in (128, 256) and w.shape[0] in (2548, 17576, 3848, 4784) and b.shape == (H,) and v.shape == (H,) and o.shape == (1,)
 with open(a.out, "wb") as f:
     if v2 is None:
         f.write(b"FKJNNUE1" + struct.pack("<II", w.shape[0], H))

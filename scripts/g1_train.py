@@ -10,10 +10,10 @@ import numpy as np
 import scipy.sparse as sp
 import shogi
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from fukaji.online_learning import atomic_json, load_snapshot, save_snapshot, parameters, expand_king_relative, expand_king_zone
-from fukaji.nnue_research import SmallNNUE, HIDDEN, active_indices, king_zone_indices, king_relative_indices
+from fukaji.online_learning import atomic_json, load_snapshot, save_snapshot, parameters, expand_king_relative, expand_king_zone, expand_king_band
+from fukaji.nnue_research import SmallNNUE, HIDDEN, active_indices, king_zone_indices, king_relative_indices, king_band_indices
 
-WIDTH = {"base": 40, "zone": 116, "king": 116}
+WIDTH = {"base": 40, "zone": 116, "king": 116, "band": 192}
 INPUTS = {}
 _CFG = None
 
@@ -32,7 +32,9 @@ def featurize(chunk):
             s = g["s"][ply]
             if s is not None and ply >= max(g["k"], min_ply):
                 ix = active_indices(board, board.turn)
-                if fs == "zone":
+                if fs == "band":
+                    ix = ix + king_band_indices(board, board.turn)
+                elif fs == "zone":
                     ix = ix + king_zone_indices(board, board.turn)
                 elif fs == "king":
                     ix = ix + king_relative_indices(board, board.turn)
@@ -53,8 +55,8 @@ def mirror_perm(fs):
     for i in range(2268):
         q, sq = divmod(i, 81); r, c = divmod(sq, 9)
         perm[i] = q * 81 + r * 9 + 8 - c
-    side = {"zone": 5, "king": 17}.get(fs)
-    for j in range(n - 2548):
+    side = {"zone": 5, "band": 5, "king": 17}.get(fs)
+    for j in range(min(n, 3848 if fs == "band" else n) - 2548):   # 距離帯の特徴は左右反転で不変(距離と前後だけで決まる)
         q, c = divmod(j, side)
         perm[2548 + j] = 2548 + q * side + side - 1 - c
     return perm
@@ -136,7 +138,7 @@ def main():
     p.add_argument("--lr", type=float, default=.0002)
     p.add_argument("--batch", type=int, default=256)
     p.add_argument("--outcome-weight", type=float, default=.2)
-    p.add_argument("--feature-set", choices=["base", "zone", "king"], default="zone")
+    p.add_argument("--feature-set", choices=["base", "zone", "band", "king"], default="zone")
     p.add_argument("--scale", type=float, default=600.)
     p.add_argument("--min-ply", type=int, default=8)
     p.add_argument("--max-games", type=int, default=0)
@@ -155,11 +157,13 @@ def main():
     base, base_opt, _ = load_snapshot(md, BASE)
     if base_opt is None or base_opt["step"] != base_step:
         raise SystemExit("Adam state missing or step differs from formal")
-    for fs, m in (("base", 2548), ("zone", 3848), ("king", 17576)):
+    for fs, m in (("base", 2548), ("zone", 3848), ("band", 4784), ("king", 17576)):
         INPUTS[fs] = m
     base_fs = {v: k for k, v in INPUTS.items()}[base.inputs]
     if a.feature_set == base_fs:
         parent, opt = base, base_opt
+    elif base_fs == "zone" and a.feature_set == "band":
+        parent, opt = expand_king_band(base, base_opt)
     elif base_fs == "base":
         parent, opt = (expand_king_zone if a.feature_set == "zone" else expand_king_relative)(base, base_opt)
     else:

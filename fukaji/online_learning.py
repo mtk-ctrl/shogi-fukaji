@@ -90,6 +90,22 @@ def expand_king_zone(parent, optimizer):
     return model, opt
 
 
+def expand_king_band(parent, optimizer):
+    """玉周辺±2升(3848入力)の親へ、距離帯特徴936行を足す。追加行だけゼロ(拡張直後の評価は親と一致)。"""
+    from .nnue_research import BAND_INPUTS, ZONE_INPUTS
+    if not parent.king_zone:
+        raise ValueError('parent must be the king-zone model')
+    def expand(array):
+        return np.concatenate((array, np.zeros((BAND_INPUTS-ZONE_INPUTS, HIDDEN), dtype=array.dtype)))
+    model = SmallNNUE(expand(parent.hidden_weights), parent.hidden_bias,
+                      parent.output_weights, parent.output_bias)
+    opt = None if optimizer is None else {
+        'step': optimizer['step'],
+        'm': [expand(optimizer['m'][0]), *[x.copy() for x in optimizer['m'][1:]]],
+        's': [expand(optimizer['s'][0]), *[x.copy() for x in optimizer['s'][1:]]]}
+    return model, opt
+
+
 def save_snapshot(root, model, optimizer, metadata):
     root = Path(root)
     root.mkdir(parents=True, exist_ok=True)

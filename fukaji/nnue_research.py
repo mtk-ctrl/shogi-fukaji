@@ -22,6 +22,11 @@ ZONE_RADIUS = 2
 ZONE_SIDE = 2 * ZONE_RADIUS + 1
 KING_ZONE_INPUTS = 2 * 2 * (PIECES - 1) * ZONE_SIDE * ZONE_SIDE  # 玉周辺±2升のみ(1300入力)
 ZONE_INPUTS = INPUTS + KING_ZONE_INPUTS
+# 距離帯特徴: 玉からの距離(升目の大きい方の差 d=max(|dr|,|dc|))が3〜8の駒を、玉ごと・駒種ごと・距離ごと・前後(3区分)で1特徴にまとめる。
+BAND_MIN, BAND_MAX = ZONE_RADIUS + 1, 8
+BAND_DIST = BAND_MAX - BAND_MIN + 1
+KING_BAND_INPUTS = 2 * 2 * (PIECES - 1) * BAND_DIST * 3   # 936入力
+BAND_INPUTS = ZONE_INPUTS + KING_BAND_INPUTS               # 4784
 
 
 def _piece_index(piece, square, perspective):
@@ -94,6 +99,36 @@ def zone_piece_indices(piece, square, perspective, kings):
     return result
 
 
+def band_piece_indices(piece, square, perspective, kings):
+    """玉から3升以上離れた駒の距離帯特徴。anchor(自玉/敵玉)×owner×駒種×距離(3..8)×前後(dr<0,=0,>0)。"""
+    if piece.piece_type == shogi.KING:
+        return []
+    kind = piece.piece_type - 1 - int(piece.piece_type > shogi.KING)
+    owner = int(piece.color) ^ int(perspective)
+    direction = 1 if perspective == shogi.BLACK else -1
+    result = []
+    for anchor, color in enumerate((perspective, 1-perspective)):
+        king = kings[color]
+        if king is None:
+            continue
+        dr = direction * (square//9 - king//9)
+        dc = direction * (square%9 - king%9)
+        d = max(abs(dr), abs(dc))
+        if d >= BAND_MIN:
+            side = 0 if dr < 0 else (1 if dr == 0 else 2)
+            result.append(ZONE_INPUTS + ((((anchor*2 + owner)*(PIECES-1) + kind)*BAND_DIST + d - BAND_MIN)*3 + side))
+    return result
+
+
+def king_band_indices(board, perspective):
+    result = king_zone_indices(board, perspective)
+    for square in range(81):
+        piece = board.piece_at(square)
+        if piece is not None:
+            result.extend(band_piece_indices(piece, square, perspective, board.king_squares))
+    return result
+
+
 def king_zone_indices(board, perspective):
     result = []
     for square in range(81):
@@ -120,7 +155,7 @@ class SmallNNUE:
         b = np.asarray(hidden_bias, dtype=np.float32)
         v = np.asarray(output_weights, dtype=np.float32)
         o = float(output_bias)
-        if (w.shape not in ((INPUTS, HIDDEN), (KING_INPUTS, HIDDEN), (ZONE_INPUTS, HIDDEN)) or b.shape != (HIDDEN,) or
+        if (w.shape not in ((INPUTS, HIDDEN), (KING_INPUTS, HIDDEN), (ZONE_INPUTS, HIDDEN), (BAND_INPUTS, HIDDEN)) or b.shape != (HIDDEN,) or
                 v.shape != (HIDDEN,) or not np.isfinite(w).all() or
                 not np.isfinite(b).all() or not np.isfinite(v).all() or
                 not np.isfinite(o)):
@@ -132,9 +167,12 @@ class SmallNNUE:
         self.inputs = w.shape[0]
         self.king_relative = self.inputs == KING_INPUTS
         self.king_zone = self.inputs == ZONE_INPUTS
+        self.king_band = self.inputs == BAND_INPUTS
 
     def active_indices(self, board, perspective):
         base = active_indices(board, perspective)
+        if self.king_band:
+            return base + king_band_indices(board, perspective)
         if self.king_zone:
             return base + king_zone_indices(board, perspective)
         return base + king_relative_indices(board, perspective) if self.king_relative else base
@@ -153,8 +191,8 @@ class SmallNNUE:
         if indexes:
             result += self.hidden_weights[indexes].astype(np.float64).sum(axis=0)
         # Sum separately: a zero extension preserves the old accumulator exactly.
-        if self.king_relative or self.king_zone:
-            relative = (king_zone_indices if self.king_zone else king_relative_indices)(board, perspective)
+        if self.king_relative or self.king_zone or self.king_band:
+            relative = (king_band_indices if self.king_band else king_zone_indices if self.king_zone else king_relative_indices)(board, perspective)
             if relative:
                 result += self.hidden_weights[relative].astype(np.float64).sum(axis=0)
         return result
