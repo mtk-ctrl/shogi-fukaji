@@ -70,8 +70,18 @@ def main(a):
     trained = Path(a.trained)
     rep = json.loads((trained / "report.json").read_text())
     arch = h["architecture"]
-    rp = result(a.result_prev, margin=12 if not a.result_prev2 else None)
-    if a.result_prev2:
+    ov = a.owner_override
+    rp = result(a.result_prev, margin=12 if not (a.result_prev2 or ov) else None)
+    if a.result_prev2 and ov:
+        # 本人の個別承認(基準未達でも採用)。対局の検証(違法手0・再現検証)は維持し、合算で現行に勝ち越していることだけ求める。
+        r2 = result(a.result_prev2)
+        rp = {"games": rp["games"] + r2["games"], "fukaji_wins": rp["fukaji_wins"] + r2["fukaji_wins"],
+              "kumoji_wins": rp["kumoji_wins"] + r2["kumoji_wins"],
+              "draws_or_unresolved": rp["draws_or_unresolved"] + r2["draws_or_unresolved"], "combined": True,
+              "go": rp.get("go"), "longthink_ms": rp.get("longthink_ms")}
+        if rp["fukaji_wins"] <= rp["kumoji_wins"]:
+            raise ValueError("owner override still needs a combined win margin")
+    elif a.result_prev2:
         # 2026-11-19本人指示: +6以上は別シードで1回追試し、合算で判定する。両方の対局が個別に検証済みで、合算が(各108局×2で)+24以上、かつ各回とも勝ち越し。
         r2 = result(a.result_prev2)
         # 2026-11-19本人指示(周回28): 追試では「両方の対局が+6以上」でも採用できる(合算+24以上でも可)。各回は勝ち越しが必須。
@@ -81,7 +91,8 @@ def main(a):
         both6 = m1 >= 6 and m2 >= 6
         rp = {"games": rp["games"] + r2["games"], "fukaji_wins": rp["fukaji_wins"] + r2["fukaji_wins"],
               "kumoji_wins": rp["kumoji_wins"] + r2["kumoji_wins"],
-              "draws_or_unresolved": rp["draws_or_unresolved"] + r2["draws_or_unresolved"], "combined": True}
+              "draws_or_unresolved": rp["draws_or_unresolved"] + r2["draws_or_unresolved"], "combined": True,
+              "go": rp.get("go"), "longthink_ms": rp.get("longthink_ms")}
         rp["both6"] = both6
         if not both6 and rp["fukaji_wins"] - rp["kumoji_wins"] < 24:
             raise ValueError("combined margin below +24 and not both +6")
@@ -89,8 +100,11 @@ def main(a):
     loss_small = rep.get("heldout_after", 9) - rep.get("heldout_before", 0) < 0.001
     # 合算(2回)なら+24以上(108局あたり+12相当)で足りる。単独は+30以上。
     need = 24 if rp.get("combined") else 30  # ゲート失敗時は、追試ありでも合算+24以上を求める
-    gate_ok = rep["gate"] == "pass" or (a.auto and loss_small and rp["fukaji_wins"] - rp["kumoji_wins"] >= need)
-    if (rep["schema"] != "g1-train-v1" or rep["parent"] != old or not gate_ok or rep["inputs"] != arch[0] or
+    gate_ok = bool(ov) or rep["gate"] == "pass" or (a.auto and loss_small and rp["fukaji_wins"] - rp["kumoji_wins"] >= need)
+    new_in = a.new_inputs or arch[0]
+    if new_in != arch[0] and new_in != 4784:
+        raise ValueError("only the band feature structure change (3848->4784) is supported")
+    if (rep["schema"] != "g1-train-v1" or rep["parent"] != old or not gate_ok or rep["inputs"] != new_in or
             rep["formal_model_changed"] is not False or rep["optimizer_step_after"] <= old_step):
         raise ValueError(f"{name} training report mismatch")
     rk = result(a.result_kumoji, min_wins=a.kumoji_min_wins) if a.result_kumoji else None  # 2026-11-17: 対雲路は省略可
@@ -99,7 +113,7 @@ def main(a):
     learned, opt, _ = load_snapshot(trained / "models", new)
     if opt is None or opt["step"] != step:
         raise ValueError("complete Adam state could not be restored")
-    if learned.hidden_weights.shape != (arch[0], arch[1]):
+    if learned.hidden_weights.shape != (new_in, arch[1]):
         raise ValueError("architecture changed; use a dedicated adoption for structure changes")
     raw_src = (trained / "cand-weights.npz").read_bytes()
     if digest(raw_src) != rep["weights_file_sha256"]:
@@ -115,10 +129,10 @@ def main(a):
                 raise ValueError("non-finite weights")
     low = name.lower()
     model_path = f"models/fukaji-{low}.nnue.npz"
-    tag, asset = f"fukaji-current-{low}-hybrid-zone-{date.replace('-', '')}", f"{name}-trained-state-Adam.tar.gz"
+    tag, asset = f"fukaji-current-{low}-hybrid-{'band' if new_in != arch[0] else 'zone'}-{date.replace('-', '')}", f"{name}-trained-state-Adam.tar.gz"
     pick = lambda r: None if r is None else {k: r[k] for k in ("games", "fukaji_wins", "kumoji_wins", "draws_or_unresolved")}
     receipt = {"schema": "hybrid-nnue-adoption-v1", "name": name, "previous": prev, "former_snapshot_sha256": old,
-               "current_snapshot_sha256": new, "optimizer_step": step, "weights_path": model_path, "architecture": arch,
+               "current_snapshot_sha256": new, "optimizer_step": step, "weights_path": model_path, "architecture": [new_in, arch[1], 1] if new_in != arch[0] else arch,
                "release_tag": tag, "release_asset": asset, "hybrid_vs_previous": pick(rp), "hybrid_vs_kumoji": pick(rk),
                "train_positions": rep["train_positions"], "games": rep["games"], "outcome_weight": rep["outcome_weight"],
                "heldout_before": rep["heldout_before"], "heldout_after": rep["heldout_after"]}
@@ -140,10 +154,20 @@ def main(a):
     cond = f"{ms}ms" + (f"＋長考{lt // 1000}秒×最大10回" if lt else "")
     cond_en = f"{ms}ms" + (f" + long think {lt // 1000}s x up to 10" if lt else "")
     w = (f"{name} ハイブリッド({cond}・同一探索・{'合算' if rp.get('combined') else '各'}{rp['games']}局)で対{prev} {rp['fukaji_wins']}-{rp['kumoji_wins']}{draws(rp)}、{kv}")
-    approval = (f"auto-adopted {name} ({date}; owner rule 2026-11-17: +12 or more vs current and 0 illegal)" if a.auto
+    if ov:
+        approval = f"owner-approved {name} ({date}; individual owner override below the +12 rule: {ov})"
+    else:
+        approval = (f"auto-adopted {name} ({date}; owner rule 2026-11-17: +12 or more vs current and 0 illegal)" if a.auto
                 else f"owner-approved {name} ({date})")
     approval_ja = (f"自動採用({date}。2026-11-17本人決定の基準：対現行+12以上かつ違法手0)" if a.auto else f"ユーザー承認({date})")
+    if ov:
+        approval_ja = f"本人の個別承認({date}。今回のみ、採用基準+12に届かないが採用：{ov})"
+    fdesc = "現行2548＋玉周辺1300＋距離帯936" if new_in != arch[0] else "現行2548＋玉周辺1300"
     nf = json.loads(json.dumps(formal))
+    if new_in != arch[0]:
+        nf["hybrid"]["architecture"] = [new_in, arch[1], 1]
+        nf["hybrid"]["feature_set"] = ("base 2548 + king zone 5x5 (1300) + king-distance band 936 (distance 3..8, own/enemy king): "
+                                       "fukaji.nnue_research.king_band_indices / research/hybrid/nnue_eval.h")
     nf["hybrid"].update({
         "weights_file": model_path, "weights_sha256": wsha, "research_snapshot_sha256": new, "research_parent_sha256": old,
         "optimizer_step": step, "nnue_approved_on": date, "nnue_approved_by": f"{approval} {w}",
@@ -166,7 +190,7 @@ def main(a):
     (ROOT / decision).write_text(
         f"# {name}：自己対局の周回でNNUEを更新（正式採用、{date}）\n\n"
         f"{approval_ja}。親{prev}(Adam{old_step})から、ハイブリッド({prev})の短時間自己対局(1手50ms、{rep['games']}局)で作り直した"
-        f"約{rep['train_positions']}局面で学習(玉周辺特徴つき入力{arch[0]}・隠れ層{arch[1]}、勝敗{rep['outcome_weight']}混合、{rep['epochs']}エポック)。"
+        f"約{rep['train_positions']}局面で学習(玉周辺特徴つき入力{new_in}・隠れ層{arch[1]}、勝敗{rep['outcome_weight']}混合、{rep['epochs']}エポック)。"
         f"教師は探索値と対局結果だけで、雲路の評価値・指し手は不使用。\n\n"
         f"- {w}。\n"
         f"- 検証ラベル損失 {rep['heldout_before']:.4f}→{rep['heldout_after']:.4f}。\n"
@@ -175,11 +199,11 @@ def main(a):
         f"- 次の周回(g1-gen.yml → g1-train.yml → hybrid-match.yml)はこの{name}を親にする(各workflowの既定値 formal が自動で指す)。\n")
     spec_doc = "docs/現行エンジン仕様.md"
     resub(spec_doc, r"正式エンジン\(ハイブリッド\)のNNUE重みはE\d+（[^）]*）",
-          f"正式エンジン(ハイブリッド)のNNUE重みは{name}（{new[:8]}、Adam{step}、入力{arch[0]}＝現行2548＋玉周辺1300、隠れ層{arch[1]}。{prev}から自己対局の周回で学習）")
+          f"正式エンジン(ハイブリッド)のNNUE重みは{name}（{new[:8]}、Adam{step}、入力{new_in}＝{fdesc}、隠れ層{arch[1]}。{prev}から自己対局の周回で学習）")
     resub(spec_doc, r"次のNNUE学習は現行E\d+（[^）]*）", f"次のNNUE学習は現行{name}（Adam{step}、Release {tag}）")
     append(spec_doc, f"## {name}：自己対局の周回でNNUEを更新（{date}）\n\n"
            f"- snapshot {new}、推論 `{model_path}` SHA256 {wsha}、Adam{step}。{w}。[判断](decisions/{dec})。")
-    common = (f"正式{name}（{new}、Adam{step}、入力{arch[0]}＝現行2548＋玉周辺1300。{prev}の自己対局約{rep['train_positions']}局面で学習）。{w}。"
+    common = (f"正式{name}（{new}、Adam{step}、入力{new_in}＝{fdesc}。{prev}の自己対局約{rep['train_positions']}局面で学習）。{w}。"
               f"[{name}採用判断](decisions/{dec})。採用範囲は正式エンジン(ハイブリッド)。")
     section("docs/00_開発ルーター.md", "## 現行モデル", "## 現在の研究・保存再開点", "## 現行モデル\n\n" + common + "\n\n")
     append("docs/00_開発ルーター.md", f"## 最新NNUE（{name}、{date}）\n\n" + common +
@@ -212,6 +236,8 @@ if __name__ == "__main__":
     a.add_argument("--result-prev2", type=Path, default=None, help="追試の結果(合算で判定)")
     a.add_argument("--result-kumoji", type=Path, default=None)
     a.add_argument("--kumoji-min-wins", type=int, default=0)
+    a.add_argument("--owner-override", default="", help="本人の個別承認(基準+12未達でも採用)。理由の短文")
+    a.add_argument("--new-inputs", type=int, default=0, help="特徴の形が変わる採用の新しい入力数(4784のみ)")
     a.add_argument("--auto", action="store_true", help="2026-11-17本人決定の自動採用(承認待ちなし)として記録する")
     a.add_argument("--out", type=Path, required=True)
     a.add_argument("--commit", action="store_true")

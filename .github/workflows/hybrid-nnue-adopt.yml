@@ -45,6 +45,16 @@ on:
         required: true
         default: "false"
         type: string
+      owner_override:
+        description: "本人の個別承認の理由(空=なし)。基準+12未達でも採用する場合だけ。2026-11-20追加"
+        required: false
+        default: ""
+        type: string
+      new_inputs:
+        description: "特徴の形が変わる採用の入力数(0=変更なし / 4784=距離帯特徴)"
+        required: false
+        default: "0"
+        type: string
 permissions:
   contents: write
   actions: read
@@ -58,6 +68,7 @@ jobs:
     timeout-minutes: 60
     env:
       GH_TOKEN: ${{ github.token }}
+      OVERRIDE: ${{ inputs.owner_override }}
       OPENBLAS_NUM_THREADS: '1'
       OMP_NUM_THREADS: '1'
     steps:
@@ -107,11 +118,12 @@ jobs:
           mkdir -p build
           FLAG=""; if [ "${{ inputs.commit }}" = "true" ]; then FLAG="--commit"; fi
           if [ "${{ inputs.auto }}" = "true" ]; then FLAG="$FLAG --auto"; fi
+          if [ "${{ inputs.new_inputs }}" != "0" ]; then FLAG="$FLAG --new-inputs ${{ inputs.new_inputs }}"; fi
           KUM=""; if [ "${{ inputs.run_kumoji }}" != "none" ]; then
             KUM="--result-kumoji in/res_kumoji/result.json --kumoji-min-wins ${{ inputs.kumoji_min_wins }}"; fi
           P2=""; if [ "${{ inputs.run_prev2 }}" != "none" ]; then P2="--result-prev2 in/res_prev2/result.json"; fi
           python scripts/hybrid_nnue_adopt.py --name "${{ inputs.name }}" --date "${{ inputs.date }}" --trained in/trained \
-            --result-prev in/res_prev/result.json $P2 $KUM --out build/adopt $FLAG | tee build/adopt.log
+            --result-prev in/res_prev/result.json $P2 $KUM ${OVERRIDE:+--owner-override "$OVERRIDE"} --out build/adopt $FLAG | tee build/adopt.log
           { echo '### NNUE adoption'; echo '```json'; cat build/adopt/receipt.json; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
       - name: Full regression, real hybrid USI play with the new weights, legacy engine unchanged
         if: inputs.commit == 'true'
