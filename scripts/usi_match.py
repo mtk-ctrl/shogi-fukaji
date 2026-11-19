@@ -180,8 +180,11 @@ def cmd_pair(a):
 
 def cmd_aggregate(a):
     games = []
+    go = longthink = None
     for f in sorted(Path(a.parts).rglob("shard-*.json")):
-        games += json.loads(f.read_text())["games"]
+        part = json.loads(f.read_text())
+        games += part["games"]
+        go, longthink = part.get("go", go), part.get("longthink_ms", longthink)
     n = len(games)
     la, lb = a.label_a, a.label_b
     wins = {la: 0, lb: 0}
@@ -204,7 +207,7 @@ def cmd_aggregate(a):
                "pair_sweeps_fukaji": sum(s == 2 for s in pair_score),
                "pair_sweeps_kumoji": sum(s == 0 for s in pair_score),
                "illegal_pairs": illegal, "reasons": reasons,
-               "replay_verified": all(replay_ok(g) for g in games),
+               "replay_verified": all(replay_ok(g) for g in games), "go": go, "longthink_ms": longthink,
                "avg_plies": sum(g["plies"] for g in games) / n if n else None}
     Path(a.out).write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
     print(json.dumps(summary, ensure_ascii=False, indent=2))

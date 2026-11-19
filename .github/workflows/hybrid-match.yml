@@ -44,9 +44,14 @@ on:
         default: "202611990"
         type: string
       movetime_ms:
-        description: "1手の時間(ms)"
+        description: "1手の時間(ms)。2026-11-19本人指示で既定を200から300へ"
         required: true
-        default: "200"
+        default: "300"
+        type: string
+      longthink_ms:
+        description: "長考1回の時間(ms)。各陣営最大10回。0=長考なし。2026-11-19本人指示で既定は2000"
+        required: true
+        default: "2000"
         type: string
       kumoji_ref:
         description: "雲路のコミットSHA(探索の借用元・対戦相手)"
@@ -144,7 +149,7 @@ jobs:
           python scripts/usi_match.py pair --engine-a /tmp/a.sh --engine-b /tmp/b.sh \
             --label-a HYBRID --label-b OPP --opts-a "$OPTA" --opts-b "$OPTB" --kumoji-src kumoji-src \
             --shard ${{ matrix.shard }} --shards 18 --pairs ${{ inputs.pairs }} \
-            --movetime-ms ${{ inputs.movetime_ms }} --seed ${{ inputs.seed }} --out build/part
+            --movetime-ms ${{ inputs.movetime_ms }} --longthink-ms ${{ inputs.longthink_ms }} --seed ${{ inputs.seed }} --out build/part
       - uses: actions/upload-artifact@v4
         if: always()
         with:

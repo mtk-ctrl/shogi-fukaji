@@ -131,7 +131,11 @@ def main(a):
     draws = lambda r: f"-{r['draws_or_unresolved']}" if r["draws_or_unresolved"] else ""
     kv = "対雲路は省略" if rk is None else f"対雲路 {rk['fukaji_wins']}-{rk['kumoji_wins']}{draws(rk)}"
     kvs = "vs KUMOJI skipped" if rk is None else f"vs KUMOJI {rk['fukaji_wins']}-{rk['kumoji_wins']}"
-    w = (f"{name} ハイブリッド(200ms・同一探索・{'合算' if rp.get('combined') else '各'}{rp['games']}局)で対{prev} {rp['fukaji_wins']}-{rp['kumoji_wins']}{draws(rp)}、{kv}")
+    ms = (rp.get("go") or "go movetime 200").split()[-1]
+    lt = rp.get("longthink_ms") or 0
+    cond = f"{ms}ms" + (f"＋長考{lt // 1000}秒×最大10回" if lt else "")
+    cond_en = f"{ms}ms" + (f" + long think {lt // 1000}s x up to 10" if lt else "")
+    w = (f"{name} ハイブリッド({cond}・同一探索・{'合算' if rp.get('combined') else '各'}{rp['games']}局)で対{prev} {rp['fukaji_wins']}-{rp['kumoji_wins']}{draws(rp)}、{kv}")
     approval = (f"auto-adopted {name} ({date}; owner rule 2026-11-17: +12 or more vs current and 0 illegal)" if a.auto
                 else f"owner-approved {name} ({date})")
     approval_ja = (f"自動採用({date}。2026-11-17本人決定の基準：対現行+12以上かつ違法手0)" if a.auto else f"ユーザー承認({date})")
@@ -145,7 +149,7 @@ def main(a):
                             "training": f"hybrid({prev}) self-play at 50ms/move, {rep['games']} games, {rep['train_positions']} positions; "
                                         f"label = search value mixed {rep['outcome_weight']} with game outcome; {rep['epochs']} epoch"},
         "validation": f"hybrid({name}) vs hybrid({prev}) {rp['fukaji_wins']}-{rp['kumoji_wins']}, {kvs} "
-                      f"({rp['games']} games each, 200ms, same options); " + h["validation"]})
+                      f"({rp['games']} games each, {cond_en}, same options); " + h["validation"]})
     for k in formal:
         if k != "hybrid" and nf[k] != formal[k]:
             raise ValueError("legacy formal field changed " + k)
