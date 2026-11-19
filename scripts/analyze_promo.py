@@ -9,8 +9,9 @@ def mover_view(score, turn_after, mover):
     if score is None:
         return None
     kind, v = score
-    s = v if turn_after == mover else -v    # turn_after側の評価 → 指した側の視点
-    return s
+    if kind == "mate":                       # 詰みは±30000から手数を引いた大きな値にそろえる
+        v = (30000 - abs(v)) * (1 if v > 0 else -1)
+    return v if turn_after == mover else -v    # turn_after側の評価 → 指した側の視点
 
 
 def main():
