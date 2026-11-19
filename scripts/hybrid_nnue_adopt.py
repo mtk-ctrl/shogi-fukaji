@@ -74,17 +74,21 @@ def main(a):
     if a.result_prev2:
         # 2026-11-19本人指示: +6以上は別シードで1回追試し、合算で判定する。両方の対局が個別に検証済みで、合算が(各108局×2で)+24以上、かつ各回とも勝ち越し。
         r2 = result(a.result_prev2)
-        if rp["fukaji_wins"] <= rp["kumoji_wins"] or r2["fukaji_wins"] <= r2["kumoji_wins"]:
+        # 2026-11-19本人指示(周回28): 追試では「両方の対局が+6以上」でも採用できる(合算+24以上でも可)。各回は勝ち越しが必須。
+        m1, m2 = rp["fukaji_wins"] - rp["kumoji_wins"], r2["fukaji_wins"] - r2["kumoji_wins"]
+        if m1 <= 0 or m2 <= 0:
             raise ValueError("combined adoption needs a win margin in each match")
+        both6 = m1 >= 6 and m2 >= 6
         rp = {"games": rp["games"] + r2["games"], "fukaji_wins": rp["fukaji_wins"] + r2["fukaji_wins"],
               "kumoji_wins": rp["kumoji_wins"] + r2["kumoji_wins"],
               "draws_or_unresolved": rp["draws_or_unresolved"] + r2["draws_or_unresolved"], "combined": True}
-        if rp["fukaji_wins"] - rp["kumoji_wins"] < 24:
-            raise ValueError("combined margin below +24")
+        rp["both6"] = both6
+        if not both6 and rp["fukaji_wins"] - rp["kumoji_wins"] < 24:
+            raise ValueError("combined margin below +24 and not both +6")
     # 2026-11-18: 損失ゲートは強さの粗い目安。自動採用では、損失の悪化が小さく(0.001未満)、対現行が+30以上の大差なら、ゲート失敗でも採用できる(判断記録 2026-11-18_周回14)。
     loss_small = rep.get("heldout_after", 9) - rep.get("heldout_before", 0) < 0.001
     # 合算(2回)なら+24以上(108局あたり+12相当)で足りる。単独は+30以上。
-    need = 24 if rp.get("combined") else 30
+    need = 24 if rp.get("combined") else 30  # ゲート失敗時は、追試ありでも合算+24以上を求める
     gate_ok = rep["gate"] == "pass" or (a.auto and loss_small and rp["fukaji_wins"] - rp["kumoji_wins"] >= need)
     if (rep["schema"] != "g1-train-v1" or rep["parent"] != old or not gate_ok or rep["inputs"] != arch[0] or
             rep["formal_model_changed"] is not False or rep["optimizer_step_after"] <= old_step):
