@@ -4,18 +4,26 @@
  "round": 34,
  "parent": "48182aca4eafb4af830231d09e2b192610bb644ed5fca83faaa96f571f75a6e8",
  "stage": "match",
- "tag": "r34-match-2",
+ "tag": "r34-match-3",
  "gens": [
   44693903779,
   44702169155
  ],
  "train_run": 44711144353,
- "matches": [],
+ "matches": [
+  {
+   "run": 44716511855,
+   "w": 59,
+   "l": 49,
+   "illegal": 0,
+   "draw": 0
+  }
+ ],
  "match_runs": [],
  "retries": 0,
- "seq": 2,
+ "seq": 3,
  "last_dispatch": null,
- "updated": "2026-11-20T10:15:17Z",
+ "updated": "2026-11-20T10:16:46Z",
  "reason": "",
  "history": [
   {
@@ -47,6 +55,12 @@
    "round": 34,
    "stage": "match",
    "note": "待っていない通知を無視(gen tag=r34-gen-1 待ち=r34-match-2)"
+  },
+  {
+   "t": "2026-11-20T10:16:46Z",
+   "round": 34,
+   "stage": "match",
+   "note": "対局 59-49。基準に届かないが+6以上のため追試"
   }
  ],
  "gate_fail": true
