@@ -3,13 +3,13 @@
  "active": true,
  "round": 34,
  "parent": "48182aca4eafb4af830231d09e2b192610bb644ed5fca83faaa96f571f75a6e8",
- "stage": "gen",
- "tag": "r34-gen-1",
+ "stage": "train",
+ "tag": "boot",
  "gens": [
   44693903779,
   44702169155
  ],
- "train_run": 44711144353,
+ "train_run": null,
  "matches": [],
  "match_runs": [],
  "retries": 0,
@@ -29,6 +29,12 @@
    "round": 34,
    "stage": "train",
    "note": "学習(run 44711144353): ゲート失敗。対局せず、生成を足して学習し直す"
+  },
+  {
+   "t": "2026-11-20T10:12:00Z",
+   "round": 34,
+   "stage": "train",
+   "note": "手動: ゲート失敗でも悪化が小さい候補は対局する規則に変えたため、周回34の学習(run 44711144353)をやり直しで評価する。第3の生成は取り消し"
   }
  ]
 }
