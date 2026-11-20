@@ -3,19 +3,19 @@
  "active": true,
  "round": 37,
  "parent": "0fdd1ebcff6e86395e0aff52d538b528b830bf0ed360f51f3ea24560374d2362",
- "stage": "train",
- "tag": "r37-train-15",
+ "stage": "match",
+ "tag": "r37-match-16",
  "gens": [
   44765210414,
   44775562652
  ],
- "train_run": null,
+ "train_run": 44785636218,
  "matches": [],
  "match_runs": [],
  "retries": 0,
- "seq": 15,
+ "seq": 16,
  "last_dispatch": null,
- "updated": "2026-11-20T17:41:03Z",
+ "updated": "2026-11-20T18:03:27Z",
  "reason": "",
  "history": [
   {
@@ -125,7 +125,13 @@
    "round": 37,
    "stage": "gen",
    "note": "生成完了(run 44775562652)。2回分で学習へ"
+  },
+  {
+   "t": "2026-11-20T18:03:27Z",
+   "round": 37,
+   "stage": "train",
+   "note": "学習(run 44785636218): ゲート失敗(悪化が微差なので勝敗で決める)、検証損失0.55081→0.55102。対局へ"
   }
  ],
- "gate_fail": false
+ "gate_fail": true
 }
