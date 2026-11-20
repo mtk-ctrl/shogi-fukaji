@@ -12,6 +12,21 @@ on:
         required: true
         default: "2400"
         type: string
+      only:
+        description: "使う対局：lost=負けた対局だけ(既定・本人決定2026-11-20) / win / all"
+        required: true
+        default: "lost"
+        type: string
+      repeat:
+        description: "同じ局を学習で繰り返す回数(量が少ないため比率を上げる)"
+        required: true
+        default: "1"
+        type: string
+      min_games:
+        description: "使える対局がこれ未満なら出力しない(まとまった量になるまで待つ)。0=待たない"
+        required: true
+        default: "300"
+        type: string
 permissions:
   contents: read
   actions: read
@@ -44,10 +59,16 @@ jobs:
           echo "artifacts downloaded: $n of $(wc -l < runs.txt) runs"
       - name: Convert
         run: |
-          set -euo pipefail
-          python scripts/floodgate_to_g1.py --in in --out out --scale ${{ inputs.scale }} | tee convert.log
+          set +e
+          python scripts/floodgate_to_g1.py --in in --out out --scale ${{ inputs.scale }} --only ${{ inputs.only }} --repeat ${{ inputs.repeat }} --min-games ${{ inputs.min_games }} | tee convert.log
+          rc=${PIPESTATUS[0]}
+          if [ "$rc" = 3 ]; then
+            { echo '### Floodgate data: まだ量が足りない(待つ)'; echo '```json'; tail -1 convert.log; echo '```'; } >> "$GITHUB_STEP_SUMMARY"; exit 0
+          fi
+          [ "$rc" = 0 ] || exit "$rc"
           { echo '### Floodgate data'; echo '```json'; cat out/summary-00.json; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
+        if: hashFiles('out/summary-00.json') != ''
         with:
           name: g1-data-floodgate-${{ github.run_id }}
           path: out
