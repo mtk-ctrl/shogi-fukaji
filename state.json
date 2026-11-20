@@ -3,8 +3,8 @@
  "active": true,
  "round": 34,
  "parent": "48182aca4eafb4af830231d09e2b192610bb644ed5fca83faaa96f571f75a6e8",
- "stage": "match",
- "tag": "r34-match-3",
+ "stage": "adopt",
+ "tag": "r34-adopt-4",
  "gens": [
   44693903779,
   44702169155
@@ -17,13 +17,20 @@
    "l": 49,
    "illegal": 0,
    "draw": 0
+  },
+  {
+   "run": 44717864257,
+   "w": 63,
+   "l": 45,
+   "illegal": 0,
+   "draw": 0
   }
  ],
  "match_runs": [],
  "retries": 0,
- "seq": 3,
+ "seq": 4,
  "last_dispatch": null,
- "updated": "2026-11-20T10:16:46Z",
+ "updated": "2026-11-20T10:27:08Z",
  "reason": "",
  "history": [
   {
@@ -61,6 +68,12 @@
    "round": 34,
    "stage": "match",
    "note": "対局 59-49。基準に届かないが+6以上のため追試"
+  },
+  {
+   "t": "2026-11-20T10:27:08Z",
+   "round": 34,
+   "stage": "match",
+   "note": "対局 59-49 / 63-45、違法手0。基準を満たした。E28として採用"
   }
  ],
  "gate_fail": true
