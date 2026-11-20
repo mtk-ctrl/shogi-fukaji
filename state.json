@@ -1,36 +1,18 @@
 {
  "schema": "g1-loop-v1",
  "active": true,
- "round": 34,
- "parent": "48182aca4eafb4af830231d09e2b192610bb644ed5fca83faaa96f571f75a6e8",
- "stage": "adopt",
- "tag": "r34-adopt-4",
- "gens": [
-  44693903779,
-  44702169155
- ],
- "train_run": 44711144353,
- "matches": [
-  {
-   "run": 44716511855,
-   "w": 59,
-   "l": 49,
-   "illegal": 0,
-   "draw": 0
-  },
-  {
-   "run": 44717864257,
-   "w": 63,
-   "l": 45,
-   "illegal": 0,
-   "draw": 0
-  }
- ],
+ "round": 35,
+ "parent": "0fdd1ebcff6e86395e0aff52d538b528b830bf0ed360f51f3ea24560374d2362",
+ "stage": "gen",
+ "tag": "r35-gen-5",
+ "gens": [],
+ "train_run": null,
+ "matches": [],
  "match_runs": [],
  "retries": 0,
- "seq": 4,
+ "seq": 5,
  "last_dispatch": null,
- "updated": "2026-11-20T10:27:08Z",
+ "updated": "2026-11-20T10:29:37Z",
  "reason": "",
  "history": [
   {
@@ -74,7 +56,13 @@
    "round": 34,
    "stage": "match",
    "note": "対局 59-49 / 63-45、違法手0。基準を満たした。E28として採用"
+  },
+  {
+   "t": "2026-11-20T10:29:37Z",
+   "round": 34,
+   "stage": "adopt",
+   "note": "採用完了。新しい親は0fdd1ebc"
   }
  ],
- "gate_fail": true
+ "gate_fail": false
 }
