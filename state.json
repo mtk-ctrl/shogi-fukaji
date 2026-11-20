@@ -4,15 +4,17 @@
  "round": 37,
  "parent": "0fdd1ebcff6e86395e0aff52d538b528b830bf0ed360f51f3ea24560374d2362",
  "stage": "gen",
- "tag": "r37-gen-13",
- "gens": [],
+ "tag": "r37-gen-14",
+ "gens": [
+  44765210414
+ ],
  "train_run": null,
  "matches": [],
  "match_runs": [],
  "retries": 0,
- "seq": 13,
+ "seq": 14,
  "last_dispatch": null,
- "updated": "2026-11-20T15:37:53Z",
+ "updated": "2026-11-20T16:39:29Z",
  "reason": "",
  "history": [
   {
@@ -110,6 +112,12 @@
    "round": 36,
    "stage": "match",
    "note": "対局 55-52-1、違法手0。不採用。データを捨てて新しい生成から"
+  },
+  {
+   "t": "2026-11-20T16:39:29Z",
+   "round": 37,
+   "stage": "gen",
+   "note": "生成完了(run 44765210414)。1/2回分。もう1回生成"
   }
  ],
  "gate_fail": false
