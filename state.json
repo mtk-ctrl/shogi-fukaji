@@ -3,19 +3,27 @@
  "active": true,
  "round": 38,
  "parent": "0fdd1ebcff6e86395e0aff52d538b528b830bf0ed360f51f3ea24560374d2362",
- "stage": "match",
- "tag": "r38-match-22",
+ "stage": "adopt",
+ "tag": "r38-adopt-23",
  "gens": [
   44790785960,
   44800416142
  ],
  "train_run": 44809928266,
- "matches": [],
+ "matches": [
+  {
+   "run": 44814510890,
+   "w": 63,
+   "l": 45,
+   "illegal": 0,
+   "draw": 0
+  }
+ ],
  "match_runs": [],
  "retries": 0,
- "seq": 22,
+ "seq": 23,
  "last_dispatch": null,
- "updated": "2026-11-20T20:47:25Z",
+ "updated": "2026-11-20T20:56:55Z",
  "reason": "",
  "history": [
   {
@@ -173,6 +181,12 @@
    "round": 38,
    "stage": "train",
    "note": "対局の順(検証損失が小さい順): lr1e-5(-0.00015)、lr2e-5(-0.00008)、lr1e-4(+0.00085)"
+  },
+  {
+   "t": "2026-11-20T20:56:55Z",
+   "round": 38,
+   "stage": "match",
+   "note": "対局[lr1e-5] 63-45、違法手0。基準を満たした。E29として採用"
   }
  ],
  "gate_fail": false,
