@@ -1,0 +1,54 @@
+name: Floodgate data (Floodgateの対局記録を学習データに変換。本人決定 2026-11-20：学習は自己対局とFloodgate、雲路本体との対局は使わない)
+on:
+  workflow_dispatch:
+    inputs:
+      since:
+        description: "この日(UTC, YYYY-MM-DD)以降に起動したFloodgateの実対局を集める"
+        required: true
+        default: "2026-11-19"
+        type: string
+      scale:
+        description: "記録した評価値の目盛り(2026-11-15以降の正式は2400)"
+        required: true
+        default: "2400"
+        type: string
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fukaji-floodgate-data
+  cancel-in-progress: false
+jobs:
+  convert:
+    if: github.repository == 'mtk-ctrl/shogi-fukaji'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download Floodgate live-game artifacts
+        run: |
+          set -euo pipefail
+          mkdir -p in
+          gh api --paginate "repos/${{ github.repository }}/actions/workflows/floodgate.yml/runs?per_page=100&created=>=${{ inputs.since }}" \
+            --jq '.workflow_runs[]|select(.status=="completed")|.id' > runs.txt
+          n=0
+          while read -r id; do
+            [ -z "$id" ] && continue
+            if gh run download "$id" -n "floodgate-live-$id" --dir "in/$id" 2>/dev/null; then n=$((n+1)); fi
+          done < runs.txt
+          echo "artifacts downloaded: $n of $(wc -l < runs.txt) runs"
+      - name: Convert
+        run: |
+          set -euo pipefail
+          python scripts/floodgate_to_g1.py --in in --out out --scale ${{ inputs.scale }} | tee convert.log
+          { echo '### Floodgate data'; echo '```json'; cat out/summary-00.json; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: g1-data-floodgate-${{ github.run_id }}
+          path: out
+          retention-days: 90
