@@ -3,18 +3,19 @@
  "active": true,
  "round": 35,
  "parent": "0fdd1ebcff6e86395e0aff52d538b528b830bf0ed360f51f3ea24560374d2362",
- "stage": "gen",
- "tag": "r35-gen-6",
+ "stage": "train",
+ "tag": "r35-train-7",
  "gens": [
-  44719687662
+  44719687662,
+  44728235343
  ],
  "train_run": null,
  "matches": [],
  "match_runs": [],
  "retries": 0,
- "seq": 6,
+ "seq": 7,
  "last_dispatch": null,
- "updated": "2026-11-20T11:30:58Z",
+ "updated": "2026-11-20T12:32:19Z",
  "reason": "",
  "history": [
   {
@@ -70,6 +71,12 @@
    "round": 35,
    "stage": "gen",
    "note": "生成完了(run 44719687662)。1/2回分。もう1回生成"
+  },
+  {
+   "t": "2026-11-20T12:32:19Z",
+   "round": 35,
+   "stage": "gen",
+   "note": "生成完了(run 44728235343)。2回分で学習へ"
   }
  ],
  "gate_fail": false
