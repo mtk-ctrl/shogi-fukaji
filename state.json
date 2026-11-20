@@ -3,19 +3,19 @@
  "active": true,
  "round": 34,
  "parent": "48182aca4eafb4af830231d09e2b192610bb644ed5fca83faaa96f571f75a6e8",
- "stage": "train",
- "tag": "boot",
+ "stage": "match",
+ "tag": "r34-match-2",
  "gens": [
   44693903779,
   44702169155
  ],
- "train_run": null,
+ "train_run": 44711144353,
  "matches": [],
  "match_runs": [],
  "retries": 0,
- "seq": 1,
+ "seq": 2,
  "last_dispatch": null,
- "updated": "2026-11-20T10:05:17Z",
+ "updated": "2026-11-20T10:07:23Z",
  "reason": "",
  "history": [
   {
@@ -35,6 +35,13 @@
    "round": 34,
    "stage": "train",
    "note": "手動: ゲート失敗でも悪化が小さい候補は対局する規則に変えたため、周回34の学習(run 44711144353)をやり直しで評価する。第3の生成は取り消し"
+  },
+  {
+   "t": "2026-11-20T10:07:23Z",
+   "round": 34,
+   "stage": "train",
+   "note": "学習(run 44711144353): ゲート失敗(悪化が小さいので厳しい基準で対局)、検証損失0.55295→0.55323。対局へ"
   }
- ]
+ ],
+ "gate_fail": true
 }
