@@ -1,21 +1,18 @@
 {
  "schema": "g1-loop-v1",
  "active": true,
- "round": 36,
+ "round": 37,
  "parent": "0fdd1ebcff6e86395e0aff52d538b528b830bf0ed360f51f3ea24560374d2362",
- "stage": "match",
- "tag": "r36-match-12",
- "gens": [
-  44741400153,
-  44750512317
- ],
- "train_run": 44760410884,
+ "stage": "gen",
+ "tag": "r37-gen-13",
+ "gens": [],
+ "train_run": null,
  "matches": [],
  "match_runs": [],
  "retries": 0,
- "seq": 12,
+ "seq": 13,
  "last_dispatch": null,
- "updated": "2026-11-20T15:25:13Z",
+ "updated": "2026-11-20T15:37:53Z",
  "reason": "",
  "history": [
   {
@@ -107,7 +104,13 @@
    "round": 36,
    "stage": "train",
    "note": "学習(run 44760410884): ゲート失敗(悪化が微差なので勝敗で決める)、検証損失0.54904→0.54921。対局へ"
+  },
+  {
+   "t": "2026-11-20T15:37:53Z",
+   "round": 36,
+   "stage": "match",
+   "note": "対局 55-52-1、違法手0。不採用。データを捨てて新しい生成から"
   }
  ],
- "gate_fail": true
+ "gate_fail": false
 }
