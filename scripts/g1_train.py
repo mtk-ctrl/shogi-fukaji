@@ -214,7 +214,7 @@ def main():
     np.savez(a.out / "cand-weights.npz", w=w, b=b, v=v, o=o)
     report = {"schema": "g1-train-v1", "parent": BASE, "snapshot": key,
               "weights_file_sha256": hashlib.sha256((a.out / "cand-weights.npz").read_bytes()).hexdigest(),
-              "games": len(lines), "train_positions": int(len(y)), "heldout_positions": int(len(hy)),
+              "games": len(lines), "train_positions": int(len(y)), "heldout_positions": int(len(hy)), "mean_label": round(float(y.mean()), 4),
               "outcome_weight": a.outcome_weight, "label_scales": {str(k): v for k, v in scales.items()}, "feature_set": a.feature_set, "mirror": a.mirror, "inputs": int(parent.inputs), "hidden": int(params[0].shape[1]),
               "heldout_history": history, "heldout_before": before, "heldout_after": after, "gate": "pass" if gate else "fail",
               "epochs": a.epochs, "lr": a.lr, "batch": a.batch, "optimizer_step_after": opt2["step"],

@@ -1,4 +1,5 @@
 name: G1 train on mass data (大量自己対局データで親=現行正式NNUEから学習。研究専用・正式版は変更しない)
+run-name: ${{ format('{0}{1}', 'G1 学習', inputs.loop_tag != '' && format(' [loop {0}]', inputs.loop_tag) || '') }}
 on:
   workflow_dispatch:
     inputs:
@@ -56,6 +57,11 @@ on:
         required: true
         default: "formal"
         type: string
+      loop_tag:
+        description: "周回の自動連鎖(g1-loop.yml)が付ける目印。手動で起動するときは空のまま"
+        required: false
+        default: ""
+        type: string
 permissions:
   contents: read
   actions: read
@@ -103,3 +109,19 @@ jobs:
             trained/models
             trained/wide-state.npz
           retention-days: 60
+  loop-notify:
+    needs: [train]
+    if: ${{ always() && inputs.loop_tag != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write
+      contents: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: 周回の自動連鎖へ終了を知らせる
+        run: |
+          gh api -X POST "repos/${{ github.repository }}/actions/workflows/g1-loop.yml/dispatches" -f ref=main \
+            -f 'inputs[event]=train' -f 'inputs[run_id]=${{ github.run_id }}' \
+            -f 'inputs[tag]=${{ inputs.loop_tag }}' -f 'inputs[result]=${{ needs.train.result }}'

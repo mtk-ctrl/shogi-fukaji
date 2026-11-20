@@ -1,4 +1,5 @@
 name: Hybrid NNUE formal adoption (本人承認後に、周回の候補を正式エンジンのNNUEへ採用)
+run-name: ${{ format('{0}{1}', '採用', inputs.loop_tag != '' && format(' [loop {0}]', inputs.loop_tag) || '') }}
 # 本人が採用を承認した後にだけ commit=true で実行する。実runのartifact(学習報告・対局結果2本)を検証してから、
 # 正式エンジン(ハイブリッド)のNNUEを次の版にする。commit=false は検証のみ。旧エンジン(E10)は変更しない。
 on:
@@ -54,6 +55,11 @@ on:
         description: "特徴の形が変わる採用の入力数(0=変更なし / 4784=距離帯特徴)"
         required: false
         default: "0"
+        type: string
+      loop_tag:
+        description: "周回の自動連鎖(g1-loop.yml)が付ける目印。手動で起動するときは空のまま"
+        required: false
+        default: ""
         type: string
 permissions:
   contents: write
@@ -196,3 +202,19 @@ jobs:
             build/adopted-files.txt
           if-no-files-found: warn
           retention-days: 30
+  loop-notify:
+    needs: [adopt]
+    if: ${{ always() && inputs.loop_tag != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write
+      contents: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: 周回の自動連鎖へ終了を知らせる
+        run: |
+          gh api -X POST "repos/${{ github.repository }}/actions/workflows/g1-loop.yml/dispatches" -f ref=main \
+            -f 'inputs[event]=adopt' -f 'inputs[run_id]=${{ github.run_id }}' \
+            -f 'inputs[tag]=${{ inputs.loop_tag }}' -f 'inputs[result]=${{ needs.adopt.result }}'

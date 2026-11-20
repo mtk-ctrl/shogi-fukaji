@@ -1,0 +1,73 @@
+name: "G1 loop (周回の自動連鎖 生成→学習→対局→採用→次の生成。研究専用)"
+run-name: ${{ format('G1 loop {0} {1}', inputs.event, inputs.tag) }}
+# 各workflowの最後の job が終了を知らせ、scripts/g1_loop.py が次を起動する。状態は loop-state ブランチの state.json。
+# 手動: event=start(最初の生成から開始) / stop(止める) / resume(いまの段階をやり直す) / status(状態を表示)。
+on:
+  workflow_dispatch:
+    inputs:
+      event:
+        description: "gen / train / match / adopt(各workflowからの終了通知) / start / stop / resume / status(手動)"
+        required: true
+        type: string
+      run_id:
+        description: "終了したworkflowのrun ID(通知のとき)"
+        required: false
+        default: ""
+        type: string
+      tag:
+        description: "通知の目印(loop_tag)。手動で引き継ぐときは boot"
+        required: false
+        default: ""
+        type: string
+      result:
+        description: "終了したjobの結果(success / failure / cancelled / skipped)"
+        required: false
+        default: "success"
+        type: string
+      note:
+        description: "stop のときの理由"
+        required: false
+        default: ""
+        type: string
+permissions:
+  contents: write
+  actions: write
+concurrency:
+  group: fukaji-g1-loop
+  cancel-in-progress: false
+jobs:
+  step:
+    if: github.repository == 'mtk-ctrl/shogi-fukaji'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EV: ${{ inputs.event }}
+      RUN_ID: ${{ inputs.run_id }}
+      TAG: ${{ inputs.tag }}
+      RESULT: ${{ inputs.result }}
+      NOTE: ${{ inputs.note }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: loop-state
+          path: state
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: 次の段階を決めて起動する
+        run: |
+          python scripts/g1_loop.py --state state/state.json --event "$EV" --run-id "$RUN_ID" --tag "$TAG" --result "$RESULT" --note "$NOTE" | tee loop.out
+          python scripts/g1_loop.py --state state/state.json --event status >> "$GITHUB_STEP_SUMMARY" || true
+      - name: 状態を保存する
+        if: always()
+        run: |
+          cd state
+          git config user.name "g1-loop"
+          git config user.email "g1-loop@users.noreply.github.com"
+          git add state.json
+          if ! git diff --cached --quiet; then
+            git commit -q -m "loop: ${EV} ${TAG}"
+            for i in 1 2 3; do git push -q origin HEAD:loop-state && break; git pull -q --rebase origin loop-state; done
+          fi

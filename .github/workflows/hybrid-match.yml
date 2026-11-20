@@ -1,4 +1,5 @@
 name: Hybrid match (KUMOJI search + FUKAJI NNUE) vs formal FUKAJI or KUMOJI
+run-name: ${{ format('{0}{1}', '対局', inputs.loop_tag != '' && format(' [loop {0}]', inputs.loop_tag) || '') }}
 # 研究専用。雲路の探索を借り、評価だけ深路のNNUEにした実験エンジンの対局。雲路・深路の正式版は変更しない。
 on:
   workflow_dispatch:
@@ -57,6 +58,11 @@ on:
         description: "雲路のコミットSHA(探索の借用元・対戦相手)"
         required: true
         default: "199dbb0b6a760b9341c27f3a0f4aaeaa7dae4e89"
+        type: string
+      loop_tag:
+        description: "周回の自動連鎖(g1-loop.yml)が付ける目印。手動で起動するときは空のまま"
+        required: false
+        default: ""
         type: string
 permissions:
   contents: read
@@ -189,3 +195,19 @@ jobs:
         with:
           name: hybrid-result-${{ github.run_id }}
           path: build/result.json
+  loop-notify:
+    needs: [play, aggregate]
+    if: ${{ always() && inputs.loop_tag != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write
+      contents: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: 周回の自動連鎖へ終了を知らせる
+        run: |
+          gh api -X POST "repos/${{ github.repository }}/actions/workflows/g1-loop.yml/dispatches" -f ref=main \
+            -f 'inputs[event]=match' -f 'inputs[run_id]=${{ github.run_id }}' \
+            -f 'inputs[tag]=${{ inputs.loop_tag }}' -f 'inputs[result]=${{ needs.aggregate.result }}'
