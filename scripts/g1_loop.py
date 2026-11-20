@@ -32,6 +32,8 @@ PASS_DIFF = 12        # 1本目でこれ以上なら採用
 RETEST_DIFF = 6       # これ以上なら追試
 COMBINED_DIFF = 24    # 2本の合算でこれ以上なら採用
 LABEL_RANGE = (0.40, 0.70)   # 平均ラベルがこの外なら偏りとみなして対局しない
+GATE_FAIL_SMALL = 0.001       # ゲート失敗でも検証損失の悪化がこれ未満なら、厳しい基準(単独+30・合算+24)で対局する(2026-11-18の採用規則と同じ)
+GATE_FAIL_SINGLE = 30
 MAX_RETRY = 2         # 失敗したときの再起動の最大回数
 PAIRS = "54"          # 108局
 GEN_MINUTES = "60"
@@ -102,11 +104,17 @@ def adopt_action(state: dict, name: str, prev: int, prev2: int | None) -> dict:
 
 
 # ------------------------------------------------------------------ 判定(純粋関数)
-def judge(matches: list[dict]) -> str:
-    """matches=[{run,w,l,illegal}]。戻り値: adopt / retest / reject。"""
+def judge(matches: list[dict], gate_ok: bool = True) -> str:
+    """matches=[{run,w,l,illegal}]。戻り値: adopt / retest / reject。ゲート失敗の候補は単独+30、追試なら合算+24(各回は勝ち越し)。"""
     if any(m["illegal"] for m in matches):
         return "reject"
     diffs = [m["w"] - m["l"] for m in matches]
+    if not gate_ok:
+        if len(matches) == 1:
+            if diffs[0] >= GATE_FAIL_SINGLE:
+                return "adopt"
+            return "retest" if diffs[0] >= RETEST_DIFF else "reject"
+        return "adopt" if all(d > 0 for d in diffs) and sum(diffs) >= COMBINED_DIFF else "reject"
     if len(matches) == 1:
         if diffs[0] >= PASS_DIFF:
             return "adopt"
@@ -181,20 +189,23 @@ def step(state: dict, ev: dict, info: dict) -> tuple[dict, list[dict]]:
         state["train_run"] = int(ev["run_id"])
         ml = rep.get("mean_label")
         biased = ml is not None and not (LABEL_RANGE[0] <= ml <= LABEL_RANGE[1])
-        if rep.get("gate") != "pass" or biased:
-            why = "ゲート失敗" if rep.get("gate") != "pass" else f"平均ラベル{ml:.3f}が偏っている"
+        hb, ha = rep.get("heldout_before"), rep.get("heldout_after")
+        gate_ok = rep.get("gate") == "pass"
+        small = (not gate_ok) and hb is not None and ha is not None and (ha - hb) < GATE_FAIL_SMALL
+        if biased or (not gate_ok and not small):
+            why = f"平均ラベル{ml:.3f}が偏っている" if biased else "ゲート失敗(損失の悪化が大きい)"
             log(state, f"学習(run {ev['run_id']}): {why}。対局せず、生成を足して学習し直す")
             return state, [gen_action(state)]
+        state["gate_fail"] = not gate_ok
         state["matches"], state["match_runs"] = [], []
-        hb, ha = rep.get("heldout_before"), rep.get("heldout_after")
         loss = f"検証損失{hb:.5f}→{ha:.5f}" if hb is not None and ha is not None else "検証損失の記録なし"
-        log(state, f"学習(run {ev['run_id']}): ゲートpass、{loss}。対局へ")
+        log(state, f"学習(run {ev['run_id']}): ゲート{'pass' if gate_ok else '失敗(悪化が小さいので厳しい基準で対局)'}、{loss}。対局へ")
         return state, [match_action(state)]
 
     if kind == "match":
         m = info["match"]
         state["matches"].append({"run": int(ev["run_id"]), "w": m["w"], "l": m["l"], "illegal": m["illegal"], "draw": m.get("draw", 0)})
-        verdict = judge(state["matches"])
+        verdict = judge(state["matches"], not state.get("gate_fail"))
         ms = " / ".join(f"{x['w']}-{x['l']}" + (f"-{x['draw']}" if x.get("draw") else "") for x in state["matches"])
         if verdict == "adopt":
             name = next_name(formal)
@@ -202,16 +213,16 @@ def step(state: dict, ev: dict, info: dict) -> tuple[dict, list[dict]]:
             prev2 = state["matches"][1]["run"] if len(state["matches"]) > 1 else None
             return state, [adopt_action(state, name, state["matches"][0]["run"], prev2)]
         if verdict == "retest":
-            log(state, f"対局 {ms}。+6以上+12未満のため追試")
+            log(state, f"対局 {ms}。基準に届かないが+6以上のため追試")
             return state, [match_action(state)]
         log(state, f"対局 {ms}、違法手{sum(x['illegal'] for x in state['matches'])}。不採用。データを捨てて新しい生成から")
-        state.update(gens=[], matches=[], match_runs=[], train_run=None, round=state["round"] + 1)
+        state.update(gens=[], matches=[], match_runs=[], train_run=None, gate_fail=False, round=state["round"] + 1)
         return state, [gen_action(state)]
 
     if kind == "adopt":
         state["parent"] = snapshot or state["parent"]
         log(state, f"採用完了。新しい親は{state['parent'][:8]}")
-        state.update(gens=[], matches=[], match_runs=[], train_run=None, round=state["round"] + 1)
+        state.update(gens=[], matches=[], match_runs=[], train_run=None, gate_fail=False, round=state["round"] + 1)
         return state, [gen_action(state)]
     raise ValueError(kind)
 
