@@ -15,7 +15,7 @@
  "retries": 0,
  "seq": 2,
  "last_dispatch": null,
- "updated": "2026-11-20T10:07:23Z",
+ "updated": "2026-11-20T10:15:17Z",
  "reason": "",
  "history": [
   {
@@ -41,6 +41,12 @@
    "round": 34,
    "stage": "train",
    "note": "学習(run 44711144353): ゲート失敗(悪化が小さいので厳しい基準で対局)、検証損失0.55295→0.55323。対局へ"
+  },
+  {
+   "t": "2026-11-20T10:15:17Z",
+   "round": 34,
+   "stage": "match",
+   "note": "待っていない通知を無視(gen tag=r34-gen-1 待ち=r34-match-2)"
   }
  ],
  "gate_fail": true
