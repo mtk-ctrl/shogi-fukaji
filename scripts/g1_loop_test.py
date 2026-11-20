@@ -118,20 +118,14 @@ for r in range(5):
     if a[0]["workflow"] == "g1-train.yml":
         s, a = L.step(s, ev("train", s, "2"), {"formal": F, "report": {"gate": "fail"}})
         tags.add(a[0]["inputs"]["loop_tag"])
-# --- ゲート失敗でも損失の悪化が小さければ、厳しい基準で対局する
-assert L.judge([M(61, 46)], gate_ok=False) == "retest"      # +15は単独+30に届かない→追試
-assert L.judge([M(80, 26)], gate_ok=False) == "adopt"       # +54
-assert L.judge([M(61, 46), M(61, 46)], gate_ok=False) == "adopt"   # 合算+30、各回勝ち越し
-assert L.judge([M(61, 46), M(52, 56)], gate_ok=False) == "reject"
+# --- ゲート失敗でも損失の悪化が微差なら、ゲートを通ったものと同じ基準で対局・採用する(2026-11-20 本人指示)
 s = started()
 for r in ("101", "102"):
     s, a = L.step(s, ev("gen", s, r), {"formal": F})
 s, a = L.step(s, ev("train", s, "201"), {"formal": F, "report": {"gate": "fail", "mean_label": 0.499, "heldout_before": 0.55295, "heldout_after": 0.55323}})
 assert a[0]["workflow"] == "hybrid-match.yml" and s["gate_fail"]
 s, a = L.step(s, ev("match", s, "301"), {"formal": F, "match": {"w": 61, "l": 46, "illegal": 0}})
-assert a[0]["workflow"] == "hybrid-match.yml"                                    # 追試
-s, a = L.step(s, ev("match", s, "302"), {"formal": F, "match": {"w": 61, "l": 46, "illegal": 0}})
-assert a[0]["workflow"] == "hybrid-nnue-adopt.yml"
+assert a[0]["workflow"] == "hybrid-nnue-adopt.yml"                               # +15で採用(単独+30は要らない)
 s = started()
 for r in ("101", "102"):
     s, a = L.step(s, ev("gen", s, r), {"formal": F})

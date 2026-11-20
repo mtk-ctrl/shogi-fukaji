@@ -96,11 +96,9 @@ def main(a):
         rp["both6"] = both6
         if not both6 and rp["fukaji_wins"] - rp["kumoji_wins"] < 24:
             raise ValueError("combined margin below +24 and not both +6")
-    # 2026-11-18: 損失ゲートは強さの粗い目安。自動採用では、損失の悪化が小さく(0.001未満)、対現行が+30以上の大差なら、ゲート失敗でも採用できる(判断記録 2026-11-18_周回14)。
+    # 2026-11-20 本人指示: 検証損失の差が微差(悪化0.001未満)なら、損失ではなく対局の勝敗で決める。ゲートを通ったものと同じ基準(+12、追試は両方+6か合算+24)で採用できる。
     loss_small = rep.get("heldout_after", 9) - rep.get("heldout_before", 0) < 0.001
-    # 合算(2回)なら+24以上(108局あたり+12相当)で足りる。単独は+30以上。
-    need = 24 if rp.get("combined") else 30  # ゲート失敗時は、追試ありでも合算+24以上を求める
-    gate_ok = bool(ov) or rep["gate"] == "pass" or (a.auto and loss_small and rp["fukaji_wins"] - rp["kumoji_wins"] >= need)
+    gate_ok = bool(ov) or rep["gate"] == "pass" or (a.auto and loss_small)
     new_in = a.new_inputs or arch[0]
     if new_in != arch[0] and new_in != 4784:
         raise ValueError("only the band feature structure change (3848->4784) is supported")
