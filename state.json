@@ -3,18 +3,19 @@
  "active": true,
  "round": 36,
  "parent": "0fdd1ebcff6e86395e0aff52d538b528b830bf0ed360f51f3ea24560374d2362",
- "stage": "gen",
- "tag": "r36-gen-10",
+ "stage": "train",
+ "tag": "r36-train-11",
  "gens": [
-  44741400153
+  44741400153,
+  44750512317
  ],
  "train_run": null,
  "matches": [],
  "match_runs": [],
  "retries": 0,
- "seq": 10,
+ "seq": 11,
  "last_dispatch": null,
- "updated": "2026-11-20T14:07:52Z",
+ "updated": "2026-11-20T15:09:18Z",
  "reason": "",
  "history": [
   {
@@ -94,6 +95,12 @@
    "round": 36,
    "stage": "gen",
    "note": "生成完了(run 44741400153)。1/2回分。もう1回生成"
+  },
+  {
+   "t": "2026-11-20T15:09:18Z",
+   "round": 36,
+   "stage": "gen",
+   "note": "生成完了(run 44750512317)。2回分で学習へ"
   }
  ],
  "gate_fail": false
