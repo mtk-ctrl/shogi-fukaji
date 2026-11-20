@@ -1,0 +1,28 @@
+{
+ "schema": "g1-loop-v1",
+ "active": true,
+ "round": 34,
+ "parent": "48182aca4eafb4af830231d09e2b192610bb644ed5fca83faaa96f571f75a6e8",
+ "stage": "train",
+ "tag": "boot",
+ "gens": [
+  44693903779,
+  44702169155
+ ],
+ "train_run": null,
+ "matches": [],
+ "match_runs": [],
+ "retries": 0,
+ "seq": 0,
+ "last_dispatch": null,
+ "updated": "2026-11-20T09:42:11Z",
+ "reason": "",
+ "history": [
+  {
+   "t": "2026-11-20T09:42:11Z",
+   "round": 34,
+   "stage": "train",
+   "note": "引き継ぎ: 走行中の学習 run 44711144353（E27親・生成2回分）の完了通知を待つ"
+  }
+ ]
+}
