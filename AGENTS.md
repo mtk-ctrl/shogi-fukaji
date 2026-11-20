@@ -6,6 +6,8 @@
 
 **学習データの方針（2026-11-20本人決定）**：学習の対象は自己対局とFloodgateでの対局。雲路本体との対局は学習に使わない（対局の比較・採用判定で雲路と指すのは別）。Floodgate記録はfloodgate-data.ymlで変換。[判断](docs/decisions/2026-11-20_学習の対象は自己対局とFloodgate_雲路との対局は外す.md)。
 
+**周回の自動連鎖（2026-11-20本人指示）**：生成→学習→対局→追試→採用→次の生成は g1-loop.yml（scripts/g1_loop.py、状態は loop-state ブランチ）が人の待ち合わせなしでつなぐ。止める・状態を見る・やり直すは g1-loop.yml の event=stop/status/resume。手動でworkflowを起動するときは loop_tag を空にする。[判断](docs/decisions/2026-11-20_周回を自動でつなぐ_待ち合わせの時間をなくす.md)。
+
 **運用の一本化（2026-11-19本人指摘）**：正式な系統は1本（親は常にformal/model.jsonの現行）。特徴の形を変える実験は周回と別枠で、対局の直前に親が最新か確認し、古ければ作り直す。採用の窓口はhybrid_nnue_adopt.py（親一致を検査）。形が変わる採用は周回を止めて切り替える。[判断](docs/decisions/2026-11-19_自己対局の運用を一本化する_特徴を変える実験の扱い.md)。
 
 ChatGPT・Claude等は同じRuleと同じGitHub正本を使う。まず[開発ルーター](docs/00_開発ルーター.md)、[F00](docs/rules/F00_深路の目的と権限.md)、[ROADMAP](docs/ROADMAP.md)を読む。共通原則はGoogle Driveの `00_AI運用基盤/00_AI共通ルーター.md`（名前が「日付_旧_」で始まらない現行版）の第5節（判断記録の正本）・第6節（複数AI）。
