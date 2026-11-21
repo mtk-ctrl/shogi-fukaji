@@ -1,29 +1,18 @@
 {
  "schema": "g1-loop-v1",
  "active": true,
- "round": 40,
- "parent": "697b6389f3eb1cc2b55a76b017d7cf6fb6ee1e5c12bd383f38b3d264b1b50e4a",
- "stage": "adopt",
- "tag": "r40-adopt-38",
- "gens": [
-  44854028161,
-  44859513426
- ],
- "train_run": 44864674630,
- "matches": [
-  {
-   "run": 44866655616,
-   "w": 60,
-   "l": 47,
-   "illegal": 0,
-   "draw": 1
-  }
- ],
+ "round": 41,
+ "parent": "b15fc2cc5e93d7b5fd5b4ed80e6887f93bdf0d23e7c07430a5a85908cec220ca",
+ "stage": "gen",
+ "tag": "r41-gen-39",
+ "gens": [],
+ "train_run": null,
+ "matches": [],
  "match_runs": [],
  "retries": 0,
- "seq": 38,
+ "seq": 39,
  "last_dispatch": null,
- "updated": "2026-11-21T04:43:11Z",
+ "updated": "2026-11-21T04:46:04Z",
  "reason": "",
  "history": [
   {
@@ -289,165 +278,17 @@
    "round": 40,
    "stage": "match",
    "note": "対局[lr1e-5] 60-47-1、違法手0。基準を満たした。E30として採用"
+  },
+  {
+   "t": "2026-11-21T04:46:04Z",
+   "round": 40,
+   "stage": "adopt",
+   "note": "採用完了。新しい親はb15fc2cc"
   }
  ],
  "gate_fail": false,
- "mode": "fast",
- "trains": {
-  "r40-train-34": {
-   "name": "lr1e-5",
-   "lr": "0.00001",
-   "run": 44864674630,
-   "done": true,
-   "failed": false,
-   "retries": 0,
-   "report": {
-    "schema": "g1-train-v1",
-    "parent": "697b6389f3eb1cc2b55a76b017d7cf6fb6ee1e5c12bd383f38b3d264b1b50e4a",
-    "snapshot": "b15fc2cc5e93d7b5fd5b4ed80e6887f93bdf0d23e7c07430a5a85908cec220ca",
-    "weights_file_sha256": "52ebe426a60e2df0e691dc722e9a2c39109484ab598dd28cb1579436a359cfa3",
-    "games": 98236,
-    "train_positions": 10602899,
-    "heldout_positions": 555281,
-    "mean_label": 0.4992,
-    "outcome_weight": 0.2,
-    "label_scales": {
-     "2400.0": 36
-    },
-    "feature_set": "band",
-    "mirror": true,
-    "inputs": 4784,
-    "hidden": 128,
-    "heldout_history": [
-     {
-      "epoch": 0,
-      "heldout": 0.5501047133118186
-     },
-     {
-      "epoch": 1,
-      "heldout": 0.5500355509579553
-     }
-    ],
-    "heldout_before": 0.5501047133118186,
-    "heldout_after": 0.5500355509579553,
-    "gate": "pass",
-    "epochs": 1,
-    "lr": 1e-05,
-    "batch": 256,
-    "optimizer_step_after": 2846982,
-    "strength_proven": false,
-    "formal_model_changed": false
-   }
-  },
-  "r40-train-35": {
-   "name": "lr2e-5",
-   "lr": "0.00002",
-   "run": 44864676201,
-   "done": true,
-   "failed": false,
-   "retries": 0,
-   "report": {
-    "schema": "g1-train-v1",
-    "parent": "697b6389f3eb1cc2b55a76b017d7cf6fb6ee1e5c12bd383f38b3d264b1b50e4a",
-    "snapshot": "bd41470a77f3d3e5f8318d8305bf7fea4c7b61b6ceeed6d02f5985625d33fa43",
-    "weights_file_sha256": "ddffa1849d759fceb7ecd068a9ae4850474af87845db11c6c12e0e6a31c01d8a",
-    "games": 98236,
-    "train_positions": 10602899,
-    "heldout_positions": 555281,
-    "mean_label": 0.4992,
-    "outcome_weight": 0.2,
-    "label_scales": {
-     "2400.0": 36
-    },
-    "feature_set": "band",
-    "mirror": true,
-    "inputs": 4784,
-    "hidden": 128,
-    "heldout_history": [
-     {
-      "epoch": 0,
-      "heldout": 0.5501047133118186
-     },
-     {
-      "epoch": 1,
-      "heldout": 0.5501231447350812
-     }
-    ],
-    "heldout_before": 0.5501047133118186,
-    "heldout_after": 0.5501231447350812,
-    "gate": "fail",
-    "epochs": 1,
-    "lr": 2e-05,
-    "batch": 256,
-    "optimizer_step_after": 2846982,
-    "strength_proven": false,
-    "formal_model_changed": false
-   }
-  },
-  "r40-train-36": {
-   "name": "lr1e-4",
-   "lr": "0.0001",
-   "run": 44864677864,
-   "done": true,
-   "failed": false,
-   "retries": 0,
-   "report": {
-    "schema": "g1-train-v1",
-    "parent": "697b6389f3eb1cc2b55a76b017d7cf6fb6ee1e5c12bd383f38b3d264b1b50e4a",
-    "snapshot": "bf642c96d7d1bd3caa9b5b4f26992ede167c74201903058222a6696b56d332ff",
-    "weights_file_sha256": "873eb183108b6b3860b871e50fc91cfa16d2adf76bcdd29ff861a1802b68e449",
-    "games": 98236,
-    "train_positions": 10602899,
-    "heldout_positions": 555281,
-    "mean_label": 0.4992,
-    "outcome_weight": 0.2,
-    "label_scales": {
-     "2400.0": 36
-    },
-    "feature_set": "band",
-    "mirror": true,
-    "inputs": 4784,
-    "hidden": 128,
-    "heldout_history": [
-     {
-      "epoch": 0,
-      "heldout": 0.5501047133118186
-     },
-     {
-      "epoch": 1,
-      "heldout": 0.5510106040694374
-     }
-    ],
-    "heldout_before": 0.5501047133118186,
-    "heldout_after": 0.5510106040694374,
-    "gate": "fail",
-    "epochs": 1,
-    "lr": 0.0001,
-    "batch": 256,
-    "optimizer_step_after": 2846982,
-    "strength_proven": false,
-    "formal_model_changed": false
-   }
-  }
- },
- "queue": [
-  {
-   "name": "lr2e-5",
-   "run": 44864676201,
-   "delta": 1.8431423262521562e-05,
-   "lr": "0.00002"
-  },
-  {
-   "name": "lr1e-4",
-   "run": 44864677864,
-   "delta": 0.0009058907576187103,
-   "lr": "0.0001"
-  }
- ],
- "cand": {
-  "name": "lr1e-5",
-  "run": 44864674630,
-  "delta": -6.916235386333902e-05,
-  "lr": "0.00001"
- }
+ "mode": "deep",
+ "trains": {},
+ "queue": [],
+ "cand": null
 }
