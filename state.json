@@ -15,7 +15,7 @@
  "retries": 0,
  "seq": 50,
  "last_dispatch": null,
- "updated": "2026-11-21T10:22:50Z",
+ "updated": "2026-11-21T10:38:25Z",
  "reason": "",
  "history": [
   {
@@ -347,6 +347,12 @@
    "round": 42,
    "stage": "gen",
    "note": "生成完了(run 44889196709、fast)。2回分で学習へ。変種を並列で学習: lr1e-5・lr2e-5・lr1e-4"
+  },
+  {
+   "t": "2026-11-21T10:38:25Z",
+   "round": 42,
+   "stage": "train",
+   "note": "学習[lr1e-5](run 44894069727): ゲートpass、検証損失0.55009→0.55000、平均ラベル0.4992"
   }
  ],
  "gate_fail": false,
@@ -355,11 +361,47 @@
   "r42-train-48": {
    "name": "lr1e-5",
    "lr": "0.00001",
-   "run": null,
-   "done": false,
+   "run": 44894069727,
+   "done": true,
    "failed": false,
    "retries": 0,
-   "report": null
+   "report": {
+    "schema": "g1-train-v1",
+    "parent": "b15fc2cc5e93d7b5fd5b4ed80e6887f93bdf0d23e7c07430a5a85908cec220ca",
+    "snapshot": "239b13e520ab34ff482c6f7b5513f9aaab84244d984b9513ce40f66359cd118c",
+    "weights_file_sha256": "08511f8d7a1582a65a1fa126b076fbdd7e82c39057d183d195133cf85a46f67d",
+    "games": 98651,
+    "train_positions": 10587012,
+    "heldout_positions": 550941,
+    "mean_label": 0.4992,
+    "outcome_weight": 0.2,
+    "label_scales": {
+     "2400.0": 36
+    },
+    "feature_set": "band",
+    "mirror": true,
+    "inputs": 4784,
+    "hidden": 128,
+    "heldout_history": [
+     {
+      "epoch": 0,
+      "heldout": 0.5500877481308684
+     },
+     {
+      "epoch": 1,
+      "heldout": 0.5500040195345186
+     }
+    ],
+    "heldout_before": 0.5500877481308684,
+    "heldout_after": 0.5500040195345186,
+    "gate": "pass",
+    "epochs": 1,
+    "lr": 1e-05,
+    "batch": 256,
+    "optimizer_step_after": 2929694,
+    "strength_proven": false,
+    "formal_model_changed": false
+   }
   },
   "r42-train-49": {
    "name": "lr2e-5",
