@@ -4,15 +4,17 @@
  "round": 44,
  "parent": "b15fc2cc5e93d7b5fd5b4ed80e6887f93bdf0d23e7c07430a5a85908cec220ca",
  "stage": "gen",
- "tag": "r44-gen-61",
- "gens": [],
+ "tag": "r44-gen-62",
+ "gens": [
+  44917289161
+ ],
  "train_run": null,
  "matches": [],
  "match_runs": [],
  "retries": 0,
- "seq": 61,
+ "seq": 62,
  "last_dispatch": null,
- "updated": "2026-11-21T15:05:15Z",
+ "updated": "2026-11-21T16:06:42Z",
  "reason": "",
  "history": [
   {
@@ -434,6 +436,12 @@
    "round": 43,
    "stage": "match",
    "note": "対局[lr5e-5] 44-63-1、違法手0。不採用。変種はこれで全部。データを捨てて新しい生成から"
+  },
+  {
+   "t": "2026-11-21T16:06:42Z",
+   "round": 44,
+   "stage": "gen",
+   "note": "生成完了(run 44917289161、fast)。1/2回分。もう1回生成"
   }
  ],
  "gate_fail": false,
