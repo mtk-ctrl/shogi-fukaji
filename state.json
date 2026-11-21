@@ -1,30 +1,20 @@
 {
  "schema": "g1-loop-v1",
  "active": true,
- "round": 45,
+ "round": 46,
  "parent": "b15fc2cc5e93d7b5fd5b4ed80e6887f93bdf0d23e7c07430a5a85908cec220ca",
- "stage": "match",
- "tag": "r45-match-74",
- "gens": [
-  44933127292,
-  44938725342,
-  44944231425
- ],
- "train_run": 44949671764,
+ "stage": "gen",
+ "tag": "r46-gen-75",
+ "gens": [],
+ "train_run": null,
  "matches": [],
  "match_runs": [],
  "retries": 0,
- "seq": 74,
+ "seq": 75,
  "last_dispatch": null,
- "updated": "2026-11-21T21:29:59Z",
+ "updated": "2026-11-21T21:39:57Z",
  "reason": "",
  "history": [
-  {
-   "t": "2026-11-20T10:16:46Z",
-   "round": 34,
-   "stage": "match",
-   "note": "対局 59-49。基準に届かないが+6以上のため追試"
-  },
   {
    "t": "2026-11-20T10:27:08Z",
    "round": 34,
@@ -498,107 +488,17 @@
    "round": 45,
    "stage": "match",
    "note": "対局[lr2e-5] 55-52-1、違法手0。不採用。同じ周回の次の変種[lr5e-5]を対局"
+  },
+  {
+   "t": "2026-11-21T21:39:57Z",
+   "round": 45,
+   "stage": "match",
+   "note": "対局[lr5e-5] 52-55-1、違法手0。不採用。変種はこれで全部。データを捨てて新しい生成から"
   }
  ],
  "gate_fail": false,
- "mode": "deep",
- "trains": {
-  "r45-train-71": {
-   "name": "lr5e-5",
-   "lr": "0.00005",
-   "run": 44949671764,
-   "done": true,
-   "failed": false,
-   "retries": 0,
-   "report": {
-    "schema": "g1-train-v1",
-    "parent": "b15fc2cc5e93d7b5fd5b4ed80e6887f93bdf0d23e7c07430a5a85908cec220ca",
-    "snapshot": "d0b12215dab0b3c9c5489d1b8757d3766d17b42ab016c74c75fcc2ae8f2e6e85",
-    "weights_file_sha256": "b5528b5d34ca1d72e03858cbfa416fc80469337e97e498b42e453857bfe85998",
-    "games": 48263,
-    "train_positions": 5227262,
-    "heldout_positions": 275406,
-    "mean_label": 0.4961,
-    "outcome_weight": 0.2,
-    "label_scales": {
-     "2400.0": 54
-    },
-    "feature_set": "band",
-    "mirror": true,
-    "inputs": 4784,
-    "hidden": 128,
-    "heldout_history": [
-     {
-      "epoch": 0,
-      "heldout": 0.5609556429587137
-     },
-     {
-      "epoch": 1,
-      "heldout": 0.5612566740245537
-     }
-    ],
-    "heldout_before": 0.5609556429587137,
-    "heldout_after": 0.5612566740245537,
-    "gate": "fail",
-    "epochs": 1,
-    "lr": 5e-05,
-    "batch": 256,
-    "optimizer_step_after": 2887820,
-    "strength_proven": false,
-    "formal_model_changed": false
-   }
-  },
-  "r45-train-72": {
-   "name": "lr2e-5",
-   "lr": "0.00002",
-   "run": 44949673449,
-   "done": true,
-   "failed": false,
-   "retries": 0,
-   "report": {
-    "schema": "g1-train-v1",
-    "parent": "b15fc2cc5e93d7b5fd5b4ed80e6887f93bdf0d23e7c07430a5a85908cec220ca",
-    "snapshot": "fcfd50a729808a211eea1c60e50adaa0b4069262a257fd0b587e869a7e257538",
-    "weights_file_sha256": "f3ab5d34c8daf9862fc592c71ac7bbead04c715f82fd2146059248a965a5faa8",
-    "games": 48263,
-    "train_positions": 5227262,
-    "heldout_positions": 275406,
-    "mean_label": 0.4961,
-    "outcome_weight": 0.2,
-    "label_scales": {
-     "2400.0": 54
-    },
-    "feature_set": "band",
-    "mirror": true,
-    "inputs": 4784,
-    "hidden": 128,
-    "heldout_history": [
-     {
-      "epoch": 0,
-      "heldout": 0.5609556429587137
-     },
-     {
-      "epoch": 1,
-      "heldout": 0.5609265470654007
-     }
-    ],
-    "heldout_before": 0.5609556429587137,
-    "heldout_after": 0.5609265470654007,
-    "gate": "pass",
-    "epochs": 1,
-    "lr": 2e-05,
-    "batch": 256,
-    "optimizer_step_after": 2887820,
-    "strength_proven": false,
-    "formal_model_changed": false
-   }
-  }
- },
+ "mode": "fast",
+ "trains": {},
  "queue": [],
- "cand": {
-  "name": "lr5e-5",
-  "run": 44949671764,
-  "delta": 0.00030103106584000727,
-  "lr": "0.00005"
- }
+ "cand": null
 }
