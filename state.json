@@ -4,17 +4,18 @@
  "round": 39,
  "parent": "697b6389f3eb1cc2b55a76b017d7cf6fb6ee1e5c12bd383f38b3d264b1b50e4a",
  "stage": "gen",
- "tag": "r39-gen-26",
+ "tag": "r39-gen-27",
  "gens": [
-  44816313284
+  44816313284,
+  44837475985
  ],
  "train_run": null,
  "matches": [],
  "match_runs": [],
- "retries": 1,
- "seq": 26,
+ "retries": 0,
+ "seq": 27,
  "last_dispatch": null,
- "updated": "2026-11-20T23:31:57Z",
+ "updated": "2026-11-21T00:33:29Z",
  "reason": "",
  "history": [
   {
@@ -196,6 +197,12 @@
    "round": 39,
    "stage": "gen",
    "note": "genが失敗(failure, run 44825410390)。再起動1回目"
+  },
+  {
+   "t": "2026-11-21T00:33:29Z",
+   "round": 39,
+   "stage": "gen",
+   "note": "生成完了(run 44837475985、deep)。2/3回分。もう1回生成"
   }
  ],
  "gate_fail": false,
