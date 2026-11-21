@@ -4,19 +4,19 @@
  "round": 39,
  "parent": "697b6389f3eb1cc2b55a76b017d7cf6fb6ee1e5c12bd383f38b3d264b1b50e4a",
  "stage": "match",
- "tag": "r39-match-30",
+ "tag": "r39-match-31",
  "gens": [
   44816313284,
   44837475985,
   44844614680
  ],
- "train_run": 44851034067,
+ "train_run": 44851031903,
  "matches": [],
  "match_runs": [],
  "retries": 0,
- "seq": 30,
+ "seq": 31,
  "last_dispatch": null,
- "updated": "2026-11-21T01:46:13Z",
+ "updated": "2026-11-21T01:56:36Z",
  "reason": "",
  "history": [
   {
@@ -228,6 +228,12 @@
    "round": 39,
    "stage": "train",
    "note": "対局の順(検証損失が小さい順): lr2e-5(-0.00008)、lr5e-5(+0.00028)"
+  },
+  {
+   "t": "2026-11-21T01:56:36Z",
+   "round": 39,
+   "stage": "match",
+   "note": "対局[lr2e-5] 49-58-1、違法手0。不採用。同じ周回の次の変種[lr5e-5]を対局"
   }
  ],
  "gate_fail": false,
@@ -324,18 +330,11 @@
    }
   }
  },
- "queue": [
-  {
-   "name": "lr5e-5",
-   "run": 44851031903,
-   "delta": 0.000277718550722339,
-   "lr": "0.00005"
-  }
- ],
+ "queue": [],
  "cand": {
-  "name": "lr2e-5",
-  "run": 44851034067,
-  "delta": -7.997033980056134e-05,
-  "lr": "0.00002"
+  "name": "lr5e-5",
+  "run": 44851031903,
+  "delta": 0.000277718550722339,
+  "lr": "0.00005"
  }
 }
