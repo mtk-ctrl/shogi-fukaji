@@ -4,18 +4,18 @@
  "round": 42,
  "parent": "b15fc2cc5e93d7b5fd5b4ed80e6887f93bdf0d23e7c07430a5a85908cec220ca",
  "stage": "match",
- "tag": "r42-match-52",
+ "tag": "r42-match-53",
  "gens": [
   44884386919,
   44889196709
  ],
- "train_run": 44894071245,
+ "train_run": 44894072669,
  "matches": [],
  "match_runs": [],
  "retries": 0,
- "seq": 52,
+ "seq": 53,
  "last_dispatch": null,
- "updated": "2026-11-21T11:02:02Z",
+ "updated": "2026-11-21T11:12:03Z",
  "reason": "",
  "history": [
   {
@@ -377,6 +377,12 @@
    "round": 42,
    "stage": "match",
    "note": "対局[lr1e-5] 48-60、違法手0。不採用。同じ周回の次の変種[lr2e-5]を対局"
+  },
+  {
+   "t": "2026-11-21T11:12:03Z",
+   "round": 42,
+   "stage": "match",
+   "note": "対局[lr2e-5] 52-54-2、違法手0。不採用。同じ周回の次の変種[lr1e-4]を対局"
   }
  ],
  "gate_fail": false,
@@ -518,18 +524,11 @@
    }
   }
  },
- "queue": [
-  {
-   "name": "lr1e-4",
-   "run": 44894072669,
-   "delta": 0.0009323062759045708,
-   "lr": "0.0001"
-  }
- ],
+ "queue": [],
  "cand": {
-  "name": "lr2e-5",
-  "run": 44894071245,
-  "delta": -1.6157547666151295e-05,
-  "lr": "0.00002"
+  "name": "lr1e-4",
+  "run": 44894072669,
+  "delta": 0.0009323062759045708,
+  "lr": "0.0001"
  }
 }
