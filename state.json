@@ -4,23 +4,19 @@
  "round": 46,
  "parent": "b15fc2cc5e93d7b5fd5b4ed80e6887f93bdf0d23e7c07430a5a85908cec220ca",
  "stage": "gen",
- "tag": "r46-gen-75",
- "gens": [],
+ "tag": "r46-gen-76",
+ "gens": [
+  44952706872
+ ],
  "train_run": null,
  "matches": [],
  "match_runs": [],
  "retries": 0,
- "seq": 75,
+ "seq": 76,
  "last_dispatch": null,
- "updated": "2026-11-21T21:39:57Z",
+ "updated": "2026-11-21T22:41:08Z",
  "reason": "",
  "history": [
-  {
-   "t": "2026-11-20T10:27:08Z",
-   "round": 34,
-   "stage": "match",
-   "note": "対局 59-49 / 63-45、違法手0。基準を満たした。E28として採用"
-  },
   {
    "t": "2026-11-20T10:29:37Z",
    "round": 34,
@@ -494,6 +490,12 @@
    "round": 45,
    "stage": "match",
    "note": "対局[lr5e-5] 52-55-1、違法手0。不採用。変種はこれで全部。データを捨てて新しい生成から"
+  },
+  {
+   "t": "2026-11-21T22:41:08Z",
+   "round": 46,
+   "stage": "gen",
+   "note": "生成完了(run 44952706872、fast)。1/2回分。もう1回生成"
   }
  ],
  "gate_fail": false,
