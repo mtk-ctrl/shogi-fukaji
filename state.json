@@ -3,27 +3,29 @@
  "active": true,
  "round": 46,
  "parent": "b15fc2cc5e93d7b5fd5b4ed80e6887f93bdf0d23e7c07430a5a85908cec220ca",
- "stage": "match",
- "tag": "r46-match-80",
+ "stage": "adopt",
+ "tag": "r46-adopt-81",
  "gens": [
   44952706872,
   44958015887
  ],
  "train_run": 44963094437,
- "matches": [],
+ "matches": [
+  {
+   "run": 44965418150,
+   "w": 63,
+   "l": 45,
+   "illegal": 0,
+   "draw": 0
+  }
+ ],
  "match_runs": [],
  "retries": 0,
- "seq": 80,
+ "seq": 81,
  "last_dispatch": null,
- "updated": "2026-11-22T00:11:34Z",
+ "updated": "2026-11-22T00:21:04Z",
  "reason": "",
  "history": [
-  {
-   "t": "2026-11-20T14:07:52Z",
-   "round": 36,
-   "stage": "gen",
-   "note": "生成完了(run 44741400153)。1/2回分。もう1回生成"
-  },
   {
    "t": "2026-11-20T15:09:18Z",
    "round": 36,
@@ -497,6 +499,12 @@
    "round": 46,
    "stage": "train",
    "note": "対局の順(検証損失が小さい順): lr1e-5(-0.00002)、lr2e-5(+0.00008)"
+  },
+  {
+   "t": "2026-11-22T00:21:04Z",
+   "round": 46,
+   "stage": "match",
+   "note": "対局[lr1e-5] 63-45、違法手0。基準を満たした。E31として採用"
   }
  ],
  "gate_fail": false,
