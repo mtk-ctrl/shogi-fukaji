@@ -4,25 +4,20 @@
  "round": 53,
  "parent": "b548c37156361216fc0ebb44fd84493b67790bfeec8a8acf57214e5a4ea14cef",
  "stage": "gen",
- "tag": "r53-gen-126",
+ "tag": "r53-gen-127",
  "gens": [
-  45063500386
+  45063500386,
+  45069308430
  ],
  "train_run": null,
  "matches": [],
  "match_runs": [],
  "retries": 0,
- "seq": 126,
+ "seq": 127,
  "last_dispatch": null,
- "updated": "2026-11-22T20:57:11Z",
+ "updated": "2026-11-22T21:58:34Z",
  "reason": "",
  "history": [
-  {
-   "t": "2026-11-21T14:26:26Z",
-   "round": 43,
-   "stage": "gen",
-   "note": "生成完了(run 44908719798、deep)。3回分で学習へ。変種を並列で学習: lr5e-5・lr2e-5"
-  },
   {
    "t": "2026-11-21T14:42:12Z",
    "round": 43,
@@ -496,6 +491,12 @@
    "round": 53,
    "stage": "gen",
    "note": "生成完了(run 45063500386、deep)。1/3回分。もう1回生成"
+  },
+  {
+   "t": "2026-11-22T21:58:34Z",
+   "round": 53,
+   "stage": "gen",
+   "note": "生成完了(run 45069308430、deep)。2/3回分。もう1回生成"
   }
  ],
  "gate_fail": false,
