@@ -3,34 +3,22 @@
  "active": true,
  "round": 53,
  "parent": "b548c37156361216fc0ebb44fd84493b67790bfeec8a8acf57214e5a4ea14cef",
- "stage": "train",
- "tag": "",
+ "stage": "match",
+ "tag": "r53-match-130",
  "gens": [
   45063500386,
   45069308430,
   45075046839
  ],
- "train_run": null,
+ "train_run": 45080790421,
  "matches": [],
  "match_runs": [],
  "retries": 0,
- "seq": 129,
+ "seq": 130,
  "last_dispatch": null,
- "updated": "2026-11-22T23:15:04Z",
+ "updated": "2026-11-22T23:15:26Z",
  "reason": "",
  "history": [
-  {
-   "t": "2026-11-21T14:45:37Z",
-   "round": 43,
-   "stage": "train",
-   "note": "対局の順(検証損失が小さい順): lr2e-5(+0.00005)、lr5e-5(+0.00043)"
-  },
-  {
-   "t": "2026-11-21T14:55:20Z",
-   "round": 43,
-   "stage": "match",
-   "note": "対局[lr2e-5] 48-60、違法手0。不採用。同じ周回の次の変種[lr5e-5]を対局"
-  },
   {
    "t": "2026-11-21T15:05:15Z",
    "round": 43,
@@ -498,6 +486,18 @@
    "round": 53,
    "stage": "train",
    "note": "学習[lr2e-5](run 45080790421): ゲートfail、検証損失0.56408→0.56417、平均ラベル0.4962"
+  },
+  {
+   "t": "2026-11-22T23:15:26Z",
+   "round": 53,
+   "stage": "train",
+   "note": "学習[lr5e-5](run 45080788025): ゲートfail、検証損失0.56408→0.56463、平均ラベル0.4962"
+  },
+  {
+   "t": "2026-11-22T23:15:26Z",
+   "round": 53,
+   "stage": "train",
+   "note": "対局の順(検証損失が小さい順): lr2e-5(+0.00009)、lr5e-5(+0.00055)"
   }
  ],
  "gate_fail": false,
@@ -506,11 +506,47 @@
   "r53-train-128": {
    "name": "lr5e-5",
    "lr": "0.00005",
-   "run": null,
-   "done": false,
+   "run": 45080788025,
+   "done": true,
    "failed": false,
    "retries": 0,
-   "report": null
+   "report": {
+    "schema": "g1-train-v1",
+    "parent": "b548c37156361216fc0ebb44fd84493b67790bfeec8a8acf57214e5a4ea14cef",
+    "snapshot": "1c9fa5c3d79204cb1c495427be09728728d69c8ceeb7b8a47fab55d60142da17",
+    "weights_file_sha256": "c5232f5b879352f9248cf5a6613f096a1debaea13cd17071854d8d6bc986b555",
+    "games": 48422,
+    "train_positions": 5218696,
+    "heldout_positions": 283240,
+    "mean_label": 0.4962,
+    "outcome_weight": 0.2,
+    "label_scales": {
+     "2400.0": 54
+    },
+    "feature_set": "band",
+    "mirror": true,
+    "inputs": 4784,
+    "hidden": 128,
+    "heldout_history": [
+     {
+      "epoch": 0,
+      "heldout": 0.5640794159008813
+     },
+     {
+      "epoch": 1,
+      "heldout": 0.5646343074432791
+     }
+    ],
+    "heldout_before": 0.5640794159008813,
+    "heldout_after": 0.5646343074432791,
+    "gate": "fail",
+    "epochs": 1,
+    "lr": 5e-05,
+    "batch": 256,
+    "optimizer_step_after": 3053475,
+    "strength_proven": false,
+    "formal_model_changed": false
+   }
   },
   "r53-train-129": {
    "name": "lr2e-5",
@@ -558,6 +594,18 @@
    }
   }
  },
- "queue": [],
- "cand": null
+ "queue": [
+  {
+   "name": "lr5e-5",
+   "run": 45080788025,
+   "delta": 0.0005548915423978507,
+   "lr": "0.00005"
+  }
+ ],
+ "cand": {
+  "name": "lr2e-5",
+  "run": 45080790421,
+  "delta": 9.359470987502228e-05,
+  "lr": "0.00002"
+ }
 }
