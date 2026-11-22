@@ -4,23 +4,19 @@
  "round": 49,
  "parent": "23b2e6f762f6090f4657cd265136a6b992a37c0c67e899bccb850d4f9ab62eab",
  "stage": "gen",
- "tag": "r49-gen-97",
- "gens": [],
+ "tag": "r49-gen-98",
+ "gens": [
+  44996393999
+ ],
  "train_run": null,
  "matches": [],
  "match_runs": [],
  "retries": 0,
- "seq": 97,
+ "seq": 98,
  "last_dispatch": null,
- "updated": "2026-11-22T07:02:21Z",
+ "updated": "2026-11-22T08:03:53Z",
  "reason": "",
  "history": [
-  {
-   "t": "2026-11-21T01:35:06Z",
-   "round": 39,
-   "stage": "gen",
-   "note": "生成完了(run 44844614680、deep)。3回分で学習へ。変種を並列で学習: lr5e-5・lr2e-5"
-  },
   {
    "t": "2026-11-21T01:43:13Z",
    "round": 39,
@@ -494,6 +490,12 @@
    "round": 48,
    "stage": "match",
    "note": "対局[lr2e-5] 57-51 / 56-51-1、違法手0。不採用。変種はこれで全部。データを捨てて新しい生成から"
+  },
+  {
+   "t": "2026-11-22T08:03:53Z",
+   "round": 49,
+   "stage": "gen",
+   "note": "生成完了(run 44996393999、deep)。1/3回分。もう1回生成"
   }
  ],
  "gate_fail": false,
