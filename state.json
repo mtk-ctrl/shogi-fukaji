@@ -4,23 +4,19 @@
  "round": 52,
  "parent": "b548c37156361216fc0ebb44fd84493b67790bfeec8a8acf57214e5a4ea14cef",
  "stage": "gen",
- "tag": "r52-gen-118",
- "gens": [],
+ "tag": "r52-gen-119",
+ "gens": [
+  45047223740
+ ],
  "train_run": null,
  "matches": [],
  "match_runs": [],
  "retries": 0,
- "seq": 118,
+ "seq": 119,
  "last_dispatch": null,
- "updated": "2026-11-22T17:03:03Z",
+ "updated": "2026-11-22T18:04:23Z",
  "reason": "",
  "history": [
-  {
-   "t": "2026-11-21T10:38:25Z",
-   "round": 42,
-   "stage": "train",
-   "note": "学習[lr1e-5](run 44894069727): ゲートpass、検証損失0.55009→0.55000、平均ラベル0.4992"
-  },
   {
    "t": "2026-11-21T10:43:50Z",
    "round": 42,
@@ -494,6 +490,12 @@
    "round": 51,
    "stage": "match",
    "note": "対局[lr5e-5] 42-64-2、違法手0。不採用。変種はこれで全部。データを捨てて新しい生成から"
+  },
+  {
+   "t": "2026-11-22T18:04:23Z",
+   "round": 52,
+   "stage": "gen",
+   "note": "生成完了(run 45047223740、fast)。1/2回分。もう1回生成"
   }
  ],
  "gate_fail": false,
