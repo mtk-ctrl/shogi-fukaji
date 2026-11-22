@@ -15,15 +15,9 @@
  "retries": 0,
  "seq": 93,
  "last_dispatch": null,
- "updated": "2026-11-22T06:27:16Z",
+ "updated": "2026-11-22T06:28:27Z",
  "reason": "",
  "history": [
-  {
-   "t": "2026-11-20T20:47:25Z",
-   "round": 38,
-   "stage": "train",
-   "note": "対局の順(検証損失が小さい順): lr1e-5(-0.00015)、lr2e-5(-0.00008)、lr1e-4(+0.00085)"
-  },
   {
    "t": "2026-11-20T20:56:55Z",
    "round": 38,
@@ -497,6 +491,12 @@
    "round": 48,
    "stage": "train",
    "note": "学習[lr1e-4](run 44992014259): ゲートfail、検証損失0.54960→0.55073、平均ラベル0.4992"
+  },
+  {
+   "t": "2026-11-22T06:28:27Z",
+   "round": 48,
+   "stage": "train",
+   "note": "学習[lr1e-5](run 44992010701): ゲートfail、検証損失0.54960→0.54964、平均ラベル0.4992"
   }
  ],
  "gate_fail": false,
@@ -505,11 +505,47 @@
   "r48-train-91": {
    "name": "lr1e-5",
    "lr": "0.00001",
-   "run": null,
-   "done": false,
+   "run": 44992010701,
+   "done": true,
    "failed": false,
    "retries": 0,
-   "report": null
+   "report": {
+    "schema": "g1-train-v1",
+    "parent": "23b2e6f762f6090f4657cd265136a6b992a37c0c67e899bccb850d4f9ab62eab",
+    "snapshot": "4902372b878a6e826be3e74b00be17411e7dbf3b30e200b12569b82bb4594d08",
+    "weights_file_sha256": "b806857a8647e1ddc44953b524b5a0b5642c1aff4c084f0e83b08b6d421e721a",
+    "games": 98361,
+    "train_positions": 10594821,
+    "heldout_positions": 553791,
+    "mean_label": 0.4992,
+    "outcome_weight": 0.2,
+    "label_scales": {
+     "2400.0": 36
+    },
+    "feature_set": "band",
+    "mirror": true,
+    "inputs": 4784,
+    "hidden": 128,
+    "heldout_history": [
+     {
+      "epoch": 0,
+      "heldout": 0.5495976715775898
+     },
+     {
+      "epoch": 1,
+      "heldout": 0.5496442054135157
+     }
+    ],
+    "heldout_before": 0.5495976715775898,
+    "heldout_after": 0.5496442054135157,
+    "gate": "fail",
+    "epochs": 1,
+    "lr": 1e-05,
+    "batch": 256,
+    "optimizer_step_after": 3012602,
+    "strength_proven": false,
+    "formal_model_changed": false
+   }
   },
   "r48-train-92": {
    "name": "lr2e-5",
