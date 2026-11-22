@@ -4,25 +4,20 @@
  "round": 47,
  "parent": "23b2e6f762f6090f4657cd265136a6b992a37c0c67e899bccb850d4f9ab62eab",
  "stage": "gen",
- "tag": "r47-gen-83",
+ "tag": "r47-gen-84",
  "gens": [
-  44966470170
+  44966470170,
+  44971472594
  ],
  "train_run": null,
  "matches": [],
  "match_runs": [],
  "retries": 0,
- "seq": 83,
+ "seq": 84,
  "last_dispatch": null,
- "updated": "2026-11-22T01:26:27Z",
+ "updated": "2026-11-22T02:28:05Z",
  "reason": "",
  "history": [
-  {
-   "t": "2026-11-20T15:37:53Z",
-   "round": 36,
-   "stage": "match",
-   "note": "対局 55-52-1、違法手0。不採用。データを捨てて新しい生成から"
-  },
   {
    "t": "2026-11-20T16:39:29Z",
    "round": 37,
@@ -496,6 +491,12 @@
    "round": 47,
    "stage": "gen",
    "note": "生成完了(run 44966470170、deep)。1/3回分。もう1回生成"
+  },
+  {
+   "t": "2026-11-22T02:28:05Z",
+   "round": 47,
+   "stage": "gen",
+   "note": "生成完了(run 44971472594、deep)。2/3回分。もう1回生成"
   }
  ],
  "gate_fail": false,
