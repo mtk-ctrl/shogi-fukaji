@@ -4,23 +4,19 @@
  "round": 47,
  "parent": "23b2e6f762f6090f4657cd265136a6b992a37c0c67e899bccb850d4f9ab62eab",
  "stage": "gen",
- "tag": "r47-gen-82",
- "gens": [],
+ "tag": "r47-gen-83",
+ "gens": [
+  44966470170
+ ],
  "train_run": null,
  "matches": [],
  "match_runs": [],
  "retries": 0,
- "seq": 82,
+ "seq": 83,
  "last_dispatch": null,
- "updated": "2026-11-22T00:24:32Z",
+ "updated": "2026-11-22T01:26:27Z",
  "reason": "",
  "history": [
-  {
-   "t": "2026-11-20T15:25:13Z",
-   "round": 36,
-   "stage": "train",
-   "note": "学習(run 44760410884): ゲート失敗(悪化が微差なので勝敗で決める)、検証損失0.54904→0.54921。対局へ"
-  },
   {
    "t": "2026-11-20T15:37:53Z",
    "round": 36,
@@ -494,6 +490,12 @@
    "round": 46,
    "stage": "adopt",
    "note": "採用完了。新しい親は23b2e6f7"
+  },
+  {
+   "t": "2026-11-22T01:26:27Z",
+   "round": 47,
+   "stage": "gen",
+   "note": "生成完了(run 44966470170、deep)。1/3回分。もう1回生成"
   }
  ],
  "gate_fail": false,
