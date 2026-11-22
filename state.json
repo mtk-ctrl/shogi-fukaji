@@ -3,26 +3,21 @@
  "active": true,
  "round": 48,
  "parent": "23b2e6f762f6090f4657cd265136a6b992a37c0c67e899bccb850d4f9ab62eab",
- "stage": "gen",
- "tag": "r48-gen-90",
+ "stage": "train",
+ "tag": "",
  "gens": [
-  44983121868
+  44983121868,
+  44987605241
  ],
  "train_run": null,
  "matches": [],
  "match_runs": [],
  "retries": 0,
- "seq": 90,
+ "seq": 93,
  "last_dispatch": null,
- "updated": "2026-11-22T05:01:55Z",
+ "updated": "2026-11-22T06:03:16Z",
  "reason": "",
  "history": [
-  {
-   "t": "2026-11-20T20:46:23Z",
-   "round": 38,
-   "stage": "train",
-   "note": "学習[lr2e-5](run 44809932978): ゲートpass、検証損失0.55132→0.55125、平均ラベル0.4992"
-  },
   {
    "t": "2026-11-20T20:47:25Z",
    "round": 38,
@@ -496,11 +491,45 @@
    "round": 48,
    "stage": "gen",
    "note": "生成完了(run 44983121868、fast)。1/2回分。もう1回生成"
+  },
+  {
+   "t": "2026-11-22T06:03:16Z",
+   "round": 48,
+   "stage": "gen",
+   "note": "生成完了(run 44987605241、fast)。2回分で学習へ。変種を並列で学習: lr1e-5・lr2e-5・lr1e-4"
   }
  ],
  "gate_fail": false,
  "mode": "fast",
- "trains": {},
+ "trains": {
+  "r48-train-91": {
+   "name": "lr1e-5",
+   "lr": "0.00001",
+   "run": null,
+   "done": false,
+   "failed": false,
+   "retries": 0,
+   "report": null
+  },
+  "r48-train-92": {
+   "name": "lr2e-5",
+   "lr": "0.00002",
+   "run": null,
+   "done": false,
+   "failed": false,
+   "retries": 0,
+   "report": null
+  },
+  "r48-train-93": {
+   "name": "lr1e-4",
+   "lr": "0.0001",
+   "run": null,
+   "done": false,
+   "failed": false,
+   "retries": 0,
+   "report": null
+  }
+ },
  "queue": [],
  "cand": null
 }
