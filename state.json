@@ -3,28 +3,30 @@
  "active": true,
  "round": 53,
  "parent": "b548c37156361216fc0ebb44fd84493b67790bfeec8a8acf57214e5a4ea14cef",
- "stage": "match",
- "tag": "r53-match-130",
+ "stage": "adopt",
+ "tag": "r53-adopt-131",
  "gens": [
   45063500386,
   45069308430,
   45075046839
  ],
  "train_run": 45080790421,
- "matches": [],
+ "matches": [
+  {
+   "run": 45082258042,
+   "w": 66,
+   "l": 42,
+   "illegal": 0,
+   "draw": 0
+  }
+ ],
  "match_runs": [],
  "retries": 0,
- "seq": 130,
+ "seq": 131,
  "last_dispatch": null,
- "updated": "2026-11-22T23:15:26Z",
+ "updated": "2026-11-22T23:25:03Z",
  "reason": "",
  "history": [
-  {
-   "t": "2026-11-21T15:05:15Z",
-   "round": 43,
-   "stage": "match",
-   "note": "対局[lr5e-5] 44-63-1、違法手0。不採用。変種はこれで全部。データを捨てて新しい生成から"
-  },
   {
    "t": "2026-11-21T16:06:42Z",
    "round": 44,
@@ -498,6 +500,12 @@
    "round": 53,
    "stage": "train",
    "note": "対局の順(検証損失が小さい順): lr2e-5(+0.00009)、lr5e-5(+0.00055)"
+  },
+  {
+   "t": "2026-11-22T23:25:03Z",
+   "round": 53,
+   "stage": "match",
+   "note": "対局[lr2e-5] 66-42、違法手0。基準を満たした。E33として採用"
   }
  ],
  "gate_fail": false,
