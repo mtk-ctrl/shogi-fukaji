@@ -3,27 +3,29 @@
  "active": true,
  "round": 50,
  "parent": "23b2e6f762f6090f4657cd265136a6b992a37c0c67e899bccb850d4f9ab62eab",
- "stage": "match",
- "tag": "r50-match-109",
+ "stage": "adopt",
+ "tag": "r50-adopt-110",
  "gens": [
   45013630964,
   45018624996
  ],
  "train_run": 45023772126,
- "matches": [],
+ "matches": [
+  {
+   "run": 45026108322,
+   "w": 59,
+   "l": 47,
+   "illegal": 0,
+   "draw": 2
+  }
+ ],
  "match_runs": [],
  "retries": 0,
- "seq": 109,
+ "seq": 110,
  "last_dispatch": null,
- "updated": "2026-11-22T13:10:46Z",
+ "updated": "2026-11-22T13:20:31Z",
  "reason": "",
  "history": [
-  {
-   "t": "2026-11-21T05:47:36Z",
-   "round": 41,
-   "stage": "gen",
-   "note": "生成完了(run 44867691356、deep)。1/3回分。もう1回生成"
-  },
   {
    "t": "2026-11-21T06:49:19Z",
    "round": 41,
@@ -497,6 +499,12 @@
    "round": 50,
    "stage": "train",
    "note": "対局の順(検証損失が小さい順): lr1e-5(-0.00000)、lr2e-5(+0.00007)"
+  },
+  {
+   "t": "2026-11-22T13:20:31Z",
+   "round": 50,
+   "stage": "match",
+   "note": "対局[lr1e-5] 59-47-2、違法手0。基準を満たした。E32として採用"
   }
  ],
  "gate_fail": false,
