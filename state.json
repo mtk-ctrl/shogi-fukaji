@@ -4,25 +4,20 @@
  "round": 59,
  "parent": "7bec9b7d15b9107fc4e120c041e9f1437feed8fb59c0d8d496941120f8fd7822",
  "stage": "gen",
- "tag": "r59-gen-174",
+ "tag": "r59-gen-175",
  "gens": [
-  45212153725
+  45212153725,
+  45223719339
  ],
  "train_run": null,
  "matches": [],
  "match_runs": [],
  "retries": 0,
- "seq": 174,
+ "seq": 175,
  "last_dispatch": null,
- "updated": "2026-11-23T17:05:08Z",
+ "updated": "2026-11-23T18:06:46Z",
  "reason": "",
  "history": [
-  {
-   "t": "2026-11-22T10:41:04Z",
-   "round": 49,
-   "stage": "match",
-   "note": "対局[lr5e-5] 47-61、違法手0。不採用。変種はこれで全部。データを捨てて新しい生成から"
-  },
   {
    "t": "2026-11-22T11:42:20Z",
    "round": 50,
@@ -496,6 +491,12 @@
    "round": 59,
    "stage": "gen",
    "note": "生成完了(run 45212153725、deep)。1/3回分。もう1回生成"
+  },
+  {
+   "t": "2026-11-23T18:06:46Z",
+   "round": 59,
+   "stage": "gen",
+   "note": "生成完了(run 45223719339、deep)。2/3回分。もう1回生成"
   }
  ],
  "gate_fail": false,
