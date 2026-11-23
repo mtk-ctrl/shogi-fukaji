@@ -16,15 +16,9 @@
  "retries": 0,
  "seq": 177,
  "last_dispatch": null,
- "updated": "2026-11-23T19:08:38Z",
+ "updated": "2026-11-23T19:24:07Z",
  "reason": "",
  "history": [
-  {
-   "t": "2026-11-22T12:43:39Z",
-   "round": 50,
-   "stage": "gen",
-   "note": "生成完了(run 45018624996、fast)。2回分で学習へ。変種を並列で学習: lr1e-5・lr2e-5・lr1e-4"
-  },
   {
    "t": "2026-11-22T13:02:59Z",
    "round": 50,
@@ -498,6 +492,12 @@
    "round": 59,
    "stage": "gen",
    "note": "生成完了(run 45234863505、deep)。3回分で学習へ。変種を並列で学習: lr5e-5・lr2e-5"
+  },
+  {
+   "t": "2026-11-23T19:24:07Z",
+   "round": 59,
+   "stage": "train",
+   "note": "学習[lr2e-5](run 45245808325): ゲートpass、検証損失0.55210→0.55192、平均ラベル0.4962"
   }
  ],
  "gate_fail": false,
@@ -515,11 +515,47 @@
   "r59-train-177": {
    "name": "lr2e-5",
    "lr": "0.00002",
-   "run": null,
-   "done": false,
+   "run": 45245808325,
+   "done": true,
    "failed": false,
    "retries": 0,
-   "report": null
+   "report": {
+    "schema": "g1-train-v1",
+    "parent": "7bec9b7d15b9107fc4e120c041e9f1437feed8fb59c0d8d496941120f8fd7822",
+    "snapshot": "281c167bbd3165a8170109c8e49d961c26c44e8a54c505e42699d429b137d79e",
+    "weights_file_sha256": "1d4d0215a4c76490d6e9fea1b5c748e4d1412185f60f426bb2232ce45437cbbf",
+    "games": 48646,
+    "train_positions": 5218760,
+    "heldout_positions": 281176,
+    "mean_label": 0.4962,
+    "outcome_weight": 0.2,
+    "label_scales": {
+     "2400.0": 54
+    },
+    "feature_set": "band",
+    "mirror": true,
+    "inputs": 4784,
+    "hidden": 128,
+    "heldout_history": [
+     {
+      "epoch": 0,
+      "heldout": 0.5520980626138633
+     },
+     {
+      "epoch": 1,
+      "heldout": 0.5519222976181399
+     }
+    ],
+    "heldout_before": 0.5520980626138633,
+    "heldout_after": 0.5519222976181399,
+    "gate": "pass",
+    "epochs": 1,
+    "lr": 2e-05,
+    "batch": 256,
+    "optimizer_step_after": 3175902,
+    "strength_proven": false,
+    "formal_model_changed": false
+   }
   }
  },
  "queue": [],
