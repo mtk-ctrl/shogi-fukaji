@@ -3,8 +3,8 @@
  "active": true,
  "round": 55,
  "parent": "83cddb59a03540035de9052d62c0295f578ff9d9988740881b9a161f9f347f77",
- "stage": "match",
- "tag": "r55-match-146",
+ "stage": "adopt",
+ "tag": "r55-adopt-147",
  "gens": [
   45100213008,
   45106138157,
@@ -18,21 +18,22 @@
    "l": 48,
    "illegal": 0,
    "draw": 2
+  },
+  {
+   "run": 45120899133,
+   "w": 58,
+   "l": 50,
+   "illegal": 0,
+   "draw": 0
   }
  ],
  "match_runs": [],
  "retries": 0,
- "seq": 146,
+ "seq": 147,
  "last_dispatch": null,
- "updated": "2026-11-23T05:56:38Z",
+ "updated": "2026-11-23T06:06:30Z",
  "reason": "",
  "history": [
-  {
-   "t": "2026-11-21T23:42:25Z",
-   "round": 46,
-   "stage": "gen",
-   "note": "生成完了(run 44958015887、fast)。2回分で学習へ。変種を並列で学習: lr1e-5・lr2e-5・lr1e-4"
-  },
   {
    "t": "2026-11-22T00:04:56Z",
    "round": 46,
@@ -506,6 +507,12 @@
    "round": 55,
    "stage": "match",
    "note": "対局[lr2e-5] 58-48-2。基準に届かないが+6以上のため追試"
+  },
+  {
+   "t": "2026-11-23T06:06:30Z",
+   "round": 55,
+   "stage": "match",
+   "note": "対局[lr2e-5] 58-48-2 / 58-50、違法手0。基準を満たした。E34として採用"
   }
  ],
  "gate_fail": false,
