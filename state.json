@@ -3,26 +3,21 @@
  "active": true,
  "round": 58,
  "parent": "7bec9b7d15b9107fc4e120c041e9f1437feed8fb59c0d8d496941120f8fd7822",
- "stage": "gen",
- "tag": "r58-gen-165",
+ "stage": "train",
+ "tag": "",
  "gens": [
-  45177735937
+  45177735937,
+  45187757251
  ],
  "train_run": null,
  "matches": [],
  "match_runs": [],
  "retries": 0,
- "seq": 165,
+ "seq": 168,
  "last_dispatch": null,
- "updated": "2026-11-23T13:49:32Z",
+ "updated": "2026-11-23T14:50:53Z",
  "reason": "",
  "history": [
-  {
-   "t": "2026-11-22T06:43:28Z",
-   "round": 48,
-   "stage": "match",
-   "note": "対局[lr1e-5] 50-57-1、違法手0。不採用。同じ周回の次の変種[lr2e-5]を対局"
-  },
   {
    "t": "2026-11-22T06:52:43Z",
    "round": 48,
@@ -496,11 +491,45 @@
    "round": 58,
    "stage": "gen",
    "note": "生成完了(run 45177735937、fast)。1/2回分。もう1回生成"
+  },
+  {
+   "t": "2026-11-23T14:50:53Z",
+   "round": 58,
+   "stage": "gen",
+   "note": "生成完了(run 45187757251、fast)。2回分で学習へ。変種を並列で学習: lr1e-5・lr2e-5・lr1e-4"
   }
  ],
  "gate_fail": false,
  "mode": "fast",
- "trains": {},
+ "trains": {
+  "r58-train-166": {
+   "name": "lr1e-5",
+   "lr": "0.00001",
+   "run": null,
+   "done": false,
+   "failed": false,
+   "retries": 0,
+   "report": null
+  },
+  "r58-train-167": {
+   "name": "lr2e-5",
+   "lr": "0.00002",
+   "run": null,
+   "done": false,
+   "failed": false,
+   "retries": 0,
+   "report": null
+  },
+  "r58-train-168": {
+   "name": "lr1e-4",
+   "lr": "0.0001",
+   "run": null,
+   "done": false,
+   "failed": false,
+   "retries": 0,
+   "report": null
+  }
+ },
  "queue": [],
  "cand": null
 }
