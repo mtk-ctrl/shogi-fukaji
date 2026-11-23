@@ -1,38 +1,20 @@
 {
  "schema": "g1-loop-v1",
  "active": true,
- "round": 57,
- "parent": "c313b0281125f41506606fb8faf45cda6f02f6908e17ac07ab709ba1f5581899",
- "stage": "adopt",
- "tag": "r57-adopt-163",
- "gens": [
-  45143910057,
-  45153138528,
-  45162505078
- ],
- "train_run": 45171845941,
- "matches": [
-  {
-   "run": 45175731717,
-   "w": 69,
-   "l": 39,
-   "illegal": 0,
-   "draw": 0
-  }
- ],
+ "round": 58,
+ "parent": "7bec9b7d15b9107fc4e120c041e9f1437feed8fb59c0d8d496941120f8fd7822",
+ "stage": "gen",
+ "tag": "r58-gen-164",
+ "gens": [],
+ "train_run": null,
+ "matches": [],
  "match_runs": [],
  "retries": 0,
- "seq": 163,
+ "seq": 164,
  "last_dispatch": null,
- "updated": "2026-11-23T12:44:39Z",
+ "updated": "2026-11-23T12:48:07Z",
  "reason": "",
  "history": [
-  {
-   "t": "2026-11-22T06:33:34Z",
-   "round": 48,
-   "stage": "train",
-   "note": "学習[lr2e-5](run 44992012780): ゲートfail、検証損失0.54960→0.54975、平均ラベル0.4992"
-  },
   {
    "t": "2026-11-22T06:33:34Z",
    "round": 48,
@@ -506,107 +488,17 @@
    "round": 57,
    "stage": "match",
    "note": "対局[lr5e-5] 69-39、違法手0。基準を満たした。E35として採用"
+  },
+  {
+   "t": "2026-11-23T12:48:07Z",
+   "round": 57,
+   "stage": "adopt",
+   "note": "採用完了。新しい親は7bec9b7d"
   }
  ],
  "gate_fail": false,
- "mode": "deep",
- "trains": {
-  "r57-train-159": {
-   "name": "lr5e-5",
-   "lr": "0.00005",
-   "run": 45171845941,
-   "done": true,
-   "failed": false,
-   "retries": 0,
-   "report": {
-    "schema": "g1-train-v1",
-    "parent": "c313b0281125f41506606fb8faf45cda6f02f6908e17ac07ab709ba1f5581899",
-    "snapshot": "7bec9b7d15b9107fc4e120c041e9f1437feed8fb59c0d8d496941120f8fd7822",
-    "weights_file_sha256": "853f171e8115c1dcc825606ddbe68c551a9b589e6dd7a64946daa0813829abe1",
-    "games": 48885,
-    "train_positions": 5218353,
-    "heldout_positions": 280850,
-    "mean_label": 0.4962,
-    "outcome_weight": 0.2,
-    "label_scales": {
-     "2400.0": 54
-    },
-    "feature_set": "band",
-    "mirror": true,
-    "inputs": 4784,
-    "hidden": 128,
-    "heldout_history": [
-     {
-      "epoch": 0,
-      "heldout": 0.5607032666945767
-     },
-     {
-      "epoch": 1,
-      "heldout": 0.5612680478034038
-     }
-    ],
-    "heldout_before": 0.5607032666945767,
-    "heldout_after": 0.5612680478034038,
-    "gate": "fail",
-    "epochs": 1,
-    "lr": 5e-05,
-    "batch": 256,
-    "optimizer_step_after": 3135130,
-    "strength_proven": false,
-    "formal_model_changed": false
-   }
-  },
-  "r57-train-160": {
-   "name": "lr2e-5",
-   "lr": "0.00002",
-   "run": 45171848902,
-   "done": true,
-   "failed": false,
-   "retries": 0,
-   "report": {
-    "schema": "g1-train-v1",
-    "parent": "c313b0281125f41506606fb8faf45cda6f02f6908e17ac07ab709ba1f5581899",
-    "snapshot": "606572a144e3102923b228149801918e18b778f320b295c5b4057e5ddc4ccc4f",
-    "weights_file_sha256": "e9eca8ef6a15b07447f78a75cd1b911124852dd80013ecc5e68f53291a50a254",
-    "games": 48885,
-    "train_positions": 5218353,
-    "heldout_positions": 280850,
-    "mean_label": 0.4962,
-    "outcome_weight": 0.2,
-    "label_scales": {
-     "2400.0": 54
-    },
-    "feature_set": "band",
-    "mirror": true,
-    "inputs": 4784,
-    "hidden": 128,
-    "heldout_history": [
-     {
-      "epoch": 0,
-      "heldout": 0.5607032666945767
-     },
-     {
-      "epoch": 1,
-      "heldout": 0.5608250544872152
-     }
-    ],
-    "heldout_before": 0.5607032666945767,
-    "heldout_after": 0.5608250544872152,
-    "gate": "fail",
-    "epochs": 1,
-    "lr": 2e-05,
-    "batch": 256,
-    "optimizer_step_after": 3135130,
-    "strength_proven": false,
-    "formal_model_changed": false
-   }
-  }
- },
+ "mode": "fast",
+ "trains": {},
  "queue": [],
- "cand": {
-  "name": "lr5e-5",
-  "run": 45171845941,
-  "delta": 0.0005647811088270727,
-  "lr": "0.00005"
- }
+ "cand": null
 }
