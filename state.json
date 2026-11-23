@@ -4,25 +4,20 @@
  "round": 57,
  "parent": "c313b0281125f41506606fb8faf45cda6f02f6908e17ac07ab709ba1f5581899",
  "stage": "gen",
- "tag": "r57-gen-157",
+ "tag": "r57-gen-158",
  "gens": [
-  45143910057
+  45143910057,
+  45153138528
  ],
  "train_run": null,
  "matches": [],
  "match_runs": [],
  "retries": 0,
- "seq": 157,
+ "seq": 158,
  "last_dispatch": null,
- "updated": "2026-11-23T10:07:05Z",
+ "updated": "2026-11-23T11:08:58Z",
  "reason": "",
  "history": [
-  {
-   "t": "2026-11-22T03:41:11Z",
-   "round": 47,
-   "stage": "train",
-   "note": "対局の順(検証損失が小さい順): lr2e-5(+0.00007)、lr5e-5(+0.00041)"
-  },
   {
    "t": "2026-11-22T03:51:06Z",
    "round": 47,
@@ -496,6 +491,12 @@
    "round": 57,
    "stage": "gen",
    "note": "生成完了(run 45143910057、deep)。1/3回分。もう1回生成"
+  },
+  {
+   "t": "2026-11-23T11:08:58Z",
+   "round": 57,
+   "stage": "gen",
+   "note": "生成完了(run 45153138528、deep)。2/3回分。もう1回生成"
   }
  ],
  "gate_fail": false,
