@@ -4,23 +4,19 @@
  "round": 54,
  "parent": "83cddb59a03540035de9052d62c0295f578ff9d9988740881b9a161f9f347f77",
  "stage": "gen",
- "tag": "r54-gen-132",
- "gens": [],
+ "tag": "r54-gen-133",
+ "gens": [
+  45083382352
+ ],
  "train_run": null,
  "matches": [],
  "match_runs": [],
  "retries": 0,
- "seq": 132,
+ "seq": 133,
  "last_dispatch": null,
- "updated": "2026-11-22T23:27:50Z",
+ "updated": "2026-11-23T00:29:09Z",
  "reason": "",
  "history": [
-  {
-   "t": "2026-11-21T17:08:05Z",
-   "round": 44,
-   "stage": "gen",
-   "note": "生成完了(run 44922747930、fast)。2回分で学習へ。変種を並列で学習: lr1e-5・lr2e-5・lr1e-4"
-  },
   {
    "t": "2026-11-21T17:37:52Z",
    "round": 44,
@@ -494,6 +490,12 @@
    "round": 53,
    "stage": "adopt",
    "note": "採用完了。新しい親は83cddb59"
+  },
+  {
+   "t": "2026-11-23T00:29:09Z",
+   "round": 54,
+   "stage": "gen",
+   "note": "生成完了(run 45083382352、fast)。1/2回分。もう1回生成"
   }
  ],
  "gate_fail": false,
