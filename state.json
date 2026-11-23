@@ -3,33 +3,21 @@
  "active": true,
  "round": 56,
  "parent": "c313b0281125f41506606fb8faf45cda6f02f6908e17ac07ab709ba1f5581899",
- "stage": "train",
- "tag": "",
+ "stage": "match",
+ "tag": "r56-match-154",
  "gens": [
   45122225546,
   45129209511
  ],
- "train_run": null,
+ "train_run": 45136672197,
  "matches": [],
  "match_runs": [],
  "retries": 0,
- "seq": 153,
+ "seq": 154,
  "last_dispatch": null,
- "updated": "2026-11-23T08:39:19Z",
+ "updated": "2026-11-23T08:45:49Z",
  "reason": "",
  "history": [
-  {
-   "t": "2026-11-22T01:26:27Z",
-   "round": 47,
-   "stage": "gen",
-   "note": "生成完了(run 44966470170、deep)。1/3回分。もう1回生成"
-  },
-  {
-   "t": "2026-11-22T02:28:05Z",
-   "round": 47,
-   "stage": "gen",
-   "note": "生成完了(run 44971472594、deep)。2/3回分。もう1回生成"
-  },
   {
    "t": "2026-11-22T03:29:39Z",
    "round": 47,
@@ -497,6 +485,18 @@
    "round": 56,
    "stage": "train",
    "note": "学習[lr1e-5](run 45136672197): ゲートpass、検証損失0.54349→0.54334、平均ラベル0.4992"
+  },
+  {
+   "t": "2026-11-23T08:45:49Z",
+   "round": 56,
+   "stage": "train",
+   "note": "学習[lr2e-5](run 45136674824): ゲートpass、検証損失0.54349→0.54344、平均ラベル0.4992"
+  },
+  {
+   "t": "2026-11-23T08:45:49Z",
+   "round": 56,
+   "stage": "train",
+   "note": "対局の順(検証損失が小さい順): lr1e-5(-0.00015)、lr2e-5(-0.00005)"
   }
  ],
  "gate_fail": false,
@@ -550,11 +550,47 @@
   "r56-train-151": {
    "name": "lr2e-5",
    "lr": "0.00002",
-   "run": null,
-   "done": false,
+   "run": 45136674824,
+   "done": true,
    "failed": false,
    "retries": 0,
-   "report": null
+   "report": {
+    "schema": "g1-train-v1",
+    "parent": "c313b0281125f41506606fb8faf45cda6f02f6908e17ac07ab709ba1f5581899",
+    "snapshot": "cc046df1f97ada69b5077cf238d0027bfb081c5ca88af6c31ba64022a047f981",
+    "weights_file_sha256": "7c5d9220d90bd57c77ed1e6584346d920b0236c02b6d01e25d82f1ebd0600f35",
+    "games": 99359,
+    "train_positions": 10602345,
+    "heldout_positions": 544952,
+    "mean_label": 0.4992,
+    "outcome_weight": 0.2,
+    "label_scales": {
+     "2400.0": 36
+    },
+    "feature_set": "band",
+    "mirror": true,
+    "inputs": 4784,
+    "hidden": 128,
+    "heldout_history": [
+     {
+      "epoch": 0,
+      "heldout": 0.5434861371678148
+     },
+     {
+      "epoch": 1,
+      "heldout": 0.5434406396830592
+     }
+    ],
+    "heldout_before": 0.5434861371678148,
+    "heldout_after": 0.5434406396830592,
+    "gate": "pass",
+    "epochs": 1,
+    "lr": 2e-05,
+    "batch": 256,
+    "optimizer_step_after": 3177192,
+    "strength_proven": false,
+    "formal_model_changed": false
+   }
   },
   "r56-train-153": {
    "name": "lr1e-4",
@@ -602,6 +638,18 @@
    }
   }
  },
- "queue": [],
- "cand": null
+ "queue": [
+  {
+   "name": "lr2e-5",
+   "run": 45136674824,
+   "delta": -4.549748475557447e-05,
+   "lr": "0.00002"
+  }
+ ],
+ "cand": {
+  "name": "lr1e-5",
+  "run": 45136672197,
+  "delta": -0.00014776064852961568,
+  "lr": "0.00001"
+ }
 }
