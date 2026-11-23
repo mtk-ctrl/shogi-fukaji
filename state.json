@@ -13,17 +13,11 @@
  "matches": [],
  "match_runs": [],
  "retries": 0,
- "seq": 152,
+ "seq": 153,
  "last_dispatch": null,
- "updated": "2026-11-23T08:11:56Z",
+ "updated": "2026-11-23T08:13:01Z",
  "reason": "",
  "history": [
-  {
-   "t": "2026-11-22T00:11:34Z",
-   "round": 46,
-   "stage": "train",
-   "note": "対局の順(検証損失が小さい順): lr1e-5(-0.00002)、lr2e-5(+0.00008)"
-  },
   {
    "t": "2026-11-22T00:21:04Z",
    "round": 46,
@@ -497,6 +491,12 @@
    "round": 56,
    "stage": "gen",
    "note": "生成完了(run 45129209511、fast)。2回分で学習へ。変種を並列で学習: lr1e-5・lr2e-5・lr1e-4"
+  },
+  {
+   "t": "2026-11-23T08:13:01Z",
+   "round": 56,
+   "stage": "train",
+   "note": "学習[lr1e-4]が失敗(failure、run 45136677382)。再起動1回目"
   }
  ],
  "gate_fail": false,
@@ -520,13 +520,13 @@
    "retries": 0,
    "report": null
   },
-  "r56-train-152": {
+  "r56-train-153": {
    "name": "lr1e-4",
    "lr": "0.0001",
    "run": null,
    "done": false,
    "failed": false,
-   "retries": 0,
+   "retries": 1,
    "report": null
   }
  },
