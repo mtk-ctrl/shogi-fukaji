@@ -4,23 +4,19 @@
  "round": 62,
  "parent": "f407a75b40b3416f4f32dd2f43ae4db917e370c1dbd51bfc58a56643d665216a",
  "stage": "gen",
- "tag": "r62-gen-195",
- "gens": [],
+ "tag": "r62-gen-196",
+ "gens": [
+  45310792203
+ ],
  "train_run": null,
  "matches": [],
  "match_runs": [],
  "retries": 0,
- "seq": 195,
+ "seq": 196,
  "last_dispatch": null,
- "updated": "2026-11-24T02:13:32Z",
+ "updated": "2026-11-24T03:14:55Z",
  "reason": "",
  "history": [
-  {
-   "t": "2026-11-22T19:55:43Z",
-   "round": 52,
-   "stage": "match",
-   "note": "対局[lr2e-5] 51-57、違法手0。不採用。変種はこれで全部。データを捨てて新しい生成から"
-  },
   {
    "t": "2026-11-22T20:57:11Z",
    "round": 53,
@@ -494,6 +490,12 @@
    "round": 61,
    "stage": "adopt",
    "note": "採用完了。新しい親はf407a75b"
+  },
+  {
+   "t": "2026-11-24T03:14:55Z",
+   "round": 62,
+   "stage": "gen",
+   "note": "生成完了(run 45310792203、fast)。1/2回分。もう1回生成"
   }
  ],
  "gate_fail": false,
