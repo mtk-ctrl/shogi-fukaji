@@ -4,25 +4,20 @@
  "round": 61,
  "parent": "8843723b7ac6eca2349caab757ac0bf2d0ba4b7af1eab472895db992425cc29f",
  "stage": "gen",
- "tag": "r61-gen-188",
+ "tag": "r61-gen-189",
  "gens": [
-  45280469967
+  45280469967,
+  45289783675
  ],
  "train_run": null,
  "matches": [],
  "match_runs": [],
  "retries": 0,
- "seq": 188,
+ "seq": 189,
  "last_dispatch": null,
- "updated": "2026-11-23T23:33:05Z",
+ "updated": "2026-11-24T00:34:37Z",
  "reason": "",
  "history": [
-  {
-   "t": "2026-11-22T17:03:03Z",
-   "round": 51,
-   "stage": "match",
-   "note": "対局[lr5e-5] 42-64-2、違法手0。不採用。変種はこれで全部。データを捨てて新しい生成から"
-  },
   {
    "t": "2026-11-22T18:04:23Z",
    "round": 52,
@@ -496,6 +491,12 @@
    "round": 61,
    "stage": "gen",
    "note": "生成完了(run 45280469967、deep)。1/3回分。もう1回生成"
+  },
+  {
+   "t": "2026-11-24T00:34:37Z",
+   "round": 61,
+   "stage": "gen",
+   "note": "生成完了(run 45289783675、deep)。2/3回分。もう1回生成"
   }
  ],
  "gate_fail": false,
