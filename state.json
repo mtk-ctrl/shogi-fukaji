@@ -4,23 +4,19 @@
  "round": 63,
  "parent": "f407a75b40b3416f4f32dd2f43ae4db917e370c1dbd51bfc58a56643d665216a",
  "stage": "gen",
- "tag": "r63-gen-203",
- "gens": [],
+ "tag": "r63-gen-204",
+ "gens": [
+  45332152273
+ ],
  "train_run": null,
  "matches": [],
  "match_runs": [],
  "retries": 0,
- "seq": 203,
+ "seq": 204,
  "last_dispatch": null,
- "updated": "2026-11-24T05:16:29Z",
+ "updated": "2026-11-24T06:18:05Z",
  "reason": "",
  "history": [
-  {
-   "t": "2026-11-23T00:29:09Z",
-   "round": 54,
-   "stage": "gen",
-   "note": "生成完了(run 45083382352、fast)。1/2回分。もう1回生成"
-  },
   {
    "t": "2026-11-23T01:30:29Z",
    "round": 54,
@@ -494,6 +490,12 @@
    "round": 62,
    "stage": "match",
    "note": "対局[lr1e-4] 51-57、違法手0。不採用。変種はこれで全部。データを捨てて新しい生成から"
+  },
+  {
+   "t": "2026-11-24T06:18:05Z",
+   "round": 63,
+   "stage": "gen",
+   "note": "生成完了(run 45332152273、deep)。1/3回分。もう1回生成"
   }
  ],
  "gate_fail": false,
