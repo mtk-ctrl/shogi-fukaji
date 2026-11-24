@@ -1,0 +1,23 @@
+{
+  "schema": "fukaji-vs-kumoji-usi-result-v1",
+  "games": 108,
+  "pairs": 54,
+  "fukaji_wins": 59,
+  "kumoji_wins": 49,
+  "labels": [
+    "E36",
+    "E30"
+  ],
+  "draws_or_unresolved": 0,
+  "fukaji_score": 0.5462962962962963,
+  "pair_sweeps_fukaji": 16,
+  "pair_sweeps_kumoji": 11,
+  "illegal_pairs": [],
+  "reasons": {
+    "checkmate": 108
+  },
+  "replay_verified": true,
+  "go": "go movetime 300",
+  "longthink_ms": 2000,
+  "avg_plies": 125.37962962962963
+}
