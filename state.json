@@ -1,9 +1,9 @@
 {
  "schema": "g1-loop-v1",
- "active": true,
+ "active": false,
  "round": 64,
  "parent": "f407a75b40b3416f4f32dd2f43ae4db917e370c1dbd51bfc58a56643d665216a",
- "stage": "gen",
+ "stage": "stopped",
  "tag": "r64-gen-211",
  "gens": [
   45359946769
@@ -14,15 +14,9 @@
  "retries": 0,
  "seq": 211,
  "last_dispatch": null,
- "updated": "2026-11-24T09:54:05Z",
- "reason": "",
+ "updated": "2026-11-24T10:09:37Z",
+ "reason": "owner request 2026-11-24 change approach",
  "history": [
-  {
-   "t": "2026-11-23T03:27:58Z",
-   "round": 55,
-   "stage": "gen",
-   "note": "生成完了(run 45100213008、deep)。1/3回分。もう1回生成"
-  },
   {
    "t": "2026-11-23T04:29:52Z",
    "round": 55,
@@ -496,6 +490,12 @@
    "round": 64,
    "stage": "gen",
    "note": "生成完了(run 45359946769、fast)。1/2回分。もう1回生成"
+  },
+  {
+   "t": "2026-11-24T10:09:37Z",
+   "round": 64,
+   "stage": "stopped",
+   "note": "停止: owner request 2026-11-24 change approach"
   }
  ],
  "gate_fail": false,
