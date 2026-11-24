@@ -4,23 +4,19 @@
  "round": 64,
  "parent": "f407a75b40b3416f4f32dd2f43ae4db917e370c1dbd51bfc58a56643d665216a",
  "stage": "gen",
- "tag": "r64-gen-210",
- "gens": [],
+ "tag": "r64-gen-211",
+ "gens": [
+  45359946769
+ ],
  "train_run": null,
  "matches": [],
  "match_runs": [],
  "retries": 0,
- "seq": 210,
+ "seq": 211,
  "last_dispatch": null,
- "updated": "2026-11-24T08:52:38Z",
+ "updated": "2026-11-24T09:54:05Z",
  "reason": "",
  "history": [
-  {
-   "t": "2026-11-23T02:26:22Z",
-   "round": 54,
-   "stage": "match",
-   "note": "対局[lr2e-5] 50-58、違法手0。不採用。変種はこれで全部。データを捨てて新しい生成から"
-  },
   {
    "t": "2026-11-23T03:27:58Z",
    "round": 55,
@@ -494,6 +490,12 @@
    "round": 63,
    "stage": "match",
    "note": "対局[lr5e-5] 54-54、違法手0。不採用。変種はこれで全部。データを捨てて新しい生成から"
+  },
+  {
+   "t": "2026-11-24T09:54:05Z",
+   "round": 64,
+   "stage": "gen",
+   "note": "生成完了(run 45359946769、fast)。1/2回分。もう1回生成"
   }
  ],
  "gate_fail": false,
