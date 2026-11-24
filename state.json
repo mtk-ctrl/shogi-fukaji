@@ -14,15 +14,9 @@
  "retries": 0,
  "seq": 211,
  "last_dispatch": null,
- "updated": "2026-11-24T10:09:37Z",
+ "updated": "2026-11-24T10:09:52Z",
  "reason": "owner request 2026-11-24 change approach",
  "history": [
-  {
-   "t": "2026-11-23T04:29:52Z",
-   "round": 55,
-   "stage": "gen",
-   "note": "生成完了(run 45106138157、deep)。2/3回分。もう1回生成"
-  },
   {
    "t": "2026-11-23T05:31:21Z",
    "round": 55,
@@ -496,6 +490,12 @@
    "round": 64,
    "stage": "stopped",
    "note": "停止: owner request 2026-11-24 change approach"
+  },
+  {
+   "t": "2026-11-24T10:09:52Z",
+   "round": 64,
+   "stage": "stopped",
+   "note": "停止中のためgenを無視"
   }
  ],
  "gate_fail": false,
